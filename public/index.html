@@ -59,6 +59,24 @@ body{
     backdrop-filter: blur(16px);
     background: rgba(0,0,0,0.25);
 }
+
+/* ===== 新增：控制栏折叠样式 ===== */
+.controls-panel {
+    transition: all 0.2s ease;
+}
+.collapse-btn {
+    transition: transform 0.2s;
+}
+.controls-panel.collapsed {
+    padding: 6px 10px;
+    gap: 0;
+}
+.controls-panel.collapsed .bg-selector-wrapper {
+    display: none;
+}
+.controls-panel.collapsed .collapse-btn {
+    transform: rotate(180deg);
+}
 </style>
 </head>
 <body>
@@ -179,17 +197,20 @@ body{
     </div>
   </div>
 
-  <!-- ===== 新增：主题与背景控制面板 ===== -->
-  <div class="controls-panel">
-    <button id="themeToggle" class="ctrl-btn">🌙 黑夜模式</button>
-    <div class="bg-selector">
-      <span>🎨 背景：</span>
-      <button data-bg="gradient" class="bg-option active">动态渐变</button>
-      <button data-bg="light" class="bg-option">浅色纹理</button>
-      <button data-bg="ocean" class="bg-option">海洋</button>
-      <button data-bg="forest" class="bg-option">森林</button>
-      <button data-bg="custom" class="bg-option">自定义颜色</button>
-      <input type="color" id="customColorPicker" value="#1a2a6c">
+  <!-- ===== 新增：可折叠的主题与背景控制面板 ===== -->
+  <div class="controls-panel" id="controlsPanel">
+    <button id="collapseToggle" class="ctrl-btn collapse-btn">▲</button>
+    <div class="bg-selector-wrapper" id="bgSelectorWrapper">
+      <button id="themeToggle" class="ctrl-btn">🌙 黑夜模式</button>
+      <div class="bg-selector">
+        <span>🎨 背景：</span>
+        <button data-bg="gradient" class="bg-option active">动态渐变</button>
+        <button data-bg="light" class="bg-option">浅色纹理</button>
+        <button data-bg="ocean" class="bg-option">海洋</button>
+        <button data-bg="forest" class="bg-option">森林</button>
+        <button data-bg="custom" class="bg-option">自定义颜色</button>
+        <input type="color" id="customColorPicker" value="#1a2a6c">
+      </div>
     </div>
   </div>
 </div>
@@ -201,6 +222,22 @@ body{
     const scroller = document.getElementById("topbarScroll");
     if (scroller) {
       scroller.scrollLeft = scroller.scrollWidth;
+    }
+
+    // ===== 折叠控制栏逻辑 =====
+    const controlsPanel = document.getElementById("controlsPanel");
+    const collapseToggle = document.getElementById("collapseToggle");
+    if (controlsPanel && collapseToggle) {
+      // 读取保存的折叠状态
+      const isCollapsed = localStorage.getItem("cfw_panel_collapsed") === "true";
+      if (isCollapsed) controlsPanel.classList.add("collapsed");
+      
+      collapseToggle.addEventListener("click", (e) => {
+        e.stopPropagation();
+        controlsPanel.classList.toggle("collapsed");
+        const nowCollapsed = controlsPanel.classList.contains("collapsed");
+        localStorage.setItem("cfw_panel_collapsed", nowCollapsed);
+      });
     }
   });
 </script>
