@@ -6,14 +6,15 @@
   <title>DeepSeek Chat</title>
   <link rel="stylesheet" href="/styles.css" />
   <style>
-/* ===== 保留毛玻璃等额外样式 ===== */
+/* ===== 全局基础 ===== */
 body{
     margin:0;
     min-height:100vh;
     overflow:hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
 }
 
-/* 毛玻璃效果 */
+/* 毛玻璃效果（保留） */
 #history,
 .input-inner,
 #settings,
@@ -30,27 +31,6 @@ body{
 .assistant{
     border-radius:18px;
     padding:12px;
-}
-
-/* 输入框优化 */
-#msg{
-    background: rgba(255,255,255,0.08);
-    color:white;
-    border:none;
-}
-
-/* 发送按钮 */
-#sendBtn{
-    border:none;
-    border-radius:12px;
-    background:#4f46e5;
-    color:white;
-    transition:0.3s;
-}
-
-#sendBtn:hover{
-    transform:scale(1.05);
-    opacity:0.9;
 }
 
 /* 顶栏 */
@@ -77,22 +57,108 @@ body{
     transform: rotate(180deg);
 }
 
-/* ===== 新增：字体缩放、停止按钮、会话面板样式 ===== */
+/* 字体变量 */
 :root {
     --chat-font-size: 15px;
 }
 .bubble, .bubble * {
     font-size: var(--chat-font-size);
 }
+
+/* ===== ChatGPT风格输入区域美化 ===== */
+.input-floating {
+    position: fixed;
+    bottom: var(--composer-gap, 18px);
+    left: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    z-index: 100;
+}
+
+.input-inner {
+    pointer-events: auto;
+    width: 100%;
+    max-width: 760px;
+    margin: 0 auto;
+    background: rgba(32,32,36,0.8) !important;
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 32px;
+    padding: 6px 12px 6px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.input-inner:focus-within {
+    border-color: rgba(79,70,229,0.6);
+    box-shadow: 0 0 0 3px rgba(79,70,229,0.2);
+}
+
+textarea#msg {
+    flex: 1;
+    resize: none;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: #fff;
+    font-size: 16px;
+    line-height: 1.5;
+    padding: 10px 0;
+    max-height: 200px;
+    font-family: inherit;
+}
+
+textarea#msg::placeholder {
+    color: rgba(255,255,255,0.5);
+    font-size: 15px;
+}
+
+/* 发送按钮和停止按钮统一风格 */
+#sendBtn, #stopBtn {
+    border: none;
+    border-radius: 28px;
+    padding: 8px 20px;
+    font-weight: 500;
+    font-size: 14px;
+    cursor: pointer;
+    transition: 0.2s;
+    background: #4f46e5;
+    color: white;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: inherit;
+}
+
+#sendBtn:hover {
+    background: #6366f1;
+    transform: scale(1.02);
+}
+
 #stopBtn {
     background: #dc2626;
-    margin-left: 8px;
     display: none;
 }
 #stopBtn:hover {
     background: #b91c1c;
 }
-/* 会话侧边栏 */
+
+/* 底部提示文字 */
+.composer-hint {
+    text-align: center;
+    font-size: 12px;
+    color: rgba(255,255,255,0.4);
+    margin-top: 10px;
+    pointer-events: none;
+}
+
+/* 会话侧边栏样式（无改动，保持原样） */
 #sessionPanel {
     position: fixed;
     top: 0;
@@ -168,6 +234,24 @@ body{
     z-index: 1050;
     display: none;
 }
+
+/* 控制栏按钮微调（可选） */
+.ctrl-btn, .bg-option {
+    background: rgba(255,255,255,0.08);
+    border: none;
+    border-radius: 999px;
+    padding: 6px 14px;
+    font-size: 13px;
+    transition: 0.2s;
+    cursor: pointer;
+}
+.ctrl-btn:hover, .bg-option:hover {
+    background: rgba(255,255,255,0.2);
+}
+.bg-option.active {
+    background: #4f46e5;
+    color: white;
+}
 </style>
 </head>
 <body>
@@ -176,7 +260,7 @@ body{
     <div class="topbar-shell">
       <div class="topbar-scroll" id="topbarScroll">
         <div class="topbar-inner">
-          <!-- 新增：会话管理按钮 -->
+          <!-- 会话管理按钮 -->
           <button class="iconbtn" id="sessionBtn" title="会话管理">💬</button>
           <button class="iconbtn" id="donateBtn" title="打赏 / Donate">
             <span class="emoji">☕</span>
@@ -215,11 +299,11 @@ body{
 
   <div class="input-floating">
     <div class="input-inner" id="composer">
-      <textarea id="msg" rows="1" placeholder="Message..."></textarea>
-      <button id="sendBtn">Send</button>
-      <!-- 新增：停止生成按钮，初始隐藏 -->
-      <button id="stopBtn">⏹️ 停止</button>
+      <textarea id="msg" rows="1" placeholder="发送消息..."></textarea>
+      <button id="sendBtn">发送</button>
+      <button id="stopBtn">停止</button>
     </div>
+    <div class="composer-hint">DeepSeek 可提供帮助，内容由 AI 生成</div>
   </div>
 
   <div id="settingsMask">
@@ -292,7 +376,7 @@ body{
     </div>
   </div>
 
-  <!-- ===== 可折叠的主题与背景控制面板（新增字体缩放按钮） ===== -->
+  <!-- 控制面板（主题背景+字体缩放） -->
   <div class="controls-panel" id="controlsPanel">
     <button id="collapseToggle" class="ctrl-btn collapse-btn">▲</button>
     <div class="bg-selector-wrapper" id="bgSelectorWrapper">
@@ -306,7 +390,6 @@ body{
         <button data-bg="custom" class="bg-option">自定义颜色</button>
         <input type="color" id="customColorPicker" value="#1a2a6c">
       </div>
-      <!-- 新增：字体缩放按钮 -->
       <button id="fontDecrease" class="ctrl-btn" title="减小字体">A-</button>
       <button id="fontIncrease" class="ctrl-btn" title="增大字体">A+</button>
     </div>
@@ -367,9 +450,8 @@ body{
       sessionOverlay.addEventListener("click", closePanel);
     }
 
-    // 字体缩放初始化（预留，实际逻辑在 app.js 中实现）
-    const fontSizeVar = getComputedStyle(document.documentElement).getPropertyValue('--chat-font-size').trim();
-    let currentFontSize = parseFloat(fontSizeVar) || 15;
+    // 字体缩放初始化（与 app.js 无冲突）
+    let currentFontSize = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--chat-font-size')) || 15;
     const fontDecrease = document.getElementById("fontDecrease");
     const fontIncrease = document.getElementById("fontIncrease");
     if (fontDecrease && fontIncrease) {
@@ -385,7 +467,6 @@ body{
       };
       fontDecrease.addEventListener("click", () => updateFontSize(-1));
       fontIncrease.addEventListener("click", () => updateFontSize(1));
-      // 从 localStorage 恢复字体大小
       const savedFontSize = localStorage.getItem("cfw_font_size");
       if (savedFontSize) {
         currentFontSize = parseFloat(savedFontSize);
