@@ -6,27 +6,12 @@
   <title>DeepSeek Chat</title>
   <link rel="stylesheet" href="/styles.css" />
   <style>
+/* ===== 保留毛玻璃等额外样式，移除 body 背景动画 ===== */
 body{
     margin:0;
     min-height:100vh;
-    background: linear-gradient(-45deg,#0f0c29,#302b63,#24243e,#000000);
-    background-size:400% 400%;
-    animation:bg 15s ease infinite;
-    color:white;
+    /* 原背景动画已移至 styles.css，此处不再重复定义 */
     overflow:hidden;
-}
-
-/* 动态背景动画 */
-@keyframes bg{
-    0%{
-        background-position:0% 50%;
-    }
-    50%{
-        background-position:100% 50%;
-    }
-    100%{
-        background-position:0% 50%;
-    }
 }
 
 /* 毛玻璃效果 */
@@ -189,10 +174,22 @@ body{
         <img id="donateImg" src="/donate.png" alt="WeChat Pay QR" />
         <div id="donateNote">
           如果真的帮助到了你，请为我打赏一杯咖啡吧，有了你的赞助，我会将服务一直运行下去的。
-          我的联系方式：admin@airymoon.com。
-          项目开源地址：https://github.com/MallocPointer/unlimited-ai
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- ===== 新增：主题与背景控制面板 ===== -->
+  <div class="controls-panel">
+    <button id="themeToggle" class="ctrl-btn">🌙 黑夜模式</button>
+    <div class="bg-selector">
+      <span>🎨 背景：</span>
+      <button data-bg="gradient" class="bg-option active">动态渐变</button>
+      <button data-bg="light" class="bg-option">浅色纹理</button>
+      <button data-bg="ocean" class="bg-option">海洋</button>
+      <button data-bg="forest" class="bg-option">森林</button>
+      <button data-bg="custom" class="bg-option">自定义颜色</button>
+      <input type="color" id="customColorPicker" value="#1a2a6c">
     </div>
   </div>
 </div>
