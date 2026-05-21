@@ -47,13 +47,18 @@
   const LS_PROMPT_ENABLED = "cfw_prompt_enabled";
   const LS_CUSTOM_PROMPT = "cfw_custom_prompt_v1";
 
-    let useBuiltin = (localStorage.getItem(LS_USE_BUILTIN) ?? "1") === "1";
+  let useBuiltin = (localStorage.getItem(LS_USE_BUILTIN) ?? "1") === "1";
   personaToggle.textContent = useBuiltin ? "😈" : "😇";
 
   let historyEnabled = (localStorage.getItem(LS_HISTORY_ENABLED) ?? "0") === "1";
   let promptEnabled  = (localStorage.getItem(LS_PROMPT_ENABLED) ?? "1") === "1";
   historyKeepEl.checked = historyEnabled;
   promptKeepEl.checked = promptEnabled;
+
+  // ========== 新增：主题与背景功能的 localStorage key ==========
+  const LS_THEME = "cfw_theme";        // "dark" / "light"
+  const LS_BG_TYPE = "cfw_bg_type";    // "gradient", "light", "ocean", "forest", "custom"
+  const LS_CUSTOM_COLOR = "cfw_custom_color";
 
   function estimateTokens(text){
     if (!text) return 0;
@@ -182,6 +187,107 @@
     modelSel.addEventListener("change", () => {
       localStorage.setItem(LS_MODEL, modelSel.value);
     });
+  }
+
+  // ========== 新增：主题与背景初始化 ==========
+  function initThemeAndBg() {
+    // 获取新增的元素
+    const themeToggle = document.getElementById("themeToggle");
+    const bgOptions = document.querySelectorAll(".bg-option");
+    const customColorPicker = document.getElementById("customColorPicker");
+
+    if (!themeToggle) return; // 如果控制栏未找到，跳过（兼容旧版）
+
+    // 预设背景映射（与 CSS 中的 --user-bg 对应）
+    const bgMap = {
+      gradient: "var(--bg-gradient)",
+      light: "url('https://www.transparenttextures.com/patterns/cubes.png'), linear-gradient(135deg, #f9f9f9, #e0e0e0)",
+      ocean: "url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600') center/cover",
+      forest: "url('https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=600') center/cover"
+    };
+
+    // 应用背景（根据类型）
+    function applyBackground(type, colorValue = null) {
+      if (type === "custom" && colorValue) {
+        document.body.style.setProperty("--user-bg", colorValue);
+        document.body.classList.add("custom-bg");
+        localStorage.setItem(LS_BG_TYPE, "custom");
+        localStorage.setItem(LS_CUSTOM_COLOR, colorValue);
+        if (customColorPicker) customColorPicker.value = colorValue;
+      } else if (bgMap[type]) {
+        document.body.style.setProperty("--user-bg", bgMap[type]);
+        document.body.classList.add("custom-bg");
+        localStorage.setItem(LS_BG_TYPE, type);
+        localStorage.removeItem(LS_CUSTOM_COLOR);
+      } else {
+        // 默认：移除自定义背景，恢复原有动态渐变
+        document.body.classList.remove("custom-bg");
+        document.body.style.removeProperty("--user-bg");
+        localStorage.removeItem(LS_BG_TYPE);
+        localStorage.removeItem(LS_CUSTOM_COLOR);
+      }
+
+      // 高亮当前激活的背景按钮
+      bgOptions.forEach(btn => {
+        const btnType = btn.dataset.bg;
+        if (btnType === type) {
+          btn.classList.add("active");
+        } else {
+          btn.classList.remove("active");
+        }
+      });
+    }
+
+    // 恢复保存的主题
+    const savedTheme = localStorage.getItem(LS_THEME);
+    if (savedTheme === "light") {
+      document.body.classList.add("light-theme");
+      if (themeToggle) themeToggle.innerHTML = "☀️ 白天模式";
+    } else {
+      document.body.classList.remove("light-theme");
+      if (themeToggle) themeToggle.innerHTML = "🌙 黑夜模式";
+    }
+
+    // 恢复保存的背景
+    const savedBgType = localStorage.getItem(LS_BG_TYPE);
+    const savedCustomColor = localStorage.getItem(LS_CUSTOM_COLOR);
+    if (savedBgType === "custom" && savedCustomColor) {
+      applyBackground("custom", savedCustomColor);
+    } else if (savedBgType && bgMap[savedBgType]) {
+      applyBackground(savedBgType);
+    } else {
+      // 默认无自定义背景（使用原有渐变）
+      applyBackground(null);
+    }
+
+    // 绑定主题切换事件
+    if (themeToggle) {
+      themeToggle.addEventListener("click", () => {
+        const isLight = document.body.classList.toggle("light-theme");
+        localStorage.setItem(LS_THEME, isLight ? "light" : "dark");
+        themeToggle.innerHTML = isLight ? "☀️ 白天模式" : "🌙 黑夜模式";
+      });
+    }
+
+    // 绑定背景按钮事件
+    bgOptions.forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        const bgType = btn.dataset.bg;
+        if (bgType === "custom") {
+          if (customColorPicker) customColorPicker.click();
+        } else {
+          applyBackground(bgType);
+        }
+      });
+    });
+
+    // 自定义颜色选择器事件
+    if (customColorPicker) {
+      customColorPicker.addEventListener("input", (e) => {
+        const color = e.target.value;
+        applyBackground("custom", color);
+      });
+    }
   }
 
   // 😈/😇
@@ -406,6 +512,7 @@
     updateSpacer();
     restoreSessionIfEnabled();
     scrollToBottom();
+    initThemeAndBg();   // 新增：初始化主题与背景功能
   }
 
   init();
