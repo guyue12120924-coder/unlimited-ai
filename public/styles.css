@@ -564,3 +564,146 @@ button#sendBtn:hover{
   background:#2a2a2a;
   border-radius:4px;
 }
+/* ========== 新增：亮色主题、控制栏、自定义背景 ========== */
+
+/* 1. 亮色主题变量覆盖 */
+body.light-theme {
+  --bg: #f2f4f8;
+  --border: #d4d4d8;
+  --muted: #5c5c66;
+  --bubble-ai: #ffffff;
+  --bubble-user: #e4e6eb;
+  --input-bg: #ffffff;
+  --input-border: #cccccc;
+  --btn-bg: #e0e0e0;
+  --btn-bg-hover: #cfcfcf;
+  --control-bg: rgba(255, 255, 255, 0.8);
+}
+
+/* 让亮色主题下的文字颜色自动继承原有 color 规则 */
+body.light-theme,
+body.light-theme #settings,
+body.light-theme .card,
+body.light-theme select,
+body.light-theme .pill,
+body.light-theme .iconbtn {
+  color: #111;
+}
+
+body.light-theme .avatar.bot,
+body.light-theme .avatar.human {
+  background: radial-gradient(circle at 30% 30%, #c0c0c0, #a0a0a0);
+  border-color: #bbb;
+}
+
+body.light-theme .smallbtn {
+  background: #eaeaea;
+  border-color: #ccc;
+  color: #111;
+}
+
+body.light-theme .smallbtn:hover {
+  background: #ddd;
+}
+
+body.light-theme #settings {
+  background: #fefefe;
+  border-color: #ddd;
+}
+
+body.light-theme .card {
+  background: #f7f7f7;
+  border-color: #e0e0e0;
+}
+
+body.light-theme .rowline {
+  border-top-color: #e5e5ea;
+}
+
+body.light-theme #customPrompt {
+  background: #fefefe;
+  border-color: #ccc;
+  color: #111;
+}
+
+/* 2. 控制栏容器（右下角浮动面板） */
+.controls-panel {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: var(--control-bg, rgba(0, 0, 0, 0.6));
+  backdrop-filter: blur(12px);
+  padding: 8px 16px;
+  border-radius: 40px;
+  display: flex;
+  gap: 12px;
+  z-index: 1000;
+  font-size: 13px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  font-weight: 500;
+  pointer-events: auto;
+}
+
+.ctrl-btn,
+.bg-option {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 30px;
+  transition: 0.2s;
+  font-size: 13px;
+  font-family: inherit;
+}
+
+.ctrl-btn:hover,
+.bg-option:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.bg-selector {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.bg-option.active {
+  background: #6366f1;
+  color: white;
+}
+
+/* 自定义颜色选择器 */
+#customColorPicker {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  vertical-align: middle;
+  cursor: pointer;
+  background: transparent;
+}
+
+/* 3. 用户自定义背景覆盖（停用原有背景渐变） */
+body.custom-bg {
+  background: var(--user-bg, var(--bg)) !important;
+  background-size: cover !important;
+  background-position: center !important;
+  background-attachment: fixed !important;
+}
+
+/* 如果原页面有 body 背景相关动画，这里关掉 */
+body.custom-bg {
+  animation: none !important;
+}
+
+/* 可选：亮色主题下控制栏按钮文字颜色微调 */
+body.light-theme .ctrl-btn,
+body.light-theme .bg-option {
+  color: #1e1e2f;
+}
+
+body.light-theme .ctrl-btn:hover,
+body.light-theme .bg-option:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
