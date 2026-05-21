@@ -10,6 +10,7 @@
   const personaToggle = document.getElementById("personaToggle");
   const settingsBtn = document.getElementById("settingsBtn");
   const sendBtn = document.getElementById("sendBtn");
+  const stopBtn = document.getElementById("stopBtn");          // 新增：停止按钮
 
   const settingsMask = document.getElementById("settingsMask");
   const customPromptEl = document.getElementById("customPrompt");
@@ -24,28 +25,45 @@
   const donateMask = document.getElementById("donateMask");
   const donateClose = document.getElementById("donateClose");
 
+  // 会话管理相关元素
+  const sessionBtn = document.getElementById("sessionBtn");
+  const sessionPanel = document.getElementById("sessionPanel");
+  const sessionOverlay = document.getElementById("sessionOverlay");
+  const closeSessionPanel = document.getElementById("closeSessionPanel");
+  const sessionListEl = document.getElementById("sessionList");
+  const newSessionBtn = document.getElementById("newSessionBtn");
+
   const MODELS = (window.APP_MODELS || [
     { id: "deepseek-ai/deepseek-v4-pro", label: "deepseek-v4-pro" },
     { id: "z-ai/glm-5.1", label: "glm-5.1" },
     { id: "openai/gpt-oss-120b", label: "gpt-oss-120b" },
   ]);
 
-  const session = [];
+  // 当前活跃会话的ID和消息数组
+  let currentSessionId = null;
+  let sessions = [];           // 存储所有会话 { id, name, messages, createdAt }
+  let session = [];            // 当前会话的消息数组（指向 sessions 中对应会话的 messages）
 
   let totalPromptTokens = 0;
   let totalCompletionTokens = 0;
   let totalInEstimate = 0;
   let totalOutEstimate = 0;
 
-  // ====== 本地存储 Key（严格分离：历史 vs 自定义模板） ======
+  // 用于停止生成
+  let currentAbortController = null;
+
+  // ====== 本地存储 Key ======
   const LS_MODEL = "cfw_model";
-  const LS_USE_BUILTIN = "cfw_use_builtin";      // "1"=😈, "0"=😇
-
+  const LS_USE_BUILTIN = "cfw_use_builtin";
   const LS_HISTORY_ENABLED = "cfw_history_enabled";
-  const LS_CHAT_SESSION = "cfw_chat_session_v1";
-
+  const LS_CHAT_SESSION = "cfw_chat_session_v1";      // 旧单会话存储（兼容）
   const LS_PROMPT_ENABLED = "cfw_prompt_enabled";
   const LS_CUSTOM_PROMPT = "cfw_custom_prompt_v1";
+  const LS_SESSIONS = "cfw_sessions_v2";              // 新增：多会话存储
+
+  const LS_THEME = "cfw_theme";
+  const LS_BG_TYPE = "cfw_bg_type";
+  const LS_CUSTOM_COLOR = "cfw_custom_color";
 
   let useBuiltin = (localStorage.getItem(LS_USE_BUILTIN) ?? "1") === "1";
   personaToggle.textContent = useBuiltin ? "😈" : "😇";
@@ -55,11 +73,203 @@
   historyKeepEl.checked = historyEnabled;
   promptKeepEl.checked = promptEnabled;
 
-  // ========== 新增：主题与背景功能的 localStorage key ==========
-  const LS_THEME = "cfw_theme";        // "dark" / "light"
-  const LS_BG_TYPE = "cfw_bg_type";    // "gradient", "light", "ocean", "forest", "custom"
-  const LS_CUSTOM_COLOR = "cfw_custom_color";
+  // ========== 多会话管理函数 ==========
+  function saveSessionsToStorage() {
+    try {
+      localStorage.setItem(LS_SESSIONS, JSON.stringify(sessions));
+    } catch(e) {}
+  }
 
+  function loadSessionsFromStorage() {
+    const raw = localStorage.getItem(LS_SESSIONS);
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          sessions = parsed;
+          // 确保每个会话都有必要的字段
+          sessions.forEach(s => {
+            if (!s.messages) s.messages = [];
+            if (!s.createdAt) s.createdAt = Date.now();
+            if (!s.name) s.name = `会话 ${new Date(s.createdAt).toLocaleString()}`;
+          });
+          return;
+        }
+      } catch(e) {}
+    }
+    // 如果不存在多会话数据，尝试迁移旧的单会话
+    const oldSessionRaw = localStorage.getItem(LS_CHAT_SESSION);
+    if (oldSessionRaw) {
+      try {
+        const oldMessages = JSON.parse(oldSessionRaw);
+        if (Array.isArray(oldMessages)) {
+          const defaultId = Date.now().toString();
+          sessions = [{
+            id: defaultId,
+            name: "默认会话",
+            messages: oldMessages,
+            createdAt: Date.now()
+          }];
+          saveSessionsToStorage();
+          // 清空旧存储以避免重复迁移
+          localStorage.removeItem(LS_CHAT_SESSION);
+        }
+      } catch(e) {}
+    }
+    if (!sessions.length) {
+      // 创建一个默认会话
+      const defaultId = Date.now().toString();
+      sessions = [{
+        id: defaultId,
+        name: "新会话",
+        messages: [],
+        createdAt: Date.now()
+      }];
+      saveSessionsToStorage();
+    }
+  }
+
+  function renderSessionList() {
+    if (!sessionListEl) return;
+    sessionListEl.innerHTML = "";
+    sessions.forEach(s => {
+      const div = document.createElement("div");
+      div.className = "session-item" + (currentSessionId === s.id ? " active" : "");
+      div.innerHTML = `
+        <span class="session-title" data-id="${s.id}">${escapeHtml(s.name)}</span>
+        <div class="session-actions">
+          <button class="rename-session" data-id="${s.id}" title="重命名">✏️</button>
+          <button class="delete-session" data-id="${s.id}" title="删除">🗑️</button>
+        </div>
+      `;
+      // 点击标题切换会话
+      div.querySelector(".session-title").addEventListener("click", (e) => {
+        e.stopPropagation();
+        switchToSession(s.id);
+        closeSessionPanelFunc();
+      });
+      div.querySelector(".rename-session").addEventListener("click", (e) => {
+        e.stopPropagation();
+        const newName = prompt("输入新名称:", s.name);
+        if (newName && newName.trim()) {
+          s.name = newName.trim();
+          saveSessionsToStorage();
+          renderSessionList();
+          // 如果当前会话被重命名，更新标题（可选）
+        }
+      });
+      div.querySelector(".delete-session").addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (sessions.length === 1) {
+          alert("至少保留一个会话");
+          return;
+        }
+        if (confirm(`确定删除会话“${s.name}”吗？`)) {
+          const index = sessions.findIndex(ss => ss.id === s.id);
+          if (index !== -1) sessions.splice(index, 1);
+          saveSessionsToStorage();
+          if (currentSessionId === s.id) {
+            // 切换到第一个会话
+            switchToSession(sessions[0].id);
+          } else {
+            renderSessionList();
+          }
+        }
+      });
+      sessionListEl.appendChild(div);
+    });
+  }
+
+  function switchToSession(sessionId) {
+    const target = sessions.find(s => s.id === sessionId);
+    if (!target) return;
+    currentSessionId = sessionId;
+    session = target.messages;   // 让全局 session 指向当前会话消息数组
+    // 重置统计（可选，可以根据需求保留累计统计）
+    totalPromptTokens = 0;
+    totalCompletionTokens = 0;
+    totalInEstimate = 0;
+    totalOutEstimate = 0;
+    // 重新渲染 UI
+    clearUIRows();
+    for (const msg of session) {
+      const role = msg.role === "user" ? "user" : "assistant";
+      const r = makeRow(role);
+      r.bubble.textContent = msg.content;
+      r.stats.textContent = "";  // 历史消息不显示统计
+    }
+    scrollToBottom();
+    renderSessionList();
+    // 如果启用了历史记忆，保存当前会话数据（已自动指向 session）
+    if (historyEnabled) persistSessionIfEnabled();
+  }
+
+  function createNewSession() {
+    const newId = Date.now().toString();
+    const newSession = {
+      id: newId,
+      name: `会话 ${new Date().toLocaleString()}`,
+      messages: [],
+      createdAt: Date.now()
+    };
+    sessions.push(newSession);
+    saveSessionsToStorage();
+    switchToSession(newId);
+    closeSessionPanelFunc();
+  }
+
+  // 兼容原有 persistSessionIfEnabled：保存当前会话到 localStorage
+  function persistSessionIfEnabled() {
+    if (!historyEnabled) return;
+    // 更新 sessions 中的当前会话消息
+    const cur = sessions.find(s => s.id === currentSessionId);
+    if (cur) {
+      cur.messages = session;
+      saveSessionsToStorage();
+    }
+  }
+
+  function restoreSessionIfEnabled() {
+    // 迁移或加载多会话数据
+    loadSessionsFromStorage();
+    // 确定当前会话
+    if (sessions.length === 0) {
+      createNewSession();
+    } else {
+      // 默认选择第一个会话，或从 localStorage 记住上次会话
+      const lastSessionId = localStorage.getItem("cfw_last_session_id");
+      let target = sessions.find(s => s.id === lastSessionId);
+      if (!target) target = sessions[0];
+      switchToSession(target.id);
+    }
+  }
+
+  // 辅助函数：转义 HTML
+  function escapeHtml(str) {
+    return str.replace(/[&<>]/g, function(m) {
+      if (m === '&') return '&amp;';
+      if (m === '<') return '&lt;';
+      if (m === '>') return '&gt;';
+      return m;
+    });
+  }
+
+  // 侧边栏开关函数
+  function openSessionPanel() {
+    if (sessionPanel && sessionOverlay) {
+      sessionPanel.classList.add("open");
+      sessionOverlay.style.display = "block";
+      renderSessionList();
+    }
+  }
+  function closeSessionPanelFunc() {
+    if (sessionPanel && sessionOverlay) {
+      sessionPanel.classList.remove("open");
+      sessionOverlay.style.display = "none";
+    }
+  }
+
+  // ========== 原有函数（estimateTokens, updateSpacer, isNearBottom, scrollToBottom, makeRow, clearUIRows 等保持不变）==========
   function estimateTokens(text){
     if (!text) return 0;
     let cjk = 0, ascii = 0;
@@ -143,35 +353,6 @@
     }
   }
 
-  function persistSessionIfEnabled(){
-    if (!historyEnabled) return;
-    try { localStorage.setItem(LS_CHAT_SESSION, JSON.stringify(session)); } catch {}
-  }
-
-  function restoreSessionIfEnabled(){
-    if (!historyEnabled) return;
-    const raw = localStorage.getItem(LS_CHAT_SESSION);
-    if (!raw) return;
-
-    try {
-      const arr = JSON.parse(raw);
-      if (!Array.isArray(arr)) return;
-
-      session.length = 0;
-      for (const m of arr) {
-        if (!m || (m.role !== "user" && m.role !== "assistant") || typeof m.content !== "string") continue;
-        session.push({ role: m.role, content: m.content });
-      }
-
-      clearUIRows();
-      for (const m of session) {
-        const r = makeRow(m.role === "user" ? "user" : "assistant");
-        r.bubble.textContent = m.content;
-        r.stats.textContent = "";
-      }
-    } catch {}
-  }
-
   function initModels(){
     modelSel.innerHTML = "";
     for (const m of MODELS) {
@@ -180,33 +361,25 @@
       opt.textContent = m.label;
       modelSel.appendChild(opt);
     }
-
     const saved = localStorage.getItem(LS_MODEL);
     modelSel.value = saved || MODELS[0].id;
-
     modelSel.addEventListener("change", () => {
       localStorage.setItem(LS_MODEL, modelSel.value);
     });
   }
 
-  // ========== 新增：主题与背景初始化 ==========
+  // ========== 主题与背景初始化（保持不变） ==========
   function initThemeAndBg() {
-    // 获取新增的元素
     const themeToggle = document.getElementById("themeToggle");
     const bgOptions = document.querySelectorAll(".bg-option");
     const customColorPicker = document.getElementById("customColorPicker");
-
-    if (!themeToggle) return; // 如果控制栏未找到，跳过（兼容旧版）
-
-    // 预设背景映射（与 CSS 中的 --user-bg 对应）
+    if (!themeToggle) return;
     const bgMap = {
       gradient: "var(--bg-gradient)",
       light: "url('https://www.transparenttextures.com/patterns/cubes.png'), linear-gradient(135deg, #f9f9f9, #e0e0e0)",
       ocean: "url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600') center/cover",
       forest: "url('https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=600') center/cover"
     };
-
-    // 应用背景（根据类型）
     function applyBackground(type, colorValue = null) {
       if (type === "custom" && colorValue) {
         document.body.style.setProperty("--user-bg", colorValue);
@@ -220,35 +393,25 @@
         localStorage.setItem(LS_BG_TYPE, type);
         localStorage.removeItem(LS_CUSTOM_COLOR);
       } else {
-        // 默认：移除自定义背景，恢复原有动态渐变
         document.body.classList.remove("custom-bg");
         document.body.style.removeProperty("--user-bg");
         localStorage.removeItem(LS_BG_TYPE);
         localStorage.removeItem(LS_CUSTOM_COLOR);
       }
-
-      // 高亮当前激活的背景按钮
       bgOptions.forEach(btn => {
         const btnType = btn.dataset.bg;
-        if (btnType === type) {
-          btn.classList.add("active");
-        } else {
-          btn.classList.remove("active");
-        }
+        if (btnType === type) btn.classList.add("active");
+        else btn.classList.remove("active");
       });
     }
-
-    // 恢复保存的主题
     const savedTheme = localStorage.getItem(LS_THEME);
     if (savedTheme === "light") {
       document.body.classList.add("light-theme");
-      if (themeToggle) themeToggle.innerHTML = "☀️ 白天模式";
+      themeToggle.innerHTML = "☀️ 白天模式";
     } else {
       document.body.classList.remove("light-theme");
-      if (themeToggle) themeToggle.innerHTML = "🌙 黑夜模式";
+      themeToggle.innerHTML = "🌙 黑夜模式";
     }
-
-    // 恢复保存的背景
     const savedBgType = localStorage.getItem(LS_BG_TYPE);
     const savedCustomColor = localStorage.getItem(LS_CUSTOM_COLOR);
     if (savedBgType === "custom" && savedCustomColor) {
@@ -256,11 +419,8 @@
     } else if (savedBgType && bgMap[savedBgType]) {
       applyBackground(savedBgType);
     } else {
-      // 默认无自定义背景（使用原有渐变）
       applyBackground(null);
     }
-
-    // 绑定主题切换事件
     if (themeToggle) {
       themeToggle.addEventListener("click", () => {
         const isLight = document.body.classList.toggle("light-theme");
@@ -268,8 +428,6 @@
         themeToggle.innerHTML = isLight ? "☀️ 白天模式" : "🌙 黑夜模式";
       });
     }
-
-    // 绑定背景按钮事件
     bgOptions.forEach(btn => {
       btn.addEventListener("click", (e) => {
         const bgType = btn.dataset.bg;
@@ -280,24 +438,21 @@
         }
       });
     });
-
-    // 自定义颜色选择器事件
     if (customColorPicker) {
       customColorPicker.addEventListener("input", (e) => {
-        const color = e.target.value;
-        applyBackground("custom", color);
+        applyBackground("custom", e.target.value);
       });
     }
   }
 
-  // 😈/😇
+  // 人物扮演
   personaToggle.addEventListener("click", () => {
     useBuiltin = !useBuiltin;
     personaToggle.textContent = useBuiltin ? "😈" : "😇";
     localStorage.setItem(LS_USE_BUILTIN, useBuiltin ? "1" : "0");
   });
 
-  // Settings
+  // Settings 事件（略，保持不变）
   settingsBtn.addEventListener("click", () => {
     settingsMask.style.display = "flex";
     historyKeepEl.checked = historyEnabled;
@@ -311,7 +466,6 @@
     if (e.target === settingsMask) settingsMask.style.display = "none";
   });
 
-  // history
   historyKeepEl.addEventListener("change", () => {
     historyEnabled = !!historyKeepEl.checked;
     localStorage.setItem(LS_HISTORY_ENABLED, historyEnabled ? "1" : "0");
@@ -320,14 +474,21 @@
   clearHistoryBtn.addEventListener("click", () => {
     const ok = confirm("确定清除本地历史？\n只会删除对话记录，不会影响网页自定义人物模板。");
     if (!ok) return;
-    localStorage.removeItem(LS_CHAT_SESSION);
-    session.length = 0;
-    clearUIRows();
-    updateSpacer();
-    scrollToBottom();
+    // 清空当前会话消息
+    if (currentSessionId) {
+      const cur = sessions.find(s => s.id === currentSessionId);
+      if (cur) {
+        cur.messages = [];
+        session = cur.messages;
+        saveSessionsToStorage();
+        clearUIRows();
+        updateSpacer();
+        scrollToBottom();
+        renderSessionList();
+      }
+    }
   });
 
-  // custom prompt
   promptKeepEl.addEventListener("change", () => {
     promptEnabled = !!promptKeepEl.checked;
     localStorage.setItem(LS_PROMPT_ENABLED, promptEnabled ? "1" : "0");
@@ -385,11 +546,17 @@
     if (stick) scrollToBottom();
   });
 
-
+  // ========== 修改后的 send 函数（支持停止生成）==========
   async function send(){
     updateSpacer();
     const text = inputEl.value.trim();
     if (!text) return;
+
+    // 如果有正在进行的请求，先停止（安全起见）
+    if (currentAbortController) {
+      currentAbortController.abort();
+      currentAbortController = null;
+    }
 
     const userRow = makeRow("user");
     userRow.bubble.textContent = text;
@@ -411,64 +578,83 @@
     let outEndMs = 0;
     let full = "";
     let exactUsage = null;
+    let isAborted = false;
 
     let customPrompt = "";
-    if (!useBuiltin) {
-      if (promptEnabled) customPrompt = localStorage.getItem(LS_CUSTOM_PROMPT) || "";
+    if (!useBuiltin && promptEnabled) {
+      customPrompt = localStorage.getItem(LS_CUSTOM_PROMPT) || "";
     }
 
-    const res = await fetch("/api/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: modelSel.value,
-        use_builtin_persona: useBuiltin,
-        custom_system_prompt: customPrompt,
-        messages: session
-      })
-    });
+    // 创建 AbortController
+    currentAbortController = new AbortController();
+    if (stopBtn) stopBtn.style.display = "inline-flex";
 
-    if (!res.ok) {
-      const t = await res.text().catch(() => "");
-      aiRow.bubble.textContent = `Request failed (${res.status}):\n${t}`;
-      aiRow.stats.textContent = "";
-      return;
-    }
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: modelSel.value,
+          use_builtin_persona: useBuiltin,
+          custom_system_prompt: customPrompt,
+          messages: session
+        }),
+        signal: currentAbortController.signal
+      });
 
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder();
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      const chunk = decoder.decode(value, { stream: true });
-      const lines = chunk.split("\n");
-
-      for (const line of lines) {
-        if (!line.startsWith("data: ")) continue;
-
-        const jsonStr = line.replace("data: ", "").trim();
-        if (!jsonStr || jsonStr === "[DONE]") continue;
-
-        try {
-          const parsed = JSON.parse(jsonStr);
-          if (parsed.usage) exactUsage = parsed.usage;
-
-          const delta = parsed.choices?.[0]?.delta?.content;
-          if (delta) {
-            if (!outStartMs) outStartMs = performance.now();
-            full += delta;
-            aiRow.bubble.textContent = full;
-            if (isNearBottom()) scrollToBottom();
-          }
-        } catch {}
+      if (!res.ok) {
+        const t = await res.text().catch(() => "");
+        aiRow.bubble.textContent = `Request failed (${res.status}):\n${t}`;
+        aiRow.stats.textContent = "";
+        return;
       }
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = chunk.split("\n");
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          const jsonStr = line.replace("data: ", "").trim();
+          if (!jsonStr || jsonStr === "[DONE]") continue;
+          try {
+            const parsed = JSON.parse(jsonStr);
+            if (parsed.usage) exactUsage = parsed.usage;
+            const delta = parsed.choices?.[0]?.delta?.content;
+            if (delta) {
+              if (!outStartMs) outStartMs = performance.now();
+              full += delta;
+              aiRow.bubble.textContent = full;
+              if (isNearBottom()) scrollToBottom();
+            }
+          } catch {}
+        }
+      }
+    } catch (err) {
+      if (err.name === "AbortError") {
+        isAborted = true;
+        aiRow.bubble.textContent = full + "\n\n[已停止生成]";
+      } else {
+        aiRow.bubble.textContent = `Error: ${err.message}`;
+      }
+    } finally {
+      currentAbortController = null;
+      if (stopBtn) stopBtn.style.display = "none";
     }
 
     outEndMs = performance.now();
-    session.push({ role: "assistant", content: full });
-    persistSessionIfEnabled();
+    if (!isAborted && full) {
+      session.push({ role: "assistant", content: full });
+      persistSessionIfEnabled();
+    } else if (isAborted && full) {
+      // 如果停止了但有部分内容，仍然保存
+      session.push({ role: "assistant", content: full });
+      persistSessionIfEnabled();
+    }
 
     const seconds = Math.max(0.001, (outEndMs - (outStartMs || outEndMs)) / 1000);
 
@@ -476,25 +662,29 @@
       const p = exactUsage.prompt_tokens || 0;
       const c = exactUsage.completion_tokens || 0;
       const t = exactUsage.total_tokens || (p + c);
-
       totalPromptTokens += p;
       totalCompletionTokens += c;
-
       const tps = c / seconds;
-
-      aiRow.stats.textContent =
-        `Prompt: ${p} | Completion: ${c} | Total: ${t} | Speed: ${tps.toFixed(2)} tok/s | CumPrompt: ${totalPromptTokens} | CumCompletion: ${totalCompletionTokens}`;
+      aiRow.stats.textContent = `Prompt: ${p} | Completion: ${c} | Total: ${t} | Speed: ${tps.toFixed(2)} tok/s | CumPrompt: ${totalPromptTokens} | CumCompletion: ${totalCompletionTokens}`;
     } else {
       const outEst = estimateTokens(full);
       totalOutEstimate += outEst;
       const tps = outEst / seconds;
-
-      aiRow.stats.textContent =
-        `Output(估算): ≈${outEst} | Total Out(估算): ≈${totalOutEstimate} | Speed(估算): ${tps.toFixed(2)} tok/s | (usage未返回)`;
+      aiRow.stats.textContent = `Output(估算): ≈${outEst} | Total Out(估算): ≈${totalOutEstimate} | Speed(估算): ${tps.toFixed(2)} tok/s | (usage未返回)`;
     }
 
     updateSpacer();
     scrollToBottom();
+  }
+
+  // 停止按钮事件
+  if (stopBtn) {
+    stopBtn.addEventListener("click", () => {
+      if (currentAbortController) {
+        currentAbortController.abort();
+        currentAbortController = null;
+      }
+    });
   }
 
   sendBtn.addEventListener("click", send);
@@ -505,14 +695,20 @@
     }
   });
 
+  // 会话面板按钮事件
+  if (sessionBtn) sessionBtn.addEventListener("click", openSessionPanel);
+  if (closeSessionPanel) closeSessionPanel.addEventListener("click", closeSessionPanelFunc);
+  if (sessionOverlay) sessionOverlay.addEventListener("click", closeSessionPanelFunc);
+  if (newSessionBtn) newSessionBtn.addEventListener("click", createNewSession);
+
   function init(){
     initModels();
     setupResizeObserver();
     setupViewportListener();
     updateSpacer();
-    restoreSessionIfEnabled();
+    restoreSessionIfEnabled();   // 加载多会话
     scrollToBottom();
-    initThemeAndBg();   // 新增：初始化主题与背景功能
+    initThemeAndBg();
   }
 
   init();
