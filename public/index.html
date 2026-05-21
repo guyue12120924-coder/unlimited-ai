@@ -5,6 +5,76 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>DeepSeek Chat</title>
   <link rel="stylesheet" href="/styles.css" />
+  <style>
+body{
+    margin:0;
+    min-height:100vh;
+    background: linear-gradient(-45deg,#0f0c29,#302b63,#24243e,#000000);
+    background-size:400% 400%;
+    animation:bg 15s ease infinite;
+    color:white;
+    overflow:hidden;
+}
+
+/* 动态背景动画 */
+@keyframes bg{
+    0%{
+        background-position:0% 50%;
+    }
+    50%{
+        background-position:100% 50%;
+    }
+    100%{
+        background-position:0% 50%;
+    }
+}
+
+/* 毛玻璃效果 */
+#history,
+.input-inner,
+#settings,
+#donateCard{
+    backdrop-filter: blur(20px);
+    background: rgba(20,20,20,0.45) !important;
+    border: 1px solid rgba(255,255,255,0.08);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+}
+
+/* 聊天气泡优化 */
+.message,
+.user,
+.assistant{
+    border-radius:18px;
+    padding:12px;
+}
+
+/* 输入框优化 */
+#msg{
+    background: rgba(255,255,255,0.08);
+    color:white;
+    border:none;
+}
+
+/* 发送按钮 */
+#sendBtn{
+    border:none;
+    border-radius:12px;
+    background:#4f46e5;
+    color:white;
+    transition:0.3s;
+}
+
+#sendBtn:hover{
+    transform:scale(1.05);
+    opacity:0.9;
+}
+
+/* 顶栏 */
+#topbar{
+    backdrop-filter: blur(16px);
+    background: rgba(0,0,0,0.25);
+}
+</style>
 </head>
 <body>
 <div id="app">
