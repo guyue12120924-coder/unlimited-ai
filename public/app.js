@@ -36,6 +36,7 @@
   // 新增：上传背景相关元素
   const uploadBgBtn = document.getElementById("uploadBgBtn");
   const bgImageFile = document.getElementById("bgImageFile");
+  const clearBgBtn = document.getElementById("clearBgBtn");   // 清除背景按钮
 
   const MODELS = (window.APP_MODELS || [
     { id: "deepseek-ai/deepseek-v4-pro", label: "deepseek-v4-pro" },
@@ -372,7 +373,7 @@
     });
   }
 
-  // ========== 主题与背景初始化（增强：二次元、上传图片） ==========
+  // ========== 主题与背景初始化（增强：二次元、上传图片、清除背景） ==========
   function initThemeAndBg() {
     const themeToggle = document.getElementById("themeToggle");
     const bgOptions = document.querySelectorAll(".bg-option");
@@ -513,6 +514,27 @@
           alert("请选择图片文件");
         }
         bgImageFile.value = ""; // 清空，允许重复上传同一文件
+      });
+    }
+
+    // ========== 新增：清除背景按钮 ==========
+    if (clearBgBtn) {
+      clearBgBtn.addEventListener("click", () => {
+        // 清除所有背景相关的 localStorage
+        localStorage.removeItem(LS_BG_TYPE);
+        localStorage.removeItem(LS_CUSTOM_COLOR);
+        localStorage.removeItem(LS_UPLOADED_BG);
+        // 移除背景相关的类
+        document.body.classList.remove("custom-bg", "anime-bg");
+        document.body.style.removeProperty("--user-bg");
+        // 自动点击“动态渐变”按钮恢复到默认渐变背景（如果存在）
+        const gradientBtn = document.querySelector('.bg-option[data-bg="gradient"]');
+        if (gradientBtn) {
+          gradientBtn.click();
+        } else {
+          // 保底：直接调用 applyBackground(null)
+          applyBackground(null);
+        }
       });
     }
   }
