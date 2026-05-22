@@ -238,6 +238,11 @@ body.light-theme #topbar {
 </style>
 </head>
 <body>
+  <!-- 模糊背景层（全屏，图片 cover + 模糊） -->
+<div id="blur-bg" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; background-size: cover; background-position: center; filter: blur(20px); transform: scale(1.1); pointer-events: none;"></div>
+
+<!-- 清晰图片层（contain 完整显示） -->
+<div id="clear-img" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; background-size: contain; background-repeat: no-repeat; background-position: center; pointer-events: none;"></div>
 <div id="app">
   <div id="topbar">
     <div class="topbar-shell">
