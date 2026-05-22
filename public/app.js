@@ -87,7 +87,6 @@
   function rotateBackground() {
     const url = GIRL_WALLPAPERS[bgIndex % GIRL_WALLPAPERS.length];
     document.body.style.backgroundImage = `url(${url})`;
-    document.body.style.backgroundSize = "cover";
     document.body.style.backgroundPosition = "center center";
     document.body.style.backgroundAttachment = "fixed";
     bgIndex = (bgIndex + 1) % GIRL_WALLPAPERS.length;
