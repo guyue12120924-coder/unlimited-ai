@@ -35,7 +35,8 @@ html,body{
 
 body{
   overflow-x:hidden;
-  background-size: cover;
+  background-size: contain;
+  background-repeat: no-repeat;
   background-position: center center;
   background-attachment: fixed;
   transition: background-image 0.6s ease-in-out;
