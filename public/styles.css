@@ -20,7 +20,7 @@
   --content-max:760px;
   --content-side:14px;
 
-  /* 新增动画变量 */
+  /* 动画变量 */
   --transition-fast: 0.15s ease;
   --transition-bubble: 0.2s cubic-bezier(0.2, 0.9, 0.4, 1.1);
 }
@@ -35,9 +35,33 @@ html,body{
 
 body{
   overflow-x:hidden;
+  background-size: cover;
+  background-position: center center;
+  background-attachment: fixed;
+  transition: background-image 0.6s ease-in-out;
 }
 
+/* 粒子画布层（动态效果） */
+#particle-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.6;
+  transition: opacity 0.3s;
+}
+
+body.light-theme #particle-canvas {
+  opacity: 0.4;
+}
+
+/* 主应用容器，位于粒子层上方 */
 #app{
+  position: relative;
+  z-index: 10;
   height:100%;
   display:flex;
   flex-direction:column;
@@ -46,9 +70,8 @@ body{
 #topbar{
   position:sticky;
   top:0;
-  z-index:5;
-  background:linear-gradient(to bottom, rgba(11,11,11,.92), rgba(11,11,11,.65));
-  backdrop-filter:blur(8px);
+  z-index:20;
+  background:rgba(0,0,0,0.55);
   border-bottom:1px solid #151515;
 }
 
@@ -160,7 +183,7 @@ select option{
   padding:0 16px;
 }
 
-/* ===== 气泡动画（淡入上浮） ===== */
+/* 气泡动画（淡入上浮） */
 @keyframes fadeInUp {
   from {
     opacity: 0;
@@ -224,10 +247,10 @@ select option{
   padding:0 4px;
 }
 
-/* 气泡样式增强：圆角加大、阴影、渐变背景（深色主题） */
+/* 气泡样式 */
 .bubble{
   padding:12px 14px;
-  border-radius:20px;             /* 加大圆角 */
+  border-radius:20px;
   line-height:1.6;
   white-space:pre-wrap;
   word-break:break-word;
@@ -242,7 +265,7 @@ select option{
 
 .bubble.ai{
   background:var(--bubble-ai);
-  border-left: 3px solid #4f46e5;   /* 左侧点缀 */
+  border-left: 3px solid #4f46e5;
 }
 
 .bubble.user{
@@ -250,12 +273,10 @@ select option{
   border-right: 3px solid #4f46e5;
 }
 
-/* 用户气泡渐变（暗色主题） */
 .bubble.user {
   background: linear-gradient(135deg, var(--bubble-user), #2a2a2f);
 }
 
-/* AI气泡微光晕 */
 .bubble.ai {
   background: var(--bubble-ai);
   box-shadow: 0 2px 8px rgba(79,70,229,0.1);
@@ -276,7 +297,7 @@ select option{
   line-height:1.3;
 }
 
-/* ===== 加载动画（三点跳动） ===== */
+/* 加载动画（三点跳动） */
 .typing-indicator {
   display: inline-flex;
   gap: 4px;
@@ -385,7 +406,7 @@ button#stopBtn:hover{
   background:#b91c1c;
 }
 
-/* Settings 保持原样，但稍加圆润 */
+/* Settings */
 #settingsMask{
   position:fixed;
   inset:0;
@@ -655,9 +676,8 @@ button#stopBtn:hover{
   background:#2a2a2a;
   border-radius:4px;
 }
-/* ========== 新增：亮色主题、控制栏、自定义背景 ========== */
 
-/* 1. 亮色主题变量覆盖 */
+/* ========== 亮色主题变量覆盖 ========== */
 body.light-theme {
   --bg: #f2f4f8;
   --border: #d4d4d8;
@@ -668,10 +688,8 @@ body.light-theme {
   --input-border: #cccccc;
   --btn-bg: #e0e0e0;
   --btn-bg-hover: #cfcfcf;
-  --control-bg: rgba(255, 255, 255, 0.8);
 }
 
-/* 让亮色主题下的文字颜色自动继承原有 color 规则 */
 body.light-theme,
 body.light-theme #settings,
 body.light-theme .card,
@@ -717,7 +735,6 @@ body.light-theme #customPrompt {
   color: #111;
 }
 
-/* 亮色主题下气泡渐变调整 */
 body.light-theme .bubble.user {
   background: linear-gradient(135deg, #e4e6eb, #d1d5db);
 }
@@ -726,7 +743,6 @@ body.light-theme .bubble.ai {
   border-left-color: #4f46e5;
 }
 
-/* ========== 新增：亮色主题下顶栏按钮、下拉框浅色样式 ========== */
 body.light-theme .iconbtn {
   background: #f0f0f0;
   border-color: #c0c0c0;
@@ -752,20 +768,17 @@ body.light-theme select option {
   color: #111;
 }
 
-/* 亮色主题下顶栏背景更通透 */
 body.light-theme #topbar {
   background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(8px);
   border-bottom-color: #e0e0e0;
 }
 
-/* 2. 控制栏容器（右下角浮动面板） */
+/* ========== 控制栏（右下角浮动，无毛玻璃） ========== */
 .controls-panel {
   position: fixed;
   bottom: 20px;
   right: 20px;
-  background: var(--control-bg, rgba(0, 0, 0, 0.6));
-  backdrop-filter: blur(12px);
+  background: rgba(0, 0, 0, 0.55);
   padding: 8px 16px;
   border-radius: 40px;
   display: flex;
@@ -777,8 +790,7 @@ body.light-theme #topbar {
   pointer-events: auto;
 }
 
-.ctrl-btn,
-.bg-option {
+.ctrl-btn {
   background: none;
   border: none;
   color: inherit;
@@ -790,87 +802,17 @@ body.light-theme #topbar {
   font-family: inherit;
 }
 
-.ctrl-btn:hover,
-.bg-option:hover {
+.ctrl-btn:hover {
   background: rgba(255, 255, 255, 0.2);
 }
 
-.bg-selector {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.bg-option.active {
-  background: #6366f1;
-  color: white;
-}
-
-/* 自定义颜色选择器 */
-#customColorPicker {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  border: 2px solid currentColor;
-  vertical-align: middle;
-  cursor: pointer;
-  background: transparent;
-}
-
-/* 3. 用户自定义背景覆盖（停用原有背景渐变） */
-body.custom-bg {
-  background: var(--user-bg, var(--bg)) !important;
-  background-size: cover !important;
-  background-position: center !important;
-  background-attachment: fixed !important;
-}
-
-/* 如果原页面有 body 背景相关动画，这里关掉 */
-body.custom-bg {
-  animation: none !important;
-}
-
-/* 可选：亮色主题下控制栏按钮文字颜色微调 */
-body.light-theme .ctrl-btn,
-body.light-theme .bg-option {
+/* 亮色主题下控制栏按钮文字颜色微调 */
+body.light-theme .ctrl-btn {
   color: #1e1e2f;
 }
 
-body.light-theme .ctrl-btn:hover,
-body.light-theme .bg-option:hover {
+body.light-theme .ctrl-btn:hover {
   background: rgba(0, 0, 0, 0.1);
 }
 
-/* ========== 新增：二次元背景预设 ========== */
-.bg-option[data-bg="anime"] {
-  /* 二次元按钮标识 */
-}
-/* 实际背景通过 JS 动态设置图片URL，这里只提供样式变量 */
-body.custom-bg.anime-bg {
-  background: var(--anime-url, url('https://picsum.photos/id/42/1920/1080')) center/cover no-repeat fixed !important;
-}
-
-/* 上传图片预览/按钮样式 */
-.upload-bg-btn {
-  background: none;
-  border: 1px solid rgba(255,255,255,0.2);
-  border-radius: 30px;
-  padding: 6px 12px;
-  cursor: pointer;
-  font-size: 13px;
-  transition: 0.2s;
-}
-.upload-bg-btn:hover {
-  background: rgba(255,255,255,0.2);
-}
-
-/* ========== 方案2：完全移除毛玻璃模糊，确保背景清晰可见 ========== */
-#history,
-.input-inner,
-#settings,
-#donateCard {
-  backdrop-filter: blur(0px) !important;
-  background: rgba(20, 20, 20, 0) !important;
-  /* 保留圆角和边框，只覆盖模糊和背景透明度 */
-}
+/* 会话侧边栏已经在上方定义，此处无需额外样式 */
