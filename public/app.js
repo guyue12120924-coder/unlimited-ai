@@ -84,13 +84,30 @@
   let bgIndex = 0;
   let bgInterval = null;
 
-  function rotateBackground() {
-    const url = GIRL_WALLPAPERS[bgIndex % GIRL_WALLPAPERS.length];
-    document.body.style.backgroundImage = `url(${url})`;
-    document.body.style.backgroundPosition = "center center";
-    document.body.style.backgroundAttachment = "fixed";
-    bgIndex = (bgIndex + 1) % GIRL_WALLPAPERS.length;
+ function rotateBackground() {
+  const url = GIRL_WALLPAPERS[bgIndex % GIRL_WALLPAPERS.length];
+  
+  // 模糊背景层：cover + 模糊
+  const blurDiv = document.getElementById("blur-bg");
+  if (blurDiv) {
+    blurDiv.style.backgroundImage = `url(${url})`;
+    blurDiv.style.backgroundSize = "cover";
+    blurDiv.style.backgroundPosition = "center";
   }
+  
+  // 清晰图片层：contain 完整显示
+  const clearDiv = document.getElementById("clear-img");
+  if (clearDiv) {
+    clearDiv.style.backgroundImage = `url(${url})`;
+    clearDiv.style.backgroundSize = "contain";
+    clearDiv.style.backgroundPosition = "center";
+  }
+  
+  // 同时清除 body 上的背景，避免冲突
+  document.body.style.backgroundImage = "none";
+  
+  bgIndex = (bgIndex + 1) % GIRL_WALLPAPERS.length;
+}
 
   // ========== 动态粒子效果 ==========
   let particleCanvas, ctx, particles = [], particleAnimationId;
