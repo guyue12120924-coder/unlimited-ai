@@ -386,7 +386,7 @@
       light: "url('https://www.transparenttextures.com/patterns/cubes.png'), linear-gradient(135deg, #f9f9f9, #e0e0e0)",
       ocean: "url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600') center/cover",
       forest: "url('https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=600') center/cover",
-      anime: "url('https://tse1.mm.bing.net/th/id/OIP.51oNedvOa5dWUTvO8V9jdwHaNK?r=0&rs=1&pid=ImgDetMain&o=7&rm=3') center/cover"  // 默认二次元图片（可替换）
+      anime: "url('/1.webp') center/cover"  // 默认二次元图片（可替换）
     };
     
     function applyBackground(type, colorValue = null, uploadedBgData = null) {
