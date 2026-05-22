@@ -88,29 +88,41 @@
   let bgIndex = 0;
   let bgInterval = null;
 
- function rotateBackground() {
-  const url = GIRL_WALLPAPERS[bgIndex % GIRL_WALLPAPERS.length];
-  
-  // 模糊背景层：cover + 模糊
-  const blurDiv = document.getElementById("blur-bg");
-  if (blurDiv) {
-    blurDiv.style.backgroundImage = `url(${url})`;
-    blurDiv.style.backgroundSize = "cover";
-    blurDiv.style.backgroundPosition = "center";
-  }
-  
-  // 清晰图片层：contain 完整显示
-  const clearDiv = document.getElementById("clear-img");
-  if (clearDiv) {
-    clearDiv.style.backgroundImage = `url(${url})`;
-    clearDiv.style.backgroundSize = "contain";
-    clearDiv.style.backgroundPosition = "center";
-  }
-  
-  // 同时清除 body 上的背景，避免冲突
-  document.body.style.backgroundImage = "none";
-  
-  bgIndex = (bgIndex + 1) % GIRL_WALLPAPERS.length;
+let preloadIndex = 0;      // 这两行变量建议放在文件顶部（靠近其他 let 变量）
+let isPreloading = false;
+
+function rotateBackground() {
+  if (isPreloading) return;  // 正在预加载时，不重复触发
+
+  const nextIndex = (bgIndex + 1) % GIRL_WALLPAPERS.length;
+  const nextUrl = GIRL_WALLPAPERS[nextIndex];
+
+  isPreloading = true;
+
+  const img = new Image();
+  img.onload = function() {
+    // 更新模糊层
+    const blurDiv = document.getElementById("blur-bg");
+    if (blurDiv) {
+      blurDiv.style.backgroundImage = `url(${nextUrl})`;
+      blurDiv.style.backgroundSize = "cover";
+      blurDiv.style.backgroundPosition = "center";
+    }
+    // 更新清晰层
+    const clearDiv = document.getElementById("clear-img");
+    if (clearDiv) {
+      clearDiv.style.backgroundImage = `url(${nextUrl})`;
+      clearDiv.style.backgroundSize = "contain";
+      clearDiv.style.backgroundPosition = "center";
+    }
+    document.body.style.backgroundImage = "none";
+    bgIndex = nextIndex;
+    isPreloading = false;
+  };
+  img.onerror = function() {
+    isPreloading = false;   // 加载失败也要释放锁
+  };
+  img.src = nextUrl;
 }
 
   // ========== 动态粒子效果 ==========
@@ -562,7 +574,7 @@
     initTheme();
     initFontScale();
     rotateBackground();
-    bgInterval = setInterval(rotateBackground, 12000);
+    bgInterval = setInterval(rotateBackground, 30000);
     initParticleBackground();
   }
   init();
