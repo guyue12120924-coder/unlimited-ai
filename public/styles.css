@@ -19,6 +19,10 @@
 
   --content-max:760px;
   --content-side:14px;
+
+  /* 新增动画变量 */
+  --transition-fast: 0.15s ease;
+  --transition-bubble: 0.2s cubic-bezier(0.2, 0.9, 0.4, 1.1);
 }
 
 html,body{
@@ -127,7 +131,7 @@ select option{
   align-items:center;
   justify-content:center;
   font-size:18px;
-  transition:.15s;
+  transition:var(--transition-fast);
   font-family:"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji","Segoe UI Symbol",sans-serif;
   flex:0 0 38px;
 }
@@ -156,11 +160,24 @@ select option{
   padding:0 16px;
 }
 
+/* ===== 气泡动画（淡入上浮） ===== */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .row{
   display:flex;
   gap:10px;
   margin:12px 0;
   align-items:flex-start;
+  animation: fadeInUp 0.2s ease backwards;
 }
 
 .row.ai{
@@ -183,6 +200,7 @@ select option{
   font-size:13px;
   user-select:none;
   border:1px solid var(--border);
+  transition:var(--transition-fast);
 }
 
 .avatar.bot{
@@ -206,21 +224,41 @@ select option{
   padding:0 4px;
 }
 
+/* 气泡样式增强：圆角加大、阴影、渐变背景（深色主题） */
 .bubble{
   padding:12px 14px;
-  border-radius:16px;
+  border-radius:20px;             /* 加大圆角 */
   line-height:1.6;
   white-space:pre-wrap;
   word-break:break-word;
   border:1px solid var(--border);
+  transition: transform var(--transition-bubble), box-shadow var(--transition-fast);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+.bubble:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 }
 
 .bubble.ai{
   background:var(--bubble-ai);
+  border-left: 3px solid #4f46e5;   /* 左侧点缀 */
 }
 
 .bubble.user{
   background:var(--bubble-user);
+  border-right: 3px solid #4f46e5;
+}
+
+/* 用户气泡渐变（暗色主题） */
+.bubble.user {
+  background: linear-gradient(135deg, var(--bubble-user), #2a2a2f);
+}
+
+/* AI气泡微光晕 */
+.bubble.ai {
+  background: var(--bubble-ai);
+  box-shadow: 0 2px 8px rgba(79,70,229,0.1);
 }
 
 .row.user .content{
@@ -236,6 +274,27 @@ select option{
   color:#7f7f7f;
   padding:0 4px;
   line-height:1.3;
+}
+
+/* ===== 加载动画（三点跳动） ===== */
+.typing-indicator {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  padding: 8px 0;
+}
+.typing-indicator span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--muted);
+  animation: blink 1.4s infinite both;
+}
+.typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+.typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes blink {
+  0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
+  40% { opacity: 1; transform: scale(1.2); }
 }
 
 #bottom-spacer{
@@ -266,6 +325,13 @@ select option{
   align-items:flex-end;
   gap:10px;
   box-shadow:0 10px 30px rgba(0,0,0,.45);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+/* 输入框聚焦发光 */
+.input-inner:focus-within {
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79,70,229,0.3), 0 10px 30px rgba(0,0,0,0.45);
 }
 
 textarea#msg{
@@ -278,24 +344,48 @@ textarea#msg{
   font-size:15px;
   max-height:200px;
   padding:6px 6px 6px 10px;
+  font-family: inherit;
 }
 
+textarea#msg::placeholder {
+  color: rgba(255,255,255,0.5);
+}
+
+/* 发送按钮渐变 */
 button#sendBtn{
   border:none;
   color:#fff;
-  background:var(--btn-bg);
-  padding:9px 14px;
-  border-radius:18px;
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  padding:9px 18px;
+  border-radius:28px;
   cursor:pointer;
-  transition:.15s;
+  transition: all 0.2s ease;
   flex:0 0 auto;
+  font-weight: 500;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
 }
 
 button#sendBtn:hover{
-  background:var(--btn-bg-hover);
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  transform: scale(1.02);
 }
 
-/* Settings */
+button#stopBtn{
+  border:none;
+  background: #dc2626;
+  color:white;
+  padding:9px 18px;
+  border-radius:28px;
+  cursor:pointer;
+  display:none;
+  transition: all 0.2s ease;
+  font-weight:500;
+}
+button#stopBtn:hover{
+  background:#b91c1c;
+}
+
+/* Settings 保持原样，但稍加圆润 */
 #settingsMask{
   position:fixed;
   inset:0;
@@ -311,7 +401,7 @@ button#sendBtn:hover{
   width:min(760px,92vw);
   border:1px solid #2a2a2a;
   background:#0f0f0f;
-  border-radius:18px;
+  border-radius:24px;
   box-shadow:0 30px 80px rgba(0,0,0,.6);
   padding:14px;
 }
@@ -338,7 +428,7 @@ button#sendBtn:hover{
 .card{
   border:1px solid #242424;
   background:#101010;
-  border-radius:14px;
+  border-radius:18px;
   padding:12px;
   margin:10px 0;
 }
@@ -393,6 +483,7 @@ button#sendBtn:hover{
   border-radius:12px;
   padding:8px 12px;
   cursor:pointer;
+  transition:var(--transition-fast);
 }
 
 .smallbtn:hover{
@@ -437,7 +528,7 @@ button#sendBtn:hover{
 #donateCard{
   width:min(520px,92vw);
   max-height:90vh;
-  border-radius:18px;
+  border-radius:24px;
   border:1px solid rgba(255,255,255,0.10);
   background:rgba(16,16,16,0.92);
   box-shadow:0 30px 90px rgba(0,0,0,0.65);
@@ -626,6 +717,15 @@ body.light-theme #customPrompt {
   color: #111;
 }
 
+/* 亮色主题下气泡渐变调整 */
+body.light-theme .bubble.user {
+  background: linear-gradient(135deg, #e4e6eb, #d1d5db);
+}
+body.light-theme .bubble.ai {
+  background: #ffffff;
+  border-left-color: #4f46e5;
+}
+
 /* 2. 控制栏容器（右下角浮动面板） */
 .controls-panel {
   position: fixed;
@@ -666,6 +766,7 @@ body.light-theme #customPrompt {
   display: flex;
   gap: 6px;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .bg-option.active {
@@ -706,4 +807,27 @@ body.light-theme .bg-option {
 body.light-theme .ctrl-btn:hover,
 body.light-theme .bg-option:hover {
   background: rgba(0, 0, 0, 0.1);
+}
+
+/* ========== 新增：二次元背景预设 ========== */
+.bg-option[data-bg="anime"] {
+  /* 二次元按钮标识 */
+}
+/* 实际背景通过 JS 动态设置图片URL，这里只提供样式变量 */
+body.custom-bg.anime-bg {
+  background: var(--anime-url, url('https://picsum.photos/id/42/1920/1080')) center/cover no-repeat fixed !important;
+}
+
+/* 上传图片预览/按钮样式 */
+.upload-bg-btn {
+  background: none;
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 30px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: 0.2s;
+}
+.upload-bg-btn:hover {
+  background: rgba(255,255,255,0.2);
 }
