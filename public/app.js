@@ -1,7 +1,5 @@
 // public/app.js
-
 (() => {
-
   const historyWrap = document.getElementById("history");
   const chatEl = document.getElementById("chat");
   const inputEl = document.getElementById("msg");
@@ -12,7 +10,7 @@
   const personaToggle = document.getElementById("personaToggle");
   const settingsBtn = document.getElementById("settingsBtn");
   const sendBtn = document.getElementById("sendBtn");
-  const stopBtn = document.getElementById("stopBtn");
+  const stopBtn = document.getElementById("stopBtn");          // 新增：停止按钮
 
   const settingsMask = document.getElementById("settingsMask");
   const customPromptEl = document.getElementById("customPrompt");
@@ -27,6 +25,7 @@
   const donateMask = document.getElementById("donateMask");
   const donateClose = document.getElementById("donateClose");
 
+  // 会话管理相关元素
   const sessionBtn = document.getElementById("sessionBtn");
   const sessionPanel = document.getElementById("sessionPanel");
   const sessionOverlay = document.getElementById("sessionOverlay");
@@ -40,337 +39,292 @@
     { id: "openai/gpt-oss-120b", label: "gpt-oss-120b" },
   ]);
 
+  // 当前活跃会话的ID和消息数组
   let currentSessionId = null;
-  let sessions = [];
-  let session = [];
+  let sessions = [];           // 存储所有会话 { id, name, messages, createdAt }
+  let session = [];            // 当前会话的消息数组（指向 sessions 中对应会话的 messages）
 
   let totalPromptTokens = 0;
   let totalCompletionTokens = 0;
   let totalInEstimate = 0;
   let totalOutEstimate = 0;
 
+  // 用于停止生成
   let currentAbortController = null;
 
+  // ====== 本地存储 Key ======
   const LS_MODEL = "cfw_model";
   const LS_USE_BUILTIN = "cfw_use_builtin";
   const LS_HISTORY_ENABLED = "cfw_history_enabled";
-  const LS_CHAT_SESSION = "cfw_chat_session_v1";
+  const LS_CHAT_SESSION = "cfw_chat_session_v1";      // 旧单会话存储（兼容）
   const LS_PROMPT_ENABLED = "cfw_prompt_enabled";
   const LS_CUSTOM_PROMPT = "cfw_custom_prompt_v1";
-  const LS_SESSIONS = "cfw_sessions_v2";
+  const LS_SESSIONS = "cfw_sessions_v2";              // 新增：多会话存储
 
   const LS_THEME = "cfw_theme";
+  const LS_BG_TYPE = "cfw_bg_type";
+  const LS_CUSTOM_COLOR = "cfw_custom_color";
 
-  let useBuiltin =
-    (localStorage.getItem(LS_USE_BUILTIN) ?? "1") === "1";
-
+  let useBuiltin = (localStorage.getItem(LS_USE_BUILTIN) ?? "1") === "1";
   personaToggle.textContent = useBuiltin ? "😈" : "😇";
 
-  let historyEnabled =
-    (localStorage.getItem(LS_HISTORY_ENABLED) ?? "0") === "1";
-
-  let promptEnabled =
-    (localStorage.getItem(LS_PROMPT_ENABLED) ?? "1") === "1";
-
+  let historyEnabled = (localStorage.getItem(LS_HISTORY_ENABLED) ?? "0") === "1";
+  let promptEnabled  = (localStorage.getItem(LS_PROMPT_ENABLED) ?? "1") === "1";
   historyKeepEl.checked = historyEnabled;
   promptKeepEl.checked = promptEnabled;
 
-  // =========================================
-  // 多会话
-  // =========================================
-
+  // ========== 多会话管理函数 ==========
   function saveSessionsToStorage() {
     try {
-      localStorage.setItem(
-        LS_SESSIONS,
-        JSON.stringify(sessions)
-      );
-    } catch (e) {}
+      localStorage.setItem(LS_SESSIONS, JSON.stringify(sessions));
+    } catch(e) {}
   }
 
   function loadSessionsFromStorage() {
-
     const raw = localStorage.getItem(LS_SESSIONS);
-
     if (raw) {
-
       try {
-
         const parsed = JSON.parse(raw);
-
         if (Array.isArray(parsed)) {
-
           sessions = parsed;
-
+          // 确保每个会话都有必要的字段
           sessions.forEach(s => {
-
             if (!s.messages) s.messages = [];
-
-            if (!s.createdAt)
-              s.createdAt = Date.now();
-
-            if (!s.name)
-              s.name = "新会话";
+            if (!s.createdAt) s.createdAt = Date.now();
+            if (!s.name) s.name = `会话 ${new Date(s.createdAt).toLocaleString()}`;
           });
-
           return;
         }
-
-      } catch (e) {}
+      } catch(e) {}
     }
+    // 如果不存在多会话数据，尝试迁移旧的单会话
+    const oldSessionRaw = localStorage.getItem(LS_CHAT_SESSION);
+    if (oldSessionRaw) {
+      try {
+        const oldMessages = JSON.parse(oldSessionRaw);
+        if (Array.isArray(oldMessages)) {
+          const defaultId = Date.now().toString();
+          sessions = [{
+            id: defaultId,
+            name: "默认会话",
+            messages: oldMessages,
+            createdAt: Date.now()
+          }];
+          saveSessionsToStorage();
+          // 清空旧存储以避免重复迁移
+          localStorage.removeItem(LS_CHAT_SESSION);
+        }
+      } catch(e) {}
+    }
+    if (!sessions.length) {
+      // 创建一个默认会话
+      const defaultId = Date.now().toString();
+      sessions = [{
+        id: defaultId,
+        name: "新会话",
+        messages: [],
+        createdAt: Date.now()
+      }];
+      saveSessionsToStorage();
+    }
+  }
 
-    const defaultId = Date.now().toString();
-
-    sessions = [{
-      id: defaultId,
-      name: "新会话",
-      messages: [],
-      createdAt: Date.now()
-    }];
-
-    saveSessionsToStorage();
+  function renderSessionList() {
+    if (!sessionListEl) return;
+    sessionListEl.innerHTML = "";
+    sessions.forEach(s => {
+      const div = document.createElement("div");
+      div.className = "session-item" + (currentSessionId === s.id ? " active" : "");
+      div.innerHTML = `
+        <span class="session-title" data-id="${s.id}">${escapeHtml(s.name)}</span>
+        <div class="session-actions">
+          <button class="rename-session" data-id="${s.id}" title="重命名">✏️</button>
+          <button class="delete-session" data-id="${s.id}" title="删除">🗑️</button>
+        </div>
+      `;
+      // 点击标题切换会话
+      div.querySelector(".session-title").addEventListener("click", (e) => {
+        e.stopPropagation();
+        switchToSession(s.id);
+        closeSessionPanelFunc();
+      });
+      div.querySelector(".rename-session").addEventListener("click", (e) => {
+        e.stopPropagation();
+        const newName = prompt("输入新名称:", s.name);
+        if (newName && newName.trim()) {
+          s.name = newName.trim();
+          saveSessionsToStorage();
+          renderSessionList();
+          // 如果当前会话被重命名，更新标题（可选）
+        }
+      });
+      div.querySelector(".delete-session").addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (sessions.length === 1) {
+          alert("至少保留一个会话");
+          return;
+        }
+        if (confirm(`确定删除会话“${s.name}”吗？`)) {
+          const index = sessions.findIndex(ss => ss.id === s.id);
+          if (index !== -1) sessions.splice(index, 1);
+          saveSessionsToStorage();
+          if (currentSessionId === s.id) {
+            // 切换到第一个会话
+            switchToSession(sessions[0].id);
+          } else {
+            renderSessionList();
+          }
+        }
+      });
+      sessionListEl.appendChild(div);
+    });
   }
 
   function switchToSession(sessionId) {
-
-    const target = sessions.find(
-      s => s.id === sessionId
-    );
-
+    const target = sessions.find(s => s.id === sessionId);
     if (!target) return;
-
     currentSessionId = sessionId;
-    session = target.messages;
-
+    session = target.messages;   // 让全局 session 指向当前会话消息数组
+    // 重置统计（可选，可以根据需求保留累计统计）
+    totalPromptTokens = 0;
+    totalCompletionTokens = 0;
+    totalInEstimate = 0;
+    totalOutEstimate = 0;
+    // 重新渲染 UI
     clearUIRows();
-
     for (const msg of session) {
-
-      const role =
-        msg.role === "user"
-          ? "user"
-          : "assistant";
-
-      const row = makeRow(role);
-
-      row.bubble.textContent = msg.content;
+      const role = msg.role === "user" ? "user" : "assistant";
+      const r = makeRow(role);
+      r.bubble.textContent = msg.content;
+      r.stats.textContent = "";  // 历史消息不显示统计
     }
-
     scrollToBottom();
-
-    localStorage.setItem(
-      "cfw_last_session_id",
-      sessionId
-    );
-
     renderSessionList();
+    // 如果启用了历史记忆，保存当前会话数据（已自动指向 session）
+    if (historyEnabled) persistSessionIfEnabled();
   }
 
   function createNewSession() {
-
-    const id = Date.now().toString();
-
+    const newId = Date.now().toString();
     const newSession = {
-      id,
-      name: `会话 ${sessions.length + 1}`,
+      id: newId,
+      name: `会话 ${new Date().toLocaleString()}`,
       messages: [],
       createdAt: Date.now()
     };
-
     sessions.push(newSession);
-
     saveSessionsToStorage();
-
-    switchToSession(id);
-
+    switchToSession(newId);
     closeSessionPanelFunc();
   }
 
+  // 兼容原有 persistSessionIfEnabled：保存当前会话到 localStorage
   function persistSessionIfEnabled() {
-
     if (!historyEnabled) return;
-
-    const cur = sessions.find(
-      s => s.id === currentSessionId
-    );
-
+    // 更新 sessions 中的当前会话消息
+    const cur = sessions.find(s => s.id === currentSessionId);
     if (cur) {
-
       cur.messages = session;
-
       saveSessionsToStorage();
     }
   }
 
   function restoreSessionIfEnabled() {
-
+    // 迁移或加载多会话数据
     loadSessionsFromStorage();
-
-    const lastSessionId =
-      localStorage.getItem(
-        "cfw_last_session_id"
-      );
-
-    let target =
-      sessions.find(
-        s => s.id === lastSessionId
-      );
-
-    if (!target) target = sessions[0];
-
-    switchToSession(target.id);
+    // 确定当前会话
+    if (sessions.length === 0) {
+      createNewSession();
+    } else {
+      // 默认选择第一个会话，或从 localStorage 记住上次会话
+      const lastSessionId = localStorage.getItem("cfw_last_session_id");
+      let target = sessions.find(s => s.id === lastSessionId);
+      if (!target) target = sessions[0];
+      switchToSession(target.id);
+    }
   }
 
-  function renderSessionList() {
-
-    if (!sessionListEl) return;
-
-    sessionListEl.innerHTML = "";
-
-    sessions.forEach(s => {
-
-      const div = document.createElement("div");
-
-      div.className =
-        "session-item" +
-        (currentSessionId === s.id
-          ? " active"
-          : "");
-
-      div.innerHTML = `
-        <span class="session-title">
-          ${escapeHtml(s.name)}
-        </span>
-      `;
-
-      div.addEventListener("click", () => {
-
-        switchToSession(s.id);
-
-        closeSessionPanelFunc();
-      });
-
-      sessionListEl.appendChild(div);
-    });
-  }
-
-  function openSessionPanel() {
-
-    sessionPanel.classList.add("open");
-
-    sessionOverlay.style.display = "block";
-
-    renderSessionList();
-  }
-
-  function closeSessionPanelFunc() {
-
-    sessionPanel.classList.remove("open");
-
-    sessionOverlay.style.display = "none";
-  }
-
-  // =========================================
-  // 工具
-  // =========================================
-
+  // 辅助函数：转义 HTML
   function escapeHtml(str) {
-
-    return str.replace(/[&<>]/g, m => {
-
-      if (m === "&") return "&amp;";
-      if (m === "<") return "&lt;";
-      if (m === ">") return "&gt;";
-
+    return str.replace(/[&<>]/g, function(m) {
+      if (m === '&') return '&amp;';
+      if (m === '<') return '&lt;';
+      if (m === '>') return '&gt;';
       return m;
     });
   }
 
-  function estimateTokens(text) {
+  // 侧边栏开关函数
+  function openSessionPanel() {
+    if (sessionPanel && sessionOverlay) {
+      sessionPanel.classList.add("open");
+      sessionOverlay.style.display = "block";
+      renderSessionList();
+    }
+  }
+  function closeSessionPanelFunc() {
+    if (sessionPanel && sessionOverlay) {
+      sessionPanel.classList.remove("open");
+      sessionOverlay.style.display = "none";
+    }
+  }
 
+  // ========== 原有函数（estimateTokens, updateSpacer, isNearBottom, scrollToBottom, makeRow, clearUIRows 等保持不变）==========
+  function estimateTokens(text){
     if (!text) return 0;
-
-    return Math.ceil(text.length / 4);
+    let cjk = 0, ascii = 0;
+    for (const ch of text) {
+      const code = ch.charCodeAt(0);
+      if (ch === " " || ch === "\n" || ch === "\t" || ch === "\r") continue;
+      const isCJK =
+        (code >= 0x4E00 && code <= 0x9FFF) ||
+        (code >= 0x3400 && code <= 0x4DBF) ||
+        (code >= 0x3040 && code <= 0x30FF) ||
+        (code >= 0xAC00 && code <= 0xD7AF) ||
+        (code >= 0xFF00 && code <= 0xFFEF);
+      if (isCJK) cjk++; else ascii++;
+    }
+    return cjk + Math.ceil(ascii / 4);
   }
 
-  function updateSpacer() {
-
+  function updateSpacer(){
     if (!composerEl || !spacerEl) return;
-
-    const rect =
-      composerEl.getBoundingClientRect();
-
-    spacerEl.style.height =
-      rect.height + 80 + "px";
+    const rect = composerEl.getBoundingClientRect();
+    const rootStyle = getComputedStyle(document.documentElement);
+    const gap = parseFloat(rootStyle.getPropertyValue("--composer-gap")) || 18;
+    const extra = parseFloat(rootStyle.getPropertyValue("--spacer-extra")) || 28;
+    const h = Math.ceil(rect.height + gap + extra);
+    spacerEl.style.height = h + "px";
+    historyWrap.style.scrollPaddingBottom = h + "px";
   }
 
-  function scrollToBottom() {
-
-    historyWrap.scrollTo({
-      top: historyWrap.scrollHeight,
-      behavior: "smooth"
-    });
+  function isNearBottom(){
+    const threshold = 120;
+    return (historyWrap.scrollHeight - historyWrap.scrollTop - historyWrap.clientHeight) < threshold;
+  }
+  function scrollToBottom(){
+    historyWrap.scrollTo({ top: historyWrap.scrollHeight, behavior: "auto" });
   }
 
-  function isNearBottom() {
-
-    return (
-      historyWrap.scrollHeight -
-      historyWrap.scrollTop -
-      historyWrap.clientHeight
-    ) < 120;
-  }
-
-  // =========================================
-  // UI Row
-  // =========================================
-
-  function makeRow(role) {
-
+  function makeRow(role){
     const row = document.createElement("div");
-
-    row.className =
-      "row " +
-      (role === "user" ? "user" : "ai");
+    row.className = "row " + (role === "user" ? "user" : "ai");
 
     const avatar = document.createElement("div");
+    avatar.className = "avatar " + (role === "user" ? "human" : "bot");
+    avatar.textContent = (role === "user" ? "U" : "B");
 
-    avatar.className =
-      "avatar " +
-      (role === "user"
-        ? "human"
-        : "bot");
-
-    avatar.textContent =
-      role === "user" ? "U" : "AI";
-
-    const content =
-      document.createElement("div");
-
+    const content = document.createElement("div");
     content.className = "content";
 
-    const meta =
-      document.createElement("div");
-
+    const meta = document.createElement("div");
     meta.className = "meta";
+    meta.textContent = (role === "user" ? "User" : "Bot");
 
-    meta.textContent =
-      role === "user"
-        ? "User"
-        : "Virtual Girl";
+    const bubble = document.createElement("div");
+    bubble.className = "bubble " + (role === "user" ? "user" : "ai");
 
-    const bubble =
-      document.createElement("div");
-
-    bubble.className =
-      "bubble " +
-      (role === "user"
-        ? "user"
-        : "ai");
-
-    const stats =
-      document.createElement("div");
-
+    const stats = document.createElement("div");
     stats.className = "stats";
 
     content.appendChild(meta);
@@ -378,570 +332,384 @@
     content.appendChild(stats);
 
     if (role === "user") {
-
       row.appendChild(content);
       row.appendChild(avatar);
-
     } else {
-
       row.appendChild(avatar);
       row.appendChild(content);
     }
 
     chatEl.insertBefore(row, spacerEl);
+    if (isNearBottom()) scrollToBottom();
 
     return { bubble, stats };
   }
 
-  function clearUIRows() {
-
-    const nodes =
-      Array.from(chatEl.children);
-
+  function clearUIRows(){
+    const nodes = Array.from(chatEl.children);
     for (const n of nodes) {
-
       if (n === spacerEl) continue;
-
       chatEl.removeChild(n);
     }
   }
 
-  // =========================================
-  // Model
-  // =========================================
-
-  function initModels() {
-
+  function initModels(){
     modelSel.innerHTML = "";
-
-    MODELS.forEach(m => {
-
-      const opt =
-        document.createElement("option");
-
+    for (const m of MODELS) {
+      const opt = document.createElement("option");
       opt.value = m.id;
-
       opt.textContent = m.label;
-
       modelSel.appendChild(opt);
+    }
+    const saved = localStorage.getItem(LS_MODEL);
+    modelSel.value = saved || MODELS[0].id;
+    modelSel.addEventListener("change", () => {
+      localStorage.setItem(LS_MODEL, modelSel.value);
     });
-
-    const saved =
-      localStorage.getItem(LS_MODEL);
-
-    modelSel.value =
-      saved || MODELS[0].id;
-
-    modelSel.addEventListener(
-      "change",
-      () => {
-
-        localStorage.setItem(
-          LS_MODEL,
-          modelSel.value
-        );
-      }
-    );
   }
 
-  // =========================================
-  // 二次元背景系统
-  // =========================================
-
+  // ========== 主题与背景初始化（保持不变） ==========
   function initThemeAndBg() {
-
-    const themeToggle =
-      document.getElementById(
-        "themeToggle"
-      );
-
-    const animeBackgrounds = {
-
-      morning:
-        "url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=1600')",
-
-      sunset:
-        "url('https://images.unsplash.com/photo-1493246507139-91e8fad9978e?q=80&w=1600')",
-
-      night:
-        "url('https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=1600')"
+    const themeToggle = document.getElementById("themeToggle");
+    const bgOptions = document.querySelectorAll(".bg-option");
+    const customColorPicker = document.getElementById("customColorPicker");
+    if (!themeToggle) return;
+    const bgMap = {
+      gradient: "var(--bg-gradient)",
+      light: "url('https://www.transparenttextures.com/patterns/cubes.png'), linear-gradient(135deg, #f9f9f9, #e0e0e0)",
+      ocean: "url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600') center/cover",
+      forest: "url('https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=600') center/cover"
     };
-
-    function getAutoAnimeBg() {
-
-      const hour = new Date().getHours();
-
-      if (hour >= 6 && hour < 16)
-        return animeBackgrounds.morning;
-
-      if (hour >= 16 && hour < 20)
-        return animeBackgrounds.sunset;
-
-      return animeBackgrounds.night;
+    function applyBackground(type, colorValue = null) {
+      if (type === "custom" && colorValue) {
+        document.body.style.setProperty("--user-bg", colorValue);
+        document.body.classList.add("custom-bg");
+        localStorage.setItem(LS_BG_TYPE, "custom");
+        localStorage.setItem(LS_CUSTOM_COLOR, colorValue);
+        if (customColorPicker) customColorPicker.value = colorValue;
+      } else if (bgMap[type]) {
+        document.body.style.setProperty("--user-bg", bgMap[type]);
+        document.body.classList.add("custom-bg");
+        localStorage.setItem(LS_BG_TYPE, type);
+        localStorage.removeItem(LS_CUSTOM_COLOR);
+      } else {
+        document.body.classList.remove("custom-bg");
+        document.body.style.removeProperty("--user-bg");
+        localStorage.removeItem(LS_BG_TYPE);
+        localStorage.removeItem(LS_CUSTOM_COLOR);
+      }
+      bgOptions.forEach(btn => {
+        const btnType = btn.dataset.bg;
+        if (btnType === type) btn.classList.add("active");
+        else btn.classList.remove("active");
+      });
     }
-
-    function applyAnimeBackground() {
-
-      const bg = getAutoAnimeBg();
-
-      document.body.style.backgroundImage = `
-        linear-gradient(
-          rgba(0,0,0,0.45),
-          rgba(0,0,0,0.65)
-        ),
-        ${bg}
-      `;
-
-      document.body.style.backgroundSize =
-        "cover";
-
-      document.body.style.backgroundPosition =
-        "center";
-
-      document.body.style.backgroundAttachment =
-        "fixed";
-    }
-
-    applyAnimeBackground();
-
-    setInterval(
-      applyAnimeBackground,
-      600000
-    );
-
-    const savedTheme =
-      localStorage.getItem(LS_THEME);
-
+    const savedTheme = localStorage.getItem(LS_THEME);
     if (savedTheme === "light") {
-
-      document.body.classList.add(
-        "light-theme"
-      );
-
-      themeToggle.innerHTML =
-        "☀️ 白天模式";
-
+      document.body.classList.add("light-theme");
+      themeToggle.innerHTML = "☀️ 白天模式";
     } else {
-
-      document.body.classList.remove(
-        "light-theme"
-      );
-
-      themeToggle.innerHTML =
-        "🌙 黑夜模式";
+      document.body.classList.remove("light-theme");
+      themeToggle.innerHTML = "🌙 黑夜模式";
     }
-
-    themeToggle.addEventListener(
-      "click",
-      () => {
-
-        const isLight =
-          document.body.classList.toggle(
-            "light-theme"
-          );
-
-        localStorage.setItem(
-          LS_THEME,
-          isLight ? "light" : "dark"
-        );
-
-        themeToggle.innerHTML =
-          isLight
-            ? "☀️ 白天模式"
-            : "🌙 黑夜模式";
-      }
-    );
-
-    // 鼠标视差
-
-    document.addEventListener(
-      "mousemove",
-      e => {
-
-        const x =
-          (e.clientX / window.innerWidth - 0.5) * 10;
-
-        const y =
-          (e.clientY / window.innerHeight - 0.5) * 10;
-
-        document.body.style.backgroundPosition =
-          `${50 + x}% ${50 + y}%`;
-      }
-    );
-  }
-
-  // =========================================
-  // 星空粒子
-  // =========================================
-
-  function initAnimeEffects() {
-
-    const stars =
-      document.createElement("div");
-
-    stars.id = "anime-stars";
-
-    document.body.appendChild(stars);
-
-    for (let i = 0; i < 80; i++) {
-
-      const s =
-        document.createElement("span");
-
-      s.className = "star";
-
-      s.style.left =
-        Math.random() * 100 + "%";
-
-      s.style.top =
-        Math.random() * 100 + "%";
-
-      s.style.animationDelay =
-        Math.random() * 5 + "s";
-
-      s.style.animationDuration =
-        2 + Math.random() * 3 + "s";
-
-      stars.appendChild(s);
+    const savedBgType = localStorage.getItem(LS_BG_TYPE);
+    const savedCustomColor = localStorage.getItem(LS_CUSTOM_COLOR);
+    if (savedBgType === "custom" && savedCustomColor) {
+      applyBackground("custom", savedCustomColor);
+    } else if (savedBgType && bgMap[savedBgType]) {
+      applyBackground(savedBgType);
+    } else {
+      applyBackground(null);
+    }
+    if (themeToggle) {
+      themeToggle.addEventListener("click", () => {
+        const isLight = document.body.classList.toggle("light-theme");
+        localStorage.setItem(LS_THEME, isLight ? "light" : "dark");
+        themeToggle.innerHTML = isLight ? "☀️ 白天模式" : "🌙 黑夜模式";
+      });
+    }
+    bgOptions.forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        const bgType = btn.dataset.bg;
+        if (bgType === "custom") {
+          if (customColorPicker) customColorPicker.click();
+        } else {
+          applyBackground(bgType);
+        }
+      });
+    });
+    if (customColorPicker) {
+      customColorPicker.addEventListener("input", (e) => {
+        applyBackground("custom", e.target.value);
+      });
     }
   }
 
-  // =========================================
-  // Settings
-  // =========================================
+  // 人物扮演
+  personaToggle.addEventListener("click", () => {
+    useBuiltin = !useBuiltin;
+    personaToggle.textContent = useBuiltin ? "😈" : "😇";
+    localStorage.setItem(LS_USE_BUILTIN, useBuiltin ? "1" : "0");
+  });
 
-  settingsBtn.addEventListener(
-    "click",
-    () => {
+  // Settings 事件（略，保持不变）
+  settingsBtn.addEventListener("click", () => {
+    settingsMask.style.display = "flex";
+    historyKeepEl.checked = historyEnabled;
+    promptKeepEl.checked = promptEnabled;
+    customPromptEl.value = (localStorage.getItem(LS_CUSTOM_PROMPT) || "");
+  });
+  closeSettingsBtn.addEventListener("click", () => {
+    settingsMask.style.display = "none";
+  });
+  settingsMask.addEventListener("click", (e) => {
+    if (e.target === settingsMask) settingsMask.style.display = "none";
+  });
 
-      settingsMask.style.display =
-        "flex";
-
-      customPromptEl.value =
-        localStorage.getItem(
-          LS_CUSTOM_PROMPT
-        ) || "";
+  historyKeepEl.addEventListener("change", () => {
+    historyEnabled = !!historyKeepEl.checked;
+    localStorage.setItem(LS_HISTORY_ENABLED, historyEnabled ? "1" : "0");
+    if (historyEnabled) persistSessionIfEnabled();
+  });
+  clearHistoryBtn.addEventListener("click", () => {
+    const ok = confirm("确定清除本地历史？\n只会删除对话记录，不会影响网页自定义人物模板。");
+    if (!ok) return;
+    // 清空当前会话消息
+    if (currentSessionId) {
+      const cur = sessions.find(s => s.id === currentSessionId);
+      if (cur) {
+        cur.messages = [];
+        session = cur.messages;
+        saveSessionsToStorage();
+        clearUIRows();
+        updateSpacer();
+        scrollToBottom();
+        renderSessionList();
+      }
     }
-  );
+  });
 
-  closeSettingsBtn.addEventListener(
-    "click",
-    () => {
+  promptKeepEl.addEventListener("change", () => {
+    promptEnabled = !!promptKeepEl.checked;
+    localStorage.setItem(LS_PROMPT_ENABLED, promptEnabled ? "1" : "0");
+    if (!promptEnabled) localStorage.removeItem(LS_CUSTOM_PROMPT);
+  });
+  savePromptBtn.addEventListener("click", () => {
+    const val = customPromptEl.value || "";
+    if (promptEnabled) localStorage.setItem(LS_CUSTOM_PROMPT, val);
+    else localStorage.removeItem(LS_CUSTOM_PROMPT);
+    settingsMask.style.display = "none";
+  });
+  clearPromptBtn.addEventListener("click", () => {
+    const ok = confirm("确定清除网页自定义人物模板？\n只会删除自定义模板，不会影响本地历史。");
+    if (!ok) return;
+    localStorage.removeItem(LS_CUSTOM_PROMPT);
+    customPromptEl.value = "";
+  });
 
-      settingsMask.style.display =
-        "none";
-    }
-  );
+  // donate
+  function openDonate(){ donateMask.style.display = "flex"; }
+  function closeDonate(){ donateMask.style.display = "none"; }
+  donateBtn.addEventListener("click", openDonate);
+  donateClose.addEventListener("click", closeDonate);
+  donateMask.addEventListener("click", (e) => { if (e.target === donateMask) closeDonate(); });
 
-  // =========================================
-  // Donate
-  // =========================================
+  // composer
+  inputEl.addEventListener("input", () => {
+    inputEl.style.height = "auto";
+    inputEl.style.height = inputEl.scrollHeight + "px";
+    const stick = isNearBottom();
+    updateSpacer();
+    if (stick) scrollToBottom();
+  });
 
-  donateBtn.addEventListener(
-    "click",
-    () => {
-
-      donateMask.style.display =
-        "flex";
-    }
-  );
-
-  donateClose.addEventListener(
-    "click",
-    () => {
-
-      donateMask.style.display =
-        "none";
-    }
-  );
-
-  // =========================================
-  // 输入框
-  // =========================================
-
-  inputEl.addEventListener(
-    "input",
-    () => {
-
-      inputEl.style.height = "auto";
-
-      inputEl.style.height =
-        inputEl.scrollHeight + "px";
-
+  function setupResizeObserver(){
+    if (!composerEl || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(() => {
+      const stick = isNearBottom();
       updateSpacer();
-    }
-  );
+      if (stick) scrollToBottom();
+    });
+    ro.observe(composerEl);
+  }
+  function setupViewportListener(){
+    if (!window.visualViewport) return;
+    window.visualViewport.addEventListener("resize", () => {
+      const stick = isNearBottom();
+      updateSpacer();
+      if (stick) scrollToBottom();
+    });
+  }
+  window.addEventListener("resize", () => {
+    const stick = isNearBottom();
+    updateSpacer();
+    if (stick) scrollToBottom();
+  });
 
-  // =========================================
-  // 发送消息
-  // =========================================
-
-  async function send() {
-
-    const text =
-      inputEl.value.trim();
-
+  // ========== 修改后的 send 函数（支持停止生成）==========
+  async function send(){
+    updateSpacer();
+    const text = inputEl.value.trim();
     if (!text) return;
 
+    // 如果有正在进行的请求，先停止（安全起见）
     if (currentAbortController) {
-
       currentAbortController.abort();
+      currentAbortController = null;
     }
 
     const userRow = makeRow("user");
-
     userRow.bubble.textContent = text;
 
-    session.push({
-      role: "user",
-      content: text
-    });
+    const inEst = estimateTokens(text);
+    totalInEstimate += inEst;
+    userRow.stats.textContent = `Input(估算): ≈${inEst} | Total In(估算): ≈${totalInEstimate}`;
 
+    session.push({ role: "user", content: text });
     persistSessionIfEnabled();
 
     inputEl.value = "";
-
     inputEl.style.height = "auto";
-
     updateSpacer();
-
     scrollToBottom();
 
-    const aiRow =
-      makeRow("assistant");
-
+    const aiRow = makeRow("assistant");
+    let outStartMs = 0;
+    let outEndMs = 0;
     let full = "";
-
-    currentAbortController =
-      new AbortController();
-
-    stopBtn.style.display =
-      "inline-flex";
+    let exactUsage = null;
+    let isAborted = false;
 
     let customPrompt = "";
-
     if (!useBuiltin && promptEnabled) {
-
-      customPrompt =
-        localStorage.getItem(
-          LS_CUSTOM_PROMPT
-        ) || "";
+      customPrompt = localStorage.getItem(LS_CUSTOM_PROMPT) || "";
     }
 
+    // 创建 AbortController
+    currentAbortController = new AbortController();
+    if (stopBtn) stopBtn.style.display = "inline-flex";
+
     try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: modelSel.value,
+          use_builtin_persona: useBuiltin,
+          custom_system_prompt: customPrompt,
+          messages: session
+        }),
+        signal: currentAbortController.signal
+      });
 
-      const res = await fetch(
-        "/api/chat",
-        {
-          method: "POST",
+      if (!res.ok) {
+        const t = await res.text().catch(() => "");
+        aiRow.bubble.textContent = `Request failed (${res.status}):\n${t}`;
+        aiRow.stats.textContent = "";
+        return;
+      }
 
-          headers: {
-            "Content-Type":
-              "application/json"
-          },
-
-          body: JSON.stringify({
-
-            model: modelSel.value,
-
-            use_builtin_persona:
-              useBuiltin,
-
-            custom_system_prompt:
-              customPrompt,
-
-            messages: session
-          }),
-
-          signal:
-            currentAbortController.signal
-        }
-      );
-
-      const reader =
-        res.body.getReader();
-
-      const decoder =
-        new TextDecoder();
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
 
       while (true) {
-
-        const {
-          done,
-          value
-        } = await reader.read();
-
+        const { done, value } = await reader.read();
         if (done) break;
-
-        const chunk =
-          decoder.decode(value);
-
-        const lines =
-          chunk.split("\n");
-
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = chunk.split("\n");
         for (const line of lines) {
-
-          if (
-            !line.startsWith(
-              "data: "
-            )
-          ) continue;
-
-          const jsonStr =
-            line.replace(
-              "data: ",
-              ""
-            );
-
-          if (
-            jsonStr === "[DONE]"
-          ) continue;
-
+          if (!line.startsWith("data: ")) continue;
+          const jsonStr = line.replace("data: ", "").trim();
+          if (!jsonStr || jsonStr === "[DONE]") continue;
           try {
-
-            const parsed =
-              JSON.parse(jsonStr);
-
-            const delta =
-              parsed.choices?.[0]
-                ?.delta?.content;
-
+            const parsed = JSON.parse(jsonStr);
+            if (parsed.usage) exactUsage = parsed.usage;
+            const delta = parsed.choices?.[0]?.delta?.content;
             if (delta) {
-
+              if (!outStartMs) outStartMs = performance.now();
               full += delta;
-
-              aiRow.bubble.textContent =
-                full;
-
-              if (isNearBottom())
-                scrollToBottom();
+              aiRow.bubble.textContent = full;
+              if (isNearBottom()) scrollToBottom();
             }
-
           } catch {}
         }
       }
-
     } catch (err) {
-
-      if (
-        err.name ===
-        "AbortError"
-      ) {
-
-        aiRow.bubble.textContent =
-          full + "\n\n[已停止生成]";
-
+      if (err.name === "AbortError") {
+        isAborted = true;
+        aiRow.bubble.textContent = full + "\n\n[已停止生成]";
       } else {
-
-        aiRow.bubble.textContent =
-          "Error: " + err.message;
+        aiRow.bubble.textContent = `Error: ${err.message}`;
       }
-
     } finally {
-
       currentAbortController = null;
-
-      stopBtn.style.display =
-        "none";
+      if (stopBtn) stopBtn.style.display = "none";
     }
 
-    session.push({
-      role: "assistant",
-      content: full
-    });
+    outEndMs = performance.now();
+    if (!isAborted && full) {
+      session.push({ role: "assistant", content: full });
+      persistSessionIfEnabled();
+    } else if (isAborted && full) {
+      // 如果停止了但有部分内容，仍然保存
+      session.push({ role: "assistant", content: full });
+      persistSessionIfEnabled();
+    }
 
-    persistSessionIfEnabled();
+    const seconds = Math.max(0.001, (outEndMs - (outStartMs || outEndMs)) / 1000);
+
+    if (exactUsage && typeof exactUsage.completion_tokens === "number") {
+      const p = exactUsage.prompt_tokens || 0;
+      const c = exactUsage.completion_tokens || 0;
+      const t = exactUsage.total_tokens || (p + c);
+      totalPromptTokens += p;
+      totalCompletionTokens += c;
+      const tps = c / seconds;
+      aiRow.stats.textContent = `Prompt: ${p} | Completion: ${c} | Total: ${t} | Speed: ${tps.toFixed(2)} tok/s | CumPrompt: ${totalPromptTokens} | CumCompletion: ${totalCompletionTokens}`;
+    } else {
+      const outEst = estimateTokens(full);
+      totalOutEstimate += outEst;
+      const tps = outEst / seconds;
+      aiRow.stats.textContent = `Output(估算): ≈${outEst} | Total Out(估算): ≈${totalOutEstimate} | Speed(估算): ${tps.toFixed(2)} tok/s | (usage未返回)`;
+    }
 
     updateSpacer();
-
     scrollToBottom();
   }
 
-  // =========================================
-  // Stop
-  // =========================================
-
-  stopBtn.addEventListener(
-    "click",
-    () => {
-
-      if (
-        currentAbortController
-      ) {
-
+  // 停止按钮事件
+  if (stopBtn) {
+    stopBtn.addEventListener("click", () => {
+      if (currentAbortController) {
         currentAbortController.abort();
+        currentAbortController = null;
       }
+    });
+  }
+
+  sendBtn.addEventListener("click", send);
+  inputEl.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      send();
     }
-  );
+  });
 
-  // =========================================
-  // Event
-  // =========================================
+  // 会话面板按钮事件
+  if (sessionBtn) sessionBtn.addEventListener("click", openSessionPanel);
+  if (closeSessionPanel) closeSessionPanel.addEventListener("click", closeSessionPanelFunc);
+  if (sessionOverlay) sessionOverlay.addEventListener("click", closeSessionPanelFunc);
+  if (newSessionBtn) newSessionBtn.addEventListener("click", createNewSession);
 
-  sendBtn.addEventListener(
-    "click",
-    send
-  );
-
-  inputEl.addEventListener(
-    "keydown",
-    e => {
-
-      if (
-        e.key === "Enter" &&
-        !e.shiftKey
-      ) {
-
-        e.preventDefault();
-
-        send();
-      }
-    }
-  );
-
-  if (sessionBtn)
-    sessionBtn.addEventListener(
-      "click",
-      openSessionPanel
-    );
-
-  if (closeSessionPanel)
-    closeSessionPanel.addEventListener(
-      "click",
-      closeSessionPanelFunc
-    );
-
-  if (sessionOverlay)
-    sessionOverlay.addEventListener(
-      "click",
-      closeSessionPanelFunc
-    );
-
-  if (newSessionBtn)
-    newSessionBtn.addEventListener(
-      "click",
-      createNewSession
-    );
-
-  // =========================================
-  // Init
-  // =========================================
-
-  function init() {
-
+  function init(){
     initModels();
-
+    setupResizeObserver();
+    setupViewportListener();
     updateSpacer();
-
-    restoreSessionIfEnabled();
-
+    restoreSessionIfEnabled();   // 加载多会话
     scrollToBottom();
-
     initThemeAndBg();
-
-    initAnimeEffects();
   }
 
   init();
-
 })();
