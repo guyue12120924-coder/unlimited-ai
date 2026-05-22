@@ -319,7 +319,7 @@ body.light-theme #topbar {
       <button id="sendBtn">发送</button>
       <button id="stopBtn">停止</button>
     </div>
-    <div class="composer-hint">DeepSeek 可提供帮助，内容由 AI 生成</div>
+    <div class="composer-hint">✨ DeepSeek 与你畅聊，按 Enter 发送</div>
   </div>
 
   <div id="settingsMask">
@@ -403,9 +403,12 @@ body.light-theme #topbar {
         <button data-bg="light" class="bg-option">浅色纹理</button>
         <button data-bg="ocean" class="bg-option">海洋</button>
         <button data-bg="forest" class="bg-option">森林</button>
+        <button data-bg="anime" class="bg-option">🌸 二次元</button>
         <button data-bg="custom" class="bg-option">自定义颜色</button>
         <input type="color" id="customColorPicker" value="#1a2a6c">
       </div>
+      <button id="uploadBgBtn" class="ctrl-btn" title="上传本地图片作为背景">📤 上传背景</button>
+      <input type="file" id="bgImageFile" accept="image/*" style="display:none;">
       <button id="fontDecrease" class="ctrl-btn" title="减小字体">A-</button>
       <button id="fontIncrease" class="ctrl-btn" title="增大字体">A+</button>
     </div>
