@@ -10,7 +10,7 @@
   const personaToggle = document.getElementById("personaToggle");
   const settingsBtn = document.getElementById("settingsBtn");
   const sendBtn = document.getElementById("sendBtn");
-  const stopBtn = document.getElementById("stopBtn");          // 新增：停止按钮
+  const stopBtn = document.getElementById("stopBtn");
 
   const settingsMask = document.getElementById("settingsMask");
   const customPromptEl = document.getElementById("customPrompt");
@@ -33,11 +33,6 @@
   const sessionListEl = document.getElementById("sessionList");
   const newSessionBtn = document.getElementById("newSessionBtn");
 
-  // 新增：上传背景相关元素
-  const uploadBgBtn = document.getElementById("uploadBgBtn");
-  const bgImageFile = document.getElementById("bgImageFile");
-  const clearBgBtn = document.getElementById("clearBgBtn");   // 清除背景按钮
-
   const MODELS = (window.APP_MODELS || [
     { id: "deepseek-ai/deepseek-v4-pro", label: "deepseek-v4-pro" },
     { id: "z-ai/glm-5.1", label: "glm-5.1" },
@@ -46,30 +41,24 @@
 
   // 当前活跃会话的ID和消息数组
   let currentSessionId = null;
-  let sessions = [];           // 存储所有会话 { id, name, messages, createdAt }
-  let session = [];            // 当前会话的消息数组（指向 sessions 中对应会话的 messages）
+  let sessions = [];
+  let session = [];
 
   let totalPromptTokens = 0;
   let totalCompletionTokens = 0;
   let totalInEstimate = 0;
   let totalOutEstimate = 0;
 
-  // 用于停止生成
   let currentAbortController = null;
 
   // ====== 本地存储 Key ======
   const LS_MODEL = "cfw_model";
   const LS_USE_BUILTIN = "cfw_use_builtin";
   const LS_HISTORY_ENABLED = "cfw_history_enabled";
-  const LS_CHAT_SESSION = "cfw_chat_session_v1";      // 旧单会话存储（兼容）
   const LS_PROMPT_ENABLED = "cfw_prompt_enabled";
   const LS_CUSTOM_PROMPT = "cfw_custom_prompt_v1";
-  const LS_SESSIONS = "cfw_sessions_v2";              // 新增：多会话存储
-
+  const LS_SESSIONS = "cfw_sessions_v2";
   const LS_THEME = "cfw_theme";
-  const LS_BG_TYPE = "cfw_bg_type";
-  const LS_CUSTOM_COLOR = "cfw_custom_color";
-  const LS_UPLOADED_BG = "cfw_uploaded_bg";           // 存储用户上传的背景图片 base64
 
   let useBuiltin = (localStorage.getItem(LS_USE_BUILTIN) ?? "1") === "1";
   personaToggle.textContent = useBuiltin ? "😈" : "😇";
@@ -93,7 +82,6 @@
         const parsed = JSON.parse(raw);
         if (Array.isArray(parsed)) {
           sessions = parsed;
-          // 确保每个会话都有必要的字段
           sessions.forEach(s => {
             if (!s.messages) s.messages = [];
             if (!s.createdAt) s.createdAt = Date.now();
@@ -103,27 +91,8 @@
         }
       } catch(e) {}
     }
-    // 如果不存在多会话数据，尝试迁移旧的单会话
-    const oldSessionRaw = localStorage.getItem(LS_CHAT_SESSION);
-    if (oldSessionRaw) {
-      try {
-        const oldMessages = JSON.parse(oldSessionRaw);
-        if (Array.isArray(oldMessages)) {
-          const defaultId = Date.now().toString();
-          sessions = [{
-            id: defaultId,
-            name: "默认会话",
-            messages: oldMessages,
-            createdAt: Date.now()
-          }];
-          saveSessionsToStorage();
-          // 清空旧存储以避免重复迁移
-          localStorage.removeItem(LS_CHAT_SESSION);
-        }
-      } catch(e) {}
-    }
+    // 如果没有会话，创建一个默认会话
     if (!sessions.length) {
-      // 创建一个默认会话
       const defaultId = Date.now().toString();
       sessions = [{
         id: defaultId,
@@ -148,7 +117,6 @@
           <button class="delete-session" data-id="${s.id}" title="删除">🗑️</button>
         </div>
       `;
-      // 点击标题切换会话
       div.querySelector(".session-title").addEventListener("click", (e) => {
         e.stopPropagation();
         switchToSession(s.id);
@@ -174,7 +142,6 @@
           if (index !== -1) sessions.splice(index, 1);
           saveSessionsToStorage();
           if (currentSessionId === s.id) {
-            // 切换到第一个会话
             switchToSession(sessions[0].id);
           } else {
             renderSessionList();
@@ -189,23 +156,20 @@
     const target = sessions.find(s => s.id === sessionId);
     if (!target) return;
     currentSessionId = sessionId;
-    session = target.messages;   // 让全局 session 指向当前会话消息数组
-    // 重置统计（可选，可以根据需求保留累计统计）
+    session = target.messages;
     totalPromptTokens = 0;
     totalCompletionTokens = 0;
     totalInEstimate = 0;
     totalOutEstimate = 0;
-    // 重新渲染 UI
     clearUIRows();
     for (const msg of session) {
       const role = msg.role === "user" ? "user" : "assistant";
       const r = makeRow(role);
       r.bubble.textContent = msg.content;
-      r.stats.textContent = "";  // 历史消息不显示统计
+      r.stats.textContent = "";
     }
     scrollToBottom();
     renderSessionList();
-    // 如果启用了历史记忆，保存当前会话数据（已自动指向 session）
     if (historyEnabled) persistSessionIfEnabled();
   }
 
@@ -223,10 +187,8 @@
     closeSessionPanelFunc();
   }
 
-  // 兼容原有 persistSessionIfEnabled：保存当前会话到 localStorage
   function persistSessionIfEnabled() {
     if (!historyEnabled) return;
-    // 更新 sessions 中的当前会话消息
     const cur = sessions.find(s => s.id === currentSessionId);
     if (cur) {
       cur.messages = session;
@@ -235,13 +197,10 @@
   }
 
   function restoreSessionIfEnabled() {
-    // 迁移或加载多会话数据
     loadSessionsFromStorage();
-    // 确定当前会话
     if (sessions.length === 0) {
       createNewSession();
     } else {
-      // 默认选择第一个会话，或从 localStorage 记住上次会话
       const lastSessionId = localStorage.getItem("cfw_last_session_id");
       let target = sessions.find(s => s.id === lastSessionId);
       if (!target) target = sessions[0];
@@ -249,7 +208,6 @@
     }
   }
 
-  // 辅助函数：转义 HTML
   function escapeHtml(str) {
     return str.replace(/[&<>]/g, function(m) {
       if (m === '&') return '&amp;';
@@ -259,7 +217,6 @@
     });
   }
 
-  // 侧边栏开关函数
   function openSessionPanel() {
     if (sessionPanel && sessionOverlay) {
       sessionPanel.classList.add("open");
@@ -274,7 +231,7 @@
     }
   }
 
-  // ========== 原有函数（estimateTokens, updateSpacer, isNearBottom, scrollToBottom, makeRow, clearUIRows 等保持不变）==========
+  // ========== 原有辅助函数 ==========
   function estimateTokens(text){
     if (!text) return 0;
     let cjk = 0, ascii = 0;
@@ -317,7 +274,7 @@
 
     const avatar = document.createElement("div");
     avatar.className = "avatar " + (role === "user" ? "human" : "bot");
-    avatar.textContent = (role === "user" ? "👤" : "🤖");  // 改用 emoji 头像
+    avatar.textContent = (role === "user" ? "👤" : "🤖");
 
     const content = document.createElement("div");
     content.className = "content";
@@ -373,70 +330,107 @@
     });
   }
 
-  // ========== 主题与背景初始化（增强：二次元、上传图片、清除背景） ==========
-  function initThemeAndBg() {
-    const themeToggle = document.getElementById("themeToggle");
-    const bgOptions = document.querySelectorAll(".bg-option");
-    const customColorPicker = document.getElementById("customColorPicker");
-    if (!themeToggle) return;
+  // ========== 美少女壁纸轮换 (高清图片池) ==========
+  const GIRL_WALLPAPERS = [
+    "https://images.pexels.com/photos/1181690/pexels-photo-1181690.jpeg?auto=compress&cs=tinysrgb&w=1600",
+    "https://images.pexels.com/photos/3812380/pexels-photo-3812380.jpeg?auto=compress&cs=tinysrgb&w=1600",
+    "https://images.pexels.com/photos/2269872/pexels-photo-2269872.jpeg?auto=compress&cs=tinysrgb&w=1600",
+    "https://images.pexels.com/photos/2361597/pexels-photo-2361597.jpeg?auto=compress&cs=tinysrgb&w=1600",
+    "https://images.pexels.com/photos/3246585/pexels-photo-3246585.jpeg?auto=compress&cs=tinysrgb&w=1600",
+    "https://images.pexels.com/photos/4031623/pexels-photo-4031623.jpeg?auto=compress&cs=tinysrgb&w=1600"
+  ];
+  let bgIndex = 0;
+  let bgInterval = null;
+
+  function rotateBackground() {
+    const nextUrl = GIRL_WALLPAPERS[bgIndex % GIRL_WALLPAPERS.length];
+    document.body.style.backgroundImage = `url(${nextUrl})`;
+    document.body.style.backgroundSize = "cover";
+    document.body.style.backgroundPosition = "center center";
+    document.body.style.backgroundAttachment = "fixed";
+    bgIndex = (bgIndex + 1) % GIRL_WALLPAPERS.length;
+  }
+
+  // ========== 粒子效果（动态萤火粒子） ==========
+  let particleCanvas, ctx, particles = [], particleAnimationId;
+  function initParticleBackground() {
+    particleCanvas = document.createElement('canvas');
+    particleCanvas.id = "particle-canvas";
+    particleCanvas.style.position = "fixed";
+    particleCanvas.style.top = "0";
+    particleCanvas.style.left = "0";
+    particleCanvas.style.width = "100%";
+    particleCanvas.style.height = "100%";
+    particleCanvas.style.pointerEvents = "none";
+    particleCanvas.style.zIndex = "1";
+    document.body.appendChild(particleCanvas);
+    ctx = particleCanvas.getContext("2d");
     
-    // 背景预设映射（包括二次元）
-    const bgMap = {
-      gradient: "var(--bg-gradient)",
-      light: "url('https://www.transparenttextures.com/patterns/cubes.png'), linear-gradient(135deg, #f9f9f9, #e0e0e0)",
-      ocean: "url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600') center/cover",
-      forest: "url('https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=600') center/cover",
-      anime: "url('/1.webp') center/cover"  // 默认二次元图片（可替换）
-    };
+    function resizeCanvas() {
+      particleCanvas.width = window.innerWidth;
+      particleCanvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', () => {
+      resizeCanvas();
+      initParticles();
+    });
+    resizeCanvas();
     
-    function applyBackground(type, colorValue = null, uploadedBgData = null) {
-      // 清除之前的自定义背景类
-      document.body.classList.remove("custom-bg", "anime-bg");
-      if (type === "custom" && colorValue) {
-        document.body.style.setProperty("--user-bg", colorValue);
-        document.body.classList.add("custom-bg");
-        localStorage.setItem(LS_BG_TYPE, "custom");
-        localStorage.setItem(LS_CUSTOM_COLOR, colorValue);
-        localStorage.removeItem(LS_UPLOADED_BG);
-        if (customColorPicker) customColorPicker.value = colorValue;
-      } 
-      else if (type === "uploaded" && uploadedBgData) {
-        document.body.style.setProperty("--user-bg", `url(${uploadedBgData}) center/cover fixed`);
-        document.body.classList.add("custom-bg");
-        localStorage.setItem(LS_BG_TYPE, "uploaded");
-        localStorage.setItem(LS_UPLOADED_BG, uploadedBgData);
-        localStorage.removeItem(LS_CUSTOM_COLOR);
+    class Particle {
+      constructor() {
+        this.x = Math.random() * particleCanvas.width;
+        this.y = Math.random() * particleCanvas.height;
+        this.size = Math.random() * 3 + 1.2;
+        this.speedX = (Math.random() - 0.5) * 0.4;
+        this.speedY = (Math.random() - 0.5) * 0.4 + 0.15;
+        const hue = Math.random() * 60 + 280; // 紫红色系
+        this.color = `hsla(${hue}, 70%, 65%, ${Math.random() * 0.5 + 0.2})`;
       }
-      else if (type === "anime" && bgMap.anime) {
-        document.body.style.setProperty("--user-bg", bgMap.anime);
-        document.body.classList.add("custom-bg", "anime-bg");
-        localStorage.setItem(LS_BG_TYPE, "anime");
-        localStorage.removeItem(LS_CUSTOM_COLOR);
-        localStorage.removeItem(LS_UPLOADED_BG);
+      update() {
+        this.x += this.speedX;
+        this.y += this.speedY;
+        if (this.x < 0) this.x = particleCanvas.width;
+        if (this.x > particleCanvas.width) this.x = 0;
+        if (this.y < 0) this.y = particleCanvas.height;
+        if (this.y > particleCanvas.height) this.y = 0;
       }
-      else if (bgMap[type]) {
-        document.body.style.setProperty("--user-bg", bgMap[type]);
-        document.body.classList.add("custom-bg");
-        localStorage.setItem(LS_BG_TYPE, type);
-        localStorage.removeItem(LS_CUSTOM_COLOR);
-        localStorage.removeItem(LS_UPLOADED_BG);
-      } 
-      else {
-        document.body.classList.remove("custom-bg");
-        document.body.style.removeProperty("--user-bg");
-        localStorage.removeItem(LS_BG_TYPE);
-        localStorage.removeItem(LS_CUSTOM_COLOR);
-        localStorage.removeItem(LS_UPLOADED_BG);
+      draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fillStyle = this.color;
+        ctx.shadowBlur = 8;
+        ctx.shadowColor = "#f0a3ff";
+        ctx.fill();
       }
-      // 更新按钮激活状态
-      bgOptions.forEach(btn => {
-        const btnType = btn.dataset.bg;
-        if (btnType === type) btn.classList.add("active");
-        else btn.classList.remove("active");
-      });
     }
     
-    // 恢复保存的背景
+    function initParticles() {
+      particles = [];
+      const particleCount = Math.min(90, Math.floor(window.innerWidth / 18));
+      for (let i = 0; i < particleCount; i++) {
+        particles.push(new Particle());
+      }
+    }
+    
+    function animateParticles() {
+      if (!ctx) return;
+      ctx.clearRect(0, 0, particleCanvas.width, particleCanvas.height);
+      ctx.shadowBlur = 6;
+      for (let p of particles) {
+        p.update();
+        p.draw();
+      }
+      particleAnimationId = requestAnimationFrame(animateParticles);
+    }
+    
+    initParticles();
+    animateParticles();
+  }
+
+  // ========== 主题切换（白天/黑夜） ==========
+  function initTheme() {
+    const themeToggle = document.getElementById("themeToggle");
+    if (!themeToggle) return;
     const savedTheme = localStorage.getItem(LS_THEME);
     if (savedTheme === "light") {
       document.body.classList.add("light-theme");
@@ -445,108 +439,21 @@
       document.body.classList.remove("light-theme");
       themeToggle.innerHTML = "🌙 黑夜模式";
     }
-    
-    const savedBgType = localStorage.getItem(LS_BG_TYPE);
-    const savedCustomColor = localStorage.getItem(LS_CUSTOM_COLOR);
-    const savedUploadedBg = localStorage.getItem(LS_UPLOADED_BG);
-    if (savedBgType === "custom" && savedCustomColor) {
-      applyBackground("custom", savedCustomColor);
-    } else if (savedBgType === "uploaded" && savedUploadedBg) {
-      applyBackground("uploaded", null, savedUploadedBg);
-    } else if (savedBgType === "anime") {
-      applyBackground("anime");
-    } else if (savedBgType && bgMap[savedBgType]) {
-      applyBackground(savedBgType);
-    } else {
-      applyBackground(null);
-    }
-    
-    // 主题切换
-    if (themeToggle) {
-      themeToggle.addEventListener("click", () => {
-        const isLight = document.body.classList.toggle("light-theme");
-        localStorage.setItem(LS_THEME, isLight ? "light" : "dark");
-        themeToggle.innerHTML = isLight ? "☀️ 白天模式" : "🌙 黑夜模式";
-      });
-    }
-    
-    // 背景预设按钮事件
-    bgOptions.forEach(btn => {
-      btn.addEventListener("click", (e) => {
-        const bgType = btn.dataset.bg;
-        if (bgType === "custom") {
-          if (customColorPicker) customColorPicker.click();
-        } else if (bgType === "anime") {
-          applyBackground("anime");
-        } else {
-          applyBackground(bgType);
-        }
-      });
+    themeToggle.addEventListener("click", () => {
+      const isLight = document.body.classList.toggle("light-theme");
+      localStorage.setItem(LS_THEME, isLight ? "light" : "dark");
+      themeToggle.innerHTML = isLight ? "☀️ 白天模式" : "🌙 黑夜模式";
     });
-    
-    // 自定义颜色选择器
-    if (customColorPicker) {
-      customColorPicker.addEventListener("input", (e) => {
-        applyBackground("custom", e.target.value);
-      });
-    }
-    
-    // 上传背景图片功能
-    if (uploadBgBtn && bgImageFile) {
-      uploadBgBtn.addEventListener("click", () => {
-        bgImageFile.click();
-      });
-      bgImageFile.addEventListener("change", (e) => {
-        const file = e.target.files[0];
-        if (file && file.type.startsWith("image/")) {
-          const reader = new FileReader();
-          reader.onload = function(ev) {
-            const base64 = ev.target.result;
-            // 检查大小：localStorage 限制约5MB，base64 会更大，建议限制图片原始大小不超过1MB
-            if (base64.length > 4 * 1024 * 1024) {
-              alert("图片过大，请选择小于 4MB 的图片 (base64 编码后大小)");
-              return;
-            }
-            applyBackground("uploaded", null, base64);
-          };
-          reader.readAsDataURL(file);
-        } else {
-          alert("请选择图片文件");
-        }
-        bgImageFile.value = ""; // 清空，允许重复上传同一文件
-      });
-    }
-
-    // ========== 新增：清除背景按钮 ==========
-    if (clearBgBtn) {
-      clearBgBtn.addEventListener("click", () => {
-        // 清除所有背景相关的 localStorage
-        localStorage.removeItem(LS_BG_TYPE);
-        localStorage.removeItem(LS_CUSTOM_COLOR);
-        localStorage.removeItem(LS_UPLOADED_BG);
-        // 移除背景相关的类
-        document.body.classList.remove("custom-bg", "anime-bg");
-        document.body.style.removeProperty("--user-bg");
-        // 自动点击“动态渐变”按钮恢复到默认渐变背景（如果存在）
-        const gradientBtn = document.querySelector('.bg-option[data-bg="gradient"]');
-        if (gradientBtn) {
-          gradientBtn.click();
-        } else {
-          // 保底：直接调用 applyBackground(null)
-          applyBackground(null);
-        }
-      });
-    }
   }
 
-  // 人物扮演
+  // ========== 人物扮演 ==========
   personaToggle.addEventListener("click", () => {
     useBuiltin = !useBuiltin;
     personaToggle.textContent = useBuiltin ? "😈" : "😇";
     localStorage.setItem(LS_USE_BUILTIN, useBuiltin ? "1" : "0");
   });
 
-  // Settings 事件（略，保持不变）
+  // ========== Settings 事件 ==========
   settingsBtn.addEventListener("click", () => {
     settingsMask.style.display = "flex";
     historyKeepEl.checked = historyEnabled;
@@ -568,7 +475,6 @@
   clearHistoryBtn.addEventListener("click", () => {
     const ok = confirm("确定清除本地历史？\n只会删除对话记录，不会影响网页自定义人物模板。");
     if (!ok) return;
-    // 清空当前会话消息
     if (currentSessionId) {
       const cur = sessions.find(s => s.id === currentSessionId);
       if (cur) {
@@ -608,7 +514,7 @@
   donateClose.addEventListener("click", closeDonate);
   donateMask.addEventListener("click", (e) => { if (e.target === donateMask) closeDonate(); });
 
-  // composer
+  // composer 自适应
   inputEl.addEventListener("input", () => {
     inputEl.style.height = "auto";
     inputEl.style.height = inputEl.scrollHeight + "px";
@@ -640,13 +546,12 @@
     if (stick) scrollToBottom();
   });
 
-  // ========== 修改后的 send 函数（支持停止生成）==========
+  // ========== 发送消息（支持停止生成） ==========
   async function send(){
     updateSpacer();
     const text = inputEl.value.trim();
     if (!text) return;
 
-    // 如果有正在进行的请求，先停止（安全起见）
     if (currentAbortController) {
       currentAbortController.abort();
       currentAbortController = null;
@@ -679,11 +584,9 @@
       customPrompt = localStorage.getItem(LS_CUSTOM_PROMPT) || "";
     }
 
-    // 创建 AbortController
     currentAbortController = new AbortController();
     if (stopBtn) stopBtn.style.display = "inline-flex";
 
-    // 可选：显示加载动画（在气泡内添加三点指示器）
     const loadingIndicator = document.createElement("div");
     loadingIndicator.className = "typing-indicator";
     loadingIndicator.innerHTML = "<span></span><span></span><span></span>";
@@ -712,7 +615,6 @@
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
 
-      // 移除加载指示器
       if (loadingIndicator.parentNode) loadingIndicator.remove();
 
       while (true) {
@@ -757,7 +659,6 @@
       session.push({ role: "assistant", content: full });
       persistSessionIfEnabled();
     } else if (isAborted && full) {
-      // 如果停止了但有部分内容，仍然保存
       session.push({ role: "assistant", content: full });
       persistSessionIfEnabled();
     }
@@ -783,7 +684,6 @@
     scrollToBottom();
   }
 
-  // 停止按钮事件
   if (stopBtn) {
     stopBtn.addEventListener("click", () => {
       if (currentAbortController) {
@@ -801,7 +701,6 @@
     }
   });
 
-  // 会话面板按钮事件
   if (sessionBtn) sessionBtn.addEventListener("click", openSessionPanel);
   if (closeSessionPanel) closeSessionPanel.addEventListener("click", closeSessionPanelFunc);
   if (sessionOverlay) sessionOverlay.addEventListener("click", closeSessionPanelFunc);
@@ -812,9 +711,14 @@
     setupResizeObserver();
     setupViewportListener();
     updateSpacer();
-    restoreSessionIfEnabled();   // 加载多会话
+    restoreSessionIfEnabled();
     scrollToBottom();
-    initThemeAndBg();
+    initTheme();
+    // 启动美少女壁纸轮换（首次立即设置，然后每隔12秒切换）
+    rotateBackground();
+    bgInterval = setInterval(rotateBackground, 12000);
+    // 启动粒子效果
+    initParticleBackground();
   }
 
   init();
