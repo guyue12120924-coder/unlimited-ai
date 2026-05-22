@@ -75,10 +75,10 @@
   // ========== 美少女壁纸轮播 ==========
   // 🔽 在这里放置你的美少女图片（可替换为本地路径或在线URL）
   const GIRL_WALLPAPERS = [
-    "https://tse1.mm.bing.net/th/id/OIP.51oNedvOa5dWUTvO8V9jdwHaNK?r=0&rs=1&pid=ImgDetMain&o=7&rm=3",
-    "https://th.bing.com/th/id/R.75438c4707f642db5bd51eb1ff5c6e7c?rik=%2fZAXIw7%2bhNuPFg&riu=http%3a%2f%2fi.zexixi.com%2fuploads%2fi_2_2979403853x1020948658_253.jpg&ehk=L6qrJVNTHiQkfEPKJRFsm30tUZDM9EGXKjJ4KskpH2s%3d&risl=&pid=ImgRaw&r=0",
-    "https://th.bing.com/th/id/R.16a927f333575cb7c67b8369399a90a1?rik=kN3FF4KVhuiNYw&riu=http%3a%2f%2fi.zexixi.com%2fuploads%2fi_0_3150684976x4257680051_253.jpg&ehk=xwmqR%2fyRMXvCxGWUgm4KzPP5uu55Ls%2fu0JF2JHqgmT8%3d&risl=&pid=ImgRaw&r=0",
-    "https://images.pexels.com/photos/2361597/pexels-photo-2361597.jpeg?auto=compress&cs=tinysrgb&w=1600",
+    "/public/1.jpg",
+    "/public/2.jpg",
+    "/public/3.jpg",
+    "/public/4.jpg",
     "https://images.pexels.com/photos/3246585/pexels-photo-3246585.jpeg?auto=compress&cs=tinysrgb&w=1600",
     "https://images.pexels.com/photos/4031623/pexels-photo-4031623.jpeg?auto=compress&cs=tinysrgb&w=1600"
   ];
