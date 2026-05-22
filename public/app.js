@@ -33,6 +33,10 @@
   const sessionListEl = document.getElementById("sessionList");
   const newSessionBtn = document.getElementById("newSessionBtn");
 
+  // 新增：上传背景相关元素
+  const uploadBgBtn = document.getElementById("uploadBgBtn");
+  const bgImageFile = document.getElementById("bgImageFile");
+
   const MODELS = (window.APP_MODELS || [
     { id: "deepseek-ai/deepseek-v4-pro", label: "deepseek-v4-pro" },
     { id: "z-ai/glm-5.1", label: "glm-5.1" },
@@ -64,6 +68,7 @@
   const LS_THEME = "cfw_theme";
   const LS_BG_TYPE = "cfw_bg_type";
   const LS_CUSTOM_COLOR = "cfw_custom_color";
+  const LS_UPLOADED_BG = "cfw_uploaded_bg";           // 存储用户上传的背景图片 base64
 
   let useBuiltin = (localStorage.getItem(LS_USE_BUILTIN) ?? "1") === "1";
   personaToggle.textContent = useBuiltin ? "😈" : "😇";
@@ -155,7 +160,6 @@
           s.name = newName.trim();
           saveSessionsToStorage();
           renderSessionList();
-          // 如果当前会话被重命名，更新标题（可选）
         }
       });
       div.querySelector(".delete-session").addEventListener("click", (e) => {
@@ -312,7 +316,7 @@
 
     const avatar = document.createElement("div");
     avatar.className = "avatar " + (role === "user" ? "human" : "bot");
-    avatar.textContent = (role === "user" ? "U" : "B");
+    avatar.textContent = (role === "user" ? "👤" : "🤖");  // 改用 emoji 头像
 
     const content = document.createElement("div");
     content.className = "content";
@@ -368,42 +372,70 @@
     });
   }
 
-  // ========== 主题与背景初始化（保持不变） ==========
+  // ========== 主题与背景初始化（增强：二次元、上传图片） ==========
   function initThemeAndBg() {
     const themeToggle = document.getElementById("themeToggle");
     const bgOptions = document.querySelectorAll(".bg-option");
     const customColorPicker = document.getElementById("customColorPicker");
     if (!themeToggle) return;
+    
+    // 背景预设映射（包括二次元）
     const bgMap = {
       gradient: "var(--bg-gradient)",
       light: "url('https://www.transparenttextures.com/patterns/cubes.png'), linear-gradient(135deg, #f9f9f9, #e0e0e0)",
       ocean: "url('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600') center/cover",
-      forest: "url('https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=600') center/cover"
+      forest: "url('https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=600') center/cover",
+      anime: "url('https://images.unsplash.com/photo-1578632767115-351597cf2477?w=600') center/cover"  // 默认二次元图片（可替换）
     };
-    function applyBackground(type, colorValue = null) {
+    
+    function applyBackground(type, colorValue = null, uploadedBgData = null) {
+      // 清除之前的自定义背景类
+      document.body.classList.remove("custom-bg", "anime-bg");
       if (type === "custom" && colorValue) {
         document.body.style.setProperty("--user-bg", colorValue);
         document.body.classList.add("custom-bg");
         localStorage.setItem(LS_BG_TYPE, "custom");
         localStorage.setItem(LS_CUSTOM_COLOR, colorValue);
+        localStorage.removeItem(LS_UPLOADED_BG);
         if (customColorPicker) customColorPicker.value = colorValue;
-      } else if (bgMap[type]) {
+      } 
+      else if (type === "uploaded" && uploadedBgData) {
+        document.body.style.setProperty("--user-bg", `url(${uploadedBgData}) center/cover fixed`);
+        document.body.classList.add("custom-bg");
+        localStorage.setItem(LS_BG_TYPE, "uploaded");
+        localStorage.setItem(LS_UPLOADED_BG, uploadedBgData);
+        localStorage.removeItem(LS_CUSTOM_COLOR);
+      }
+      else if (type === "anime" && bgMap.anime) {
+        document.body.style.setProperty("--user-bg", bgMap.anime);
+        document.body.classList.add("custom-bg", "anime-bg");
+        localStorage.setItem(LS_BG_TYPE, "anime");
+        localStorage.removeItem(LS_CUSTOM_COLOR);
+        localStorage.removeItem(LS_UPLOADED_BG);
+      }
+      else if (bgMap[type]) {
         document.body.style.setProperty("--user-bg", bgMap[type]);
         document.body.classList.add("custom-bg");
         localStorage.setItem(LS_BG_TYPE, type);
         localStorage.removeItem(LS_CUSTOM_COLOR);
-      } else {
+        localStorage.removeItem(LS_UPLOADED_BG);
+      } 
+      else {
         document.body.classList.remove("custom-bg");
         document.body.style.removeProperty("--user-bg");
         localStorage.removeItem(LS_BG_TYPE);
         localStorage.removeItem(LS_CUSTOM_COLOR);
+        localStorage.removeItem(LS_UPLOADED_BG);
       }
+      // 更新按钮激活状态
       bgOptions.forEach(btn => {
         const btnType = btn.dataset.bg;
         if (btnType === type) btn.classList.add("active");
         else btn.classList.remove("active");
       });
     }
+    
+    // 恢复保存的背景
     const savedTheme = localStorage.getItem(LS_THEME);
     if (savedTheme === "light") {
       document.body.classList.add("light-theme");
@@ -412,15 +444,23 @@
       document.body.classList.remove("light-theme");
       themeToggle.innerHTML = "🌙 黑夜模式";
     }
+    
     const savedBgType = localStorage.getItem(LS_BG_TYPE);
     const savedCustomColor = localStorage.getItem(LS_CUSTOM_COLOR);
+    const savedUploadedBg = localStorage.getItem(LS_UPLOADED_BG);
     if (savedBgType === "custom" && savedCustomColor) {
       applyBackground("custom", savedCustomColor);
+    } else if (savedBgType === "uploaded" && savedUploadedBg) {
+      applyBackground("uploaded", null, savedUploadedBg);
+    } else if (savedBgType === "anime") {
+      applyBackground("anime");
     } else if (savedBgType && bgMap[savedBgType]) {
       applyBackground(savedBgType);
     } else {
       applyBackground(null);
     }
+    
+    // 主题切换
     if (themeToggle) {
       themeToggle.addEventListener("click", () => {
         const isLight = document.body.classList.toggle("light-theme");
@@ -428,19 +468,51 @@
         themeToggle.innerHTML = isLight ? "☀️ 白天模式" : "🌙 黑夜模式";
       });
     }
+    
+    // 背景预设按钮事件
     bgOptions.forEach(btn => {
       btn.addEventListener("click", (e) => {
         const bgType = btn.dataset.bg;
         if (bgType === "custom") {
           if (customColorPicker) customColorPicker.click();
+        } else if (bgType === "anime") {
+          applyBackground("anime");
         } else {
           applyBackground(bgType);
         }
       });
     });
+    
+    // 自定义颜色选择器
     if (customColorPicker) {
       customColorPicker.addEventListener("input", (e) => {
         applyBackground("custom", e.target.value);
+      });
+    }
+    
+    // 上传背景图片功能
+    if (uploadBgBtn && bgImageFile) {
+      uploadBgBtn.addEventListener("click", () => {
+        bgImageFile.click();
+      });
+      bgImageFile.addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (file && file.type.startsWith("image/")) {
+          const reader = new FileReader();
+          reader.onload = function(ev) {
+            const base64 = ev.target.result;
+            // 检查大小：localStorage 限制约5MB，base64 会更大，建议限制图片原始大小不超过1MB
+            if (base64.length > 4 * 1024 * 1024) {
+              alert("图片过大，请选择小于 4MB 的图片 (base64 编码后大小)");
+              return;
+            }
+            applyBackground("uploaded", null, base64);
+          };
+          reader.readAsDataURL(file);
+        } else {
+          alert("请选择图片文件");
+        }
+        bgImageFile.value = ""; // 清空，允许重复上传同一文件
       });
     }
   }
@@ -589,6 +661,12 @@
     currentAbortController = new AbortController();
     if (stopBtn) stopBtn.style.display = "inline-flex";
 
+    // 可选：显示加载动画（在气泡内添加三点指示器）
+    const loadingIndicator = document.createElement("div");
+    loadingIndicator.className = "typing-indicator";
+    loadingIndicator.innerHTML = "<span></span><span></span><span></span>";
+    aiRow.bubble.appendChild(loadingIndicator);
+
     try {
       const res = await fetch("/api/chat", {
         method: "POST",
@@ -611,6 +689,9 @@
 
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
+
+      // 移除加载指示器
+      if (loadingIndicator.parentNode) loadingIndicator.remove();
 
       while (true) {
         const { done, value } = await reader.read();
@@ -637,11 +718,14 @@
     } catch (err) {
       if (err.name === "AbortError") {
         isAborted = true;
+        if (loadingIndicator.parentNode) loadingIndicator.remove();
         aiRow.bubble.textContent = full + "\n\n[已停止生成]";
       } else {
+        if (loadingIndicator.parentNode) loadingIndicator.remove();
         aiRow.bubble.textContent = `Error: ${err.message}`;
       }
     } finally {
+      if (loadingIndicator.parentNode) loadingIndicator.remove();
       currentAbortController = null;
       if (stopBtn) stopBtn.style.display = "none";
     }
