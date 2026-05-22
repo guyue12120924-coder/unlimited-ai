@@ -838,6 +838,6 @@ body.custom-bg.anime-bg {
 #settings,
 #donateCard {
   backdrop-filter: blur(0px) !important;
-  background: rgba(20, 20, 20, 0.85) !important;
+  background: rgba(20, 20, 20, 0.35) !important;
   /* 保留圆角和边框，只覆盖模糊和背景透明度 */
 }
