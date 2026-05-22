@@ -817,3 +817,26 @@ body.light-theme .ctrl-btn:hover {
 }
 
 /* 会话侧边栏已经在上方定义，此处无需额外样式 */
+/* ========== 动态背景动画（Ken Burns 效果） ========== */
+@keyframes slowZoom {
+  0% {
+    transform: scale(1) translateX(0) translateY(0);
+  }
+  50% {
+    transform: scale(1.08) translateX(2%) translateY(1%);
+  }
+  100% {
+    transform: scale(1) translateX(0) translateY(0);
+  }
+}
+
+/* 应用于清晰图片层和模糊背景层 */
+#clear-img, #blur-bg {
+  animation: slowZoom 20s ease-in-out infinite;
+}
+
+/* 确保动画不超出边界、不产生滚动条 */
+#clear-img, #blur-bg {
+  transform-origin: center center;
+  will-change: transform;
+}
