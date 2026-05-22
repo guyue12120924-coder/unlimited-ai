@@ -831,3 +831,13 @@ body.custom-bg.anime-bg {
 .upload-bg-btn:hover {
   background: rgba(255,255,255,0.2);
 }
+
+/* ========== 方案2：完全移除毛玻璃模糊，确保背景清晰可见 ========== */
+#history,
+.input-inner,
+#settings,
+#donateCard {
+  backdrop-filter: blur(0px) !important;
+  background: rgba(20, 20, 20, 0.85) !important;
+  /* 保留圆角和边框，只覆盖模糊和背景透明度 */
+}
