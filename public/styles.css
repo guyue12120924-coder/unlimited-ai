@@ -726,6 +726,39 @@ body.light-theme .bubble.ai {
   border-left-color: #4f46e5;
 }
 
+/* ========== 新增：亮色主题下顶栏按钮、下拉框浅色样式 ========== */
+body.light-theme .iconbtn {
+  background: #f0f0f0;
+  border-color: #c0c0c0;
+}
+body.light-theme .iconbtn:hover {
+  background: #e0e0e0;
+}
+
+body.light-theme .pill {
+  background: #f0f0f0;
+  border-color: #c0c0c0;
+}
+
+body.light-theme select,
+body.light-theme .pill select {
+  background: #ffffff;
+  border-color: #c0c0c0;
+  color: #111;
+}
+
+body.light-theme select option {
+  background: #ffffff;
+  color: #111;
+}
+
+/* 亮色主题下顶栏背景更通透 */
+body.light-theme #topbar {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(8px);
+  border-bottom-color: #e0e0e0;
+}
+
 /* 2. 控制栏容器（右下角浮动面板） */
 .controls-panel {
   position: fixed;
