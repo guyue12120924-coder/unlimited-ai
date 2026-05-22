@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>DeepSeek Chat</title>
+  <title>DeepSeek Chat · 美少女粒子版</title>
   <link rel="stylesheet" href="/styles.css" />
   <style>
 /* ===== 全局基础 ===== */
@@ -13,8 +13,6 @@ body{
     overflow:hidden;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
 }
-
-
 
 /* 聊天气泡优化 */
 .message,
@@ -28,24 +26,6 @@ body{
 #topbar{
     backdrop-filter: blur(16px);
     background: rgba(0,0,0,0.25);
-}
-
-/* 控制栏折叠样式 */
-.controls-panel {
-    transition: all 0.2s ease;
-}
-.collapse-btn {
-    transition: transform 0.2s;
-}
-.controls-panel.collapsed {
-    padding: 6px 10px;
-    gap: 0;
-}
-.controls-panel.collapsed .bg-selector-wrapper {
-    display: none;
-}
-.controls-panel.collapsed .collapse-btn {
-    transform: rotate(180deg);
 }
 
 /* 字体变量 */
@@ -149,7 +129,7 @@ textarea#msg::placeholder {
     pointer-events: none;
 }
 
-/* 会话侧边栏样式（无改动，保持原样） */
+/* 会话侧边栏样式 */
 #sessionPanel {
     position: fixed;
     top: 0;
@@ -226,8 +206,8 @@ textarea#msg::placeholder {
     display: none;
 }
 
-/* 控制栏按钮微调（可选） */
-.ctrl-btn, .bg-option {
+/* 控制栏按钮（精简后只保留主题和字体） */
+.ctrl-btn {
     background: rgba(255,255,255,0.08);
     border: none;
     border-radius: 999px;
@@ -236,12 +216,8 @@ textarea#msg::placeholder {
     transition: 0.2s;
     cursor: pointer;
 }
-.ctrl-btn:hover, .bg-option:hover {
+.ctrl-btn:hover {
     background: rgba(255,255,255,0.2);
-}
-.bg-option.active {
-    background: #4f46e5;
-    color: white;
 }
 
 /* ===== 亮色主题下图标、文字颜色适配 ===== */
@@ -383,27 +359,11 @@ body.light-theme #topbar {
     </div>
   </div>
 
-  <!-- 控制面板（主题背景+字体缩放） -->
+  <!-- 精简后的控制栏：只有白天黑夜模式和字体缩放 -->
   <div class="controls-panel" id="controlsPanel">
-    <button id="collapseToggle" class="ctrl-btn collapse-btn">▲</button>
-    <div class="bg-selector-wrapper" id="bgSelectorWrapper">
-      <button id="themeToggle" class="ctrl-btn">🌙 黑夜模式</button>
-      <div class="bg-selector">
-        <span>🎨 背景：</span>
-        <button data-bg="gradient" class="bg-option active">动态渐变</button>
-        <button data-bg="light" class="bg-option">浅色纹理</button>
-        <button data-bg="ocean" class="bg-option">海洋</button>
-        <button data-bg="forest" class="bg-option">森林</button>
-        <button data-bg="anime" class="bg-option">🌸 二次元</button>
-        <button data-bg="custom" class="bg-option">自定义颜色</button>
-        <input type="color" id="customColorPicker" value="#1a2a6c">
-      </div>
-      <button id="uploadBgBtn" class="ctrl-btn" title="上传本地图片作为背景">📤 上传背景</button>
-      <input type="file" id="bgImageFile" accept="image/*" style="display:none;">
-      <button id="clearBgBtn" class="ctrl-btn" title="清除自定义背景">🗑️ 清除背景</button>
-      <button id="fontDecrease" class="ctrl-btn" title="减小字体">A-</button>
-      <button id="fontIncrease" class="ctrl-btn" title="增大字体">A+</button>
-    </div>
+    <button id="themeToggle" class="ctrl-btn">🌙 黑夜模式</button>
+    <button id="fontDecrease" class="ctrl-btn" title="减小字体">A-</button>
+    <button id="fontIncrease" class="ctrl-btn" title="增大字体">A+</button>
   </div>
 
   <!-- 会话侧边栏 -->
@@ -425,21 +385,6 @@ body.light-theme #topbar {
     const scroller = document.getElementById("topbarScroll");
     if (scroller) {
       scroller.scrollLeft = scroller.scrollWidth;
-    }
-
-    // 折叠控制栏逻辑
-    const controlsPanel = document.getElementById("controlsPanel");
-    const collapseToggle = document.getElementById("collapseToggle");
-    if (controlsPanel && collapseToggle) {
-      const isCollapsed = localStorage.getItem("cfw_panel_collapsed") === "true";
-      if (isCollapsed) controlsPanel.classList.add("collapsed");
-      
-      collapseToggle.addEventListener("click", (e) => {
-        e.stopPropagation();
-        controlsPanel.classList.toggle("collapsed");
-        const nowCollapsed = controlsPanel.classList.contains("collapsed");
-        localStorage.setItem("cfw_panel_collapsed", nowCollapsed);
-      });
     }
 
     // 会话侧边栏基础控制（打开/关闭）
