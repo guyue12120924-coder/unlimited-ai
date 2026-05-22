@@ -75,12 +75,11 @@
   // ========== 美少女壁纸轮播 ==========
   // 🔽 在这里放置你的美少女图片（可替换为本地路径或在线URL）
   const GIRL_WALLPAPERS = [
-    "/public/1.jpg",
-    "/public/2.jpg",
-    "/public/3.jpg",
-    "/public/4.jpg",
+    "/1.jpg",
+    "/2.jpg",
+    "/3.jpg",
+    "/4.jpg",
     "https://images.pexels.com/photos/3246585/pexels-photo-3246585.jpeg?auto=compress&cs=tinysrgb&w=1600",
-    "https://images.pexels.com/photos/4031623/pexels-photo-4031623.jpeg?auto=compress&cs=tinysrgb&w=1600"
   ];
   let bgIndex = 0;
   let bgInterval = null;
