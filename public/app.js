@@ -81,9 +81,6 @@
     "/4.jpg",
     "/5.webp",
     "/6.jpg",
-    "/6.gif",
-    "/8.gif",
-    "/7.gif",
   ];
   let bgIndex = 0;
   let bgInterval = null;
