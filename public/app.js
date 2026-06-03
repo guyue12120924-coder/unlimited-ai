@@ -25,7 +25,6 @@
   const donateMask = document.getElementById("donateMask");
   const donateClose = document.getElementById("donateClose");
 
-  // 会话管理相关元素
   const sessionBtn = document.getElementById("sessionBtn");
   const sessionPanel = document.getElementById("sessionPanel");
   const sessionOverlay = document.getElementById("sessionOverlay");
@@ -33,7 +32,6 @@
   const sessionListEl = document.getElementById("sessionList");
   const newSessionBtn = document.getElementById("newSessionBtn");
 
-  // 字体缩放按钮
   const fontDecrease = document.getElementById("fontDecrease");
   const fontIncrease = document.getElementById("fontIncrease");
 
@@ -43,7 +41,6 @@
     { id: "openai/gpt-oss-120b", label: "gpt-oss-120b" },
   ]);
 
-  // 当前活跃会话的ID和消息数组
   let currentSessionId = null;
   let sessions = [];
   let session = [];
@@ -55,7 +52,10 @@
 
   let currentAbortController = null;
 
-  // ====== 本地存储 Key ======
+  let bgIndex = 0;
+  let bgInterval = null;
+  let isPreloading = false;
+
   const LS_MODEL = "cfw_model";
   const LS_USE_BUILTIN = "cfw_use_builtin";
   const LS_HISTORY_ENABLED = "cfw_history_enabled";
@@ -72,8 +72,6 @@
   historyKeepEl.checked = historyEnabled;
   promptKeepEl.checked = promptEnabled;
 
-  // ========== 美少女壁纸轮播 ==========
-  // 🔽 在这里放置你的美少女图片（可替换为本地路径或在线URL）
   const GIRL_WALLPAPERS = [
     "/1.webp",
     "/2.jpg",
@@ -82,48 +80,42 @@
     "/5.webp",
     "/6.jpg",
   ];
-  let bgIndex = 0;
-  let bgInterval = null;
 
-let preloadIndex = 0;      // 这两行变量建议放在文件顶部（靠近其他 let 变量）
-let isPreloading = false;
+  function rotateBackground() {
+    if (isPreloading) return;
 
-function rotateBackground() {
-  if (isPreloading) return;  // 正在预加载时，不重复触发
+    const nextIndex = (bgIndex + 1) % GIRL_WALLPAPERS.length;
+    const nextUrl = GIRL_WALLPAPERS[nextIndex];
 
-  const nextIndex = (bgIndex + 1) % GIRL_WALLPAPERS.length;
-  const nextUrl = GIRL_WALLPAPERS[nextIndex];
+    isPreloading = true;
 
-  isPreloading = true;
+    const img = new Image();
+    img.onload = function() {
+      const blurDiv = document.getElementById("blur-bg");
+      if (blurDiv) {
+        blurDiv.style.backgroundImage = `url(${nextUrl})`;
+        blurDiv.style.backgroundSize = "cover";
+        blurDiv.style.backgroundPosition = "center";
+      }
+      const clearDiv = document.getElementById("clear-img");
+      if (clearDiv) {
+        clearDiv.style.backgroundImage = `url(${nextUrl})`;
+        clearDiv.style.backgroundSize = "contain";
+        clearDiv.style.backgroundPosition = "center";
+      }
+      document.body.style.backgroundImage = "none";
+      bgIndex = nextIndex;
+      isPreloading = false;
+    };
+    img.onerror = function() {
+      isPreloading = false;
+    };
+    img.src = nextUrl;
+  }
 
-  const img = new Image();
-  img.onload = function() {
-    // 更新模糊层
-    const blurDiv = document.getElementById("blur-bg");
-    if (blurDiv) {
-      blurDiv.style.backgroundImage = `url(${nextUrl})`;
-      blurDiv.style.backgroundSize = "cover";
-      blurDiv.style.backgroundPosition = "center";
-    }
-    // 更新清晰层
-    const clearDiv = document.getElementById("clear-img");
-    if (clearDiv) {
-      clearDiv.style.backgroundImage = `url(${nextUrl})`;
-      clearDiv.style.backgroundSize = "contain";
-      clearDiv.style.backgroundPosition = "center";
-    }
-    document.body.style.backgroundImage = "none";
-    bgIndex = nextIndex;
-    isPreloading = false;
-  };
-  img.onerror = function() {
-    isPreloading = false;   // 加载失败也要释放锁
-  };
-  img.src = nextUrl;
-}
-
-  // ========== 动态粒子效果 ==========
   let particleCanvas, ctx, particles = [], particleAnimationId;
+  let mouseX = null, mouseY = null;
+
   function initParticleBackground() {
     particleCanvas = document.createElement('canvas');
     particleCanvas.id = "particle-canvas";
@@ -134,10 +126,22 @@ function rotateBackground() {
       particleCanvas.width = window.innerWidth;
       particleCanvas.height = window.innerHeight;
     }
+
     window.addEventListener('resize', () => {
       resizeCanvas();
       initParticles();
     });
+
+    window.addEventListener('mousemove', (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+    });
+
+    window.addEventListener('mouseout', () => {
+      mouseX = null;
+      mouseY = null;
+    });
+
     resizeCanvas();
 
     class Particle {
@@ -147,7 +151,9 @@ function rotateBackground() {
         this.size = Math.random() * 3 + 1.2;
         this.speedX = (Math.random() - 0.5) * 0.4;
         this.speedY = (Math.random() - 0.5) * 0.4 + 0.15;
-        this.color = `hsla(${Math.random() * 60 + 280}, 70%, 65%, ${Math.random() * 0.5 + 0.2})`;
+        this.hue = Math.random() * 60 + 280;
+        this.hueSpeed = 0.05 + Math.random() * 0.1;
+        this.color = `hsla(${this.hue}, 70%, 65%, ${Math.random() * 0.5 + 0.2})`;
       }
       update() {
         this.x += this.speedX;
@@ -156,6 +162,22 @@ function rotateBackground() {
         if (this.x > particleCanvas.width) this.x = 0;
         if (this.y < 0) this.y = particleCanvas.height;
         if (this.y > particleCanvas.height) this.y = 0;
+
+        this.hue += this.hueSpeed;
+        if (this.hue > 340) this.hue = 280;
+        this.color = `hsla(${this.hue}, 70%, 65%, ${Math.random() * 0.5 + 0.2})`;
+
+        if (mouseX !== null && mouseY !== null) {
+          const dx = this.x - mouseX;
+          const dy = this.y - mouseY;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 150) {
+            const angle = Math.atan2(dy, dx);
+            const force = (150 - dist) * 0.03;
+            this.speedX -= Math.cos(angle) * force;
+            this.speedY -= Math.sin(angle) * force;
+          }
+        }
       }
       draw() {
         ctx.beginPath();
@@ -177,6 +199,25 @@ function rotateBackground() {
       if (!ctx) return;
       ctx.clearRect(0, 0, particleCanvas.width, particleCanvas.height);
       ctx.shadowBlur = 6;
+
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const p1 = particles[i];
+          const p2 = particles[j];
+          const dx = p1.x - p2.x;
+          const dy = p1.y - p2.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 150) {
+            ctx.beginPath();
+            ctx.moveTo(p1.x, p1.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.strokeStyle = `rgba(255, 255, 255, ${0.25 - dist/600})`;
+            ctx.lineWidth = 0.4;
+            ctx.stroke();
+          }
+        }
+      }
+
       for (let p of particles) {
         p.update();
         p.draw();
@@ -188,7 +229,6 @@ function rotateBackground() {
     animateParticles();
   }
 
-  // ========== 主题切换（只保留黑夜/白天） ==========
   function initTheme() {
     const themeToggle = document.getElementById("themeToggle");
     const savedTheme = localStorage.getItem(LS_THEME);
@@ -206,7 +246,6 @@ function rotateBackground() {
     });
   }
 
-  // ========== 字体缩放 ==========
   function initFontScale() {
     let currentFontSize = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--chat-font-size')) || 15;
     const updateFont = (delta) => {
@@ -228,10 +267,10 @@ function rotateBackground() {
     }
   }
 
-  // ========== 多会话管理函数（保持不变） ==========
   function saveSessionsToStorage() {
     try { localStorage.setItem(LS_SESSIONS, JSON.stringify(sessions)); } catch(e) {}
   }
+
   function loadSessionsFromStorage() {
     const raw = localStorage.getItem(LS_SESSIONS);
     if (raw) {
@@ -248,12 +287,12 @@ function rotateBackground() {
         }
       } catch(e) {}
     }
-    // 迁移旧数据略...
     if (!sessions.length) {
       sessions = [{ id: Date.now().toString(), name: "新会话", messages: [], createdAt: Date.now() }];
       saveSessionsToStorage();
     }
   }
+
   function renderSessionList() {
     if (!sessionListEl) return;
     sessionListEl.innerHTML = "";
@@ -284,7 +323,7 @@ function rotateBackground() {
       div.querySelector(".delete-session").addEventListener("click", (e) => {
         e.stopPropagation();
         if (sessions.length === 1) { alert("至少保留一个会话"); return; }
-        if (confirm(`确定删除会话“${s.name}”吗？`)) {
+        if (confirm(`确定删除会话"${s.name}"吗？`)) {
           const idx = sessions.findIndex(ss => ss.id === s.id);
           if (idx !== -1) sessions.splice(idx, 1);
           saveSessionsToStorage();
@@ -295,6 +334,7 @@ function rotateBackground() {
       sessionListEl.appendChild(div);
     });
   }
+
   function switchToSession(sessionId) {
     const target = sessions.find(s => s.id === sessionId);
     if (!target) return;
@@ -312,6 +352,7 @@ function rotateBackground() {
     renderSessionList();
     if (historyEnabled) persistSessionIfEnabled();
   }
+
   function createNewSession() {
     const newId = Date.now().toString();
     sessions.push({ id: newId, name: `会话 ${new Date().toLocaleString()}`, messages: [], createdAt: Date.now() });
@@ -319,21 +360,23 @@ function rotateBackground() {
     switchToSession(newId);
     closeSessionPanelFunc();
   }
+
   function persistSessionIfEnabled() {
     if (!historyEnabled) return;
     const cur = sessions.find(s => s.id === currentSessionId);
     if (cur) { cur.messages = session; saveSessionsToStorage(); }
   }
+
   function restoreSessionIfEnabled() {
     loadSessionsFromStorage();
     if (sessions.length === 0) createNewSession();
     else switchToSession(sessions[0].id);
   }
+
   function escapeHtml(str) { return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m])); }
   function openSessionPanel() { sessionPanel.classList.add("open"); sessionOverlay.style.display = "block"; renderSessionList(); }
   function closeSessionPanelFunc() { sessionPanel.classList.remove("open"); sessionOverlay.style.display = "none"; }
 
-  // ========== 辅助函数 ==========
   function estimateTokens(text) {
     if (!text) return 0;
     let cjk = 0, ascii = 0;
@@ -345,6 +388,7 @@ function rotateBackground() {
     }
     return cjk + Math.ceil(ascii / 4);
   }
+
   function updateSpacer() {
     if (!composerEl || !spacerEl) return;
     const rect = composerEl.getBoundingClientRect();
@@ -353,12 +397,15 @@ function rotateBackground() {
     spacerEl.style.height = Math.ceil(rect.height + gap + extra) + "px";
     historyWrap.style.scrollPaddingBottom = spacerEl.style.height;
   }
+
   function isNearBottom() {
     return (historyWrap.scrollHeight - historyWrap.scrollTop - historyWrap.clientHeight) < 120;
   }
+
   function scrollToBottom() {
     historyWrap.scrollTo({ top: historyWrap.scrollHeight, behavior: "auto" });
   }
+
   function makeRow(role) {
     const row = document.createElement("div");
     row.className = "row " + (role === "user" ? "user" : "ai");
@@ -383,10 +430,12 @@ function rotateBackground() {
     if (isNearBottom()) scrollToBottom();
     return { bubble, stats };
   }
+
   function clearUIRows() {
     const nodes = Array.from(chatEl.children);
     for (const n of nodes) if (n !== spacerEl) chatEl.removeChild(n);
   }
+
   function initModels() {
     modelSel.innerHTML = "";
     for (const m of MODELS) {
@@ -400,67 +449,68 @@ function rotateBackground() {
     modelSel.addEventListener("change", () => localStorage.setItem(LS_MODEL, modelSel.value));
   }
 
-  // ========== 发送消息（支持停止生成） ==========
   async function send() {
-    updateSpacer();
     const text = inputEl.value.trim();
     if (!text) return;
-    if (currentAbortController) currentAbortController.abort();
+    inputEl.value = "";
+    inputEl.style.height = "auto";
 
     const userRow = makeRow("user");
     userRow.bubble.textContent = text;
-    const inEst = estimateTokens(text);
-    totalInEstimate += inEst;
-    userRow.stats.textContent = `Input(估算): ≈${inEst} | Total In: ≈${totalInEstimate}`;
     session.push({ role: "user", content: text });
     persistSessionIfEnabled();
-    inputEl.value = "";
-    inputEl.style.height = "auto";
-    updateSpacer();
-    scrollToBottom();
 
     const aiRow = makeRow("assistant");
-    let full = "";
-    let exactUsage = null;
-    let isAborted = false;
-    let customPrompt = "";
-    if (!useBuiltin && promptEnabled) customPrompt = localStorage.getItem(LS_CUSTOM_PROMPT) || "";
-
-    currentAbortController = new AbortController();
-    stopBtn.style.display = "inline-flex";
-
     const loadingIndicator = document.createElement("div");
-    loadingIndicator.className = "typing-indicator";
-    loadingIndicator.innerHTML = "<span></span><span></span><span></span>";
+    loadingIndicator.textContent = "▍";
+    loadingIndicator.style.animation = "blink 1s infinite";
     aiRow.bubble.appendChild(loadingIndicator);
 
+    stopBtn.style.display = "inline-flex";
+    sendBtn.style.display = "none";
+
+    currentAbortController = new AbortController();
+    let full = "";
+    let isAborted = false;
+    let exactUsage = null;
+
     try {
-      const res = await fetch("/api/chat", {
+      const resp = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           model: modelSel.value,
           use_builtin_persona: useBuiltin,
-          custom_system_prompt: customPrompt,
-          messages: session
+          custom_system_prompt: customPromptEl.value,
+          messages: session.filter(m => m.role === "user" || m.role === "assistant").slice(-20)
         }),
         signal: currentAbortController.signal
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const reader = res.body.getReader();
+
+      if (!resp.ok) {
+        const errText = await resp.text();
+        aiRow.bubble.textContent = `错误 ${resp.status}: ${errText}`;
+        return;
+      }
+
+      const reader = resp.body.getReader();
       const decoder = new TextDecoder();
-      loadingIndicator.remove();
+      let buffer = "";
+
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split("\n");
+        buffer += decoder.decode(value, { stream: true });
+
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+
         for (const line of lines) {
-          if (!line.startsWith("data: ")) continue;
-          const jsonStr = line.slice(6).trim();
-          if (!jsonStr || jsonStr === "[DONE]") continue;
+          if (!line.startsWith("data:")) continue;
+          const data = line.slice(5).trim();
+          if (data === "[DONE]") continue;
           try {
-            const parsed = JSON.parse(jsonStr);
+            const parsed = JSON.parse(data);
             if (parsed.usage) exactUsage = parsed.usage;
             const delta = parsed.choices?.[0]?.delta?.content;
             if (delta) {
@@ -479,6 +529,7 @@ function rotateBackground() {
       if (loadingIndicator.parentNode) loadingIndicator.remove();
       currentAbortController = null;
       stopBtn.style.display = "none";
+      sendBtn.style.display = "inline-flex";
     }
     if (full && !isAborted) { session.push({ role: "assistant", content: full }); persistSessionIfEnabled(); }
     if (exactUsage) {
@@ -494,59 +545,63 @@ function rotateBackground() {
     scrollToBottom();
   }
 
-  // 停止按钮
   stopBtn.addEventListener("click", () => { if (currentAbortController) currentAbortController.abort(); });
   sendBtn.addEventListener("click", send);
   inputEl.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } });
 
-  // 事件绑定
   personaToggle.addEventListener("click", () => {
     useBuiltin = !useBuiltin;
     personaToggle.textContent = useBuiltin ? "😈" : "😇";
     localStorage.setItem(LS_USE_BUILTIN, useBuiltin ? "1" : "0");
   });
+
   settingsBtn.addEventListener("click", () => {
     settingsMask.style.display = "flex";
     historyKeepEl.checked = historyEnabled;
     promptKeepEl.checked = promptEnabled;
     customPromptEl.value = localStorage.getItem(LS_CUSTOM_PROMPT) || "";
   });
+
   closeSettingsBtn.addEventListener("click", () => settingsMask.style.display = "none");
   settingsMask.addEventListener("click", (e) => { if (e.target === settingsMask) settingsMask.style.display = "none"; });
+
   historyKeepEl.addEventListener("change", () => {
     historyEnabled = historyKeepEl.checked;
     localStorage.setItem(LS_HISTORY_ENABLED, historyEnabled ? "1" : "0");
     if (historyEnabled) persistSessionIfEnabled();
   });
+
   clearHistoryBtn.addEventListener("click", () => {
     if (confirm("清除当前会话历史？")) {
       const cur = sessions.find(s => s.id === currentSessionId);
       if (cur) { cur.messages = []; session = cur.messages; saveSessionsToStorage(); clearUIRows(); updateSpacer(); scrollToBottom(); renderSessionList(); }
     }
   });
+
   promptKeepEl.addEventListener("change", () => {
     promptEnabled = promptKeepEl.checked;
     localStorage.setItem(LS_PROMPT_ENABLED, promptEnabled ? "1" : "0");
     if (!promptEnabled) localStorage.removeItem(LS_CUSTOM_PROMPT);
   });
+
   savePromptBtn.addEventListener("click", () => {
     if (promptEnabled) localStorage.setItem(LS_CUSTOM_PROMPT, customPromptEl.value);
     settingsMask.style.display = "none";
   });
+
   clearPromptBtn.addEventListener("click", () => {
     if (confirm("清除自定义模板？")) { localStorage.removeItem(LS_CUSTOM_PROMPT); customPromptEl.value = ""; }
   });
+
   donateBtn.addEventListener("click", () => donateMask.style.display = "flex");
   donateClose.addEventListener("click", () => donateMask.style.display = "none");
   donateMask.addEventListener("click", (e) => { if (e.target === donateMask) donateMask.style.display = "none"; });
 
-  // 会话面板
   sessionBtn.addEventListener("click", openSessionPanel);
   closeSessionPanel.addEventListener("click", closeSessionPanelFunc);
   sessionOverlay.addEventListener("click", closeSessionPanelFunc);
   newSessionBtn.addEventListener("click", createNewSession);
 
-  // 输入框自适应
   inputEl.addEventListener("input", () => {
     inputEl.style.height = "auto";
     inputEl.style.height = inputEl.scrollHeight + "px";
@@ -554,14 +609,15 @@ function rotateBackground() {
     updateSpacer();
     if (stick) scrollToBottom();
   });
+
   function setupResizeObserver() {
     if (!composerEl || typeof ResizeObserver === "undefined") return;
     const ro = new ResizeObserver(() => { const stick = isNearBottom(); updateSpacer(); if (stick) scrollToBottom(); });
     ro.observe(composerEl);
   }
+
   window.addEventListener("resize", () => { const stick = isNearBottom(); updateSpacer(); if (stick) scrollToBottom(); });
 
-  // 初始化
   function init() {
     initModels();
     setupResizeObserver();
@@ -574,5 +630,6 @@ function rotateBackground() {
     bgInterval = setInterval(rotateBackground, 30000);
     initParticleBackground();
   }
+
   init();
 })();
