@@ -3,346 +3,100 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>DeepSeek Chat · 美少女粒子版</title>
   <link rel="stylesheet" href="/styles.css" />
-  <style>
-/* ===== 全局基础 ===== */
-body{
-    margin:0;
-    min-height:100vh;
-    overflow:hidden;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
-}
-
-/* 聊天气泡优化 */
-.message,
-.user,
-.assistant{
-    border-radius:18px;
-    padding:12px;
-}
-
-/* 顶栏 */
-#topbar{
-    backdrop-filter: blur(16px);
-    background: rgba(0,0,0,0.25);
-}
-
-/* 字体变量 */
-:root {
-    --chat-font-size: 15px;
-}
-.bubble, .bubble * {
-    font-size: var(--chat-font-size);
-}
-
-/* ===== ChatGPT风格输入区域美化 ===== */
-.input-floating {
-    position: fixed;
-    bottom: var(--composer-gap, 18px);
-    left: 0;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    pointer-events: none;
-    z-index: 100;
-}
-
-.input-inner {
-    pointer-events: auto;
-    width: 100%;
-    max-width: 760px;
-    margin: 0 auto;
-    background: rgba(32,32,36,0.8) !important;
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 32px;
-    padding: 6px 12px 6px 20px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-.input-inner:focus-within {
-    border-color: rgba(79,70,229,0.6);
-    box-shadow: 0 0 0 3px rgba(79,70,229,0.2);
-}
-
-textarea#msg {
-    flex: 1;
-    resize: none;
-    border: none;
-    outline: none;
-    background: transparent;
-    color: #fff;
-    font-size: 16px;
-    line-height: 1.5;
-    padding: 10px 0;
-    max-height: 200px;
-    font-family: inherit;
-}
-
-textarea#msg::placeholder {
-    color: rgba(255,255,255,0.5);
-    font-size: 15px;
-}
-
-/* 发送按钮和停止按钮统一风格 */
-#sendBtn, #stopBtn {
-    border: none;
-    border-radius: 28px;
-    padding: 8px 20px;
-    font-weight: 500;
-    font-size: 14px;
-    cursor: pointer;
-    transition: 0.2s;
-    background: #4f46e5;
-    color: white;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-family: inherit;
-}
-
-#sendBtn:hover {
-    background: #6366f1;
-    transform: scale(1.02);
-}
-
-#stopBtn {
-    background: #dc2626;
-    display: none;
-}
-#stopBtn:hover {
-    background: #b91c1c;
-}
-
-/* 底部提示文字 */
-.composer-hint {
-    text-align: center;
-    font-size: 12px;
-    color: rgba(255,255,255,0.4);
-    margin-top: 10px;
-    pointer-events: none;
-}
-
-/* 会话侧边栏样式 */
-#sessionPanel {
-    position: fixed;
-    top: 0;
-    left: -300px;
-    width: 280px;
-    height: 100%;
-    background: rgba(20,20,30,0.95);
-    backdrop-filter: blur(16px);
-    border-right: 1px solid #333;
-    z-index: 1100;
-    transition: left 0.2s ease;
-    display: flex;
-    flex-direction: column;
-    padding: 16px;
-    box-sizing: border-box;
-}
-#sessionPanel.open {
-    left: 0;
-}
-.session-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-}
-.session-list {
-    flex: 1;
-    overflow-y: auto;
-}
-.session-item {
-    padding: 10px 12px;
-    margin: 4px 0;
-    border-radius: 12px;
-    cursor: pointer;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: rgba(255,255,255,0.05);
-}
-.session-item.active {
-    background: #4f46e5;
-}
-.session-title {
-    flex: 1;
-    font-size: 14px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-.session-actions button {
-    background: none;
-    border: none;
-    color: #ccc;
-    cursor: pointer;
-    margin-left: 8px;
-}
-.new-session-btn {
-    background: #4f46e5;
-    border: none;
-    padding: 10px;
-    border-radius: 20px;
-    color: white;
-    margin-top: 16px;
-    cursor: pointer;
-}
-#sessionOverlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0,0,0,0.5);
-    z-index: 1050;
-    display: none;
-}
-
-/* 控制栏按钮（精简后只保留主题和字体） */
-.ctrl-btn {
-    background: rgba(255,255,255,0.08);
-    border: none;
-    border-radius: 999px;
-    padding: 6px 14px;
-    font-size: 13px;
-    transition: 0.2s;
-    cursor: pointer;
-}
-.ctrl-btn:hover {
-    background: rgba(255,255,255,0.2);
-}
-
-/* ===== 亮色主题下图标、文字颜色适配 ===== */
-body.light-theme .iconbtn {
-    color: #1e1e2f;
-}
-body.light-theme .iconbtn svg {
-    fill: #1e1e2f;
-}
-body.light-theme select,
-body.light-theme .pill {
-    color: #1e1e2f;
-    background: rgba(0,0,0,0.05);
-}
-body.light-theme #topbar {
-    background: rgba(255,255,255,0.3);
-}
-</style>
 </head>
 <body>
-  <!-- 模糊背景层（全屏，图片 cover + 模糊） -->
-<div id="blur-bg" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; background-size: cover; background-position: center; filter: blur(20px); transform: scale(1.1); pointer-events: none;"></div>
+  <div id="blur-bg" style="position:fixed;top:0;left:0;width:100%;height:100%;background-size:cover;background-position:center;filter:blur(20px);z-index:0;opacity:0.6;"></div>
+  <div id="clear-img" style="position:fixed;top:0;left:0;width:100%;height:100%;background-size:contain;background-position:center;z-index:0;opacity:0.3;"></div>
 
-<!-- 清晰图片层（contain 完整显示） -->
-<div id="clear-img" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; background-size: contain; background-repeat: no-repeat; background-position: center; pointer-events: none;"></div>
-<div id="app">
-  <div id="topbar">
-    <div class="topbar-shell">
-      <div class="topbar-scroll" id="topbarScroll">
-        <div class="topbar-inner">
-          <!-- 会话管理按钮 -->
-          <button class="iconbtn" id="sessionBtn" title="会话管理">💬</button>
-          <button class="iconbtn" id="donateBtn" title="打赏 / Donate">
-            <span class="emoji">☕</span>
-          </button>
-
-          <a
-            href="https://github.com/MallocPointer/unlimited-ai"
-            target="_blank"
-            class="iconbtn"
-            id="githubBtn"
-            style="text-decoration: none;"
-            title="GitHub 开源地址"
-          >
-            <svg height="20" width="20" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
-              <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
-            </svg>
-          </a>
-
-          <div class="pill model-pill">
-            <label for="modelSel" class="model-label">Model</label>
-            <select id="modelSel"></select>
+  <div id="app">
+    <div id="topbar">
+      <div class="topbar-shell">
+        <div class="topbar-scroll" id="topbarScroll">
+          <div class="topbar-inner">
+            <div class="pill model-pill">
+              <span class="model-label">模型：</span>
+              <select id="modelSel"></select>
+            </div>
+            <button class="iconbtn" id="personaToggle" title="切换内置/自定义人物">😈</button>
+            <button class="iconbtn" id="settingsBtn" title="设置">⚙️</button>
+            <button class="iconbtn" id="sessionBtn" title="会话管理">📂</button>
+            <button class="iconbtn" id="donateBtn" title="打赏">💰</button>
           </div>
-
-          <button class="iconbtn" id="personaToggle" title="😈=使用内置人物扮演 | 😇=不使用内置（网页自定义才生效）">😈</button>
-          <button class="iconbtn" id="settingsBtn" title="Settings">⚙️</button>
         </div>
       </div>
     </div>
-  </div>
 
-  <div id="history">
-    <div class="chat" id="chat">
-      <div id="bottom-spacer"></div>
+    <div id="history">
+      <div class="chat" id="chat">
+        <div id="bottom-spacer"></div>
+      </div>
     </div>
-  </div>
 
-  <div class="input-floating">
-    <div class="input-inner" id="composer">
-      <textarea id="msg" rows="1" placeholder="发送消息..."></textarea>
-      <button id="sendBtn">发送</button>
-      <button id="stopBtn">停止</button>
+    <div id="composer">
+      <div class="input-wrap">
+        <div class="input-inner">
+          <textarea id="msg" rows="1" placeholder="输入消息... (Enter 发送, Shift+Enter 换行)"></textarea>
+          <button id="sendBtn">发送</button>
+          <button id="stopBtn">停止</button>
+        </div>
+        <div class="composer-hint">Enter 发送 · Shift+Enter 换行</div>
+      </div>
     </div>
-    <div class="composer-hint">✨ DeepSeek 与你畅聊，按 Enter 发送</div>
   </div>
 
   <div id="settingsMask">
     <div id="settings">
-      <div id="settingsHeader">
-        <h3>Settings</h3>
-        <div class="hint">所有数据仅保存在本地浏览器（localStorage），不会上传</div>
+      <div id="settingsHead">
+        <div class="t">设置 / Settings</div>
+        <button id="closeSettings">✕</button>
       </div>
-
-      <div class="card">
-        <h4>本地对话记忆（Local History）</h4>
-        <p>
-          开启后：刷新页面/重开浏览器仍会恢复对话。关闭后：仅本次页面会话有效，不再落盘保存。<br>
-          ⚠️ 清除历史只会删除本地对话，不会影响“网页自定义人物模板”。
-        </p>
-
-        <div class="rowline">
-          <div class="toggle">
-            <input type="checkbox" id="historyKeep">
-            <label for="historyKeep">保留本地历史（启用本地记忆）</label>
-          </div>
-          <div class="btns">
-            <button class="smallbtn danger" id="clearHistory">清除本地历史</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="card">
-        <h4>网页自定义人物模板（Web Custom Persona）</h4>
-        <p>
-          ⚠️ 仅当右上角为 <b>😇</b> 时，此处才会生效；<b>😈 会忽略这里</b>。<br>
-          清除模板只会删除网页自定义内容，不会影响本地历史。
-        </p>
-
-        <div class="rowline">
-          <div class="toggle">
-            <input type="checkbox" id="promptKeep">
-            <label for="promptKeep">保留自定义人物模板（保存到本地）</label>
-          </div>
-          <div class="btns">
-            <button class="smallbtn danger" id="clearPrompt">清除自定义模板</button>
+      <div id="settingsBody">
+        <div class="card">
+          <h4>本地历史（Local History）</h4>
+          <p>
+            开启后，聊天记录会保存在浏览器本地（localStorage）。<br>
+            关闭后，刷新页面会丢失当前对话。
+          </p>
+          <div class="rowline">
+            <div class="toggle">
+              <input type="checkbox" id="historyKeep">
+              <label for="historyKeep">保留本地历史（启用本地记忆）</label>
+            </div>
+            <div class="btns">
+              <button class="smallbtn danger" id="clearHistory">清除本地历史</button>
+            </div>
           </div>
         </div>
 
-        <textarea id="customPrompt" placeholder="仅😇时生效：在这里写网页端自定义 system prompt（可多行）。"></textarea>
+        <div class="card">
+          <h4>网页自定义人物模板（Web Custom Persona）</h4>
+          <p>
+            ⚠️ 仅当右上角为 <b>😇</b> 时，此处才会生效；<b>😈 会忽略这里</b>。<br>
+            清除模板只会删除网页自定义内容，不会影响本地历史。
+          </p>
 
-        <div class="rowline">
-          <div></div>
-          <div class="btns">
-            <button class="smallbtn" id="savePrompt">保存</button>
-            <button class="smallbtn" id="closeSettings">关闭</button>
+          <div class="rowline">
+            <div class="toggle">
+              <input type="checkbox" id="promptKeep">
+              <label for="promptKeep">保留自定义人物模板（保存到本地）</label>
+            </div>
+            <div class="btns">
+              <button class="smallbtn danger" id="clearPrompt">清除自定义模板</button>
+            </div>
+          </div>
+
+          <textarea id="customPrompt" placeholder="仅😇时生效：在这里写网页端自定义 system prompt（可多行）。"></textarea>
+
+          <div class="rowline">
+            <div></div>
+            <div class="btns">
+              <button class="smallbtn" id="savePrompt">保存</button>
+              <button class="smallbtn" id="closeSettings">关闭</button>
+            </div>
           </div>
         </div>
       </div>
@@ -364,14 +118,12 @@ body.light-theme #topbar {
     </div>
   </div>
 
-  <!-- 精简后的控制栏：只有白天黑夜模式和字体缩放 -->
   <div class="controls-panel" id="controlsPanel">
     <button id="themeToggle" class="ctrl-btn">🌙 黑夜模式</button>
     <button id="fontDecrease" class="ctrl-btn" title="减小字体">A-</button>
     <button id="fontIncrease" class="ctrl-btn" title="增大字体">A+</button>
   </div>
 
-  <!-- 会话侧边栏 -->
   <div id="sessionOverlay"></div>
   <div id="sessionPanel">
     <div class="session-header">
@@ -381,60 +133,8 @@ body.light-theme #topbar {
     <div class="session-list" id="sessionList"></div>
     <button id="newSessionBtn" class="new-session-btn">➕ 新建会话</button>
   </div>
-</div>
 
-<script src="/config.js"></script>
-<script src="/app.js"></script>
-<script>
-  window.addEventListener("load", function () {
-    const scroller = document.getElementById("topbarScroll");
-    if (scroller) {
-      scroller.scrollLeft = scroller.scrollWidth;
-    }
-
-    // 会话侧边栏基础控制（打开/关闭）
-    const sessionBtn = document.getElementById("sessionBtn");
-    const sessionPanel = document.getElementById("sessionPanel");
-    const sessionOverlay = document.getElementById("sessionOverlay");
-    const closeSessionPanel = document.getElementById("closeSessionPanel");
-    if (sessionBtn && sessionPanel && sessionOverlay) {
-      const openPanel = () => {
-        sessionPanel.classList.add("open");
-        sessionOverlay.style.display = "block";
-      };
-      const closePanel = () => {
-        sessionPanel.classList.remove("open");
-        sessionOverlay.style.display = "none";
-      };
-      sessionBtn.addEventListener("click", openPanel);
-      closeSessionPanel.addEventListener("click", closePanel);
-      sessionOverlay.addEventListener("click", closePanel);
-    }
-
-    // 字体缩放初始化（与 app.js 无冲突）
-    let currentFontSize = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--chat-font-size')) || 15;
-    const fontDecrease = document.getElementById("fontDecrease");
-    const fontIncrease = document.getElementById("fontIncrease");
-    if (fontDecrease && fontIncrease) {
-      const updateFontSize = (delta) => {
-        let newSize = currentFontSize + delta;
-        if (newSize < 12) newSize = 12;
-        if (newSize > 20) newSize = 20;
-        if (newSize !== currentFontSize) {
-          currentFontSize = newSize;
-          document.documentElement.style.setProperty('--chat-font-size', currentFontSize + 'px');
-          localStorage.setItem("cfw_font_size", currentFontSize);
-        }
-      };
-      fontDecrease.addEventListener("click", () => updateFontSize(-1));
-      fontIncrease.addEventListener("click", () => updateFontSize(1));
-      const savedFontSize = localStorage.getItem("cfw_font_size");
-      if (savedFontSize) {
-        currentFontSize = parseFloat(savedFontSize);
-        document.documentElement.style.setProperty('--chat-font-size', currentFontSize + 'px');
-      }
-    }
-  });
-</script>
+  <script src="/config.js"></script>
+  <script src="/app.js"></script>
 </body>
 </html>
