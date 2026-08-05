@@ -1259,6 +1259,12 @@ body.light-theme .character-card {
     display: none;
   }
 
+  .command-button::before {
+    content: "⌕";
+    font-size: 18px;
+    line-height: 1;
+  }
+
   .studio-top-btn {
     min-width: 34px;
     padding: 0 7px;
