@@ -25,7 +25,7 @@
   const donateMask = document.getElementById("donateMask");
   const donateClose = document.getElementById("donateClose");
 
-  // 浼氳瘽绠＄悊鐩稿叧鍏冪礌
+  // 会话管理相关元素
   const sessionBtn = document.getElementById("sessionBtn");
   const sessionPanel = document.getElementById("sessionPanel");
   const sessionOverlay = document.getElementById("sessionOverlay");
@@ -33,11 +33,11 @@
   const sessionListEl = document.getElementById("sessionList");
   const newSessionBtn = document.getElementById("newSessionBtn");
 
-  // 瀛椾綋缂╂斁鎸夐挳
+  // 字体缩放按钮
   const fontDecrease = document.getElementById("fontDecrease");
   const fontIncrease = document.getElementById("fontIncrease");
 
-  // 闃呰妯″紡鐩稿叧鍏冪礌
+  // 阅读模式相关元素
   const emptyState = document.getElementById("emptyState");
   const readerBtn = document.getElementById("readerBtn");
   const readerCount = document.getElementById("readerCount");
@@ -61,7 +61,8 @@
     { id: "openai/gpt-oss-120b", label: "gpt-oss-120b" },
   ]);
 
-  // 褰撳墠娲昏穬浼氳瘽鐨処D鍜屾秷鎭暟缁?  let currentSessionId = null;
+  // 当前活跃会话的ID和消息数组
+  let currentSessionId = null;
   let sessions = [];
   let session = [];
 
@@ -72,7 +73,7 @@
 
   let currentAbortController = null;
 
-  // ====== 鏈湴瀛樺偍 Key ======
+  // ====== 本地存储 Key ======
   const LS_MODEL = "cfw_model";
   const LS_USE_BUILTIN = "cfw_use_builtin";
   const LS_HISTORY_ENABLED = "cfw_history_enabled";
@@ -91,15 +92,16 @@
   }
 
   let useBuiltin = (localStorage.getItem(LS_USE_BUILTIN) ?? "1") === "1";
-  personaToggle.textContent = useBuiltin ? "馃槇" : "馃槆";
+  personaToggle.textContent = useBuiltin ? "😈" : "😇";
 
   let historyEnabled = (localStorage.getItem(LS_HISTORY_ENABLED) ?? "0") === "1";
   let promptEnabled  = (localStorage.getItem(LS_PROMPT_ENABLED) ?? "1") === "1";
   historyKeepEl.checked = historyEnabled;
   promptKeepEl.checked = promptEnabled;
 
-  // ========== 缇庡皯濂冲绾歌疆鎾?==========
-  // 馃斀 鍦ㄨ繖閲屾斁缃綘鐨勭編灏戝コ鍥剧墖锛堝彲鏇挎崲涓烘湰鍦拌矾寰勬垨鍦ㄧ嚎URL锛?  const GIRL_WALLPAPERS = [
+  // ========== 美少女壁纸轮播 ==========
+  // 🔽 在这里放置你的美少女图片（可替换为本地路径或在线URL）
+  const GIRL_WALLPAPERS = [
     "/1.webp",
     "/2.jpg",
     "/3.jpg",
@@ -110,10 +112,11 @@
   let bgIndex = 0;
   let bgInterval = null;
 
-let preloadIndex = 0;      // 杩欎袱琛屽彉閲忓缓璁斁鍦ㄦ枃浠堕《閮紙闈犺繎鍏朵粬 let 鍙橀噺锛?let isPreloading = false;
+let preloadIndex = 0;      // 这两行变量建议放在文件顶部（靠近其他 let 变量）
+let isPreloading = false;
 
 function rotateBackground() {
-  if (isPreloading) return;  // 姝ｅ湪棰勫姞杞芥椂锛屼笉閲嶅瑙﹀彂
+  if (isPreloading) return;  // 正在预加载时，不重复触发
 
   const nextIndex = (bgIndex + 1) % GIRL_WALLPAPERS.length;
   const nextUrl = GIRL_WALLPAPERS[nextIndex];
@@ -122,13 +125,15 @@ function rotateBackground() {
 
   const img = new Image();
   img.onload = function() {
-    // 鏇存柊妯＄硦灞?    const blurDiv = document.getElementById("blur-bg");
+    // 更新模糊层
+    const blurDiv = document.getElementById("blur-bg");
     if (blurDiv) {
       blurDiv.style.backgroundImage = `url(${nextUrl})`;
       blurDiv.style.backgroundSize = "cover";
       blurDiv.style.backgroundPosition = "center";
     }
-    // 鏇存柊娓呮櫚灞?    const clearDiv = document.getElementById("clear-img");
+    // 更新清晰层
+    const clearDiv = document.getElementById("clear-img");
     if (clearDiv) {
       clearDiv.style.backgroundImage = `url(${nextUrl})`;
       clearDiv.style.backgroundSize = "contain";
@@ -139,11 +144,12 @@ function rotateBackground() {
     isPreloading = false;
   };
   img.onerror = function() {
-    isPreloading = false;   // 鍔犺浇澶辫触涔熻閲婃斁閿?  };
+    isPreloading = false;   // 加载失败也要释放锁
+  };
   img.src = nextUrl;
 }
 
-  // ========== 鍔ㄦ€佺矑瀛愭晥鏋?==========
+  // ========== 动态粒子效果 ==========
   let particleCanvas, ctx, particles = [], particleAnimationId;
   function initParticleBackground() {
     particleCanvas = document.createElement('canvas');
@@ -209,25 +215,25 @@ function rotateBackground() {
     animateParticles();
   }
 
-  // ========== 涓婚鍒囨崲锛堝彧淇濈暀榛戝/鐧藉ぉ锛?==========
+  // ========== 主题切换（只保留黑夜/白天） ==========
   function initTheme() {
     const themeToggle = document.getElementById("themeToggle");
     const savedTheme = localStorage.getItem(LS_THEME);
     if (savedTheme === "light") {
       document.body.classList.add("light-theme");
-      themeToggle.textContent = "鍒囨崲娣辫壊涓婚";
+      themeToggle.textContent = "切换深色主题";
     } else {
       document.body.classList.remove("light-theme");
-      themeToggle.textContent = "鍒囨崲娴呰壊涓婚";
+      themeToggle.textContent = "切换浅色主题";
     }
     themeToggle.addEventListener("click", () => {
       const isLight = document.body.classList.toggle("light-theme");
       localStorage.setItem(LS_THEME, isLight ? "light" : "dark");
-      themeToggle.textContent = isLight ? "鍒囨崲娣辫壊涓婚" : "鍒囨崲娴呰壊涓婚";
+      themeToggle.textContent = isLight ? "切换深色主题" : "切换浅色主题";
     });
   }
 
-  // ========== 瀛椾綋缂╂斁 ==========
+  // ========== 字体缩放 ==========
   function initFontScale() {
     let currentFontSize = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--chat-font-size')) || 15;
     const updateFont = (delta) => {
@@ -249,7 +255,7 @@ function rotateBackground() {
     }
   }
 
-  // ========== 灏忚闃呰妯″紡锛堜粎浣跨敤褰撳墠娴忚鍣ㄤ腑鐨勪細璇濆唴瀹癸級 ==========
+  // ========== 小说阅读模式（仅使用当前浏览器中的会话内容） ==========
   function getAssistantSegments() {
     return session
       .map((message, index) => ({ message, index }))
@@ -288,7 +294,7 @@ function rotateBackground() {
       const selected = selection.has(index);
       button.classList.toggle("selected", selected);
       button.setAttribute("aria-pressed", selected ? "true" : "false");
-      button.textContent = selected ? "宸插姞鍏ラ槄璇? : "鍔犲叆闃呰";
+      button.textContent = selected ? "已加入阅读" : "加入阅读";
     });
   }
 
@@ -340,7 +346,7 @@ function rotateBackground() {
       const copy = document.createElement("span");
       copy.className = "reader-segment-copy";
       const title = document.createElement("strong");
-      title.textContent = `鐗囨 ${String(position + 1).padStart(2, "0")}`;
+      title.textContent = `片段 ${String(position + 1).padStart(2, "0")}`;
       const preview = document.createElement("span");
       preview.textContent = message.content.replace(/\s+/g, " ").trim().slice(0, 140);
       copy.appendChild(title);
@@ -355,7 +361,7 @@ function rotateBackground() {
       chapter.className = "reader-chapter";
       const chapterLabel = document.createElement("div");
       chapterLabel.className = "reader-chapter-label";
-      chapterLabel.textContent = `鐗囨 ${String(position + 1).padStart(2, "0")}`;
+      chapterLabel.textContent = `片段 ${String(position + 1).padStart(2, "0")}`;
       const text = document.createElement("p");
       text.className = "reader-chapter-text";
       text.textContent = message.content;
@@ -365,7 +371,7 @@ function rotateBackground() {
     });
 
     const charCount = selectedSegments.reduce((sum, item) => sum + item.message.content.length, 0);
-    readerSummary.textContent = `${selectedSegments.length} 涓墖娈?路 ${charCount.toLocaleString()} 瀛梎;
+    readerSummary.textContent = `${selectedSegments.length} 个片段 · ${charCount.toLocaleString()} 字`;
     readerEmpty.classList.toggle("visible", selectedSegments.length === 0);
     readerContent.hidden = selectedSegments.length === 0;
     readerCopy.disabled = selectedSegments.length === 0;
@@ -419,17 +425,17 @@ function rotateBackground() {
       if (!text) return;
       try {
         await navigator.clipboard.writeText(text);
-        readerCopy.textContent = "宸插鍒?;
-        setTimeout(() => { readerCopy.textContent = "澶嶅埗鍏ㄦ枃"; }, 1400);
+        readerCopy.textContent = "已复制";
+        setTimeout(() => { readerCopy.textContent = "复制全文"; }, 1400);
       } catch {
-        readerCopy.textContent = "澶嶅埗澶辫触";
-        setTimeout(() => { readerCopy.textContent = "澶嶅埗鍏ㄦ枃"; }, 1400);
+        readerCopy.textContent = "复制失败";
+        setTimeout(() => { readerCopy.textContent = "复制全文"; }, 1400);
       }
     });
     updateReaderCount();
   }
 
-  // ========== 澶氫細璇濈鐞嗗嚱鏁帮紙淇濇寔涓嶅彉锛?==========
+  // ========== 多会话管理函数（保持不变） ==========
   function saveSessionsToStorage() {
     try { localStorage.setItem(LS_SESSIONS, JSON.stringify(sessions)); } catch(e) {}
   }
@@ -443,15 +449,15 @@ function rotateBackground() {
           sessions.forEach(s => {
             if (!s.messages) s.messages = [];
             if (!s.createdAt) s.createdAt = Date.now();
-            if (!s.name) s.name = `浼氳瘽 ${new Date(s.createdAt).toLocaleString()}`;
+            if (!s.name) s.name = `会话 ${new Date(s.createdAt).toLocaleString()}`;
           });
           return;
         }
       } catch(e) {}
     }
-    // 杩佺Щ鏃ф暟鎹暐...
+    // 迁移旧数据略...
     if (!sessions.length) {
-      sessions = [{ id: Date.now().toString(), name: "鏂颁細璇?, messages: [], createdAt: Date.now() }];
+      sessions = [{ id: Date.now().toString(), name: "新会话", messages: [], createdAt: Date.now() }];
       saveSessionsToStorage();
     }
   }
@@ -464,8 +470,8 @@ function rotateBackground() {
       div.innerHTML = `
         <span class="session-title" data-id="${s.id}">${escapeHtml(s.name)}</span>
         <div class="session-actions">
-          <button class="rename-session" data-id="${s.id}" title="閲嶅懡鍚? aria-label="閲嶅懡鍚嶄細璇?>閲?/button>
-          <button class="delete-session" data-id="${s.id}" title="鍒犻櫎" aria-label="鍒犻櫎浼氳瘽">鍒?/button>
+          <button class="rename-session" data-id="${s.id}" title="重命名" aria-label="重命名会话">重</button>
+          <button class="delete-session" data-id="${s.id}" title="删除" aria-label="删除会话">删</button>
         </div>
       `;
       div.querySelector(".session-title").addEventListener("click", (e) => {
@@ -475,7 +481,7 @@ function rotateBackground() {
       });
       div.querySelector(".rename-session").addEventListener("click", (e) => {
         e.stopPropagation();
-        const newName = prompt("杈撳叆鏂板悕绉?", s.name);
+        const newName = prompt("输入新名称:", s.name);
         if (newName && newName.trim()) {
           s.name = newName.trim();
           saveSessionsToStorage();
@@ -484,8 +490,8 @@ function rotateBackground() {
       });
       div.querySelector(".delete-session").addEventListener("click", (e) => {
         e.stopPropagation();
-        if (sessions.length === 1) { alert("鑷冲皯淇濈暀涓€涓細璇?); return; }
-        if (confirm(`纭畾鍒犻櫎浼氳瘽鈥?{s.name}鈥濆悧锛焋)) {
+        if (sessions.length === 1) { alert("至少保留一个会话"); return; }
+        if (confirm(`确定删除会话“${s.name}”吗？`)) {
           const idx = sessions.findIndex(ss => ss.id === s.id);
           if (idx !== -1) {
             sessions.splice(idx, 1);
@@ -520,7 +526,7 @@ function rotateBackground() {
   }
   function createNewSession() {
     const newId = Date.now().toString();
-    sessions.push({ id: newId, name: `浼氳瘽 ${new Date().toLocaleString()}`, messages: [], createdAt: Date.now() });
+    sessions.push({ id: newId, name: `会话 ${new Date().toLocaleString()}`, messages: [], createdAt: Date.now() });
     saveSessionsToStorage();
     switchToSession(newId);
     closeSessionPanelFunc();
@@ -539,7 +545,7 @@ function rotateBackground() {
   function openSessionPanel() { sessionPanel.classList.add("open"); sessionOverlay.style.display = "block"; renderSessionList(); }
   function closeSessionPanelFunc() { sessionPanel.classList.remove("open"); sessionOverlay.style.display = "none"; }
 
-  // ========== 杈呭姪鍑芥暟 ==========
+  // ========== 辅助函数 ==========
   function estimateTokens(text) {
     if (!text) return 0;
     let cjk = 0, ascii = 0;
@@ -574,14 +580,14 @@ function rotateBackground() {
     row.className = "row " + (role === "user" ? "user" : "ai");
     const avatar = document.createElement("div");
     avatar.className = "avatar " + (role === "user" ? "human" : "bot");
-    avatar.textContent = role === "user" ? "浣? : "AI";
+    avatar.textContent = role === "user" ? "你" : "AI";
     const content = document.createElement("div");
     content.className = "content";
     const metaLine = document.createElement("div");
     metaLine.className = "meta-line";
     const meta = document.createElement("div");
     meta.className = "meta";
-    meta.textContent = role === "user" ? "浣? : "AI";
+    meta.textContent = role === "user" ? "你" : "AI";
     const tools = document.createElement("div");
     tools.className = "message-tools";
     const bubble = document.createElement("div");
@@ -620,7 +626,7 @@ function rotateBackground() {
     modelSel.addEventListener("change", () => localStorage.setItem(LS_MODEL, modelSel.value));
   }
 
-  // ========== 鍙戦€佹秷鎭紙鏀寔鍋滄鐢熸垚锛?==========
+  // ========== 发送消息（支持停止生成） ==========
   async function send() {
     updateSpacer();
     const text = inputEl.value.trim();
@@ -631,7 +637,7 @@ function rotateBackground() {
     userRow.bubble.textContent = text;
     const inEst = estimateTokens(text);
     totalInEstimate += inEst;
-    userRow.stats.textContent = `Input(浼扮畻): 鈮?{inEst} | Total In: 鈮?{totalInEstimate}`;
+    userRow.stats.textContent = `Input(估算): ≈${inEst} | Total In: ≈${totalInEstimate}`;
     session.push({ role: "user", content: text });
     persistSessionIfEnabled();
     inputEl.value = "";
@@ -692,8 +698,8 @@ function rotateBackground() {
         }
       }
     } catch (err) {
-      if (err.name === "AbortError") { isAborted = true; aiRow.bubble.textContent = full + "\n\n[宸插仠姝"; }
-      else { aiRow.bubble.textContent = `閿欒: ${err.message}`; }
+      if (err.name === "AbortError") { isAborted = true; aiRow.bubble.textContent = full + "\n\n[已停止]"; }
+      else { aiRow.bubble.textContent = `错误: ${err.message}`; }
       if (loadingIndicator.parentNode) loadingIndicator.remove();
     } finally {
       if (loadingIndicator.parentNode) loadingIndicator.remove();
@@ -720,21 +726,21 @@ function rotateBackground() {
     } else {
       const outEst = estimateTokens(full);
       totalOutEstimate += outEst;
-      aiRow.stats.textContent = `Output浼扮畻:鈮?{outEst} | Total Out:鈮?{totalOutEstimate}`;
+      aiRow.stats.textContent = `Output估算:≈${outEst} | Total Out:≈${totalOutEstimate}`;
     }
     updateSpacer();
     scrollToBottom();
   }
 
-  // 鍋滄鎸夐挳
+  // 停止按钮
   stopBtn.addEventListener("click", () => { if (currentAbortController) currentAbortController.abort(); });
   sendBtn.addEventListener("click", send);
   inputEl.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } });
 
-  // 浜嬩欢缁戝畾
+  // 事件绑定
   personaToggle.addEventListener("click", () => {
     useBuiltin = !useBuiltin;
-    personaToggle.textContent = useBuiltin ? "馃槇" : "馃槆";
+    personaToggle.textContent = useBuiltin ? "😈" : "😇";
     localStorage.setItem(LS_USE_BUILTIN, useBuiltin ? "1" : "0");
   });
   settingsBtn.addEventListener("click", () => {
@@ -751,7 +757,7 @@ function rotateBackground() {
     if (historyEnabled) persistSessionIfEnabled();
   });
   clearHistoryBtn.addEventListener("click", () => {
-    if (confirm("娓呴櫎褰撳墠浼氳瘽鍘嗗彶锛?)) {
+    if (confirm("清除当前会话历史？")) {
       const cur = sessions.find(s => s.id === currentSessionId);
       if (cur) {
         cur.messages = [];
@@ -776,13 +782,13 @@ function rotateBackground() {
     settingsMask.style.display = "none";
   });
   clearPromptBtn.addEventListener("click", () => {
-    if (confirm("娓呴櫎鑷畾涔夋ā鏉匡紵")) { localStorage.removeItem(LS_CUSTOM_PROMPT); customPromptEl.value = ""; }
+    if (confirm("清除自定义模板？")) { localStorage.removeItem(LS_CUSTOM_PROMPT); customPromptEl.value = ""; }
   });
   donateBtn.addEventListener("click", () => donateMask.style.display = "flex");
   donateClose.addEventListener("click", () => donateMask.style.display = "none");
   donateMask.addEventListener("click", (e) => { if (e.target === donateMask) donateMask.style.display = "none"; });
 
-  // 浼氳瘽闈㈡澘
+  // 会话面板
   sessionBtn.addEventListener("click", openSessionPanel);
   closeSessionPanel.addEventListener("click", closeSessionPanelFunc);
   sessionOverlay.addEventListener("click", closeSessionPanelFunc);
@@ -796,7 +802,7 @@ function rotateBackground() {
     else closeSessionPanelFunc();
   });
 
-  // 杈撳叆妗嗚嚜閫傚簲
+  // 输入框自适应
   inputEl.addEventListener("input", () => {
     inputEl.style.height = "auto";
     inputEl.style.height = inputEl.scrollHeight + "px";
@@ -811,7 +817,8 @@ function rotateBackground() {
   }
   window.addEventListener("resize", () => { const stick = isNearBottom(); updateSpacer(); if (stick) scrollToBottom(); });
 
-  // 鍒濆鍖?  function init() {
+  // 初始化
+  function init() {
     initModels();
     setupResizeObserver();
     updateSpacer();
@@ -826,4 +833,3 @@ function rotateBackground() {
   }
   init();
 })();
-
