@@ -1,440 +1,215 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>DeepSeek Chat · 美少女粒子版</title>
+  <meta name="theme-color" content="#11110f" />
+  <title>Unlimited AI Chat</title>
   <link rel="stylesheet" href="/styles.css" />
-  <style>
-/* ===== 全局基础 ===== */
-body{
-    margin:0;
-    min-height:100vh;
-    overflow:hidden;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
-}
-
-/* 聊天气泡优化 */
-.message,
-.user,
-.assistant{
-    border-radius:18px;
-    padding:12px;
-}
-
-/* 顶栏 */
-#topbar{
-    backdrop-filter: blur(16px);
-    background: rgba(0,0,0,0.25);
-}
-
-/* 字体变量 */
-:root {
-    --chat-font-size: 15px;
-}
-.bubble, .bubble * {
-    font-size: var(--chat-font-size);
-}
-
-/* ===== ChatGPT风格输入区域美化 ===== */
-.input-floating {
-    position: fixed;
-    bottom: var(--composer-gap, 18px);
-    left: 0;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    pointer-events: none;
-    z-index: 100;
-}
-
-.input-inner {
-    pointer-events: auto;
-    width: 100%;
-    max-width: 760px;
-    margin: 0 auto;
-    background: rgba(32,32,36,0.8) !important;
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 32px;
-    padding: 6px 12px 6px 20px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-.input-inner:focus-within {
-    border-color: rgba(79,70,229,0.6);
-    box-shadow: 0 0 0 3px rgba(79,70,229,0.2);
-}
-
-textarea#msg {
-    flex: 1;
-    resize: none;
-    border: none;
-    outline: none;
-    background: transparent;
-    color: #fff;
-    font-size: 16px;
-    line-height: 1.5;
-    padding: 10px 0;
-    max-height: 200px;
-    font-family: inherit;
-}
-
-textarea#msg::placeholder {
-    color: rgba(255,255,255,0.5);
-    font-size: 15px;
-}
-
-/* 发送按钮和停止按钮统一风格 */
-#sendBtn, #stopBtn {
-    border: none;
-    border-radius: 28px;
-    padding: 8px 20px;
-    font-weight: 500;
-    font-size: 14px;
-    cursor: pointer;
-    transition: 0.2s;
-    background: #4f46e5;
-    color: white;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-family: inherit;
-}
-
-#sendBtn:hover {
-    background: #6366f1;
-    transform: scale(1.02);
-}
-
-#stopBtn {
-    background: #dc2626;
-    display: none;
-}
-#stopBtn:hover {
-    background: #b91c1c;
-}
-
-/* 底部提示文字 */
-.composer-hint {
-    text-align: center;
-    font-size: 12px;
-    color: rgba(255,255,255,0.4);
-    margin-top: 10px;
-    pointer-events: none;
-}
-
-/* 会话侧边栏样式 */
-#sessionPanel {
-    position: fixed;
-    top: 0;
-    left: -300px;
-    width: 280px;
-    height: 100%;
-    background: rgba(20,20,30,0.95);
-    backdrop-filter: blur(16px);
-    border-right: 1px solid #333;
-    z-index: 1100;
-    transition: left 0.2s ease;
-    display: flex;
-    flex-direction: column;
-    padding: 16px;
-    box-sizing: border-box;
-}
-#sessionPanel.open {
-    left: 0;
-}
-.session-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-}
-.session-list {
-    flex: 1;
-    overflow-y: auto;
-}
-.session-item {
-    padding: 10px 12px;
-    margin: 4px 0;
-    border-radius: 12px;
-    cursor: pointer;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: rgba(255,255,255,0.05);
-}
-.session-item.active {
-    background: #4f46e5;
-}
-.session-title {
-    flex: 1;
-    font-size: 14px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-.session-actions button {
-    background: none;
-    border: none;
-    color: #ccc;
-    cursor: pointer;
-    margin-left: 8px;
-}
-.new-session-btn {
-    background: #4f46e5;
-    border: none;
-    padding: 10px;
-    border-radius: 20px;
-    color: white;
-    margin-top: 16px;
-    cursor: pointer;
-}
-#sessionOverlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0,0,0,0.5);
-    z-index: 1050;
-    display: none;
-}
-
-/* 控制栏按钮（精简后只保留主题和字体） */
-.ctrl-btn {
-    background: rgba(255,255,255,0.08);
-    border: none;
-    border-radius: 999px;
-    padding: 6px 14px;
-    font-size: 13px;
-    transition: 0.2s;
-    cursor: pointer;
-}
-.ctrl-btn:hover {
-    background: rgba(255,255,255,0.2);
-}
-
-/* ===== 亮色主题下图标、文字颜色适配 ===== */
-body.light-theme .iconbtn {
-    color: #1e1e2f;
-}
-body.light-theme .iconbtn svg {
-    fill: #1e1e2f;
-}
-body.light-theme select,
-body.light-theme .pill {
-    color: #1e1e2f;
-    background: rgba(0,0,0,0.05);
-}
-body.light-theme #topbar {
-    background: rgba(255,255,255,0.3);
-}
-</style>
 </head>
 <body>
-  <!-- 模糊背景层（全屏，图片 cover + 模糊） -->
-<div id="blur-bg" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; background-size: cover; background-position: center; filter: blur(20px); transform: scale(1.1); pointer-events: none;"></div>
+  <div id="blur-bg" aria-hidden="true"></div>
+  <div id="clear-img" aria-hidden="true"></div>
 
-<!-- 清晰图片层（contain 完整显示） -->
-<div id="clear-img" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; background-size: contain; background-repeat: no-repeat; background-position: center; pointer-events: none;"></div>
-<div id="app">
-  <div id="topbar">
-    <div class="topbar-shell">
-      <div class="topbar-scroll" id="topbarScroll">
-        <div class="topbar-inner">
-          <!-- 会话管理按钮 -->
-          <button class="iconbtn" id="sessionBtn" title="会话管理">💬</button>
-          <button class="iconbtn" id="donateBtn" title="打赏 / Donate">
-            <span class="emoji">☕</span>
+  <div id="app">
+    <header id="topbar">
+      <div class="topbar-shell">
+        <div class="brand-cluster">
+          <button class="iconbtn" id="sessionBtn" type="button" title="浼氳瘽绠＄悊" aria-label="鎵撳紑浼氳瘽绠＄悊">鈽?/button>
+          <div class="brand-copy">
+            <strong>Unlimited AI</strong>
+            <span>涓撴敞瀵硅瘽涓庡垱浣?/span>
+          </div>
+        </div>
+
+        <div class="pill model-pill">
+          <label for="modelSel" class="model-label">妯″瀷</label>
+          <select id="modelSel" aria-label="閫夋嫨妯″瀷"></select>
+        </div>
+
+        <div class="topbar-actions">
+          <button class="reader-entry" id="readerBtn" type="button" title="鏁寸悊 AI 鍥炲骞惰繘鍏ラ槄璇绘ā寮?>
+            <span>闃呰</span>
+            <span class="reader-count" id="readerCount">0</span>
           </button>
-
+          <button class="iconbtn" id="personaToggle" type="button" title="馃槇 浣跨敤鍐呯疆浜虹墿锛涴煒?浣跨敤缃戦〉鑷畾涔変汉鐗? aria-label="鍒囨崲浜虹墿妯″紡">馃槇</button>
+          <button class="iconbtn" id="settingsBtn" type="button" title="璁剧疆" aria-label="鎵撳紑璁剧疆">鈿?/button>
+          <button class="iconbtn secondary-action" id="donateBtn" type="button" title="鎵撹祻" aria-label="鎵撳紑鎵撹祻">鈽?/button>
           <a
             href="https://github.com/MallocPointer/unlimited-ai"
             target="_blank"
-            class="iconbtn"
+            rel="noreferrer"
+            class="iconbtn secondary-action"
             id="githubBtn"
-            style="text-decoration: none;"
-            title="GitHub 开源地址"
+            title="GitHub 寮€婧愬湴鍧€"
+            aria-label="鎵撳紑 GitHub 寮€婧愬湴鍧€"
           >
-            <svg height="20" width="20" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
-              <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+            <svg height="19" width="19" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+              <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 0.27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
             </svg>
           </a>
-
-          <div class="pill model-pill">
-            <label for="modelSel" class="model-label">Model</label>
-            <select id="modelSel"></select>
-          </div>
-
-          <button class="iconbtn" id="personaToggle" title="😈=使用内置人物扮演 | 😇=不使用内置（网页自定义才生效）">😈</button>
-          <button class="iconbtn" id="settingsBtn" title="Settings">⚙️</button>
         </div>
       </div>
-    </div>
-  </div>
+    </header>
 
-  <div id="history">
-    <div class="chat" id="chat">
-      <div id="bottom-spacer"></div>
-    </div>
-  </div>
-
-  <div class="input-floating">
-    <div class="input-inner" id="composer">
-      <textarea id="msg" rows="1" placeholder="发送消息..."></textarea>
-      <button id="sendBtn">发送</button>
-      <button id="stopBtn">停止</button>
-    </div>
-    <div class="composer-hint">✨ DeepSeek 与你畅聊，按 Enter 发送</div>
-  </div>
-
-  <div id="settingsMask">
-    <div id="settings">
-      <div id="settingsHeader">
-        <h3>Settings</h3>
-        <div class="hint">所有数据仅保存在本地浏览器（localStorage），不会上传</div>
-      </div>
-
-      <div class="card">
-        <h4>本地对话记忆（Local History）</h4>
-        <p>
-          开启后：刷新页面/重开浏览器仍会恢复对话。关闭后：仅本次页面会话有效，不再落盘保存。<br>
-          ⚠️ 清除历史只会删除本地对话，不会影响“网页自定义人物模板”。
-        </p>
-
-        <div class="rowline">
-          <div class="toggle">
-            <input type="checkbox" id="historyKeep">
-            <label for="historyKeep">保留本地历史（启用本地记忆）</label>
-          </div>
-          <div class="btns">
-            <button class="smallbtn danger" id="clearHistory">清除本地历史</button>
-          </div>
+    <main id="history">
+      <div class="chat" id="chat">
+        <div class="empty-state" id="emptyState">
+          <div class="empty-kicker">NEW CONVERSATION</div>
+          <h1>浠庝竴鍙ヨ瘽寮€濮?/h1>
+          <p>瀵硅瘽銆佹瀯鎬濇垨缁啓灏忚銆侫I 鐨勫娆″洖澶嶅彲浠ユ暣鐞嗚繘闃呰妯″紡銆?/p>
         </div>
+        <div id="bottom-spacer"></div>
       </div>
+    </main>
 
-      <div class="card">
-        <h4>网页自定义人物模板（Web Custom Persona）</h4>
-        <p>
-          ⚠️ 仅当右上角为 <b>😇</b> 时，此处才会生效；<b>😈 会忽略这里</b>。<br>
-          清除模板只会删除网页自定义内容，不会影响本地历史。
-        </p>
+    <div class="input-floating">
+      <div class="input-inner" id="composer">
+        <textarea id="msg" rows="1" placeholder="杈撳叆娑堟伅" aria-label="娑堟伅鍐呭"></textarea>
+        <button id="sendBtn" type="button">鍙戦€?/button>
+        <button id="stopBtn" type="button">鍋滄</button>
+      </div>
+      <div class="composer-hint">Enter 鍙戦€?路 Shift + Enter 鎹㈣</div>
+    </div>
 
-        <div class="rowline">
-          <div class="toggle">
-            <input type="checkbox" id="promptKeep">
-            <label for="promptKeep">保留自定义人物模板（保存到本地）</label>
+    <div class="modal-mask" id="settingsMask" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+      <section id="settings" class="modal-panel">
+        <div class="modal-header" id="settingsHeader">
+          <div>
+            <div class="eyebrow">PREFERENCES</div>
+            <h2 id="settingsTitle">璁剧疆</h2>
           </div>
-          <div class="btns">
-            <button class="smallbtn danger" id="clearPrompt">清除自定义模板</button>
+          <button class="close-btn" id="closeSettings" type="button" aria-label="鍏抽棴璁剧疆">脳</button>
+        </div>
+        <p class="privacy-note">鎵€鏈夎缃笌鍐呭浠呬繚瀛樺湪褰撳墠娴忚鍣ㄧ殑 localStorage 涓€?/p>
+
+        <div class="settings-section">
+          <div class="section-heading">
+            <div>
+              <h3>闃呰涓庡瑙?/h3>
+              <p>璋冩暣鐣岄潰涓婚鍜岃亰澶╁瓧鍙枫€?/p>
+            </div>
+          </div>
+          <div class="appearance-controls" id="controlsPanel">
+            <button id="themeToggle" class="control-btn" type="button">鍒囨崲娴呰壊涓婚</button>
+            <div class="font-stepper" aria-label="鑱婂ぉ瀛楀彿">
+              <button id="fontDecrease" type="button" title="鍑忓皬瀛椾綋">A鈭?/button>
+              <span>鑱婂ぉ瀛楀彿</span>
+              <button id="fontIncrease" type="button" title="澧炲ぇ瀛椾綋">A锛?/button>
+            </div>
           </div>
         </div>
 
-        <textarea id="customPrompt" placeholder="仅😇时生效：在这里写网页端自定义 system prompt（可多行）。"></textarea>
+        <div class="settings-section">
+          <div class="section-heading">
+            <div>
+              <h3>鏈湴瀵硅瘽璁板繂</h3>
+              <p>寮€鍚悗锛屽埛鏂版垨閲嶅紑娴忚鍣ㄤ粛浼氭仮澶嶅璇濄€?/p>
+            </div>
+            <label class="switch-row" for="historyKeep">
+              <input type="checkbox" id="historyKeep" />
+              <span class="switch-ui" aria-hidden="true"></span>
+              <span>淇濈暀</span>
+            </label>
+          </div>
+          <button class="text-btn danger" id="clearHistory" type="button">娓呴櫎褰撳墠浼氳瘽鍘嗗彶</button>
+        </div>
 
-        <div class="rowline">
-          <div></div>
-          <div class="btns">
-            <button class="smallbtn" id="savePrompt">保存</button>
-            <button class="smallbtn" id="closeSettings">关闭</button>
+        <div class="settings-section">
+          <div class="section-heading">
+            <div>
+              <h3>缃戦〉鑷畾涔変汉鐗╂ā鏉?/h3>
+              <p>浠呭湪鍙充笂瑙掓樉绀?馃槆 鏃剁敓鏁堬紱馃槇 妯″紡浼氬拷鐣ヨ繖閲屻€?/p>
+            </div>
+            <label class="switch-row" for="promptKeep">
+              <input type="checkbox" id="promptKeep" />
+              <span class="switch-ui" aria-hidden="true"></span>
+              <span>淇濈暀</span>
+            </label>
+          </div>
+          <textarea id="customPrompt" placeholder="鍦ㄨ繖閲屽～鍐欑綉椤电鑷畾涔?system prompt"></textarea>
+          <div class="modal-actions">
+            <button class="text-btn danger" id="clearPrompt" type="button">娓呴櫎妯℃澘</button>
+            <button class="primary-btn" id="savePrompt" type="button">淇濆瓨璁剧疆</button>
           </div>
         </div>
-      </div>
+      </section>
     </div>
-  </div>
 
-  <div id="donateMask">
-    <div id="donateCard">
-      <div id="donateHead">
-        <div class="t">打赏 / Donate</div>
-        <button id="donateClose">✕</button>
-      </div>
-      <div id="donateBody">
-        <img id="donateImg" src="/donate.png" alt="WeChat Pay QR" />
-        <div id="donateNote">
-          如果真的帮助到了你，请为我打赏一杯咖啡吧，有了你的赞助，我会将服务一直运行下去的。
+    <div class="modal-mask" id="donateMask" role="dialog" aria-modal="true" aria-labelledby="donateTitle">
+      <section id="donateCard" class="modal-panel compact-modal">
+        <div class="modal-header" id="donateHead">
+          <div>
+            <div class="eyebrow">SUPPORT</div>
+            <h2 id="donateTitle">璇锋垜鍠濇澂鍜栧暋</h2>
+          </div>
+          <button class="close-btn" id="donateClose" type="button" aria-label="鍏抽棴鎵撹祻">脳</button>
         </div>
+        <div id="donateBody">
+          <img id="donateImg" src="/donate.png" alt="寰俊鏀粯浜岀淮鐮? />
+          <p id="donateNote">濡傛灉杩欎釜鏈嶅姟甯姪鍒颁簡浣狅紝涓€鏉挅鍟′細鏀寔瀹冪户缁繍琛屻€?/p>
+        </div>
+      </section>
+    </div>
+
+    <div id="readerMask" role="dialog" aria-modal="true" aria-labelledby="readerTitle">
+      <section class="reader-shell">
+        <header class="reader-header">
+          <div class="reader-title-block">
+            <div class="eyebrow">READING MODE</div>
+            <h2 id="readerTitle">灏忚闃呰</h2>
+            <p id="readerSummary">浠庡綋鍓嶄細璇濋€夋嫨 AI 鍥炲鐗囨</p>
+          </div>
+          <div class="reader-toolbar">
+            <button class="reader-tool mobile-only" id="readerSegmentsToggle" type="button">鐗囨</button>
+            <button class="reader-tool" id="readerCopy" type="button">澶嶅埗鍏ㄦ枃</button>
+            <div class="reader-font-controls" aria-label="闃呰瀛楀彿">
+              <button id="readerFontDecrease" type="button" title="鍑忓皬闃呰瀛楀彿">A鈭?/button>
+              <button id="readerFontIncrease" type="button" title="澧炲ぇ闃呰瀛楀彿">A锛?/button>
+            </div>
+            <button class="close-btn reader-close" id="readerClose" type="button" aria-label="鍏抽棴闃呰妯″紡">脳</button>
+          </div>
+        </header>
+
+        <div class="reader-layout">
+          <aside class="reader-sidebar" id="readerSidebar">
+            <div class="reader-sidebar-head">
+              <strong>鍐呭鐗囨</strong>
+              <div>
+                <button id="readerSelectAll" type="button">鍏ㄩ€?/button>
+                <button id="readerClear" type="button">娓呯┖</button>
+              </div>
+            </div>
+            <div class="reader-segments" id="readerSegments"></div>
+          </aside>
+
+          <main class="reader-page-wrap" id="readerPageWrap">
+            <article class="reader-page" id="readerContent"></article>
+            <div class="reader-empty" id="readerEmpty">
+              <span>鏆傛棤鍙槄璇诲唴瀹?/span>
+              <p>鍏堣 AI 鐢熸垚鍐呭锛屾垨浠庡乏渚ч€夋嫨瑕佸悎骞剁殑鍥炲鐗囨銆?/p>
+            </div>
+          </main>
+        </div>
+      </section>
+    </div>
+
+    <div id="sessionOverlay"></div>
+    <aside id="sessionPanel" aria-label="浼氳瘽绠＄悊">
+      <div class="session-header">
+        <div>
+          <div class="eyebrow">CONVERSATIONS</div>
+          <strong>浼氳瘽绠＄悊</strong>
+        </div>
+        <button id="closeSessionPanel" class="close-btn" type="button" aria-label="鍏抽棴浼氳瘽绠＄悊">脳</button>
       </div>
-    </div>
+      <div class="session-list" id="sessionList"></div>
+      <button id="newSessionBtn" class="new-session-btn" type="button">鏂板缓浼氳瘽</button>
+    </aside>
   </div>
 
-  <!-- 精简后的控制栏：只有白天黑夜模式和字体缩放 -->
-  <div class="controls-panel" id="controlsPanel">
-    <button id="themeToggle" class="ctrl-btn">🌙 黑夜模式</button>
-    <button id="fontDecrease" class="ctrl-btn" title="减小字体">A-</button>
-    <button id="fontIncrease" class="ctrl-btn" title="增大字体">A+</button>
-  </div>
-
-  <!-- 会话侧边栏 -->
-  <div id="sessionOverlay"></div>
-  <div id="sessionPanel">
-    <div class="session-header">
-      <strong>会话管理</strong>
-      <button id="closeSessionPanel" class="ctrl-btn" style="background:none;">✕</button>
-    </div>
-    <div class="session-list" id="sessionList"></div>
-    <button id="newSessionBtn" class="new-session-btn">➕ 新建会话</button>
-  </div>
-</div>
-
-<script src="/config.js"></script>
-<script src="/app.js"></script>
-<script>
-  window.addEventListener("load", function () {
-    const scroller = document.getElementById("topbarScroll");
-    if (scroller) {
-      scroller.scrollLeft = scroller.scrollWidth;
-    }
-
-    // 会话侧边栏基础控制（打开/关闭）
-    const sessionBtn = document.getElementById("sessionBtn");
-    const sessionPanel = document.getElementById("sessionPanel");
-    const sessionOverlay = document.getElementById("sessionOverlay");
-    const closeSessionPanel = document.getElementById("closeSessionPanel");
-    if (sessionBtn && sessionPanel && sessionOverlay) {
-      const openPanel = () => {
-        sessionPanel.classList.add("open");
-        sessionOverlay.style.display = "block";
-      };
-      const closePanel = () => {
-        sessionPanel.classList.remove("open");
-        sessionOverlay.style.display = "none";
-      };
-      sessionBtn.addEventListener("click", openPanel);
-      closeSessionPanel.addEventListener("click", closePanel);
-      sessionOverlay.addEventListener("click", closePanel);
-    }
-
-    // 字体缩放初始化（与 app.js 无冲突）
-    let currentFontSize = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--chat-font-size')) || 15;
-    const fontDecrease = document.getElementById("fontDecrease");
-    const fontIncrease = document.getElementById("fontIncrease");
-    if (fontDecrease && fontIncrease) {
-      const updateFontSize = (delta) => {
-        let newSize = currentFontSize + delta;
-        if (newSize < 12) newSize = 12;
-        if (newSize > 20) newSize = 20;
-        if (newSize !== currentFontSize) {
-          currentFontSize = newSize;
-          document.documentElement.style.setProperty('--chat-font-size', currentFontSize + 'px');
-          localStorage.setItem("cfw_font_size", currentFontSize);
-        }
-      };
-      fontDecrease.addEventListener("click", () => updateFontSize(-1));
-      fontIncrease.addEventListener("click", () => updateFontSize(1));
-      const savedFontSize = localStorage.getItem("cfw_font_size");
-      if (savedFontSize) {
-        currentFontSize = parseFloat(savedFontSize);
-        document.documentElement.style.setProperty('--chat-font-size', currentFontSize + 'px');
-      }
-    }
-  });
-</script>
+  <script src="/config.js"></script>
+  <script src="/app.js"></script>
 </body>
 </html>
+
