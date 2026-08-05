@@ -25,7 +25,7 @@
   const donateMask = document.getElementById("donateMask");
   const donateClose = document.getElementById("donateClose");
 
-  // 会话管理相关元素
+  // 浼氳瘽绠＄悊鐩稿叧鍏冪礌
   const sessionBtn = document.getElementById("sessionBtn");
   const sessionPanel = document.getElementById("sessionPanel");
   const sessionOverlay = document.getElementById("sessionOverlay");
@@ -33,9 +33,27 @@
   const sessionListEl = document.getElementById("sessionList");
   const newSessionBtn = document.getElementById("newSessionBtn");
 
-  // 字体缩放按钮
+  // 瀛椾綋缂╂斁鎸夐挳
   const fontDecrease = document.getElementById("fontDecrease");
   const fontIncrease = document.getElementById("fontIncrease");
+
+  // 闃呰妯″紡鐩稿叧鍏冪礌
+  const emptyState = document.getElementById("emptyState");
+  const readerBtn = document.getElementById("readerBtn");
+  const readerCount = document.getElementById("readerCount");
+  const readerMask = document.getElementById("readerMask");
+  const readerClose = document.getElementById("readerClose");
+  const readerSummary = document.getElementById("readerSummary");
+  const readerSidebar = document.getElementById("readerSidebar");
+  const readerSegments = document.getElementById("readerSegments");
+  const readerContent = document.getElementById("readerContent");
+  const readerEmpty = document.getElementById("readerEmpty");
+  const readerSelectAll = document.getElementById("readerSelectAll");
+  const readerClear = document.getElementById("readerClear");
+  const readerCopy = document.getElementById("readerCopy");
+  const readerFontDecrease = document.getElementById("readerFontDecrease");
+  const readerFontIncrease = document.getElementById("readerFontIncrease");
+  const readerSegmentsToggle = document.getElementById("readerSegmentsToggle");
 
   const MODELS = (window.APP_MODELS || [
     { id: "deepseek-ai/deepseek-v4-pro", label: "deepseek-v4-pro" },
@@ -43,8 +61,7 @@
     { id: "openai/gpt-oss-120b", label: "gpt-oss-120b" },
   ]);
 
-  // 当前活跃会话的ID和消息数组
-  let currentSessionId = null;
+  // 褰撳墠娲昏穬浼氳瘽鐨処D鍜屾秷鎭暟缁?  let currentSessionId = null;
   let sessions = [];
   let session = [];
 
@@ -55,7 +72,7 @@
 
   let currentAbortController = null;
 
-  // ====== 本地存储 Key ======
+  // ====== 鏈湴瀛樺偍 Key ======
   const LS_MODEL = "cfw_model";
   const LS_USE_BUILTIN = "cfw_use_builtin";
   const LS_HISTORY_ENABLED = "cfw_history_enabled";
@@ -63,18 +80,26 @@
   const LS_CUSTOM_PROMPT = "cfw_custom_prompt_v1";
   const LS_SESSIONS = "cfw_sessions_v2";
   const LS_THEME = "cfw_theme";
+  const LS_READER_SELECTIONS = "cfw_reader_selections_v1";
+  const LS_READER_FONT_SIZE = "cfw_reader_font_size";
+
+  let readerSelections = {};
+  try {
+    readerSelections = JSON.parse(localStorage.getItem(LS_READER_SELECTIONS) || "{}") || {};
+  } catch {
+    readerSelections = {};
+  }
 
   let useBuiltin = (localStorage.getItem(LS_USE_BUILTIN) ?? "1") === "1";
-  personaToggle.textContent = useBuiltin ? "😈" : "😇";
+  personaToggle.textContent = useBuiltin ? "馃槇" : "馃槆";
 
   let historyEnabled = (localStorage.getItem(LS_HISTORY_ENABLED) ?? "0") === "1";
   let promptEnabled  = (localStorage.getItem(LS_PROMPT_ENABLED) ?? "1") === "1";
   historyKeepEl.checked = historyEnabled;
   promptKeepEl.checked = promptEnabled;
 
-  // ========== 美少女壁纸轮播 ==========
-  // 🔽 在这里放置你的美少女图片（可替换为本地路径或在线URL）
-  const GIRL_WALLPAPERS = [
+  // ========== 缇庡皯濂冲绾歌疆鎾?==========
+  // 馃斀 鍦ㄨ繖閲屾斁缃綘鐨勭編灏戝コ鍥剧墖锛堝彲鏇挎崲涓烘湰鍦拌矾寰勬垨鍦ㄧ嚎URL锛?  const GIRL_WALLPAPERS = [
     "/1.webp",
     "/2.jpg",
     "/3.jpg",
@@ -85,11 +110,10 @@
   let bgIndex = 0;
   let bgInterval = null;
 
-let preloadIndex = 0;      // 这两行变量建议放在文件顶部（靠近其他 let 变量）
-let isPreloading = false;
+let preloadIndex = 0;      // 杩欎袱琛屽彉閲忓缓璁斁鍦ㄦ枃浠堕《閮紙闈犺繎鍏朵粬 let 鍙橀噺锛?let isPreloading = false;
 
 function rotateBackground() {
-  if (isPreloading) return;  // 正在预加载时，不重复触发
+  if (isPreloading) return;  // 姝ｅ湪棰勫姞杞芥椂锛屼笉閲嶅瑙﹀彂
 
   const nextIndex = (bgIndex + 1) % GIRL_WALLPAPERS.length;
   const nextUrl = GIRL_WALLPAPERS[nextIndex];
@@ -98,15 +122,13 @@ function rotateBackground() {
 
   const img = new Image();
   img.onload = function() {
-    // 更新模糊层
-    const blurDiv = document.getElementById("blur-bg");
+    // 鏇存柊妯＄硦灞?    const blurDiv = document.getElementById("blur-bg");
     if (blurDiv) {
       blurDiv.style.backgroundImage = `url(${nextUrl})`;
       blurDiv.style.backgroundSize = "cover";
       blurDiv.style.backgroundPosition = "center";
     }
-    // 更新清晰层
-    const clearDiv = document.getElementById("clear-img");
+    // 鏇存柊娓呮櫚灞?    const clearDiv = document.getElementById("clear-img");
     if (clearDiv) {
       clearDiv.style.backgroundImage = `url(${nextUrl})`;
       clearDiv.style.backgroundSize = "contain";
@@ -117,12 +139,11 @@ function rotateBackground() {
     isPreloading = false;
   };
   img.onerror = function() {
-    isPreloading = false;   // 加载失败也要释放锁
-  };
+    isPreloading = false;   // 鍔犺浇澶辫触涔熻閲婃斁閿?  };
   img.src = nextUrl;
 }
 
-  // ========== 动态粒子效果 ==========
+  // ========== 鍔ㄦ€佺矑瀛愭晥鏋?==========
   let particleCanvas, ctx, particles = [], particleAnimationId;
   function initParticleBackground() {
     particleCanvas = document.createElement('canvas');
@@ -188,25 +209,25 @@ function rotateBackground() {
     animateParticles();
   }
 
-  // ========== 主题切换（只保留黑夜/白天） ==========
+  // ========== 涓婚鍒囨崲锛堝彧淇濈暀榛戝/鐧藉ぉ锛?==========
   function initTheme() {
     const themeToggle = document.getElementById("themeToggle");
     const savedTheme = localStorage.getItem(LS_THEME);
     if (savedTheme === "light") {
       document.body.classList.add("light-theme");
-      themeToggle.innerHTML = "☀️ 白天模式";
+      themeToggle.textContent = "鍒囨崲娣辫壊涓婚";
     } else {
       document.body.classList.remove("light-theme");
-      themeToggle.innerHTML = "🌙 黑夜模式";
+      themeToggle.textContent = "鍒囨崲娴呰壊涓婚";
     }
     themeToggle.addEventListener("click", () => {
       const isLight = document.body.classList.toggle("light-theme");
       localStorage.setItem(LS_THEME, isLight ? "light" : "dark");
-      themeToggle.innerHTML = isLight ? "☀️ 白天模式" : "🌙 黑夜模式";
+      themeToggle.textContent = isLight ? "鍒囨崲娣辫壊涓婚" : "鍒囨崲娴呰壊涓婚";
     });
   }
 
-  // ========== 字体缩放 ==========
+  // ========== 瀛椾綋缂╂斁 ==========
   function initFontScale() {
     let currentFontSize = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--chat-font-size')) || 15;
     const updateFont = (delta) => {
@@ -228,7 +249,187 @@ function rotateBackground() {
     }
   }
 
-  // ========== 多会话管理函数（保持不变） ==========
+  // ========== 灏忚闃呰妯″紡锛堜粎浣跨敤褰撳墠娴忚鍣ㄤ腑鐨勪細璇濆唴瀹癸級 ==========
+  function getAssistantSegments() {
+    return session
+      .map((message, index) => ({ message, index }))
+      .filter(({ message }) => message?.role === "assistant" && typeof message.content === "string" && message.content.trim());
+  }
+
+  function getReaderSelection() {
+    const available = getAssistantSegments().map(({ index }) => index);
+    const saved = readerSelections[currentSessionId];
+    if (!Array.isArray(saved)) return new Set(available);
+    return new Set(saved.filter(index => available.includes(index)));
+  }
+
+  function saveReaderSelection(selection) {
+    if (!currentSessionId) return;
+    readerSelections[currentSessionId] = Array.from(selection).sort((a, b) => a - b);
+    try { localStorage.setItem(LS_READER_SELECTIONS, JSON.stringify(readerSelections)); } catch {}
+  }
+
+  function removeReaderSelectionForSession(sessionId) {
+    if (!sessionId || !Object.prototype.hasOwnProperty.call(readerSelections, sessionId)) return;
+    delete readerSelections[sessionId];
+    try { localStorage.setItem(LS_READER_SELECTIONS, JSON.stringify(readerSelections)); } catch {}
+  }
+
+  function updateReaderCount() {
+    const count = getReaderSelection().size;
+    readerCount.textContent = String(count);
+    readerBtn.disabled = getAssistantSegments().length === 0;
+  }
+
+  function syncReaderToggleButtons() {
+    const selection = getReaderSelection();
+    chatEl.querySelectorAll(".reader-toggle[data-message-index]").forEach(button => {
+      const index = Number(button.dataset.messageIndex);
+      const selected = selection.has(index);
+      button.classList.toggle("selected", selected);
+      button.setAttribute("aria-pressed", selected ? "true" : "false");
+      button.textContent = selected ? "宸插姞鍏ラ槄璇? : "鍔犲叆闃呰";
+    });
+  }
+
+  function setReaderSegmentSelected(messageIndex, selected) {
+    const selection = getReaderSelection();
+    if (selected) selection.add(messageIndex);
+    else selection.delete(messageIndex);
+    saveReaderSelection(selection);
+    syncReaderToggleButtons();
+    updateReaderCount();
+  }
+
+  function attachReaderControl(rowParts, messageIndex) {
+    if (!rowParts?.tools || !Number.isInteger(messageIndex)) return;
+    const existing = rowParts.tools.querySelector(".reader-toggle");
+    if (existing) existing.remove();
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "reader-toggle";
+    button.dataset.messageIndex = String(messageIndex);
+    button.addEventListener("click", () => {
+      const selected = !getReaderSelection().has(messageIndex);
+      setReaderSegmentSelected(messageIndex, selected);
+    });
+    rowParts.tools.appendChild(button);
+    syncReaderToggleButtons();
+  }
+
+  function renderReader() {
+    const segments = getAssistantSegments();
+    const selection = getReaderSelection();
+    const selectedSegments = segments.filter(({ index }) => selection.has(index));
+
+    readerSegments.innerHTML = "";
+    readerContent.innerHTML = "";
+
+    segments.forEach(({ message, index }, position) => {
+      const label = document.createElement("label");
+      label.className = "reader-segment-item" + (selection.has(index) ? " selected" : "");
+
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.checked = selection.has(index);
+      checkbox.addEventListener("change", () => {
+        setReaderSegmentSelected(index, checkbox.checked);
+        renderReader();
+      });
+
+      const copy = document.createElement("span");
+      copy.className = "reader-segment-copy";
+      const title = document.createElement("strong");
+      title.textContent = `鐗囨 ${String(position + 1).padStart(2, "0")}`;
+      const preview = document.createElement("span");
+      preview.textContent = message.content.replace(/\s+/g, " ").trim().slice(0, 140);
+      copy.appendChild(title);
+      copy.appendChild(preview);
+      label.appendChild(checkbox);
+      label.appendChild(copy);
+      readerSegments.appendChild(label);
+    });
+
+    selectedSegments.forEach(({ message }, position) => {
+      const chapter = document.createElement("section");
+      chapter.className = "reader-chapter";
+      const chapterLabel = document.createElement("div");
+      chapterLabel.className = "reader-chapter-label";
+      chapterLabel.textContent = `鐗囨 ${String(position + 1).padStart(2, "0")}`;
+      const text = document.createElement("p");
+      text.className = "reader-chapter-text";
+      text.textContent = message.content;
+      chapter.appendChild(chapterLabel);
+      chapter.appendChild(text);
+      readerContent.appendChild(chapter);
+    });
+
+    const charCount = selectedSegments.reduce((sum, item) => sum + item.message.content.length, 0);
+    readerSummary.textContent = `${selectedSegments.length} 涓墖娈?路 ${charCount.toLocaleString()} 瀛梎;
+    readerEmpty.classList.toggle("visible", selectedSegments.length === 0);
+    readerContent.hidden = selectedSegments.length === 0;
+    readerCopy.disabled = selectedSegments.length === 0;
+    syncReaderToggleButtons();
+    updateReaderCount();
+  }
+
+  function openReader() {
+    renderReader();
+    readerMask.classList.add("open");
+    document.body.classList.add("reader-open");
+    readerSidebar.classList.remove("open");
+  }
+
+  function closeReader() {
+    readerMask.classList.remove("open");
+    document.body.classList.remove("reader-open");
+    readerSidebar.classList.remove("open");
+  }
+
+  function setAllReaderSegments(selected) {
+    const selection = selected
+      ? new Set(getAssistantSegments().map(({ index }) => index))
+      : new Set();
+    saveReaderSelection(selection);
+    renderReader();
+  }
+
+  function initReaderMode() {
+    let readerFontSize = Number(localStorage.getItem(LS_READER_FONT_SIZE)) || 19;
+    const applyReaderFontSize = () => {
+      readerFontSize = Math.max(15, Math.min(28, readerFontSize));
+      document.documentElement.style.setProperty("--reader-font-size", `${readerFontSize}px`);
+      localStorage.setItem(LS_READER_FONT_SIZE, String(readerFontSize));
+    };
+    applyReaderFontSize();
+
+    readerBtn.addEventListener("click", openReader);
+    readerClose.addEventListener("click", closeReader);
+    readerSelectAll.addEventListener("click", () => setAllReaderSegments(true));
+    readerClear.addEventListener("click", () => setAllReaderSegments(false));
+    readerSegmentsToggle.addEventListener("click", () => readerSidebar.classList.toggle("open"));
+    readerFontDecrease.addEventListener("click", () => { readerFontSize -= 1; applyReaderFontSize(); });
+    readerFontIncrease.addEventListener("click", () => { readerFontSize += 1; applyReaderFontSize(); });
+    readerCopy.addEventListener("click", async () => {
+      const selection = getReaderSelection();
+      const text = getAssistantSegments()
+        .filter(({ index }) => selection.has(index))
+        .map(({ message }) => message.content)
+        .join("\n\n");
+      if (!text) return;
+      try {
+        await navigator.clipboard.writeText(text);
+        readerCopy.textContent = "宸插鍒?;
+        setTimeout(() => { readerCopy.textContent = "澶嶅埗鍏ㄦ枃"; }, 1400);
+      } catch {
+        readerCopy.textContent = "澶嶅埗澶辫触";
+        setTimeout(() => { readerCopy.textContent = "澶嶅埗鍏ㄦ枃"; }, 1400);
+      }
+    });
+    updateReaderCount();
+  }
+
+  // ========== 澶氫細璇濈鐞嗗嚱鏁帮紙淇濇寔涓嶅彉锛?==========
   function saveSessionsToStorage() {
     try { localStorage.setItem(LS_SESSIONS, JSON.stringify(sessions)); } catch(e) {}
   }
@@ -242,15 +443,15 @@ function rotateBackground() {
           sessions.forEach(s => {
             if (!s.messages) s.messages = [];
             if (!s.createdAt) s.createdAt = Date.now();
-            if (!s.name) s.name = `会话 ${new Date(s.createdAt).toLocaleString()}`;
+            if (!s.name) s.name = `浼氳瘽 ${new Date(s.createdAt).toLocaleString()}`;
           });
           return;
         }
       } catch(e) {}
     }
-    // 迁移旧数据略...
+    // 杩佺Щ鏃ф暟鎹暐...
     if (!sessions.length) {
-      sessions = [{ id: Date.now().toString(), name: "新会话", messages: [], createdAt: Date.now() }];
+      sessions = [{ id: Date.now().toString(), name: "鏂颁細璇?, messages: [], createdAt: Date.now() }];
       saveSessionsToStorage();
     }
   }
@@ -263,8 +464,8 @@ function rotateBackground() {
       div.innerHTML = `
         <span class="session-title" data-id="${s.id}">${escapeHtml(s.name)}</span>
         <div class="session-actions">
-          <button class="rename-session" data-id="${s.id}" title="重命名">✏️</button>
-          <button class="delete-session" data-id="${s.id}" title="删除">🗑️</button>
+          <button class="rename-session" data-id="${s.id}" title="閲嶅懡鍚? aria-label="閲嶅懡鍚嶄細璇?>閲?/button>
+          <button class="delete-session" data-id="${s.id}" title="鍒犻櫎" aria-label="鍒犻櫎浼氳瘽">鍒?/button>
         </div>
       `;
       div.querySelector(".session-title").addEventListener("click", (e) => {
@@ -274,7 +475,7 @@ function rotateBackground() {
       });
       div.querySelector(".rename-session").addEventListener("click", (e) => {
         e.stopPropagation();
-        const newName = prompt("输入新名称:", s.name);
+        const newName = prompt("杈撳叆鏂板悕绉?", s.name);
         if (newName && newName.trim()) {
           s.name = newName.trim();
           saveSessionsToStorage();
@@ -283,10 +484,13 @@ function rotateBackground() {
       });
       div.querySelector(".delete-session").addEventListener("click", (e) => {
         e.stopPropagation();
-        if (sessions.length === 1) { alert("至少保留一个会话"); return; }
-        if (confirm(`确定删除会话“${s.name}”吗？`)) {
+        if (sessions.length === 1) { alert("鑷冲皯淇濈暀涓€涓細璇?); return; }
+        if (confirm(`纭畾鍒犻櫎浼氳瘽鈥?{s.name}鈥濆悧锛焋)) {
           const idx = sessions.findIndex(ss => ss.id === s.id);
-          if (idx !== -1) sessions.splice(idx, 1);
+          if (idx !== -1) {
+            sessions.splice(idx, 1);
+            removeReaderSelectionForSession(s.id);
+          }
           saveSessionsToStorage();
           if (currentSessionId === s.id) switchToSession(sessions[0].id);
           else renderSessionList();
@@ -302,19 +506,21 @@ function rotateBackground() {
     session = target.messages;
     totalPromptTokens = totalCompletionTokens = totalInEstimate = totalOutEstimate = 0;
     clearUIRows();
-    for (const msg of session) {
+    session.forEach((msg, index) => {
       const role = msg.role === "user" ? "user" : "assistant";
-      const r = makeRow(role);
+      const r = makeRow(role, role === "assistant" ? index : null);
       r.bubble.textContent = msg.content;
       r.stats.textContent = "";
-    }
+    });
+    updateEmptyState();
+    updateReaderCount();
     scrollToBottom();
     renderSessionList();
     if (historyEnabled) persistSessionIfEnabled();
   }
   function createNewSession() {
     const newId = Date.now().toString();
-    sessions.push({ id: newId, name: `会话 ${new Date().toLocaleString()}`, messages: [], createdAt: Date.now() });
+    sessions.push({ id: newId, name: `浼氳瘽 ${new Date().toLocaleString()}`, messages: [], createdAt: Date.now() });
     saveSessionsToStorage();
     switchToSession(newId);
     closeSessionPanelFunc();
@@ -333,7 +539,7 @@ function rotateBackground() {
   function openSessionPanel() { sessionPanel.classList.add("open"); sessionOverlay.style.display = "block"; renderSessionList(); }
   function closeSessionPanelFunc() { sessionPanel.classList.remove("open"); sessionOverlay.style.display = "none"; }
 
-  // ========== 辅助函数 ==========
+  // ========== 杈呭姪鍑芥暟 ==========
   function estimateTokens(text) {
     if (!text) return 0;
     let cjk = 0, ascii = 0;
@@ -359,33 +565,47 @@ function rotateBackground() {
   function scrollToBottom() {
     historyWrap.scrollTo({ top: historyWrap.scrollHeight, behavior: "auto" });
   }
-  function makeRow(role) {
+  function updateEmptyState() {
+    if (!emptyState) return;
+    emptyState.classList.toggle("hidden", chatEl.querySelector(".row") !== null);
+  }
+  function makeRow(role, messageIndex = null) {
     const row = document.createElement("div");
     row.className = "row " + (role === "user" ? "user" : "ai");
     const avatar = document.createElement("div");
     avatar.className = "avatar " + (role === "user" ? "human" : "bot");
-    avatar.textContent = role === "user" ? "👤" : "🤖";
+    avatar.textContent = role === "user" ? "浣? : "AI";
     const content = document.createElement("div");
     content.className = "content";
+    const metaLine = document.createElement("div");
+    metaLine.className = "meta-line";
     const meta = document.createElement("div");
     meta.className = "meta";
-    meta.textContent = role === "user" ? "User" : "Bot";
+    meta.textContent = role === "user" ? "浣? : "AI";
+    const tools = document.createElement("div");
+    tools.className = "message-tools";
     const bubble = document.createElement("div");
     bubble.className = "bubble " + (role === "user" ? "user" : "ai");
     const stats = document.createElement("div");
     stats.className = "stats";
-    content.appendChild(meta);
+    metaLine.appendChild(meta);
+    if (role !== "user") metaLine.appendChild(tools);
+    content.appendChild(metaLine);
     content.appendChild(bubble);
     content.appendChild(stats);
     if (role === "user") { row.appendChild(content); row.appendChild(avatar); }
     else { row.appendChild(avatar); row.appendChild(content); }
     chatEl.insertBefore(row, spacerEl);
+    updateEmptyState();
+    const rowParts = { row, bubble, stats, tools };
+    if (role !== "user" && Number.isInteger(messageIndex)) attachReaderControl(rowParts, messageIndex);
     if (isNearBottom()) scrollToBottom();
-    return { bubble, stats };
+    return rowParts;
   }
   function clearUIRows() {
     const nodes = Array.from(chatEl.children);
-    for (const n of nodes) if (n !== spacerEl) chatEl.removeChild(n);
+    for (const n of nodes) if (n !== spacerEl && n !== emptyState) chatEl.removeChild(n);
+    updateEmptyState();
   }
   function initModels() {
     modelSel.innerHTML = "";
@@ -400,7 +620,7 @@ function rotateBackground() {
     modelSel.addEventListener("change", () => localStorage.setItem(LS_MODEL, modelSel.value));
   }
 
-  // ========== 发送消息（支持停止生成） ==========
+  // ========== 鍙戦€佹秷鎭紙鏀寔鍋滄鐢熸垚锛?==========
   async function send() {
     updateSpacer();
     const text = inputEl.value.trim();
@@ -411,7 +631,7 @@ function rotateBackground() {
     userRow.bubble.textContent = text;
     const inEst = estimateTokens(text);
     totalInEstimate += inEst;
-    userRow.stats.textContent = `Input(估算): ≈${inEst} | Total In: ≈${totalInEstimate}`;
+    userRow.stats.textContent = `Input(浼扮畻): 鈮?{inEst} | Total In: 鈮?{totalInEstimate}`;
     session.push({ role: "user", content: text });
     persistSessionIfEnabled();
     inputEl.value = "";
@@ -472,15 +692,27 @@ function rotateBackground() {
         }
       }
     } catch (err) {
-      if (err.name === "AbortError") { isAborted = true; aiRow.bubble.textContent = full + "\n\n[已停止]"; }
-      else { aiRow.bubble.textContent = `错误: ${err.message}`; }
+      if (err.name === "AbortError") { isAborted = true; aiRow.bubble.textContent = full + "\n\n[宸插仠姝"; }
+      else { aiRow.bubble.textContent = `閿欒: ${err.message}`; }
       if (loadingIndicator.parentNode) loadingIndicator.remove();
     } finally {
       if (loadingIndicator.parentNode) loadingIndicator.remove();
       currentAbortController = null;
       stopBtn.style.display = "none";
     }
-    if (full && !isAborted) { session.push({ role: "assistant", content: full }); persistSessionIfEnabled(); }
+    if (full && !isAborted) {
+      session.push({ role: "assistant", content: full });
+      const messageIndex = session.length - 1;
+      const savedSelection = readerSelections[currentSessionId];
+      if (Array.isArray(savedSelection) && savedSelection.length > 0) {
+        const selection = new Set(savedSelection);
+        selection.add(messageIndex);
+        saveReaderSelection(selection);
+      }
+      attachReaderControl(aiRow, messageIndex);
+      updateReaderCount();
+      persistSessionIfEnabled();
+    }
     if (exactUsage) {
       totalPromptTokens += exactUsage.prompt_tokens || 0;
       totalCompletionTokens += exactUsage.completion_tokens || 0;
@@ -488,21 +720,21 @@ function rotateBackground() {
     } else {
       const outEst = estimateTokens(full);
       totalOutEstimate += outEst;
-      aiRow.stats.textContent = `Output估算:≈${outEst} | Total Out:≈${totalOutEstimate}`;
+      aiRow.stats.textContent = `Output浼扮畻:鈮?{outEst} | Total Out:鈮?{totalOutEstimate}`;
     }
     updateSpacer();
     scrollToBottom();
   }
 
-  // 停止按钮
+  // 鍋滄鎸夐挳
   stopBtn.addEventListener("click", () => { if (currentAbortController) currentAbortController.abort(); });
   sendBtn.addEventListener("click", send);
   inputEl.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } });
 
-  // 事件绑定
+  // 浜嬩欢缁戝畾
   personaToggle.addEventListener("click", () => {
     useBuiltin = !useBuiltin;
-    personaToggle.textContent = useBuiltin ? "😈" : "😇";
+    personaToggle.textContent = useBuiltin ? "馃槇" : "馃槆";
     localStorage.setItem(LS_USE_BUILTIN, useBuiltin ? "1" : "0");
   });
   settingsBtn.addEventListener("click", () => {
@@ -519,9 +751,19 @@ function rotateBackground() {
     if (historyEnabled) persistSessionIfEnabled();
   });
   clearHistoryBtn.addEventListener("click", () => {
-    if (confirm("清除当前会话历史？")) {
+    if (confirm("娓呴櫎褰撳墠浼氳瘽鍘嗗彶锛?)) {
       const cur = sessions.find(s => s.id === currentSessionId);
-      if (cur) { cur.messages = []; session = cur.messages; saveSessionsToStorage(); clearUIRows(); updateSpacer(); scrollToBottom(); renderSessionList(); }
+      if (cur) {
+        cur.messages = [];
+        session = cur.messages;
+        removeReaderSelectionForSession(currentSessionId);
+        saveSessionsToStorage();
+        clearUIRows();
+        updateReaderCount();
+        updateSpacer();
+        scrollToBottom();
+        renderSessionList();
+      }
     }
   });
   promptKeepEl.addEventListener("change", () => {
@@ -534,19 +776,27 @@ function rotateBackground() {
     settingsMask.style.display = "none";
   });
   clearPromptBtn.addEventListener("click", () => {
-    if (confirm("清除自定义模板？")) { localStorage.removeItem(LS_CUSTOM_PROMPT); customPromptEl.value = ""; }
+    if (confirm("娓呴櫎鑷畾涔夋ā鏉匡紵")) { localStorage.removeItem(LS_CUSTOM_PROMPT); customPromptEl.value = ""; }
   });
   donateBtn.addEventListener("click", () => donateMask.style.display = "flex");
   donateClose.addEventListener("click", () => donateMask.style.display = "none");
   donateMask.addEventListener("click", (e) => { if (e.target === donateMask) donateMask.style.display = "none"; });
 
-  // 会话面板
+  // 浼氳瘽闈㈡澘
   sessionBtn.addEventListener("click", openSessionPanel);
   closeSessionPanel.addEventListener("click", closeSessionPanelFunc);
   sessionOverlay.addEventListener("click", closeSessionPanelFunc);
   newSessionBtn.addEventListener("click", createNewSession);
 
-  // 输入框自适应
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape") return;
+    if (readerMask.classList.contains("open")) closeReader();
+    else if (settingsMask.style.display === "flex") settingsMask.style.display = "none";
+    else if (donateMask.style.display === "flex") donateMask.style.display = "none";
+    else closeSessionPanelFunc();
+  });
+
+  // 杈撳叆妗嗚嚜閫傚簲
   inputEl.addEventListener("input", () => {
     inputEl.style.height = "auto";
     inputEl.style.height = inputEl.scrollHeight + "px";
@@ -561,8 +811,7 @@ function rotateBackground() {
   }
   window.addEventListener("resize", () => { const stick = isNearBottom(); updateSpacer(); if (stick) scrollToBottom(); });
 
-  // 初始化
-  function init() {
+  // 鍒濆鍖?  function init() {
     initModels();
     setupResizeObserver();
     updateSpacer();
@@ -570,9 +819,11 @@ function rotateBackground() {
     scrollToBottom();
     initTheme();
     initFontScale();
+    initReaderMode();
     rotateBackground();
     bgInterval = setInterval(rotateBackground, 30000);
     initParticleBackground();
   }
   init();
 })();
+
