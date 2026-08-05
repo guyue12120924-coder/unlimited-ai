@@ -1401,7 +1401,7 @@ body.light-theme #sessionPanel {
   }
 
   .reader-entry::before {
-    content: "璇?;
+    content: "读";
   }
 
   #history {
@@ -1596,4 +1596,3 @@ body.light-theme #sessionPanel {
     display: none;
   }
 }
-
