@@ -1255,6 +1255,34 @@ body.light-theme .character-card {
     padding: 9px 9px calc(10px + env(safe-area-inset-bottom));
   }
 
+  .reader-header {
+    min-width: 0;
+  }
+
+  .reader-toolbar {
+    min-width: 0;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    scrollbar-width: none;
+  }
+
+  .reader-toolbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .reader-toolbar > *,
+  .reader-studio-tools,
+  .reader-tool,
+  .reader-close {
+    flex: 0 0 auto;
+  }
+
+  .reader-tool,
+  .reader-studio-tools select {
+    white-space: nowrap;
+  }
+
   .command-button span {
     display: none;
   }
@@ -1285,6 +1313,20 @@ body.light-theme .character-card {
 
   .character-form button {
     height: 34px;
+  }
+}
+
+@media (max-width: 420px) {
+  .reader-title-block {
+    display: none;
+  }
+
+  .reader-header {
+    min-height: 58px;
+  }
+
+  .reader-toolbar {
+    width: 100%;
   }
 }
 
