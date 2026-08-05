@@ -204,6 +204,8 @@
     commandButton.id = "commandBtn";
     commandButton.className = "studio-top-btn command-button";
     commandButton.type = "button";
+    commandButton.setAttribute("aria-label", "打开命令面板");
+    commandButton.title = "命令面板 (Ctrl+K)";
     commandButton.innerHTML = `<span>命令</span><kbd>Ctrl K</kbd>`;
     fragment.append(libraryButton, studioButton, commandButton);
     controls.prepend(fragment);
