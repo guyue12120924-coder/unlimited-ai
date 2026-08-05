@@ -21,6 +21,8 @@
     notes: "",
     timeline: "",
     foreshadow: "",
+    scenes: [],
+    snapshots: [],
     dailyGoal: 2000,
     createdAt: Date.now()
   };
@@ -35,6 +37,10 @@
   let navigatingPromptHistory = false;
   let observedSessionId = null;
   let readerEnhanceQueued = false;
+  let focusTimerId = null;
+  let focusRemaining = 25 * 60;
+  let focusRunning = false;
+  let focusPreviousPanels = null;
 
   function clone(value) {
     return JSON.parse(JSON.stringify(value));
@@ -47,7 +53,12 @@
     next.projects = Array.isArray(next.projects) && next.projects.length
       ? next.projects
       : [clone(DEFAULT_PROJECT)];
-    next.projects = next.projects.map(project => ({ ...clone(DEFAULT_PROJECT), ...project }));
+    next.projects = next.projects.map(project => {
+      const normalized = { ...clone(DEFAULT_PROJECT), ...project };
+      normalized.scenes = Array.isArray(normalized.scenes) ? normalized.scenes : [];
+      normalized.snapshots = Array.isArray(normalized.snapshots) ? normalized.snapshots : [];
+      return normalized;
+    });
     next.activeProjectId = next.projects.some(project => project.id === next.activeProjectId)
       ? next.activeProjectId
       : next.projects[0].id;
@@ -62,6 +73,7 @@
       clickFx: true,
       spotlight: true,
       backgroundDim: 48,
+      focusMinutes: 25,
       ...next.settings
     };
     return next;
@@ -171,6 +183,7 @@
           <button data-studio-tab="outline" type="button">大纲</button>
           <button data-studio-tab="characters" type="button">人物</button>
           <button data-studio-tab="world" type="button">设定</button>
+          <button data-studio-tab="scenes" type="button">场景</button>
           <button data-studio-tab="notes" type="button">便签</button>
           <button data-studio-tab="stats" type="button">统计</button>
         </div>
@@ -215,6 +228,12 @@
     document.body.insertAdjacentHTML("beforeend", `
       <div id="pointerGlow" aria-hidden="true"></div>
       <div id="studioToast" role="status" aria-live="polite"></div>
+      <div id="focusDock" hidden aria-live="polite">
+        <div><span>FOCUS SESSION</span><strong id="focusClock">25:00</strong></div>
+        <button id="focusPause" type="button">暂停</button>
+        <button id="focusReset" type="button">重置</button>
+        <button id="focusExit" type="button">退出专注</button>
+      </div>
       <div id="commandMask" class="studio-modal-mask" hidden>
         <div id="commandPalette" role="dialog" aria-modal="true" aria-label="命令面板">
           <div class="command-input-row"><span>⌕</span><input id="commandInput" placeholder="搜索命令、作品或会话" autocomplete="off" /></div>
@@ -233,6 +252,115 @@
     tools.innerHTML = `<select id="readerTheme" aria-label="阅读主题"><option value="paper">纸张</option><option value="night">夜间</option><option value="eye">护眼</option></select><button class="reader-tool" id="readerExportTxt" type="button">TXT</button><button class="reader-tool" id="readerExportMd" type="button">MD</button><button class="reader-tool" id="readerPrint" type="button">打印</button>`;
     toolbar.insertBefore(tools, document.getElementById("readerCopy"));
     shell.insertAdjacentHTML("afterbegin", `<div id="readerProgress"><i></i></div>`);
+  }
+
+  function formatFocusTime(seconds) {
+    const safe = Math.max(0, Number(seconds) || 0);
+    return `${String(Math.floor(safe / 60)).padStart(2, "0")}:${String(safe % 60).padStart(2, "0")}`;
+  }
+
+  function renderFocusDock() {
+    const dock = document.getElementById("focusDock");
+    if (!dock) return;
+    dock.hidden = !document.body.classList.contains("focus-mode");
+    document.getElementById("focusClock").textContent = formatFocusTime(focusRemaining);
+    document.getElementById("focusPause").textContent = focusRunning ? "暂停" : "继续";
+  }
+
+  function stopFocusTimer() {
+    if (focusTimerId) clearInterval(focusTimerId);
+    focusTimerId = null;
+  }
+
+  function runFocusTimer() {
+    stopFocusTimer();
+    focusRunning = true;
+    focusTimerId = setInterval(() => {
+      focusRemaining = Math.max(0, focusRemaining - 1);
+      renderFocusDock();
+      if (focusRemaining === 0) {
+        stopFocusTimer();
+        focusRunning = false;
+        renderFocusDock();
+        toast("本次专注写作已完成");
+      }
+    }, 1000);
+    renderFocusDock();
+  }
+
+  function startFocusMode() {
+    if (!document.body.classList.contains("focus-mode")) {
+      focusPreviousPanels = {
+        library: document.body.classList.contains("library-collapsed"),
+        studio: document.body.classList.contains("studio-collapsed")
+      };
+    }
+    document.body.classList.add("focus-mode", "library-collapsed", "studio-collapsed");
+    focusRemaining = Math.max(1, Number(state.settings.focusMinutes) || 25) * 60;
+    runFocusTimer();
+    document.getElementById("msg")?.focus();
+  }
+
+  function exitFocusMode() {
+    stopFocusTimer();
+    focusRunning = false;
+    document.body.classList.remove("focus-mode");
+    if (focusPreviousPanels) {
+      document.body.classList.toggle("library-collapsed", focusPreviousPanels.library);
+      document.body.classList.toggle("studio-collapsed", focusPreviousPanels.studio);
+    }
+    focusPreviousPanels = null;
+    renderFocusDock();
+  }
+
+  function toggleFocusTimer() {
+    if (focusRunning) {
+      stopFocusTimer();
+      focusRunning = false;
+      renderFocusDock();
+    } else if (focusRemaining > 0) {
+      runFocusTimer();
+    }
+  }
+
+  function resetFocusTimer() {
+    focusRemaining = Math.max(1, Number(state.settings.focusMinutes) || 25) * 60;
+    runFocusTimer();
+  }
+
+  function createProjectSnapshot() {
+    const project = getActiveProject();
+    const payload = clone(project);
+    delete payload.snapshots;
+    project.snapshots.unshift({
+      id: makeId("snapshot"),
+      createdAt: Date.now(),
+      label: new Date().toLocaleString(),
+      payload
+    });
+    project.snapshots = project.snapshots.slice(0, 10);
+    saveState();
+    renderStudioPanel();
+    toast("作品快照已保存");
+  }
+
+  function restoreProjectSnapshot(snapshotId) {
+    const project = getActiveProject();
+    const snapshot = project.snapshots.find(item => item.id === snapshotId);
+    if (!snapshot || !confirm(`恢复 ${snapshot.label} 的作品快照？当前作品资料会被覆盖。`)) return;
+    const fields = ["description", "synopsis", "outline", "characters", "world", "notes", "timeline", "foreshadow", "scenes", "chapters", "dailyGoal"];
+    fields.forEach(field => { project[field] = clone(snapshot.payload[field] ?? DEFAULT_PROJECT[field]); });
+    state.activeChapterId = project.chapters.some(chapter => chapter.id === state.activeChapterId) ? state.activeChapterId : null;
+    saveState();
+    renderAll();
+    toast("作品快照已恢复");
+  }
+
+  function deleteProjectSnapshot(snapshotId) {
+    const project = getActiveProject();
+    project.snapshots = project.snapshots.filter(item => item.id !== snapshotId);
+    saveState();
+    renderStudioPanel();
   }
 
   function renderAll() {
@@ -327,6 +455,27 @@
         <label><span>故事时间线</span><textarea data-project-field="timeline" placeholder="记录事件顺序、日期与人物年龄">${escapeHtml(project.timeline)}</textarea></label>
         <label><span>伏笔追踪</span><textarea data-project-field="foreshadow" placeholder="记录埋设位置、回收章节和状态">${escapeHtml(project.foreshadow)}</textarea></label>
       </div>`;
+    } else if (activeTab === "scenes") {
+      const statusLabel = { todo: "待写", writing: "进行中", done: "已完成" };
+      const chapterOptions = project.chapters.map(chapter => `<option value="${escapeHtml(chapter.id)}">${escapeHtml(chapter.name)}</option>`).join("");
+      body.innerHTML = `<div class="studio-pane scene-pane">
+        <div id="sceneForm" class="scene-form">
+          <input id="sceneTitle" maxlength="60" placeholder="场景标题" required />
+          <select id="sceneChapter" aria-label="关联章节"><option value="">未关联章节</option>${chapterOptions}</select>
+          <textarea id="sceneSummary" maxlength="500" placeholder="冲突、转折、出场人物或场景目标"></textarea>
+          <button id="addSceneCard" type="button">添加场景</button>
+        </div>
+        <div class="scene-list">${project.scenes.length ? project.scenes.map((scene, index) => {
+          const chapter = project.chapters.find(item => item.id === scene.chapterId);
+          return `<article class="scene-card" data-scene-id="${escapeHtml(scene.id)}" draggable="true">
+            <button class="scene-drag" type="button" title="拖动排序">⋮⋮</button>
+            <div class="scene-card-copy"><input data-scene-field="title" value="${escapeHtml(scene.title)}" aria-label="场景标题" /><span>${String(index + 1).padStart(2, "0")} · ${escapeHtml(chapter?.name || "未关联章节")}</span></div>
+            <button class="scene-status status-${escapeHtml(scene.status)}" type="button">${statusLabel[scene.status] || statusLabel.todo}</button>
+            <button class="remove-scene" type="button" title="删除场景">×</button>
+            <textarea data-scene-field="summary" placeholder="记录这个场景要发生什么">${escapeHtml(scene.summary || "")}</textarea>
+          </article>`;
+        }).join("") : `<div class="studio-empty-state"><strong>搭建场景节奏</strong><p>把情节拆成可以排序和推进的小场景。</p></div>`}</div>
+      </div>`;
     } else if (activeTab === "notes") {
       body.innerHTML = `<div class="studio-pane editor-pane"><label><span>灵感便签</span><textarea class="note-paper" data-project-field="notes" placeholder="台词、场景、冲突、意象或临时想法">${escapeHtml(project.notes)}</textarea></label><div class="autosave-note">自动保存 · 支持在命令面板中快速打开</div></div>`;
     } else {
@@ -344,11 +493,68 @@
         <div class="stat-grid"><div><strong>${words.toLocaleString()}</strong><span>正文字数</span></div><div><strong>${assistant.length}</strong><span>AI 片段</span></div><div><strong>${project.chapters.length}</strong><span>章节</span></div><div><strong>${chapterDone}</strong><span>已完成</span></div></div>
         <label class="goal-control"><span>本次写作目标</span><input type="number" min="100" step="100" value="${Number(project.dailyGoal) || 2000}" id="dailyGoalInput" /></label>
         <div class="goal-progress"><i style="width:${progress}%"></i></div><p class="goal-caption">已完成 ${progress}%</p>
+        <div class="focus-settings"><div><strong>专注写作</strong><span>隐藏两侧面板并启动计时</span></div><label><select id="focusMinutesSetting" aria-label="专注时长"><option value="15"${state.settings.focusMinutes === 15 ? " selected" : ""}>15 分钟</option><option value="25"${state.settings.focusMinutes === 25 ? " selected" : ""}>25 分钟</option><option value="45"${state.settings.focusMinutes === 45 ? " selected" : ""}>45 分钟</option><option value="60"${state.settings.focusMinutes === 60 ? " selected" : ""}>60 分钟</option></select><button id="startFocusMode" type="button">开始</button></label></div>
+        <div class="snapshot-panel"><div class="snapshot-head"><div><strong>作品快照</strong><span>只保存大纲、人物、设定、章节和场景</span></div><button id="createSnapshot" type="button">保存快照</button></div><div class="snapshot-list">${project.snapshots.length ? project.snapshots.slice(0, 5).map(snapshot => `<div data-snapshot-id="${escapeHtml(snapshot.id)}"><span>${escapeHtml(snapshot.label)}</span><button class="restore-snapshot" type="button">恢复</button><button class="delete-snapshot" type="button" title="删除快照">×</button></div>`).join("") : `<p>还没有作品快照</p>`}</div></div>
         <div class="storage-note">本地数据约 ${(storageBytes / 1024).toFixed(1)} KB</div>
         <div class="motion-settings"><strong>界面动效</strong><div class="segmented"><button data-motion="off" type="button">关闭</button><button data-motion="reduced" type="button">精简</button><button data-motion="full" type="button">完整</button></div><label><input id="clickFxSetting" type="checkbox"${state.settings.clickFx ? " checked" : ""} /> 点击涟漪</label><label><input id="spotlightSetting" type="checkbox"${state.settings.spotlight ? " checked" : ""} /> 鼠标环境光</label><label class="dim-control"><span>背景遮罩</span><input id="backgroundDimSetting" type="range" min="20" max="80" value="${state.settings.backgroundDim}" /></label></div>
       </div>`;
       body.querySelectorAll("[data-motion]").forEach(button => button.classList.toggle("active", button.dataset.motion === state.settings.motion));
     }
+    bindRenderedPanelControls(body);
+  }
+
+  function bindRenderedPanelControls(body) {
+    body.querySelector("#addSceneCard")?.addEventListener("click", () => {
+      const title = document.getElementById("sceneTitle").value.trim();
+      if (!title) { document.getElementById("sceneTitle").focus(); return; }
+      getActiveProject().scenes.push({ id: makeId("scene"), title, chapterId: document.getElementById("sceneChapter").value, summary: document.getElementById("sceneSummary").value.trim(), status: "todo", createdAt: Date.now() });
+      saveState();
+      renderStudioPanel();
+      toast("场景卡已添加");
+    });
+    body.querySelectorAll("[data-scene-field]").forEach(input => input.addEventListener("input", () => {
+      const scene = getActiveProject().scenes.find(item => item.id === input.closest("[data-scene-id]")?.dataset.sceneId);
+      if (scene) scene[input.dataset.sceneField] = input.value;
+      saveState();
+    }));
+    body.querySelectorAll(".scene-status").forEach(button => button.addEventListener("click", () => {
+      const scene = getActiveProject().scenes.find(item => item.id === button.closest("[data-scene-id]")?.dataset.sceneId);
+      if (!scene) return;
+      const statuses = ["todo", "writing", "done"];
+      scene.status = statuses[(statuses.indexOf(scene.status) + 1) % statuses.length];
+      saveState();
+      renderStudioPanel();
+    }));
+    body.querySelectorAll(".remove-scene").forEach(button => button.addEventListener("click", () => {
+      const sceneId = button.closest("[data-scene-id]")?.dataset.sceneId;
+      getActiveProject().scenes = getActiveProject().scenes.filter(item => item.id !== sceneId);
+      saveState();
+      renderStudioPanel();
+    }));
+    body.querySelectorAll("[data-scene-id]").forEach(card => {
+      card.addEventListener("dragstart", event => event.dataTransfer.setData("text/scene-id", card.dataset.sceneId));
+      card.addEventListener("dragover", event => event.preventDefault());
+      card.addEventListener("drop", event => {
+        event.preventDefault();
+        const sourceId = event.dataTransfer.getData("text/scene-id");
+        if (!sourceId || sourceId === card.dataset.sceneId) return;
+        const scenes = getActiveProject().scenes;
+        const from = scenes.findIndex(item => item.id === sourceId);
+        const to = scenes.findIndex(item => item.id === card.dataset.sceneId);
+        if (from < 0 || to < 0) return;
+        scenes.splice(to, 0, scenes.splice(from, 1)[0]);
+        saveState();
+        renderStudioPanel();
+      });
+    });
+    body.querySelector("#focusMinutesSetting")?.addEventListener("change", event => {
+      state.settings.focusMinutes = Number(event.target.value) || 25;
+      saveState();
+    });
+    body.querySelector("#startFocusMode")?.addEventListener("click", startFocusMode);
+    body.querySelector("#createSnapshot")?.addEventListener("click", createProjectSnapshot);
+    body.querySelectorAll(".restore-snapshot").forEach(button => button.addEventListener("click", () => restoreProjectSnapshot(button.closest("[data-snapshot-id]")?.dataset.snapshotId)));
+    body.querySelectorAll(".delete-snapshot").forEach(button => button.addEventListener("click", () => deleteProjectSnapshot(button.closest("[data-snapshot-id]")?.dataset.snapshotId)));
   }
 
   function switchSession(id) {
@@ -605,9 +811,12 @@
       { id: "theme", label: "切换明暗主题", group: "设置", run: () => document.getElementById("themeToggle").click() },
       { id: "library", label: "显示或隐藏创作书架", group: "界面", run: toggleLibrary },
       { id: "studio", label: "显示或隐藏创作台", group: "界面", run: toggleStudio },
+      { id: "focus-mode", label: "开始专注写作", group: "创作", run: startFocusMode },
       { id: "outline", label: "打开故事大纲", group: "创作", run: () => setStudioTab("outline") },
       { id: "characters", label: "打开人物卡", group: "创作", run: () => setStudioTab("characters") },
+      { id: "scenes", label: "打开场景卡片", group: "创作", run: () => setStudioTab("scenes") },
       { id: "notes", label: "打开灵感便签", group: "创作", run: () => setStudioTab("notes") },
+      { id: "snapshot", label: "保存当前作品快照", group: "数据", run: createProjectSnapshot },
       { id: "backup", label: "导出本地完整备份", group: "数据", run: exportBackup },
       { id: "delete-project", label: "删除当前小说项目", group: "数据", disabled: state.projects.length <= 1, run: deleteActiveProject }
     ];
@@ -807,6 +1016,9 @@
     document.getElementById("libraryToggleBtn").addEventListener("click", toggleLibrary);
     document.getElementById("studioToggleBtn").addEventListener("click", toggleStudio);
     document.getElementById("commandBtn").addEventListener("click", openCommandPalette);
+    document.getElementById("focusPause").addEventListener("click", toggleFocusTimer);
+    document.getElementById("focusReset").addEventListener("click", resetFocusTimer);
+    document.getElementById("focusExit").addEventListener("click", exitFocusMode);
     document.getElementById("conversationSearchInput").addEventListener("input", event => searchConversation(event.target.value));
     document.getElementById("closeConversationSearch").addEventListener("click", closeConversationSearch);
 
@@ -901,15 +1113,16 @@
       applySettings();
     });
     document.getElementById("studioPanelBody").addEventListener("submit", event => {
-      if (event.target.id !== "characterForm") return;
-      event.preventDefault();
-      const name = document.getElementById("characterName").value.trim();
-      const role = document.getElementById("characterRole").value.trim();
-      if (!name) return;
-      getActiveProject().characters.push({ id: makeId("character"), name, role, note: "" });
-      saveState();
-      renderStudioPanel();
-      toast("人物卡已添加");
+      if (event.target.id === "characterForm") {
+        event.preventDefault();
+        const name = document.getElementById("characterName").value.trim();
+        const role = document.getElementById("characterRole").value.trim();
+        if (!name) return;
+        getActiveProject().characters.push({ id: makeId("character"), name, role, note: "" });
+        saveState();
+        renderStudioPanel();
+        toast("人物卡已添加");
+      }
     });
     document.getElementById("studioPanelBody").addEventListener("click", async event => {
       const motion = event.target.closest("[data-motion]");
@@ -982,6 +1195,7 @@
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") { event.preventDefault(); openCommandPalette(); return; }
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "f") { event.preventDefault(); openConversationSearch(); return; }
       if (event.key === "Escape" && !document.getElementById("commandMask").hidden) { closeCommandPalette(); return; }
+      if (event.key === "Escape" && document.body.classList.contains("focus-mode")) { exitFocusMode(); return; }
       if (event.key === "/" && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName || "")) { event.preventDefault(); openCommandPalette(); }
       if (event.key === "?" && !/INPUT|TEXTAREA/.test(document.activeElement?.tagName || "")) { setStudioTab("stats"); document.body.classList.remove("studio-collapsed"); }
     });
