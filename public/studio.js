@@ -17,6 +17,7 @@
     synopsis: "",
     outline: "",
     characters: [],
+    relations: [],
     world: "",
     notes: "",
     timeline: "",
@@ -41,6 +42,8 @@
   let focusRemaining = 25 * 60;
   let focusRunning = false;
   let focusPreviousPanels = null;
+  let workspaceSearchQuery = "";
+  let pendingSnapshotId = null;
 
   function clone(value) {
     return JSON.parse(JSON.stringify(value));
@@ -57,6 +60,7 @@
       const normalized = { ...clone(DEFAULT_PROJECT), ...project };
       normalized.scenes = Array.isArray(normalized.scenes) ? normalized.scenes : [];
       normalized.snapshots = Array.isArray(normalized.snapshots) ? normalized.snapshots : [];
+      normalized.relations = Array.isArray(normalized.relations) ? normalized.relations : [];
       return normalized;
     });
     next.activeProjectId = next.projects.some(project => project.id === next.activeProjectId)
@@ -167,6 +171,7 @@
           <div id="studioChapterList" class="studio-list"></div>
         </section>
         <div class="library-footer">
+          <button id="workspaceSearch" type="button">全文检索</button>
           <button id="backupWorkspace" type="button">导出备份</button>
           <button id="restoreWorkspace" type="button">导入</button>
           <input id="restoreWorkspaceFile" type="file" accept="application/json" hidden />
@@ -233,6 +238,20 @@
         <button id="focusPause" type="button">暂停</button>
         <button id="focusReset" type="button">重置</button>
         <button id="focusExit" type="button">退出专注</button>
+      </div>
+      <div id="workspaceSearchMask" class="studio-modal-mask" hidden>
+        <div id="workspaceSearchDialog" role="dialog" aria-modal="true" aria-label="全文检索">
+          <div class="workspace-search-head"><div><span>GLOBAL SEARCH</span><strong>全文检索</strong></div><button id="closeWorkspaceSearch" type="button" aria-label="关闭全文检索">×</button></div>
+          <div class="workspace-search-input"><span>⌕</span><input id="workspaceSearchInput" placeholder="搜索作品、对话、章节、人物、场景与设定" autocomplete="off" /></div>
+          <div id="workspaceSearchResults"></div>
+        </div>
+      </div>
+      <div id="snapshotPreviewMask" class="studio-modal-mask" hidden>
+        <div id="snapshotPreviewDialog" role="dialog" aria-modal="true" aria-label="快照预览">
+          <div class="snapshot-preview-head"><div><span>SNAPSHOT</span><strong id="snapshotPreviewTitle">恢复作品快照</strong></div><button id="closeSnapshotPreview" type="button" aria-label="关闭快照预览">×</button></div>
+          <div id="snapshotPreviewBody"></div>
+          <div class="snapshot-preview-actions"><button id="cancelSnapshotRestore" type="button">取消</button><button id="confirmSnapshotRestore" type="button">确认恢复</button></div>
+        </div>
       </div>
       <div id="commandMask" class="studio-modal-mask" hidden>
         <div id="commandPalette" role="dialog" aria-modal="true" aria-label="命令面板">
@@ -347,13 +366,117 @@
   function restoreProjectSnapshot(snapshotId) {
     const project = getActiveProject();
     const snapshot = project.snapshots.find(item => item.id === snapshotId);
-    if (!snapshot || !confirm(`恢复 ${snapshot.label} 的作品快照？当前作品资料会被覆盖。`)) return;
-    const fields = ["description", "synopsis", "outline", "characters", "world", "notes", "timeline", "foreshadow", "scenes", "chapters", "dailyGoal"];
+    if (!snapshot) return;
+    const fields = ["description", "synopsis", "outline", "characters", "relations", "world", "notes", "timeline", "foreshadow", "scenes", "chapters", "dailyGoal"];
     fields.forEach(field => { project[field] = clone(snapshot.payload[field] ?? DEFAULT_PROJECT[field]); });
     state.activeChapterId = project.chapters.some(chapter => chapter.id === state.activeChapterId) ? state.activeChapterId : null;
     saveState();
     renderAll();
     toast("作品快照已恢复");
+  }
+
+  function projectSnapshotSummary(project) {
+    return {
+      chapters: (project.chapters || []).length,
+      characters: (project.characters || []).length,
+      relations: (project.relations || []).length,
+      scenes: (project.scenes || []).length,
+      text: [project.description, project.synopsis, project.outline, project.world, project.notes, project.timeline, project.foreshadow].join("").replace(/\s/g, "").length
+    };
+  }
+
+  function openSnapshotPreview(snapshotId) {
+    const project = getActiveProject();
+    const snapshot = project.snapshots.find(item => item.id === snapshotId);
+    if (!snapshot) return;
+    pendingSnapshotId = snapshotId;
+    const current = projectSnapshotSummary(project);
+    const saved = projectSnapshotSummary(snapshot.payload);
+    const metrics = [
+      ["资料字数", current.text, saved.text],
+      ["章节", current.chapters, saved.chapters],
+      ["人物", current.characters, saved.characters],
+      ["关系", current.relations, saved.relations],
+      ["场景", current.scenes, saved.scenes]
+    ];
+    document.getElementById("snapshotPreviewTitle").textContent = snapshot.label;
+    document.getElementById("snapshotPreviewBody").innerHTML = `<p>恢复后将用快照中的创作资料覆盖当前作品，对话记录不会改变。</p><div class="snapshot-compare"><div><span>项目</span><strong>当前</strong><strong>快照</strong></div>${metrics.map(([label, now, before]) => `<div class="${now === before ? "same" : "changed"}"><span>${label}</span><strong>${Number(now).toLocaleString()}</strong><strong>${Number(before).toLocaleString()}</strong></div>`).join("")}</div>`;
+    document.getElementById("snapshotPreviewMask").hidden = false;
+  }
+
+  function closeSnapshotPreview() {
+    pendingSnapshotId = null;
+    document.getElementById("snapshotPreviewMask").hidden = true;
+  }
+
+  function collectWorkspaceSearchResults(query) {
+    const clean = query.trim().toLowerCase();
+    if (!clean) return [];
+    const results = [];
+    const push = (type, label, text, projectId, tab, sessionId = null) => {
+      const haystack = `${label} ${text || ""}`.toLowerCase();
+      if (!haystack.includes(clean)) return;
+      const index = haystack.indexOf(clean);
+      const source = String(text || label).replace(/\s+/g, " ").trim();
+      const start = Math.max(0, Math.min(source.length, index) - 38);
+      results.push({ type, label, excerpt: source.slice(start, start + 110), projectId, tab, sessionId });
+    };
+    const sessions = getSessions();
+    state.projects.forEach(project => {
+      push("作品", project.name, [project.description, project.synopsis, project.outline].join(" "), project.id, "outline");
+      push("设定", `${project.name} · 世界观`, [project.world, project.timeline, project.foreshadow].join(" "), project.id, "world");
+      push("便签", `${project.name} · 灵感便签`, project.notes, project.id, "notes");
+      project.chapters.forEach(chapter => push("章节", chapter.name, chapter.name, project.id, "draft"));
+      project.characters.forEach(character => push("人物", character.name, `${character.role || ""} ${character.note || ""}`, project.id, "characters"));
+      project.relations.forEach(relation => {
+        const from = project.characters.find(character => character.id === relation.fromId)?.name || "未知";
+        const to = project.characters.find(character => character.id === relation.toId)?.name || "未知";
+        push("关系", `${from} → ${to}`, `${relation.type || ""} ${relation.note || ""}`, project.id, "characters");
+      });
+      project.scenes.forEach(scene => push("场景", scene.title, scene.summary, project.id, "scenes"));
+      sessions.filter(session => project.sessionIds.includes(session.id)).forEach(session => {
+        const matched = (session.messages || []).filter(message => String(message.content || "").toLowerCase().includes(clean)).slice(0, 3);
+        if (session.name.toLowerCase().includes(clean) && !matched.length) push("会话", session.name, session.name, project.id, "draft", session.id);
+        matched.forEach(message => push(message.role === "assistant" ? "AI 内容" : "提问", session.name, message.content, project.id, "draft", session.id));
+      });
+    });
+    return results.slice(0, 60);
+  }
+
+  function renderWorkspaceSearch() {
+    const root = document.getElementById("workspaceSearchResults");
+    const results = collectWorkspaceSearchResults(workspaceSearchQuery);
+    if (!workspaceSearchQuery.trim()) {
+      root.innerHTML = `<div class="workspace-search-empty"><strong>搜索整个创作工作区</strong><p>结果不会发送到网络。</p></div>`;
+      return;
+    }
+    root.innerHTML = results.length ? results.map((result, index) => `<button type="button" data-search-result="${index}"><span>${escapeHtml(result.type)}</span><div><strong>${escapeHtml(result.label)}</strong><p>${escapeHtml(result.excerpt || "匹配标题")}</p></div></button>`).join("") : `<div class="workspace-search-empty"><strong>没有匹配内容</strong><p>试试作品名、人物、地点或正文片段。</p></div>`;
+    root.searchResults = results;
+  }
+
+  function openWorkspaceSearch() {
+    workspaceSearchQuery = "";
+    const mask = document.getElementById("workspaceSearchMask");
+    const input = document.getElementById("workspaceSearchInput");
+    mask.hidden = false;
+    input.value = "";
+    renderWorkspaceSearch();
+    requestAnimationFrame(() => input.focus());
+  }
+
+  function closeWorkspaceSearch() {
+    document.getElementById("workspaceSearchMask").hidden = true;
+  }
+
+  function openWorkspaceSearchResult(result) {
+    if (!result) return;
+    closeWorkspaceSearch();
+    state.activeProjectId = result.projectId;
+    saveState();
+    renderAll();
+    document.body.classList.remove("studio-collapsed");
+    if (result.tab) setStudioTab(result.tab);
+    if (result.sessionId) switchSession(result.sessionId);
   }
 
   function deleteProjectSnapshot(snapshotId) {
@@ -445,9 +568,24 @@
         <div class="autosave-note">内容仅保存在当前浏览器，不会发送给 AI。</div>
       </div>`;
     } else if (activeTab === "characters") {
+      const characterOptions = project.characters.map(character => `<option value="${escapeHtml(character.id)}">${escapeHtml(character.name)}</option>`).join("");
       body.innerHTML = `<div class="studio-pane">
-        <form id="characterForm" class="character-form"><input id="characterName" maxlength="30" placeholder="人物姓名" required /><input id="characterRole" maxlength="40" placeholder="身份或阵营" /><button type="submit">添加人物</button></form>
+        <div id="characterForm" class="character-form"><input id="characterName" maxlength="30" placeholder="人物姓名" /><input id="characterRole" maxlength="40" placeholder="身份或阵营" /><button id="addCharacter" type="button">添加人物</button></div>
         <div class="character-grid">${project.characters.length ? project.characters.map(character => `<article class="character-card" data-character-id="${escapeHtml(character.id)}"><div class="character-monogram">${escapeHtml(character.name.slice(0, 1))}</div><div><strong>${escapeHtml(character.name)}</strong><span>${escapeHtml(character.role || "未设置身份")}</span></div><button class="remove-character" type="button" title="删除人物">×</button><textarea data-character-note="${escapeHtml(character.id)}" placeholder="性格、目标、关系、外貌与备注">${escapeHtml(character.note || "")}</textarea></article>`).join("") : `<div class="studio-empty-state"><strong>建立人物档案</strong><p>人物卡不会自动加入 AI 上下文。</p></div>`}</div>
+        <section class="relation-section"><div class="relation-heading"><div><span>RELATIONSHIPS</span><strong>人物关系</strong></div><small>${project.relations.length} 条关系</small></div>
+          <div id="relationForm" class="relation-form">
+            <select id="relationFrom" aria-label="关系起点"${project.characters.length < 2 ? " disabled" : ""}><option value="">选择人物</option>${characterOptions}</select>
+            <span>→</span>
+            <select id="relationTo" aria-label="关系终点"${project.characters.length < 2 ? " disabled" : ""}><option value="">选择人物</option>${characterOptions}</select>
+            <input id="relationType" maxlength="30" placeholder="关系，如盟友、师徒"${project.characters.length < 2 ? " disabled" : ""} />
+            <button id="addRelation" type="button"${project.characters.length < 2 ? " disabled" : ""}>添加关系</button>
+          </div>
+          <div class="relation-list">${project.relations.length ? project.relations.map(relation => {
+            const from = project.characters.find(character => character.id === relation.fromId);
+            const to = project.characters.find(character => character.id === relation.toId);
+            return `<article data-relation-id="${escapeHtml(relation.id)}"><div class="relation-route"><span>${escapeHtml(from?.name || "未知")}</span><i>${escapeHtml(relation.type || "关联")}</i><span>${escapeHtml(to?.name || "未知")}</span></div><button class="remove-relation" type="button" title="删除关系">×</button><textarea data-relation-note placeholder="补充关系变化、矛盾或共同目标">${escapeHtml(relation.note || "")}</textarea></article>`;
+          }).join("") : `<div class="relation-empty">至少添加两个人物后，可以建立人物关系。</div>`}</div>
+        </section>
       </div>`;
     } else if (activeTab === "world") {
       body.innerHTML = `<div class="studio-pane editor-pane">
@@ -504,6 +642,44 @@
   }
 
   function bindRenderedPanelControls(body) {
+    body.querySelector("#addCharacter")?.addEventListener("click", () => {
+      const name = document.getElementById("characterName").value.trim();
+      const role = document.getElementById("characterRole").value.trim();
+      if (!name) { document.getElementById("characterName").focus(); return; }
+      getActiveProject().characters.push({ id: makeId("character"), name, role, note: "" });
+      saveState();
+      renderStudioPanel();
+      toast("人物卡已添加");
+    });
+    body.querySelector("#addRelation")?.addEventListener("click", () => {
+      const fromId = document.getElementById("relationFrom").value;
+      const toId = document.getElementById("relationTo").value;
+      const type = document.getElementById("relationType").value.trim();
+      if (!fromId || !toId || fromId === toId || !type) { toast("请选择两个不同人物并填写关系", "error"); return; }
+      getActiveProject().relations.push({ id: makeId("relation"), fromId, toId, type, note: "", createdAt: Date.now() });
+      saveState();
+      renderStudioPanel();
+      toast("人物关系已添加");
+    });
+    body.querySelectorAll("[data-relation-note]").forEach(input => input.addEventListener("input", () => {
+      const relation = getActiveProject().relations.find(item => item.id === input.closest("[data-relation-id]")?.dataset.relationId);
+      if (relation) relation.note = input.value;
+      saveState();
+    }));
+    body.querySelectorAll(".remove-relation").forEach(button => button.addEventListener("click", () => {
+      const relationId = button.closest("[data-relation-id]")?.dataset.relationId;
+      getActiveProject().relations = getActiveProject().relations.filter(item => item.id !== relationId);
+      saveState();
+      renderStudioPanel();
+    }));
+    body.querySelectorAll(".remove-character").forEach(button => button.addEventListener("click", () => {
+      const characterId = button.closest("[data-character-id]")?.dataset.characterId;
+      const project = getActiveProject();
+      project.characters = project.characters.filter(item => item.id !== characterId);
+      project.relations = project.relations.filter(item => item.fromId !== characterId && item.toId !== characterId);
+      saveState();
+      renderStudioPanel();
+    }));
     body.querySelector("#addSceneCard")?.addEventListener("click", () => {
       const title = document.getElementById("sceneTitle").value.trim();
       if (!title) { document.getElementById("sceneTitle").focus(); return; }
@@ -553,7 +729,7 @@
     });
     body.querySelector("#startFocusMode")?.addEventListener("click", startFocusMode);
     body.querySelector("#createSnapshot")?.addEventListener("click", createProjectSnapshot);
-    body.querySelectorAll(".restore-snapshot").forEach(button => button.addEventListener("click", () => restoreProjectSnapshot(button.closest("[data-snapshot-id]")?.dataset.snapshotId)));
+    body.querySelectorAll(".restore-snapshot").forEach(button => button.addEventListener("click", () => openSnapshotPreview(button.closest("[data-snapshot-id]")?.dataset.snapshotId)));
     body.querySelectorAll(".delete-snapshot").forEach(button => button.addEventListener("click", () => deleteProjectSnapshot(button.closest("[data-snapshot-id]")?.dataset.snapshotId)));
   }
 
@@ -805,6 +981,7 @@
     const commands = [
       { id: "focus", label: "聚焦消息输入框", group: "导航", run: () => document.getElementById("msg").focus() },
       { id: "search-chat", label: "搜索当前对话", group: "导航", run: openConversationSearch },
+      { id: "search-workspace", label: "全文检索创作工作区", group: "导航", run: openWorkspaceSearch },
       { id: "reader", label: "打开小说阅读模式", group: "创作", disabled: readerButton.disabled, run: () => readerButton.click() },
       { id: "new-session", label: "新建会话", group: "会话", run: () => document.getElementById("newSessionBtn").click() },
       { id: "settings", label: "打开设置", group: "设置", run: () => document.getElementById("settingsBtn").click() },
@@ -1001,6 +1178,7 @@
       renderChapters();
     });
     document.getElementById("studioNewSession").addEventListener("click", () => document.getElementById("newSessionBtn").click());
+    document.getElementById("workspaceSearch").addEventListener("click", openWorkspaceSearch);
     document.getElementById("backupWorkspace").addEventListener("click", exportBackup);
     document.getElementById("restoreWorkspace").addEventListener("click", () => document.getElementById("restoreWorkspaceFile").click());
     document.getElementById("restoreWorkspaceFile").addEventListener("change", event => restoreBackup(event.target.files[0]));
@@ -1133,13 +1311,7 @@
         renderStudioPanel();
         return;
       }
-      const removeCharacter = event.target.closest(".remove-character");
-      if (removeCharacter) {
-        const card = removeCharacter.closest("[data-character-id]");
-        getActiveProject().characters = getActiveProject().characters.filter(item => item.id !== card.dataset.characterId);
-        saveState();
-        renderStudioPanel();
-      } else if (event.target.closest("#openReaderFromStudio")) {
+      if (event.target.closest("#openReaderFromStudio")) {
         document.getElementById("readerBtn").click();
       } else if (event.target.closest("#copySessionText")) {
         try { await navigator.clipboard.writeText(sessionText(false)); toast("正文已复制"); } catch { toast("复制失败", "error"); }
@@ -1172,6 +1344,25 @@
     });
 
     document.getElementById("commandMask").addEventListener("click", event => { if (event.target.id === "commandMask") closeCommandPalette(); });
+    document.getElementById("workspaceSearchMask").addEventListener("click", event => { if (event.target.id === "workspaceSearchMask") closeWorkspaceSearch(); });
+    document.getElementById("closeWorkspaceSearch").addEventListener("click", closeWorkspaceSearch);
+    document.getElementById("workspaceSearchInput").addEventListener("input", event => {
+      workspaceSearchQuery = event.target.value;
+      renderWorkspaceSearch();
+    });
+    document.getElementById("workspaceSearchResults").addEventListener("click", event => {
+      const button = event.target.closest("[data-search-result]");
+      if (!button) return;
+      openWorkspaceSearchResult(document.getElementById("workspaceSearchResults").searchResults?.[Number(button.dataset.searchResult)]);
+    });
+    document.getElementById("snapshotPreviewMask").addEventListener("click", event => { if (event.target.id === "snapshotPreviewMask") closeSnapshotPreview(); });
+    document.getElementById("closeSnapshotPreview").addEventListener("click", closeSnapshotPreview);
+    document.getElementById("cancelSnapshotRestore").addEventListener("click", closeSnapshotPreview);
+    document.getElementById("confirmSnapshotRestore").addEventListener("click", () => {
+      const snapshotId = pendingSnapshotId;
+      closeSnapshotPreview();
+      if (snapshotId) restoreProjectSnapshot(snapshotId);
+    });
     document.getElementById("commandInput").addEventListener("input", event => { commandQuery = event.target.value; renderCommands(); });
     document.getElementById("commandInput").addEventListener("keydown", event => {
       const buttons = Array.from(document.querySelectorAll("#commandResults [data-command-id]:not(:disabled)"));
@@ -1193,8 +1384,11 @@
 
     document.addEventListener("keydown", event => {
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") { event.preventDefault(); openCommandPalette(); return; }
+      if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key.toLowerCase() === "f") { event.preventDefault(); openWorkspaceSearch(); return; }
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "f") { event.preventDefault(); openConversationSearch(); return; }
       if (event.key === "Escape" && !document.getElementById("commandMask").hidden) { closeCommandPalette(); return; }
+      if (event.key === "Escape" && !document.getElementById("workspaceSearchMask").hidden) { closeWorkspaceSearch(); return; }
+      if (event.key === "Escape" && !document.getElementById("snapshotPreviewMask").hidden) { closeSnapshotPreview(); return; }
       if (event.key === "Escape" && document.body.classList.contains("focus-mode")) { exitFocusMode(); return; }
       if (event.key === "/" && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName || "")) { event.preventDefault(); openCommandPalette(); }
       if (event.key === "?" && !/INPUT|TEXTAREA/.test(document.activeElement?.tagName || "")) { setStudioTab("stats"); document.body.classList.remove("studio-collapsed"); }
