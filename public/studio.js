@@ -24,6 +24,7 @@
     foreshadow: "",
     scenes: [],
     snapshots: [],
+    activity: {},
     dailyGoal: 2000,
     createdAt: Date.now()
   };
@@ -61,6 +62,8 @@
       normalized.scenes = Array.isArray(normalized.scenes) ? normalized.scenes : [];
       normalized.snapshots = Array.isArray(normalized.snapshots) ? normalized.snapshots : [];
       normalized.relations = Array.isArray(normalized.relations) ? normalized.relations : [];
+      normalized.activity = normalized.activity && typeof normalized.activity === "object" ? normalized.activity : {};
+      normalized.chapters = Array.isArray(normalized.chapters) ? normalized.chapters.map(chapter => ({ summary: "", notes: "", targetWords: 3000, sessionId: "", ...chapter })) : [];
       return normalized;
     });
     next.activeProjectId = next.projects.some(project => project.id === next.activeProjectId)
@@ -78,6 +81,7 @@
       spotlight: true,
       backgroundDim: 48,
       focusMinutes: 25,
+      accent: "moss",
       ...next.settings
     };
     return next;
@@ -109,6 +113,37 @@
 
   function getActiveProject() {
     return state.projects.find(project => project.id === state.activeProjectId) || state.projects[0];
+  }
+
+  function localDateKey(date = new Date()) {
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+  }
+
+  function recordWritingActivity(characters = 0) {
+    const project = getActiveProject();
+    const key = localDateKey();
+    const current = project.activity[key] || { characters: 0, actions: 0 };
+    current.characters += Math.max(0, Number(characters) || 0);
+    current.actions += 1;
+    project.activity[key] = current;
+  }
+
+  function activitySummary(project) {
+    const today = new Date();
+    const days = [];
+    for (let offset = 13; offset >= 0; offset -= 1) {
+      const date = new Date(today.getFullYear(), today.getMonth(), today.getDate() - offset);
+      const key = localDateKey(date);
+      days.push({ key, label: `${date.getMonth() + 1}/${date.getDate()}`, ...(project.activity[key] || { characters: 0, actions: 0 }) });
+    }
+    let streak = 0;
+    for (let offset = 0; offset < 365; offset += 1) {
+      const date = new Date(today.getFullYear(), today.getMonth(), today.getDate() - offset);
+      const entry = project.activity[localDateKey(date)];
+      if (!entry?.actions) break;
+      streak += 1;
+    }
+    return { days, streak, totalCharacters: Object.values(project.activity).reduce((sum, entry) => sum + (Number(entry.characters) || 0), 0) };
   }
 
   function makeId(prefix) {
@@ -172,6 +207,7 @@
         </section>
         <div class="library-footer">
           <button id="workspaceSearch" type="button">全文检索</button>
+          <button id="exportProject" type="button">导出作品</button>
           <button id="backupWorkspace" type="button">导出备份</button>
           <button id="restoreWorkspace" type="button">导入</button>
           <input id="restoreWorkspaceFile" type="file" accept="application/json" hidden />
@@ -561,7 +597,15 @@
           <button class="draft-fragment" type="button" data-fragment-index="${index}"><span>片段 ${String(index + 1).padStart(2, "0")}</span><p>${escapeHtml(message.content.slice(0, 90))}</p></button>`).join("") : `<div class="studio-empty-state"><strong>正文会出现在这里</strong><p>AI 生成内容后，可以整理、阅读和导出。</p></div>`}</div>
       </div>`;
     } else if (activeTab === "outline") {
+      const activeChapter = project.chapters.find(chapter => chapter.id === state.activeChapterId);
+      const assignedSessions = getSessions().filter(item => project.sessionIds.includes(item.id));
       body.innerHTML = `<div class="studio-pane editor-pane">
+        ${activeChapter ? `<section class="chapter-editor">
+          <div class="chapter-editor-head"><div><span>CHAPTER DETAIL</span><h3>${escapeHtml(activeChapter.name)}</h3></div><button class="chapter-editor-status${activeChapter.done ? " done" : ""}" type="button">${activeChapter.done ? "已完成" : "创作中"}</button></div>
+          <label><span>本章摘要</span><textarea data-chapter-field="summary" placeholder="用几句话说明本章发生了什么">${escapeHtml(activeChapter.summary)}</textarea></label>
+          <label><span>写作备忘</span><textarea data-chapter-field="notes" placeholder="记录情绪、视角、伏笔和下一步修改方向">${escapeHtml(activeChapter.notes)}</textarea></label>
+          <div class="chapter-editor-meta"><label><span>目标字数</span><input data-chapter-field="targetWords" type="number" min="100" step="100" value="${Number(activeChapter.targetWords) || 3000}" /></label><label><span>关联会话</span><select data-chapter-field="sessionId"><option value="">暂不关联</option>${assignedSessions.map(item => `<option value="${escapeHtml(item.id)}"${activeChapter.sessionId === item.id ? " selected" : ""}>${escapeHtml(item.name || "未命名会话")}</option>`).join("")}</select></label></div>
+        </section>` : `<div class="chapter-editor-empty"><strong>选择一个章节</strong><p>从左侧章节列表进入详情，继续整理摘要、目标和关联会话。</p></div>`}
         <label><span>作品简介</span><textarea data-project-field="description" placeholder="记录作品定位、类型与一句话介绍">${escapeHtml(project.description)}</textarea></label>
         <label><span>故事梗概</span><textarea data-project-field="synopsis" placeholder="记录故事核心冲突、主角目标与结局方向">${escapeHtml(project.synopsis)}</textarea></label>
         <label><span>章节大纲</span><textarea class="large" data-project-field="outline" placeholder="按卷、章或场景整理故事结构">${escapeHtml(project.outline)}</textarea></label>
@@ -622,21 +666,25 @@
       const words = assistant.reduce((sum, message) => sum + message.content.replace(/\s/g, "").length, 0);
       const chapterDone = project.chapters.filter(chapter => chapter.done).length;
       const progress = Math.min(100, Math.round(words / Math.max(1, project.dailyGoal) * 100));
+      const activity = activitySummary(project);
       let storageBytes = 0;
       for (let index = 0; index < localStorage.length; index += 1) {
         const key = localStorage.key(index);
         storageBytes += (key.length + (localStorage.getItem(key) || "").length) * 2;
       }
       body.innerHTML = `<div class="studio-pane stats-pane">
-        <div class="stat-grid"><div><strong>${words.toLocaleString()}</strong><span>正文字数</span></div><div><strong>${assistant.length}</strong><span>AI 片段</span></div><div><strong>${project.chapters.length}</strong><span>章节</span></div><div><strong>${chapterDone}</strong><span>已完成</span></div></div>
+        <div class="stat-grid"><div><strong>${words.toLocaleString()}</strong><span>正文字数</span></div><div><strong>${assistant.length}</strong><span>AI 片段</span></div><div><strong>${project.chapters.length}</strong><span>章节</span></div><div><strong>${chapterDone}</strong><span>已完成</span></div><div><strong>${activity.streak}</strong><span>连续写作天数</span></div><div><strong>${activity.totalCharacters.toLocaleString()}</strong><span>本地新增字数</span></div></div>
+        <section class="activity-panel"><div class="activity-head"><div><strong>写作热度</strong><span>最近 14 天</span></div><small>今天 ${activity.days.at(-1)?.characters || 0} 字</small></div><div class="activity-heatmap">${activity.days.map(day => { const level = day.characters >= 500 ? 4 : day.characters >= 200 ? 3 : day.characters >= 50 ? 2 : day.actions ? 1 : 0; return `<div data-level="${level}" title="${day.key} · ${day.characters} 字"><i></i><span>${escapeHtml(day.label)}</span></div>`; }).join("")}</div></section>
         <label class="goal-control"><span>本次写作目标</span><input type="number" min="100" step="100" value="${Number(project.dailyGoal) || 2000}" id="dailyGoalInput" /></label>
         <div class="goal-progress"><i style="width:${progress}%"></i></div><p class="goal-caption">已完成 ${progress}%</p>
         <div class="focus-settings"><div><strong>专注写作</strong><span>隐藏两侧面板并启动计时</span></div><label><select id="focusMinutesSetting" aria-label="专注时长"><option value="15"${state.settings.focusMinutes === 15 ? " selected" : ""}>15 分钟</option><option value="25"${state.settings.focusMinutes === 25 ? " selected" : ""}>25 分钟</option><option value="45"${state.settings.focusMinutes === 45 ? " selected" : ""}>45 分钟</option><option value="60"${state.settings.focusMinutes === 60 ? " selected" : ""}>60 分钟</option></select><button id="startFocusMode" type="button">开始</button></label></div>
         <div class="snapshot-panel"><div class="snapshot-head"><div><strong>作品快照</strong><span>只保存大纲、人物、设定、章节和场景</span></div><button id="createSnapshot" type="button">保存快照</button></div><div class="snapshot-list">${project.snapshots.length ? project.snapshots.slice(0, 5).map(snapshot => `<div data-snapshot-id="${escapeHtml(snapshot.id)}"><span>${escapeHtml(snapshot.label)}</span><button class="restore-snapshot" type="button">恢复</button><button class="delete-snapshot" type="button" title="删除快照">×</button></div>`).join("") : `<p>还没有作品快照</p>`}</div></div>
         <div class="storage-note">本地数据约 ${(storageBytes / 1024).toFixed(1)} KB</div>
+        <div class="accent-settings"><strong>界面强调色</strong><div class="accent-swatches"><button data-accent="moss" type="button"><i></i><span>苔绿</span></button><button data-accent="gold" type="button"><i></i><span>鎏金</span></button><button data-accent="rose" type="button"><i></i><span>烟粉</span></button></div></div>
         <div class="motion-settings"><strong>界面动效</strong><div class="segmented"><button data-motion="off" type="button">关闭</button><button data-motion="reduced" type="button">精简</button><button data-motion="full" type="button">完整</button></div><label><input id="clickFxSetting" type="checkbox"${state.settings.clickFx ? " checked" : ""} /> 点击涟漪</label><label><input id="spotlightSetting" type="checkbox"${state.settings.spotlight ? " checked" : ""} /> 鼠标环境光</label><label class="dim-control"><span>背景遮罩</span><input id="backgroundDimSetting" type="range" min="20" max="80" value="${state.settings.backgroundDim}" /></label></div>
       </div>`;
       body.querySelectorAll("[data-motion]").forEach(button => button.classList.toggle("active", button.dataset.motion === state.settings.motion));
+      body.querySelectorAll("[data-accent]").forEach(button => button.classList.toggle("active", button.dataset.accent === state.settings.accent));
     }
     bindRenderedPanelControls(body);
   }
@@ -663,7 +711,10 @@
     });
     body.querySelectorAll("[data-relation-note]").forEach(input => input.addEventListener("input", () => {
       const relation = getActiveProject().relations.find(item => item.id === input.closest("[data-relation-id]")?.dataset.relationId);
-      if (relation) relation.note = input.value;
+      if (relation) {
+        recordWritingActivity(Math.max(0, input.value.length - String(relation.note || "").length));
+        relation.note = input.value;
+      }
       saveState();
     }));
     body.querySelectorAll(".remove-relation").forEach(button => button.addEventListener("click", () => {
@@ -690,7 +741,10 @@
     });
     body.querySelectorAll("[data-scene-field]").forEach(input => input.addEventListener("input", () => {
       const scene = getActiveProject().scenes.find(item => item.id === input.closest("[data-scene-id]")?.dataset.sceneId);
-      if (scene) scene[input.dataset.sceneField] = input.value;
+      if (scene) {
+        recordWritingActivity(Math.max(0, input.value.length - String(scene[input.dataset.sceneField] || "").length));
+        scene[input.dataset.sceneField] = input.value;
+      }
       saveState();
     }));
     body.querySelectorAll(".scene-status").forEach(button => button.addEventListener("click", () => {
@@ -731,6 +785,20 @@
     body.querySelector("#createSnapshot")?.addEventListener("click", createProjectSnapshot);
     body.querySelectorAll(".restore-snapshot").forEach(button => button.addEventListener("click", () => openSnapshotPreview(button.closest("[data-snapshot-id]")?.dataset.snapshotId)));
     body.querySelectorAll(".delete-snapshot").forEach(button => button.addEventListener("click", () => deleteProjectSnapshot(button.closest("[data-snapshot-id]")?.dataset.snapshotId)));
+    body.querySelector(".chapter-editor-status")?.addEventListener("click", () => {
+      const chapter = getActiveProject().chapters.find(item => item.id === state.activeChapterId);
+      if (!chapter) return;
+      chapter.done = !chapter.done;
+      saveState();
+      renderChapters();
+      renderStudioPanel();
+    });
+    body.querySelectorAll("[data-accent]").forEach(button => button.addEventListener("click", () => {
+      state.settings.accent = button.dataset.accent;
+      saveState();
+      applySettings();
+      renderStudioPanel();
+    }));
   }
 
   function switchSession(id) {
@@ -776,7 +844,7 @@
   function addChapter(name) {
     const cleanName = name.trim();
     if (!cleanName) return;
-    const chapter = { id: makeId("chapter"), name: cleanName, done: false, createdAt: Date.now() };
+    const chapter = { id: makeId("chapter"), name: cleanName, summary: "", notes: "", targetWords: 3000, sessionId: "", done: false, createdAt: Date.now() };
     getActiveProject().chapters.push(chapter);
     state.activeChapterId = chapter.id;
     saveState();
@@ -928,6 +996,49 @@
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 
+  function projectMarkdown() {
+    const project = getActiveProject();
+    const sessions = getSessions().filter(session => project.sessionIds.includes(session.id));
+    const lines = [`# ${project.name}`, "", project.description || "暂无作品简介", "", "## 故事梗概", "", project.synopsis || "暂无", "", "## 章节大纲", "", project.outline || "暂无"];
+    lines.push("", "## 章节");
+    if (!project.chapters.length) lines.push("", "暂无章节");
+    project.chapters.forEach((chapter, index) => {
+      const linked = sessions.find(session => session.id === chapter.sessionId);
+      lines.push("", `### ${index + 1}. ${chapter.name}`, "", `- 状态：${chapter.done ? "已完成" : "创作中"}`, `- 目标字数：${Number(chapter.targetWords) || 3000}`, `- 关联会话：${linked?.name || "无"}`, "", "**本章摘要**", "", chapter.summary || "暂无", "", "**写作备忘**", "", chapter.notes || "暂无");
+    });
+    lines.push("", "## 人物");
+    if (!project.characters.length) lines.push("", "暂无人物");
+    project.characters.forEach(character => lines.push("", `### ${character.name}`, "", `- 身份：${character.role || "未设置"}`, "", character.note || "暂无备注"));
+    if (project.relations.length) {
+      lines.push("", "### 人物关系");
+      project.relations.forEach(relation => {
+        const from = project.characters.find(item => item.id === relation.fromId)?.name || "未知";
+        const to = project.characters.find(item => item.id === relation.toId)?.name || "未知";
+        lines.push("", `- ${from} → ${relation.type || "关联"} → ${to}${relation.note ? `：${relation.note}` : ""}`);
+      });
+    }
+    lines.push("", "## 场景");
+    if (!project.scenes.length) lines.push("", "暂无场景");
+    project.scenes.forEach((scene, index) => {
+      const chapter = project.chapters.find(item => item.id === scene.chapterId);
+      lines.push("", `### ${index + 1}. ${scene.title}`, "", `- 状态：${({ todo: "待写", writing: "进行中", done: "已完成" })[scene.status] || "待写"}`, `- 所属章节：${chapter?.name || "未关联"}`, "", scene.summary || "暂无摘要");
+    });
+    [["世界观与规则", project.world], ["故事时间线", project.timeline], ["伏笔追踪", project.foreshadow], ["灵感便签", project.notes]].forEach(([title, content]) => lines.push("", `## ${title}`, "", content || "暂无"));
+    lines.push("", "## 创作会话");
+    if (!sessions.length) lines.push("", "暂无关联会话");
+    sessions.forEach(session => {
+      lines.push("", `### ${session.name || "未命名会话"}`);
+      (session.messages || []).filter(message => message.role === "assistant").forEach((message, index) => lines.push("", `#### 片段 ${index + 1}`, "", message.content || ""));
+    });
+    return lines.join("\n");
+  }
+
+  function exportActiveProject() {
+    const filename = `${getActiveProject().name || "novel"}`.replace(/[\\/:*?"<>|]/g, "_");
+    downloadText(`${filename}.md`, projectMarkdown(), "text/markdown;charset=utf-8");
+    toast("作品文档已导出");
+  }
+
   function exportBackup() {
     const backup = {
       version: 1,
@@ -994,6 +1105,7 @@
       { id: "scenes", label: "打开场景卡片", group: "创作", run: () => setStudioTab("scenes") },
       { id: "notes", label: "打开灵感便签", group: "创作", run: () => setStudioTab("notes") },
       { id: "snapshot", label: "保存当前作品快照", group: "数据", run: createProjectSnapshot },
+      { id: "export-project", label: "导出当前作品 Markdown", group: "数据", run: exportActiveProject },
       { id: "backup", label: "导出本地完整备份", group: "数据", run: exportBackup },
       { id: "delete-project", label: "删除当前小说项目", group: "数据", disabled: state.projects.length <= 1, run: deleteActiveProject }
     ];
@@ -1073,6 +1185,7 @@
 
   function applySettings() {
     document.documentElement.dataset.motion = state.settings.motion;
+    document.documentElement.dataset.accent = state.settings.accent || "moss";
     document.body.classList.toggle("click-fx-enabled", state.settings.clickFx);
     document.body.classList.toggle("spotlight-enabled", state.settings.spotlight);
     document.documentElement.style.setProperty("--studio-dim", `${state.settings.backgroundDim / 100}`);
@@ -1179,6 +1292,7 @@
     });
     document.getElementById("studioNewSession").addEventListener("click", () => document.getElementById("newSessionBtn").click());
     document.getElementById("workspaceSearch").addEventListener("click", openWorkspaceSearch);
+    document.getElementById("exportProject").addEventListener("click", exportActiveProject);
     document.getElementById("backupWorkspace").addEventListener("click", exportBackup);
     document.getElementById("restoreWorkspace").addEventListener("click", () => document.getElementById("restoreWorkspaceFile").click());
     document.getElementById("restoreWorkspaceFile").addEventListener("change", event => restoreBackup(event.target.files[0]));
@@ -1216,11 +1330,16 @@
       if (chapterItem) {
         const chapter = getActiveProject().chapters.find(item => item.id === chapterItem.dataset.chapterId);
         if (!chapter) return;
-        if (event.target.closest(".chapter-status")) chapter.done = !chapter.done;
+        const statusButton = event.target.closest(".chapter-status");
+        if (statusButton) chapter.done = !chapter.done;
         state.activeChapterId = chapter.id;
         saveState();
         renderChapters();
-        if (activeTab === "stats") renderStudioPanel();
+        if (statusButton) {
+          if (activeTab === "stats" || activeTab === "outline") renderStudioPanel();
+        } else {
+          setStudioTab("outline");
+        }
       }
     });
 
@@ -1274,10 +1393,27 @@
     document.getElementById("studioPanelBody").addEventListener("input", event => {
       const project = getActiveProject();
       const field = event.target.dataset.projectField;
-      if (field) project[field] = event.target.value;
+      if (field) {
+        recordWritingActivity(Math.max(0, event.target.value.length - String(project[field] || "").length));
+        project[field] = event.target.value;
+      }
+      const chapterField = event.target.dataset.chapterField;
+      if (chapterField) {
+        const chapter = project.chapters.find(item => item.id === state.activeChapterId);
+        if (chapter) {
+          if (chapterField === "targetWords") chapter.targetWords = Math.max(100, Number(event.target.value) || 3000);
+          else {
+            recordWritingActivity(Math.max(0, event.target.value.length - String(chapter[chapterField] || "").length));
+            chapter[chapterField] = event.target.value;
+          }
+        }
+      }
       if (event.target.matches("[data-character-note]")) {
         const character = project.characters.find(item => item.id === event.target.dataset.characterNote);
-        if (character) character.note = event.target.value;
+        if (character) {
+          recordWritingActivity(Math.max(0, event.target.value.length - String(character.note || "").length));
+          character.note = event.target.value;
+        }
       }
       if (event.target.id === "dailyGoalInput") project.dailyGoal = Math.max(100, Number(event.target.value) || 2000);
       if (event.target.id === "backgroundDimSetting") state.settings.backgroundDim = Number(event.target.value);
@@ -1287,6 +1423,10 @@
     document.getElementById("studioPanelBody").addEventListener("change", event => {
       if (event.target.id === "clickFxSetting") state.settings.clickFx = event.target.checked;
       if (event.target.id === "spotlightSetting") state.settings.spotlight = event.target.checked;
+      if (event.target.matches('select[data-chapter-field="sessionId"]')) {
+        const chapter = getActiveProject().chapters.find(item => item.id === state.activeChapterId);
+        if (chapter) chapter.sessionId = event.target.value;
+      }
       saveState();
       applySettings();
     });
