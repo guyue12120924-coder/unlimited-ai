@@ -3,10 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#11110f" />
-  <title>Unlimited AI Chat</title>
+  <meta name="theme-color" content="#101210" />
+  <title>Unlimited AI - 小说创作工作台</title>
   <link rel="stylesheet" href="/styles.css?v=20260805-1" />
   <link rel="stylesheet" href="/studio.css?v=20260806-13" />
+  <link rel="stylesheet" href="/ui-system.css?v=20260806-1" />
 </head>
 <body>
   <div id="blur-bg" aria-hidden="true"></div>
@@ -19,12 +20,12 @@
           <button class="iconbtn" id="sessionBtn" type="button" title="会话管理" aria-label="打开会话管理">☰</button>
           <div class="brand-copy">
             <strong>Unlimited AI</strong>
-            <span>专注对话与创作</span>
+            <span>小说创作工作台</span>
           </div>
         </div>
 
         <div class="pill model-pill">
-          <label for="modelSel" class="model-label">模型</label>
+          <label for="modelSel" class="model-label"><span class="model-status-dot" aria-hidden="true"></span>模型</label>
           <select id="modelSel" aria-label="选择模型"></select>
         </div>
 
@@ -33,8 +34,8 @@
             <span>阅读</span>
             <span class="reader-count" id="readerCount">0</span>
           </button>
-          <button class="iconbtn" id="personaToggle" type="button" title="😈 使用内置人物；😇 使用网页自定义人物" aria-label="切换人物模式">😈</button>
-          <button class="iconbtn" id="settingsBtn" type="button" title="设置" aria-label="打开设置">⚙</button>
+          <button class="iconbtn" id="personaToggle" type="button" title="切换人物模式" aria-label="切换人物模式">😈</button>
+          <button class="iconbtn" id="settingsBtn" type="button" title="设置与外观" aria-label="打开设置与外观">⚙</button>
           <button class="iconbtn secondary-action" id="donateBtn" type="button" title="打赏" aria-label="打开打赏">☕</button>
           <a
             href="https://github.com/MallocPointer/unlimited-ai"
@@ -56,9 +57,9 @@
     <main id="history">
       <div class="chat" id="chat">
         <div class="empty-state" id="emptyState">
-          <div class="empty-kicker">NEW CONVERSATION</div>
-          <h1>从一句话开始</h1>
-          <p>对话、构思或续写小说。AI 的多次回复可以整理进阅读模式。</p>
+          <div class="empty-kicker">NEW CHAPTER</div>
+          <h1>让故事从这里发生</h1>
+          <p>开始构思、续写或打磨一段文字。生成的片段可以收录进章节，再进入沉浸阅读。</p>
         </div>
         <div id="bottom-spacer"></div>
       </div>
@@ -66,11 +67,15 @@
 
     <div class="input-floating">
       <div class="input-inner" id="composer">
-        <textarea id="msg" rows="1" placeholder="输入消息" aria-label="消息内容"></textarea>
-        <button id="sendBtn" type="button">发送</button>
-        <button id="stopBtn" type="button">停止</button>
+        <div class="composer-main">
+          <textarea id="msg" rows="1" placeholder="写下你的想法、剧情或续写要求…" aria-label="消息内容"></textarea>
+          <div class="composer-actions">
+            <button id="sendBtn" type="button" aria-label="发送消息"><span>发送</span><b aria-hidden="true">↑</b></button>
+            <button id="stopBtn" type="button" aria-label="停止生成"><span>停止</span><b aria-hidden="true">■</b></button>
+          </div>
+        </div>
+        <div class="composer-footer"><span>内容仅保存在当前浏览器</span><span><kbd>Enter</kbd> 发送&nbsp;&nbsp;<kbd>Shift</kbd> + <kbd>Enter</kbd> 换行</span></div>
       </div>
-      <div class="composer-hint">Enter 发送 · Shift + Enter 换行</div>
     </div>
 
     <div class="modal-mask" id="settingsMask" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
@@ -211,6 +216,6 @@
 
   <script src="/config.js"></script>
   <script src="/app.js?v=20260805-1"></script>
-  <script src="/studio.js?v=20260806-13"></script>
+  <script src="/studio.js?v=20260806-14"></script>
 </body>
 </html>
