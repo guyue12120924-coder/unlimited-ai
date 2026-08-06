@@ -23,6 +23,7 @@
     timeline: "",
     foreshadow: "",
     scenes: [],
+    manuscriptClips: [],
     snapshots: [],
     activity: {},
     dailyGoal: 2000,
@@ -45,6 +46,8 @@
   let focusPreviousPanels = null;
   let workspaceSearchQuery = "";
   let pendingSnapshotId = null;
+  let projectReaderMode = false;
+  let projectReaderSaveTimer = null;
 
   function clone(value) {
     return JSON.parse(JSON.stringify(value));
@@ -60,6 +63,7 @@
     next.projects = next.projects.map(project => {
       const normalized = { ...clone(DEFAULT_PROJECT), ...project };
       normalized.scenes = Array.isArray(normalized.scenes) ? normalized.scenes : [];
+      normalized.manuscriptClips = Array.isArray(normalized.manuscriptClips) ? normalized.manuscriptClips : [];
       normalized.snapshots = Array.isArray(normalized.snapshots) ? normalized.snapshots : [];
       normalized.relations = Array.isArray(normalized.relations) ? normalized.relations : [];
       normalized.activity = normalized.activity && typeof normalized.activity === "object" ? normalized.activity : {};
@@ -75,6 +79,7 @@
     next.drafts = next.drafts && typeof next.drafts === "object" ? next.drafts : {};
     next.promptHistory = next.promptHistory && typeof next.promptHistory === "object" ? next.promptHistory : {};
     next.scrollPositions = next.scrollPositions && typeof next.scrollPositions === "object" ? next.scrollPositions : {};
+    next.projectReaderPositions = next.projectReaderPositions && typeof next.projectReaderPositions === "object" ? next.projectReaderPositions : {};
     next.settings = {
       motion: "full",
       clickFx: true,
@@ -146,6 +151,56 @@
     return { days, streak, totalCharacters: Object.values(project.activity).reduce((sum, entry) => sum + (Number(entry.characters) || 0), 0) };
   }
 
+  function resolveManuscriptClip(clip, sessions = getSessions()) {
+    const session = sessions.find(item => item.id === clip.sessionId);
+    const message = session?.messages?.[clip.messageIndex];
+    if (!session || message?.role !== "assistant" || typeof message.content !== "string" || !message.content.trim()) return null;
+    return { ...clip, session, message };
+  }
+
+  function getChapterClips(project, chapterId) {
+    const sessions = getSessions();
+    return project.manuscriptClips
+      .filter(clip => clip.chapterId === chapterId)
+      .map(clip => resolveManuscriptClip(clip, sessions))
+      .filter(Boolean);
+  }
+
+  function projectManuscriptSummary(project = getActiveProject()) {
+    const chapters = project.chapters.map(chapter => {
+      const clips = getChapterClips(project, chapter.id);
+      const characters = clips.reduce((sum, clip) => sum + clip.message.content.replace(/\s/g, "").length, 0);
+      return { chapter, clips, characters };
+    });
+    return {
+      chapters,
+      readyChapters: chapters.filter(item => item.clips.length),
+      clips: chapters.reduce((sum, item) => sum + item.clips.length, 0),
+      characters: chapters.reduce((sum, item) => sum + item.characters, 0)
+    };
+  }
+
+  function collectManuscriptClip(sessionId, messageIndex, chapterId) {
+    const project = getActiveProject();
+    if (!chapterId || !resolveManuscriptClip({ sessionId, messageIndex })) return;
+    const existing = project.manuscriptClips.find(clip => clip.sessionId === sessionId && clip.messageIndex === messageIndex);
+    if (existing) existing.chapterId = chapterId;
+    else project.manuscriptClips.push({ id: makeId("clip"), chapterId, sessionId, messageIndex, createdAt: Date.now() });
+    saveState();
+    renderProjects();
+    renderStudioPanel();
+    toast(existing ? "片段已移动到新章节" : "片段已收录到章节");
+  }
+
+  function removeManuscriptClip(clipId) {
+    const project = getActiveProject();
+    project.manuscriptClips = project.manuscriptClips.filter(clip => clip.id !== clipId);
+    saveState();
+    renderProjects();
+    renderStudioPanel();
+    toast("已解除收录，原对话保留");
+  }
+
   function makeId(prefix) {
     return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
   }
@@ -207,6 +262,7 @@
         </section>
         <div class="library-footer">
           <button id="workspaceSearch" type="button">全文检索</button>
+          <button id="readProject" type="button">阅读作品</button>
           <button id="exportProject" type="button">导出作品</button>
           <button id="backupWorkspace" type="button">导出备份</button>
           <button id="restoreWorkspace" type="button">导入</button>
@@ -403,7 +459,7 @@
     const project = getActiveProject();
     const snapshot = project.snapshots.find(item => item.id === snapshotId);
     if (!snapshot) return;
-    const fields = ["description", "synopsis", "outline", "characters", "relations", "world", "notes", "timeline", "foreshadow", "scenes", "chapters", "dailyGoal"];
+    const fields = ["description", "synopsis", "outline", "characters", "relations", "world", "notes", "timeline", "foreshadow", "scenes", "chapters", "manuscriptClips", "dailyGoal"];
     fields.forEach(field => { project[field] = clone(snapshot.payload[field] ?? DEFAULT_PROJECT[field]); });
     state.activeChapterId = project.chapters.some(chapter => chapter.id === state.activeChapterId) ? state.activeChapterId : null;
     saveState();
@@ -417,6 +473,7 @@
       characters: (project.characters || []).length,
       relations: (project.relations || []).length,
       scenes: (project.scenes || []).length,
+      clips: (project.manuscriptClips || []).length,
       text: [project.description, project.synopsis, project.outline, project.world, project.notes, project.timeline, project.foreshadow].join("").replace(/\s/g, "").length
     };
   }
@@ -433,7 +490,8 @@
       ["章节", current.chapters, saved.chapters],
       ["人物", current.characters, saved.characters],
       ["关系", current.relations, saved.relations],
-      ["场景", current.scenes, saved.scenes]
+      ["场景", current.scenes, saved.scenes],
+      ["成稿片段", current.clips, saved.clips]
     ];
     document.getElementById("snapshotPreviewTitle").textContent = snapshot.label;
     document.getElementById("snapshotPreviewBody").innerHTML = `<p>恢复后将用快照中的创作资料覆盖当前作品，对话记录不会改变。</p><div class="snapshot-compare"><div><span>项目</span><strong>当前</strong><strong>快照</strong></div>${metrics.map(([label, now, before]) => `<div class="${now === before ? "same" : "changed"}"><span>${label}</span><strong>${Number(now).toLocaleString()}</strong><strong>${Number(before).toLocaleString()}</strong></div>`).join("")}</div>`;
@@ -538,6 +596,8 @@
       `<option value="${escapeHtml(project.id)}"${project.id === state.activeProjectId ? " selected" : ""}>${escapeHtml(project.name)}</option>`
     ).join("");
     document.getElementById("studioProjectTitle").textContent = getActiveProject().name;
+    const readProject = document.getElementById("readProject");
+    if (readProject) readProject.disabled = projectManuscriptSummary().clips === 0;
   }
 
   function renderSessions() {
@@ -584,27 +644,36 @@
     });
 
     if (activeTab === "draft") {
-      const assistantMessages = (session?.messages || []).filter(message => message.role === "assistant");
+      const assistantMessages = (session?.messages || []).map((message, messageIndex) => ({ message, messageIndex })).filter(item => item.message.role === "assistant");
+      const manuscript = projectManuscriptSummary(project);
       body.innerHTML = `<div class="studio-pane">
-        <div class="pane-hero"><span>MANUSCRIPT</span><h3>${escapeHtml(session?.name || "当前会话")}</h3><p>${assistantMessages.length} 个可整理片段</p></div>
+        <div class="pane-hero"><span>MANUSCRIPT</span><h3>${escapeHtml(session?.name || "当前会话")}</h3><p>${assistantMessages.length} 个可整理片段 · ${manuscript.clips} 个已收录</p></div>
         <div class="studio-action-grid">
           <button id="openReaderFromStudio" type="button"${assistantMessages.length ? "" : " disabled"}>进入阅读模式</button>
+          <button id="openProjectReaderFromStudio" type="button"${manuscript.clips ? "" : " disabled"}>阅读整部作品</button>
           <button id="copySessionText" type="button"${assistantMessages.length ? "" : " disabled"}>复制全部正文</button>
           <button id="exportSessionTxt" type="button"${assistantMessages.length ? "" : " disabled"}>导出 TXT</button>
           <button id="exportSessionMd" type="button"${assistantMessages.length ? "" : " disabled"}>导出 Markdown</button>
         </div>
-        <div class="draft-fragment-list">${assistantMessages.length ? assistantMessages.map((message, index) => `
-          <button class="draft-fragment" type="button" data-fragment-index="${index}"><span>片段 ${String(index + 1).padStart(2, "0")}</span><p>${escapeHtml(message.content.slice(0, 90))}</p></button>`).join("") : `<div class="studio-empty-state"><strong>正文会出现在这里</strong><p>AI 生成内容后，可以整理、阅读和导出。</p></div>`}</div>
+        <div class="draft-fragment-list">${assistantMessages.length ? assistantMessages.map((item, index) => {
+          const collected = project.manuscriptClips.find(clip => clip.sessionId === session?.id && clip.messageIndex === item.messageIndex);
+          return `<article class="draft-fragment-card${collected ? " collected" : ""}" data-message-index="${item.messageIndex}">
+            <button class="draft-fragment" type="button" data-fragment-index="${index}"><span>片段 ${String(index + 1).padStart(2, "0")}${collected ? " · 已收录" : ""}</span><p>${escapeHtml(item.message.content.slice(0, 90))}</p></button>
+            <div class="fragment-collect-row"><select data-clip-chapter aria-label="收录章节"${project.chapters.length ? "" : " disabled"}><option value="">${project.chapters.length ? "选择章节" : "请先创建章节"}</option>${project.chapters.map(chapter => `<option value="${escapeHtml(chapter.id)}"${collected?.chapterId === chapter.id ? " selected" : ""}>${escapeHtml(chapter.name)}</option>`).join("")}</select><button class="collect-fragment" data-message-index="${item.messageIndex}" type="button"${project.chapters.length ? "" : " disabled"}>${collected ? "移动" : "收录"}</button></div>
+          </article>`;
+        }).join("") : `<div class="studio-empty-state"><strong>正文会出现在这里</strong><p>AI 生成内容后，可以整理、阅读和导出。</p></div>`}</div>
       </div>`;
     } else if (activeTab === "outline") {
       const activeChapter = project.chapters.find(chapter => chapter.id === state.activeChapterId);
       const assignedSessions = getSessions().filter(item => project.sessionIds.includes(item.id));
+      const chapterClips = activeChapter ? getChapterClips(project, activeChapter.id) : [];
       body.innerHTML = `<div class="studio-pane editor-pane">
         ${activeChapter ? `<section class="chapter-editor">
           <div class="chapter-editor-head"><div><span>CHAPTER DETAIL</span><h3>${escapeHtml(activeChapter.name)}</h3></div><button class="chapter-editor-status${activeChapter.done ? " done" : ""}" type="button">${activeChapter.done ? "已完成" : "创作中"}</button></div>
           <label><span>本章摘要</span><textarea data-chapter-field="summary" placeholder="用几句话说明本章发生了什么">${escapeHtml(activeChapter.summary)}</textarea></label>
           <label><span>写作备忘</span><textarea data-chapter-field="notes" placeholder="记录情绪、视角、伏笔和下一步修改方向">${escapeHtml(activeChapter.notes)}</textarea></label>
           <div class="chapter-editor-meta"><label><span>目标字数</span><input data-chapter-field="targetWords" type="number" min="100" step="100" value="${Number(activeChapter.targetWords) || 3000}" /></label><label><span>关联会话</span><select data-chapter-field="sessionId"><option value="">暂不关联</option>${assignedSessions.map(item => `<option value="${escapeHtml(item.id)}"${activeChapter.sessionId === item.id ? " selected" : ""}>${escapeHtml(item.name || "未命名会话")}</option>`).join("")}</select></label></div>
+          <section class="chapter-manuscript"><div class="chapter-manuscript-head"><div><strong>成稿片段</strong><span>${chapterClips.length} 个片段 · ${chapterClips.reduce((sum, clip) => sum + clip.message.content.replace(/\s/g, "").length, 0).toLocaleString()} 字</span></div><button class="read-chapter-manuscript" type="button"${chapterClips.length ? "" : " disabled"}>阅读本章</button></div><div class="chapter-clip-list">${chapterClips.length ? chapterClips.map((clip, index) => `<article data-clip-id="${escapeHtml(clip.id)}" draggable="true"><button class="clip-drag" type="button" title="拖动排序">⋮⋮</button><div><strong>片段 ${String(index + 1).padStart(2, "0")}</strong><span>${escapeHtml(clip.session.name || "未命名会话")}</span><p>${escapeHtml(clip.message.content.replace(/\s+/g, " ").slice(0, 100))}</p></div><button class="open-clip-source" type="button" title="打开原会话">↗</button><button class="remove-clip" type="button" title="解除收录">×</button></article>`).join("") : `<p class="chapter-clips-empty">在“正文”页把 AI 片段收录到本章。</p>`}</div></section>
         </section>` : `<div class="chapter-editor-empty"><strong>选择一个章节</strong><p>从左侧章节列表进入详情，继续整理摘要、目标和关联会话。</p></div>`}
         <label><span>作品简介</span><textarea data-project-field="description" placeholder="记录作品定位、类型与一句话介绍">${escapeHtml(project.description)}</textarea></label>
         <label><span>故事梗概</span><textarea data-project-field="synopsis" placeholder="记录故事核心冲突、主角目标与结局方向">${escapeHtml(project.synopsis)}</textarea></label>
@@ -667,18 +736,20 @@
       const chapterDone = project.chapters.filter(chapter => chapter.done).length;
       const progress = Math.min(100, Math.round(words / Math.max(1, project.dailyGoal) * 100));
       const activity = activitySummary(project);
+      const manuscript = projectManuscriptSummary(project);
       let storageBytes = 0;
       for (let index = 0; index < localStorage.length; index += 1) {
         const key = localStorage.key(index);
         storageBytes += (key.length + (localStorage.getItem(key) || "").length) * 2;
       }
       body.innerHTML = `<div class="studio-pane stats-pane">
-        <div class="stat-grid"><div><strong>${words.toLocaleString()}</strong><span>正文字数</span></div><div><strong>${assistant.length}</strong><span>AI 片段</span></div><div><strong>${project.chapters.length}</strong><span>章节</span></div><div><strong>${chapterDone}</strong><span>已完成</span></div><div><strong>${activity.streak}</strong><span>连续写作天数</span></div><div><strong>${activity.totalCharacters.toLocaleString()}</strong><span>本地新增字数</span></div></div>
+        <div class="stat-grid"><div><strong>${words.toLocaleString()}</strong><span>当前会话正文</span></div><div><strong>${assistant.length}</strong><span>当前 AI 片段</span></div><div><strong>${project.chapters.length}</strong><span>章节</span></div><div><strong>${chapterDone}</strong><span>已完成</span></div><div><strong>${manuscript.clips}</strong><span>成稿片段</span></div><div><strong>${manuscript.characters.toLocaleString()}</strong><span>成稿字数</span></div><div><strong>${activity.streak}</strong><span>连续写作天数</span></div><div><strong>${activity.totalCharacters.toLocaleString()}</strong><span>本地新增字数</span></div></div>
+        <section class="manuscript-check"><div class="manuscript-check-head"><div><strong>成稿检查</strong><span>${manuscript.readyChapters.length} / ${project.chapters.length} 章已有正文</span></div><button id="openProjectReaderFromStats" type="button"${manuscript.clips ? "" : " disabled"}>阅读作品</button></div><div class="manuscript-check-list">${manuscript.chapters.length ? manuscript.chapters.map(item => { const target = Math.max(100, Number(item.chapter.targetWords) || 3000); const percent = Math.min(100, Math.round(item.characters / target * 100)); const ready = [item.chapter.summary ? "摘要" : "缺摘要", item.chapter.sessionId ? "会话" : "缺会话", item.clips.length ? `${item.clips.length} 片段` : "缺正文"]; return `<button data-check-chapter="${escapeHtml(item.chapter.id)}" type="button"><div><strong>${escapeHtml(item.chapter.name)}</strong><span>${item.characters.toLocaleString()} / ${target.toLocaleString()} 字</span></div><i><b style="width:${percent}%"></b></i><small>${ready.join(" · ")}</small></button>`; }).join("") : `<p>创建章节后，这里会显示成稿准备情况。</p>`}</div></section>
         <section class="activity-panel"><div class="activity-head"><div><strong>写作热度</strong><span>最近 14 天</span></div><small>今天 ${activity.days.at(-1)?.characters || 0} 字</small></div><div class="activity-heatmap">${activity.days.map(day => { const level = day.characters >= 500 ? 4 : day.characters >= 200 ? 3 : day.characters >= 50 ? 2 : day.actions ? 1 : 0; return `<div data-level="${level}" title="${day.key} · ${day.characters} 字"><i></i><span>${escapeHtml(day.label)}</span></div>`; }).join("")}</div></section>
         <label class="goal-control"><span>本次写作目标</span><input type="number" min="100" step="100" value="${Number(project.dailyGoal) || 2000}" id="dailyGoalInput" /></label>
         <div class="goal-progress"><i style="width:${progress}%"></i></div><p class="goal-caption">已完成 ${progress}%</p>
         <div class="focus-settings"><div><strong>专注写作</strong><span>隐藏两侧面板并启动计时</span></div><label><select id="focusMinutesSetting" aria-label="专注时长"><option value="15"${state.settings.focusMinutes === 15 ? " selected" : ""}>15 分钟</option><option value="25"${state.settings.focusMinutes === 25 ? " selected" : ""}>25 分钟</option><option value="45"${state.settings.focusMinutes === 45 ? " selected" : ""}>45 分钟</option><option value="60"${state.settings.focusMinutes === 60 ? " selected" : ""}>60 分钟</option></select><button id="startFocusMode" type="button">开始</button></label></div>
-        <div class="snapshot-panel"><div class="snapshot-head"><div><strong>作品快照</strong><span>只保存大纲、人物、设定、章节和场景</span></div><button id="createSnapshot" type="button">保存快照</button></div><div class="snapshot-list">${project.snapshots.length ? project.snapshots.slice(0, 5).map(snapshot => `<div data-snapshot-id="${escapeHtml(snapshot.id)}"><span>${escapeHtml(snapshot.label)}</span><button class="restore-snapshot" type="button">恢复</button><button class="delete-snapshot" type="button" title="删除快照">×</button></div>`).join("") : `<p>还没有作品快照</p>`}</div></div>
+        <div class="snapshot-panel"><div class="snapshot-head"><div><strong>作品快照</strong><span>保存大纲、人物、设定、章节、场景和成稿收录</span></div><button id="createSnapshot" type="button">保存快照</button></div><div class="snapshot-list">${project.snapshots.length ? project.snapshots.slice(0, 5).map(snapshot => `<div data-snapshot-id="${escapeHtml(snapshot.id)}"><span>${escapeHtml(snapshot.label)}</span><button class="restore-snapshot" type="button">恢复</button><button class="delete-snapshot" type="button" title="删除快照">×</button></div>`).join("") : `<p>还没有作品快照</p>`}</div></div>
         <div class="storage-note">本地数据约 ${(storageBytes / 1024).toFixed(1)} KB</div>
         <div class="accent-settings"><strong>界面强调色</strong><div class="accent-swatches"><button data-accent="moss" type="button"><i></i><span>苔绿</span></button><button data-accent="gold" type="button"><i></i><span>鎏金</span></button><button data-accent="rose" type="button"><i></i><span>烟粉</span></button></div></div>
         <div class="motion-settings"><strong>界面动效</strong><div class="segmented"><button data-motion="off" type="button">关闭</button><button data-motion="reduced" type="button">精简</button><button data-motion="full" type="button">完整</button></div><label><input id="clickFxSetting" type="checkbox"${state.settings.clickFx ? " checked" : ""} /> 点击涟漪</label><label><input id="spotlightSetting" type="checkbox"${state.settings.spotlight ? " checked" : ""} /> 鼠标环境光</label><label class="dim-control"><span>背景遮罩</span><input id="backgroundDimSetting" type="range" min="20" max="80" value="${state.settings.backgroundDim}" /></label></div>
@@ -690,6 +761,52 @@
   }
 
   function bindRenderedPanelControls(body) {
+    body.querySelector("#openProjectReaderFromStudio")?.addEventListener("click", () => openProjectReader());
+    body.querySelector("#openProjectReaderFromStats")?.addEventListener("click", () => openProjectReader());
+    body.querySelectorAll(".collect-fragment").forEach(button => button.addEventListener("click", () => {
+      const chapterId = button.closest(".draft-fragment-card")?.querySelector("[data-clip-chapter]")?.value;
+      collectManuscriptClip(getCurrentSessionId(), Number(button.dataset.messageIndex), chapterId);
+    }));
+    body.querySelectorAll(".draft-fragment").forEach(button => button.addEventListener("click", () => {
+      const rows = document.querySelectorAll("#chat .row.ai");
+      const row = rows[Number(button.dataset.fragmentIndex)];
+      row?.scrollIntoView({ block: "center", behavior: state.settings.motion === "off" ? "auto" : "smooth" });
+    }));
+    body.querySelector(".read-chapter-manuscript")?.addEventListener("click", () => openProjectReader(state.activeChapterId));
+    body.querySelectorAll(".remove-clip").forEach(button => button.addEventListener("click", () => removeManuscriptClip(button.closest("[data-clip-id]")?.dataset.clipId)));
+    body.querySelectorAll(".open-clip-source").forEach(button => button.addEventListener("click", () => {
+      const clipId = button.closest("[data-clip-id]")?.dataset.clipId;
+      const clip = getActiveProject().manuscriptClips.find(item => item.id === clipId);
+      if (!clip) return;
+      switchSession(clip.sessionId);
+      setTimeout(() => {
+        setStudioTab("draft");
+        document.querySelector(`.draft-fragment-card[data-message-index="${clip.messageIndex}"]`)?.scrollIntoView({ block: "center", behavior: state.settings.motion === "off" ? "auto" : "smooth" });
+      }, 100);
+    }));
+    body.querySelectorAll("[data-clip-id]").forEach(card => {
+      card.addEventListener("dragstart", event => event.dataTransfer.setData("text/manuscript-clip", card.dataset.clipId));
+      card.addEventListener("dragover", event => event.preventDefault());
+      card.addEventListener("drop", event => {
+        event.preventDefault();
+        const sourceId = event.dataTransfer.getData("text/manuscript-clip");
+        const targetId = card.dataset.clipId;
+        if (!sourceId || sourceId === targetId) return;
+        const clips = getActiveProject().manuscriptClips;
+        const from = clips.findIndex(item => item.id === sourceId);
+        const to = clips.findIndex(item => item.id === targetId);
+        if (from < 0 || to < 0 || clips[from].chapterId !== clips[to].chapterId) return;
+        clips.splice(to, 0, clips.splice(from, 1)[0]);
+        saveState();
+        renderStudioPanel();
+      });
+    });
+    body.querySelectorAll("[data-check-chapter]").forEach(button => button.addEventListener("click", () => {
+      state.activeChapterId = button.dataset.checkChapter;
+      saveState();
+      renderChapters();
+      setStudioTab("outline");
+    }));
     body.querySelector("#addCharacter")?.addEventListener("click", () => {
       const name = document.getElementById("characterName").value.trim();
       const role = document.getElementById("characterRole").value.trim();
@@ -870,6 +987,7 @@
   }
 
   function enhanceReaderContent() {
+    if (projectReaderMode) return;
     if (readerEnhanceQueued) return;
     readerEnhanceQueued = true;
     requestAnimationFrame(() => {
@@ -949,14 +1067,62 @@
     if (!wrap || !bar) return;
     const distance = Math.max(1, wrap.scrollHeight - wrap.clientHeight);
     bar.style.width = `${Math.min(100, Math.round(wrap.scrollTop / distance * 100))}%`;
+    if (projectReaderMode) {
+      clearTimeout(projectReaderSaveTimer);
+      projectReaderSaveTimer = setTimeout(() => {
+        state.projectReaderPositions[getActiveProject().id] = wrap.scrollTop;
+        saveState();
+      }, 120);
+    }
   }
 
   function readerDocumentText(markdown = false) {
     return Array.from(document.querySelectorAll("#readerContent .reader-chapter")).map(chapter => {
       const title = chapter.querySelector(".reader-chapter-label")?.textContent || "章节";
-      const text = chapter.querySelector(".reader-chapter-text")?.textContent || "";
+      const fragments = Array.from(chapter.querySelectorAll(".manuscript-fragment")).map(item => item.textContent || "");
+      const text = fragments.length ? fragments.join("\n\n") : chapter.querySelector(".reader-chapter-text")?.textContent || "";
       return markdown ? `## ${title}\n\n${text}` : `${title}\n\n${text}`;
     }).join("\n\n---\n\n");
+  }
+
+  function resetReaderPresentation() {
+    projectReaderMode = false;
+    document.body.classList.remove("project-reader-open");
+    document.getElementById("readerTitle").textContent = "小说阅读";
+    document.querySelector(".reader-sidebar-head strong").textContent = "内容片段";
+  }
+
+  function jumpProjectReaderChapter(chapterId) {
+    const wrap = document.getElementById("readerPageWrap");
+    const target = document.querySelector(`[data-project-reader-chapter="${CSS.escape(chapterId)}"]`);
+    if (!wrap || !target) return;
+    wrap.scrollTo({ top: Math.max(0, target.offsetTop - 24), behavior: state.settings.motion === "off" ? "auto" : "smooth" });
+    document.querySelectorAll("[data-reader-chapter]").forEach(button => button.classList.toggle("selected", button.dataset.readerChapter === chapterId));
+    document.getElementById("readerSidebar").classList.remove("open");
+  }
+
+  function openProjectReader(chapterId = "") {
+    const project = getActiveProject();
+    const manuscript = projectManuscriptSummary(project);
+    if (!manuscript.clips) { toast("请先把 AI 片段收录到章节", "error"); return; }
+    projectReaderMode = true;
+    document.body.classList.add("project-reader-open", "reader-open");
+    document.getElementById("readerMask").classList.add("open");
+    document.getElementById("readerSidebar").classList.remove("open");
+    document.getElementById("readerTitle").textContent = project.name;
+    document.getElementById("readerSummary").textContent = `${manuscript.readyChapters.length} 个章节 · ${manuscript.clips} 个片段 · ${manuscript.characters.toLocaleString()} 字`;
+    document.querySelector(".reader-sidebar-head strong").textContent = "章节目录";
+    document.getElementById("readerSegments").innerHTML = manuscript.readyChapters.map((item, index) => `<button class="reader-segment-item project-reader-nav" data-reader-chapter="${escapeHtml(item.chapter.id)}" type="button"><span class="reader-segment-copy"><strong>第 ${String(index + 1).padStart(2, "0")} 章</strong><span>${escapeHtml(item.chapter.name)} · ${item.characters.toLocaleString()} 字</span></span></button>`).join("");
+    document.getElementById("readerContent").innerHTML = manuscript.readyChapters.map((item, index) => `<section class="reader-chapter" data-project-reader-chapter="${escapeHtml(item.chapter.id)}"><div class="reader-chapter-label">${escapeHtml(item.chapter.name)}</div><div class="reader-chapter-text">${item.clips.map((clip, clipIndex) => `<p class="manuscript-fragment" data-clip-number="${clipIndex + 1}">${escapeHtml(clip.message.content)}</p>`).join("")}</div></section>`).join("");
+    document.getElementById("readerEmpty").classList.remove("visible");
+    document.getElementById("readerContent").hidden = false;
+    document.getElementById("readerCopy").disabled = false;
+    requestAnimationFrame(() => {
+      const wrap = document.getElementById("readerPageWrap");
+      if (chapterId) jumpProjectReaderChapter(chapterId);
+      else wrap.scrollTop = Math.min(Number(state.projectReaderPositions[project.id]) || 0, Math.max(0, wrap.scrollHeight - wrap.clientHeight));
+      updateReaderProgress();
+    });
   }
 
   function decorateMessages() {
@@ -1005,6 +1171,11 @@
     project.chapters.forEach((chapter, index) => {
       const linked = sessions.find(session => session.id === chapter.sessionId);
       lines.push("", `### ${index + 1}. ${chapter.name}`, "", `- 状态：${chapter.done ? "已完成" : "创作中"}`, `- 目标字数：${Number(chapter.targetWords) || 3000}`, `- 关联会话：${linked?.name || "无"}`, "", "**本章摘要**", "", chapter.summary || "暂无", "", "**写作备忘**", "", chapter.notes || "暂无");
+      const clips = getChapterClips(project, chapter.id);
+      if (clips.length) {
+        lines.push("", "**收录正文**");
+        clips.forEach((clip, clipIndex) => lines.push("", `#### 正文片段 ${clipIndex + 1}`, "", clip.message.content));
+      }
     });
     lines.push("", "## 人物");
     if (!project.characters.length) lines.push("", "暂无人物");
@@ -1094,6 +1265,7 @@
       { id: "search-chat", label: "搜索当前对话", group: "导航", run: openConversationSearch },
       { id: "search-workspace", label: "全文检索创作工作区", group: "导航", run: openWorkspaceSearch },
       { id: "reader", label: "打开小说阅读模式", group: "创作", disabled: readerButton.disabled, run: () => readerButton.click() },
+      { id: "project-reader", label: "阅读当前整部作品", group: "创作", disabled: projectManuscriptSummary().clips === 0, run: () => openProjectReader() },
       { id: "new-session", label: "新建会话", group: "会话", run: () => document.getElementById("newSessionBtn").click() },
       { id: "settings", label: "打开设置", group: "设置", run: () => document.getElementById("settingsBtn").click() },
       { id: "theme", label: "切换明暗主题", group: "设置", run: () => document.getElementById("themeToggle").click() },
@@ -1292,6 +1464,7 @@
     });
     document.getElementById("studioNewSession").addEventListener("click", () => document.getElementById("newSessionBtn").click());
     document.getElementById("workspaceSearch").addEventListener("click", openWorkspaceSearch);
+    document.getElementById("readProject").addEventListener("click", () => openProjectReader());
     document.getElementById("exportProject").addEventListener("click", exportActiveProject);
     document.getElementById("backupWorkspace").addEventListener("click", exportBackup);
     document.getElementById("restoreWorkspace").addEventListener("click", () => document.getElementById("restoreWorkspaceFile").click());
@@ -1303,6 +1476,23 @@
     document.getElementById("readerExportMd").addEventListener("click", () => downloadText(`${getCurrentSession()?.name || "novel"}.md`, readerDocumentText(true), "text/markdown;charset=utf-8"));
     document.getElementById("readerPrint").addEventListener("click", () => window.print());
     document.getElementById("readerPageWrap").addEventListener("scroll", updateReaderProgress, { passive: true });
+    document.getElementById("readerBtn").addEventListener("click", resetReaderPresentation, true);
+    document.getElementById("readerClose").addEventListener("click", resetReaderPresentation);
+    document.getElementById("readerCopy").addEventListener("click", async event => {
+      if (!projectReaderMode) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      try { await navigator.clipboard.writeText(readerDocumentText(false)); toast("整部作品已复制"); } catch { toast("复制失败", "error"); }
+    }, true);
+    ["readerSelectAll", "readerClear"].forEach(id => document.getElementById(id).addEventListener("click", event => {
+      if (!projectReaderMode) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+    }, true));
+    document.getElementById("readerSegments").addEventListener("click", event => {
+      const button = event.target.closest("[data-reader-chapter]");
+      if (projectReaderMode && button) jumpProjectReaderChapter(button.dataset.readerChapter);
+    });
     document.getElementById("collapseLibrary").addEventListener("click", toggleLibrary);
     document.getElementById("collapseStudio").addEventListener("click", toggleStudio);
     document.getElementById("libraryToggleBtn").addEventListener("click", toggleLibrary);
@@ -1526,6 +1716,7 @@
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") { event.preventDefault(); openCommandPalette(); return; }
       if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key.toLowerCase() === "f") { event.preventDefault(); openWorkspaceSearch(); return; }
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "f") { event.preventDefault(); openConversationSearch(); return; }
+      if (event.key === "Escape" && projectReaderMode) { resetReaderPresentation(); return; }
       if (event.key === "Escape" && !document.getElementById("commandMask").hidden) { closeCommandPalette(); return; }
       if (event.key === "Escape" && !document.getElementById("workspaceSearchMask").hidden) { closeWorkspaceSearch(); return; }
       if (event.key === "Escape" && !document.getElementById("snapshotPreviewMask").hidden) { closeSnapshotPreview(); return; }
