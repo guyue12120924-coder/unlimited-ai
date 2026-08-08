@@ -5,7 +5,7 @@ export const MODELS = [
   {
     id: "nvidia/nemotron-3-super-120b-a12b",
     label: "nemotron-3-super-120b",
-    persona: 1,
+    promptProfile: "creative-primary",
     provider: "NVIDIA Free Endpoint",
     request: {
       temperature: 1,
@@ -18,7 +18,7 @@ export const MODELS = [
   {
     id: "nvidia/nemotron-3-nano-30b-a3b",
     label: "nemotron-3-nano-30b",
-    persona: 2,
+    promptProfile: "creative-secondary",
     provider: "NVIDIA Free Endpoint",
     request: {
       temperature: 1,
@@ -30,7 +30,7 @@ export const MODELS = [
   {
     id: "openai/gpt-oss-120b",
     label: "gpt-oss-120b",
-    persona: 3,
+    promptProfile: "creative-open",
     provider: "NVIDIA Free Endpoint",
     request: {
       max_tokens: 8192
