@@ -9,6 +9,7 @@ import { extractStoryMemories } from "./memory-extractor.js";
 import { reviewContinuity } from "./continuity-review.js";
 
 const NVIDIA_CHAT_URL = "https://integrate.api.nvidia.com/v1/chat/completions";
+const APP_REVISION = "2026-08-09-assets-diagnostic-1";
 
 function resp(body, contentType = "text/plain; charset=utf-8", status = 200, extraHeaders = {}) {
   return new Response(body, {
@@ -21,7 +22,9 @@ function resp(body, contentType = "text/plain; charset=utf-8", status = 200, ext
 }
 
 function jsonResp(value, status = 200) {
-  return resp(JSON.stringify(value), "application/json; charset=utf-8", status);
+  return resp(JSON.stringify(value, null, 2), "application/json; charset=utf-8", status, {
+    "Cache-Control": "no-store"
+  });
 }
 
 function clientConfigJs() {
@@ -30,7 +33,7 @@ function clientConfigJs() {
     label: model.label
   }));
 
-  return `window.APP_MODELS = ${JSON.stringify(models, null, 2)};\nwindow.APP_DEFAULT_MODEL = ${JSON.stringify(DEFAULT_MODEL_ID)};\n`;
+  return `window.APP_MODELS = ${JSON.stringify(models, null, 2)};\nwindow.APP_DEFAULT_MODEL = ${JSON.stringify(DEFAULT_MODEL_ID)};\nwindow.APP_REVISION = ${JSON.stringify(APP_REVISION)};\n`;
 }
 
 function buildMessages(payload, modelConfig) {
@@ -217,12 +220,92 @@ async function handleChat(request, env) {
   return streamNvidia(payload, env, requestedModelId);
 }
 
+async function inspectAsset(request, env, pathname, markers = []) {
+  if (!env.ASSETS || typeof env.ASSETS.fetch !== "function") {
+    return {
+      path: pathname,
+      available: false,
+      status: null,
+      markers: Object.fromEntries(markers.map((marker) => [marker, false]))
+    };
+  }
+
+  const assetUrl = new URL(pathname, request.url);
+  assetUrl.searchParams.set("__diag", APP_REVISION);
+  const assetRequest = new Request(assetUrl.toString(), {
+    method: "GET",
+    headers: {
+      "Cache-Control": "no-cache",
+      "Pragma": "no-cache"
+    }
+  });
+
+  try {
+    const response = await env.ASSETS.fetch(assetRequest);
+    const body = await response.text();
+    return {
+      path: pathname,
+      available: response.ok,
+      status: response.status,
+      bytes: body.length,
+      etag: response.headers.get("etag") || "",
+      cacheControl: response.headers.get("cache-control") || "",
+      markers: Object.fromEntries(markers.map((marker) => [marker, body.includes(marker)]))
+    };
+  } catch (error) {
+    return {
+      path: pathname,
+      available: false,
+      status: null,
+      error: error?.message || String(error),
+      markers: Object.fromEntries(markers.map((marker) => [marker, false]))
+    };
+  }
+}
+
+async function handleDiagnostics(request, env) {
+  const assets = await Promise.all([
+    inspectAsset(request, env, "/index.html", [
+      "/context-bridge.js?v=20260809-1",
+      "/continuity-bridge.js?v=20260809-1",
+      "/memory-bridge.js?v=20260809-1",
+      "/memory-suggest.js?v=20260809-1"
+    ]),
+    inspectAsset(request, env, "/context-bridge.js", ["contextInspectorBtn", "creative_context"]),
+    inspectAsset(request, env, "/continuity-bridge.js", ["continuityBtn", "continuity_context"]),
+    inspectAsset(request, env, "/memory-bridge.js", ["storyMemoryBtn", "memory_context"]),
+    inspectAsset(request, env, "/memory-suggest.js", ["memorySuggestTrigger", "/api/memory/extract"])
+  ]);
+
+  const index = assets[0];
+  const expectedIndexMarkers = Object.values(index.markers || {});
+  const frontendCurrent = expectedIndexMarkers.length > 0
+    && expectedIndexMarkers.every(Boolean)
+    && assets.slice(1).every((asset) => asset.available);
+
+  return jsonResp({
+    workerRevision: APP_REVISION,
+    assetBindingPresent: Boolean(env.ASSETS && typeof env.ASSETS.fetch === "function"),
+    frontendCurrent,
+    conclusion: frontendCurrent
+      ? "Worker and static assets are on the new frontend revision. If the page still looks old, the client is serving cached HTML."
+      : "Worker is current but the ASSETS binding is serving an older or incomplete public directory. Check Workers Builds root/deploy command so ./public is uploaded with the Worker.",
+    assets
+  });
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
     if (request.method === "GET" && url.pathname === "/config.js") {
-      return resp(clientConfigJs(), "text/javascript; charset=utf-8");
+      return resp(clientConfigJs(), "text/javascript; charset=utf-8", 200, {
+        "Cache-Control": "no-store"
+      });
+    }
+
+    if (request.method === "GET" && url.pathname === "/api/diagnostics") {
+      return handleDiagnostics(request, env);
     }
 
     if (request.method === "POST" && url.pathname === "/api/chat") {
