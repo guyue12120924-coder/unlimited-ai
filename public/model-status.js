@@ -1,7 +1,7 @@
 (() => {
   const MODEL_LABELS = {
     "nvidia/nemotron-3-super-120b-a12b": "Nemotron 3 Super 120B",
-    "nvidia/llama-3.3-nemotron-super-49b-v1.5": "Llama 3.3 Nemotron Super 49B",
+    "nvidia/nemotron-3-nano-30b-a3b": "Nemotron 3 Nano 30B",
     "openai/gpt-oss-120b": "GPT-OSS 120B"
   };
 
