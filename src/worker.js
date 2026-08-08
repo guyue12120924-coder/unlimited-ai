@@ -7,13 +7,13 @@ import {
 const NVIDIA_CHAT_URL = "https://integrate.api.nvidia.com/v1/chat/completions";
 
 const NEMOTRON_MODEL = "nvidia/nemotron-3-super-120b-a12b";
-const LLAMA_NEMOTRON_MODEL = "nvidia/llama-3.3-nemotron-super-49b-v1.5";
+const NEMOTRON_NANO_MODEL = "nvidia/nemotron-3-nano-30b-a3b";
 const GPT_OSS_MODEL = "openai/gpt-oss-120b";
 const DEFAULT_MODEL = NEMOTRON_MODEL;
 
 const FREE_MODELS = [
   { id: NEMOTRON_MODEL, label: "nemotron-3-super-120b", persona: 1 },
-  { id: LLAMA_NEMOTRON_MODEL, label: "llama-3.3-nemotron-super-49b", persona: 2 },
+  { id: NEMOTRON_NANO_MODEL, label: "nemotron-3-nano-30b", persona: 2 },
   { id: GPT_OSS_MODEL, label: "gpt-oss-120b", persona: 3 }
 ];
 
@@ -97,12 +97,11 @@ function buildRequestBody(model, messages) {
     body.max_tokens = 16384;
     body.chat_template_kwargs = { enable_thinking: true };
     body.reasoning_budget = 16384;
-  } else if (model === LLAMA_NEMOTRON_MODEL) {
-    body.temperature = 0.6;
-    body.top_p = 0.95;
+  } else if (model === NEMOTRON_NANO_MODEL) {
+    body.temperature = 1;
+    body.top_p = 1;
     body.max_tokens = 8192;
-    body.frequency_penalty = 0;
-    body.presence_penalty = 0;
+    body.reasoning_budget = 8192;
   } else if (model === GPT_OSS_MODEL) {
     body.max_tokens = 8192;
   }
