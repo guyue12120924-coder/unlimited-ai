@@ -1,21 +1,12 @@
 import {
-  PROMPT_1,
-  PROMPT_2,
-  PROMPT_3
-} from "./config.js";
+  MODELS,
+  DEFAULT_MODEL_ID,
+  resolveModelConfig
+} from "./models.js";
+import { getBuiltinPrompt } from "./prompts.js";
+import { buildCreativeContextMessage } from "./context.js";
 
 const NVIDIA_CHAT_URL = "https://integrate.api.nvidia.com/v1/chat/completions";
-
-const NEMOTRON_MODEL = "nvidia/nemotron-3-super-120b-a12b";
-const NEMOTRON_NANO_MODEL = "nvidia/nemotron-3-nano-30b-a3b";
-const GPT_OSS_MODEL = "openai/gpt-oss-120b";
-const DEFAULT_MODEL = NEMOTRON_MODEL;
-
-const FREE_MODELS = [
-  { id: NEMOTRON_MODEL, label: "nemotron-3-super-120b", persona: 1 },
-  { id: NEMOTRON_NANO_MODEL, label: "nemotron-3-nano-30b", persona: 2 },
-  { id: GPT_OSS_MODEL, label: "gpt-oss-120b", persona: 3 }
-];
 
 function resp(body, contentType = "text/plain; charset=utf-8", status = 200, extraHeaders = {}) {
   return new Response(body, {
@@ -27,29 +18,16 @@ function resp(body, contentType = "text/plain; charset=utf-8", status = 200, ext
   });
 }
 
-function isAllowedModel(modelId) {
-  return FREE_MODELS.some((m) => m.id === modelId);
-}
-
-function builtinPromptForModel(modelId) {
-  const meta = FREE_MODELS.find((m) => m.id === modelId);
-  const persona = meta?.persona ?? 1;
-
-  if (persona === 3) return PROMPT_3;
-  if (persona === 2) return PROMPT_2;
-  return PROMPT_1;
-}
-
 function clientConfigJs() {
-  const models = FREE_MODELS.map((m) => ({
-    id: m.id,
-    label: m.label
+  const models = MODELS.map((model) => ({
+    id: model.id,
+    label: model.label
   }));
 
-  return `window.APP_MODELS = ${JSON.stringify(models, null, 2)};\nwindow.APP_DEFAULT_MODEL = ${JSON.stringify(DEFAULT_MODEL)};\n`;
+  return `window.APP_MODELS = ${JSON.stringify(models, null, 2)};\nwindow.APP_DEFAULT_MODEL = ${JSON.stringify(DEFAULT_MODEL_ID)};\n`;
 }
 
-function buildMessages(payload, model) {
+function buildMessages(payload, modelConfig) {
   const useBuiltinPersona = payload?.use_builtin_persona !== false;
   const customSystemPrompt =
     typeof payload?.custom_system_prompt === "string"
@@ -62,7 +40,7 @@ function buildMessages(payload, model) {
   if (useBuiltinPersona) {
     upstreamMessages.push({
       role: "system",
-      content: builtinPromptForModel(model)
+      content: getBuiltinPrompt(modelConfig.promptProfile)
     });
   } else if (customSystemPrompt) {
     upstreamMessages.push({
@@ -71,45 +49,40 @@ function buildMessages(payload, model) {
     });
   }
 
+  const creativeContext = buildCreativeContextMessage(payload?.creative_context);
+  if (creativeContext) {
+    upstreamMessages.push({
+      role: "system",
+      content: creativeContext
+    });
+  }
+
   for (const msg of messages) {
     if (!msg || typeof msg !== "object") continue;
     if (msg.role !== "user" && msg.role !== "assistant") continue;
 
+    const content = typeof msg.content === "string" ? msg.content : "";
+    if (!content.trim()) continue;
+
     upstreamMessages.push({
       role: msg.role,
-      content: typeof msg.content === "string" ? msg.content : ""
+      content
     });
   }
 
   return upstreamMessages;
 }
 
-function buildRequestBody(model, messages) {
-  const body = {
-    model,
+function buildRequestBody(modelConfig, messages) {
+  return {
+    model: modelConfig.id,
     messages,
-    stream: true
+    stream: true,
+    ...(modelConfig.request || {})
   };
-
-  if (model === NEMOTRON_MODEL) {
-    body.temperature = 1;
-    body.top_p = 0.95;
-    body.max_tokens = 16384;
-    body.chat_template_kwargs = { enable_thinking: true };
-    body.reasoning_budget = 16384;
-  } else if (model === NEMOTRON_NANO_MODEL) {
-    body.temperature = 1;
-    body.top_p = 1;
-    body.max_tokens = 8192;
-    body.reasoning_budget = 8192;
-  } else if (model === GPT_OSS_MODEL) {
-    body.max_tokens = 8192;
-  }
-
-  return body;
 }
 
-async function streamNvidia(payload, env, model) {
+async function streamNvidia(payload, env, requestedModelId) {
   if (!env.NVIDIA_API_KEY) {
     return resp(
       "Missing NVIDIA_API_KEY. Add the NVIDIA API key in Cloudflare Worker Variables and Secrets.",
@@ -118,7 +91,8 @@ async function streamNvidia(payload, env, model) {
     );
   }
 
-  const messages = buildMessages(payload, model);
+  const modelConfig = resolveModelConfig(requestedModelId);
+  const messages = buildMessages(payload, modelConfig);
   const upstream = await fetch(NVIDIA_CHAT_URL, {
     method: "POST",
     headers: {
@@ -126,13 +100,13 @@ async function streamNvidia(payload, env, model) {
       "Content-Type": "application/json",
       "Accept": "text/event-stream"
     },
-    body: JSON.stringify(buildRequestBody(model, messages))
+    body: JSON.stringify(buildRequestBody(modelConfig, messages))
   });
 
   if (!upstream.ok) {
     const errorText = await upstream.text().catch(() => "");
     return resp(
-      `NVIDIA API error ${upstream.status} for ${model}: ${errorText}`,
+      `NVIDIA API error ${upstream.status} for ${modelConfig.id}: ${errorText}`,
       "text/plain; charset=utf-8",
       upstream.status
     );
@@ -144,9 +118,9 @@ async function streamNvidia(payload, env, model) {
       "Content-Type": "text/event-stream; charset=utf-8",
       "Cache-Control": "no-cache, no-transform",
       "Connection": "keep-alive",
-      "X-Requested-Model": model,
-      "X-Model-Used": model,
-      "X-Model-Provider": "NVIDIA Free Endpoint"
+      "X-Requested-Model": requestedModelId || DEFAULT_MODEL_ID,
+      "X-Model-Used": modelConfig.id,
+      "X-Model-Provider": modelConfig.provider || "NVIDIA Free Endpoint"
     }
   });
 }
@@ -159,9 +133,8 @@ async function handleChat(request, env) {
     return resp("Bad JSON", "text/plain; charset=utf-8", 400);
   }
 
-  const requestedModel = payload?.model;
-  const model = isAllowedModel(requestedModel) ? requestedModel : DEFAULT_MODEL;
-  return streamNvidia(payload, env, model);
+  const requestedModelId = typeof payload?.model === "string" ? payload.model : DEFAULT_MODEL_ID;
+  return streamNvidia(payload, env, requestedModelId);
 }
 
 export default {
