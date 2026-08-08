@@ -1,5 +1,5 @@
 // src/context.js
-// Formats structured novel/project context and long-term Story Memory into compact system context.
+// Formats structured novel/project context, reviewed continuity state, and long-term Story Memory.
 
 const CREATIVE_CONTEXT_CHAR_BUDGET = 24000;
 
@@ -30,21 +30,31 @@ function section(title, value, limit) {
   return body ? `## ${title}\n${body}` : "";
 }
 
-function characterText(character) {
+function continuityStateFor(name, continuityContext) {
+  if (!name || !Array.isArray(continuityContext?.characterStates)) return "";
+  const normalized = String(name).trim().toLowerCase();
+  const match = continuityContext.characterStates.find((item) => String(item?.name || "").trim().toLowerCase() === normalized);
+  return text(match?.state, 900);
+}
+
+function characterText(character, continuityContext) {
   if (typeof character === "string") {
-    const clean = text(character, LIMITS.character);
-    return clean ? `### 人物\n${clean}` : "";
+    const name = text(character, 120);
+    if (!name) return "";
+    const reviewedState = continuityStateFor(name, continuityContext);
+    return `### ${name}${reviewedState ? `\n当前状态：${reviewedState}` : ""}`;
   }
   if (!character || typeof character !== "object") return "";
 
   const name = text(character.name || character.title || character.id || "人物", 120);
+  const reviewedState = continuityStateFor(name, continuityContext);
   const preferred = [
     ["身份", character.role || character.identity || character.job],
     ["性格", character.personality],
     ["外貌", character.appearance],
     ["目标", character.goal || character.goals],
     ["秘密", character.secret || character.secrets],
-    ["当前状态", character.currentState || character.state],
+    ["当前状态", reviewedState || character.currentState || character.state],
     ["说话方式", character.voice || character.speech],
     ["补充", character.description || character.notes || character.bio]
   ];
@@ -97,14 +107,17 @@ function joinWithinBudget(header, sections) {
   return output;
 }
 
-export function buildCreativeContextMessage(context, memoryContext = null) {
-  if ((!context || typeof context !== "object") && (!memoryContext || typeof memoryContext !== "object")) return "";
+export function buildCreativeContextMessage(context, memoryContext = null, continuityContext = null) {
+  if ((!context || typeof context !== "object")
+    && (!memoryContext || typeof memoryContext !== "object")
+    && (!continuityContext || typeof continuityContext !== "object")) return "";
 
   const safeContext = context && typeof context === "object" ? context : {};
   const project = safeContext.project && typeof safeContext.project === "object" ? safeContext.project : {};
   const chapter = safeContext.chapter && typeof safeContext.chapter === "object" ? safeContext.chapter : {};
   const characters = Array.isArray(safeContext.characters) ? safeContext.characters.slice(0, 8) : [];
   const memories = Array.isArray(memoryContext?.items) ? memoryContext.items.slice(0, 20) : [];
+  const reviewedChapterSummary = text(continuityContext?.chapterSummary, 2600);
 
   const identity = section("作品", [
     project.name ? `名称：${text(project.name, 160)}` : "",
@@ -113,13 +126,15 @@ export function buildCreativeContextMessage(context, memoryContext = null) {
 
   const currentChapter = section("当前章节", [
     chapter.title || chapter.name ? `标题：${text(chapter.title || chapter.name, 180)}` : "",
-    chapter.summary ? `摘要：${text(chapter.summary, 2600)}` : "",
+    reviewedChapterSummary
+      ? `AI维护摘要：${reviewedChapterSummary}`
+      : chapter.summary ? `摘要：${text(chapter.summary, 2600)}` : "",
     chapter.notes ? `写作备注：${text(chapter.notes, 1800)}` : "",
     chapter.targetWords ? `目标字数：${chapter.targetWords}` : ""
   ].filter(Boolean).join("\n"), LIMITS.chapter);
 
   const characterSection = characters.length
-    ? `## 相关人物\n${characters.map(characterText).filter(Boolean).join("\n\n")}`
+    ? `## 相关人物\n${characters.map((character) => characterText(character, continuityContext)).filter(Boolean).join("\n\n")}`
     : "";
 
   const memoryLines = memories.map(memoryText).filter(Boolean).join("\n");
