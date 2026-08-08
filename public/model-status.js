@@ -1,12 +1,8 @@
 (() => {
-  const MODEL_LABELS = {
-    "nvidia/nemotron-3-super-120b-a12b": "Nemotron 3 Super 120B",
-    "nvidia/nemotron-3-nano-30b-a3b": "Nemotron 3 Nano 30B",
-    "openai/gpt-oss-120b": "GPT-OSS 120B"
-  };
+  const MODEL_LABELS = new Map((window.APP_MODELS || []).map(model => [model.id, model.label]));
 
   try {
-    const allowed = new Set((window.APP_MODELS || []).map((m) => m.id));
+    const allowed = new Set((window.APP_MODELS || []).map((model) => model.id));
     const saved = localStorage.getItem("cfw_model");
     if (!saved || !allowed.has(saved)) {
       const fallback = window.APP_DEFAULT_MODEL || window.APP_MODELS?.[0]?.id;
@@ -19,7 +15,7 @@
   const originalFetch = window.fetch.bind(window);
 
   function labelFor(modelId) {
-    return MODEL_LABELS[modelId] || modelId || "未知模型";
+    return MODEL_LABELS.get(modelId) || modelId || "未知模型";
   }
 
   function findLatestAiStats() {
@@ -45,11 +41,8 @@
       : `实际模型：${usedLabel}`;
 
     stats.classList.toggle("model-fallback", Boolean(switched));
-    if (fallback) {
-      stats.title = `自动切换原因：${fallback}`;
-    } else {
-      stats.removeAttribute("title");
-    }
+    if (fallback) stats.title = `自动切换原因：${fallback}`;
+    else stats.removeAttribute("title");
   }
 
   window.addEventListener("unlimited-ai:model-route", (event) => {
