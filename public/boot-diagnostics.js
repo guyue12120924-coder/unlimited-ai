@@ -1,7 +1,7 @@
 // public/boot-diagnostics.js
 // Captures startup failures so the UI never silently falls back to the base chat shell.
 (() => {
-  const REVISION = "2026-08-09-v2-boot-1";
+  const REVISION = "2026-08-09-v2-boot-2";
   const errors = [];
 
   document.documentElement.dataset.frontendRevision = REVISION;
@@ -15,12 +15,17 @@
     if (event?.reason) {
       return event.reason?.stack || event.reason?.message || String(event.reason);
     }
-    return event?.error?.stack || event?.error?.message || event?.message || "Unknown frontend error";
+
+    const message = event?.error?.stack || event?.error?.message || event?.message || "Unknown frontend error";
+    const location = event?.filename
+      ? `\n位置：${event.filename}${event.lineno ? `:${event.lineno}` : ""}${event.colno ? `:${event.colno}` : ""}`
+      : "";
+    return `${message}${location}`;
   }
 
   window.addEventListener("error", (event) => {
     errors.push(describeError(event));
-  });
+  }, true);
 
   window.addEventListener("unhandledrejection", (event) => {
     errors.push(describeError(event));
@@ -36,7 +41,7 @@
       "right:16px",
       "bottom:16px",
       "z-index:99999",
-      "max-width:520px",
+      "max-width:620px",
       "padding:12px 14px",
       "border:1px solid rgba(239,140,130,.55)",
       "border-radius:10px",
@@ -44,7 +49,8 @@
       "color:#ffe8e5",
       "box-shadow:0 18px 50px rgba(0,0,0,.45)",
       "font:12px/1.55 system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif",
-      "white-space:pre-wrap"
+      "white-space:pre-wrap",
+      "word-break:break-all"
     ].join(";");
     panel.textContent = `前端初始化失败（${REVISION}）\n${message}`;
     document.body.appendChild(panel);
@@ -64,7 +70,7 @@
     }
 
     const details = errors.length
-      ? `\n捕获到的错误：\n${errors.slice(0, 5).join("\n\n")}`
+      ? `\n捕获到的错误：\n${errors.slice(0, 8).join("\n\n")}`
       : "\n没有捕获到 JS 异常，可能是脚本未执行或资源被浏览器阻止。";
     showFailure(`缺少：${missing.map(([, label]) => label).join("、")}${details}`);
   }
