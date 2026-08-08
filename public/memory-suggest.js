@@ -27,12 +27,24 @@
   }
 
   function recentConversationText() {
+    const rows = Array.from(document.querySelectorAll("#chat .row")).slice(-10);
+    const visibleText = rows
+      .map((row) => {
+        const content = row.querySelector(".bubble")?.textContent?.trim() || "";
+        if (!content || content.startsWith("错误:")) return "";
+        return `${row.classList.contains("ai") ? "AI" : "用户"}：${content}`;
+      })
+      .filter(Boolean)
+      .join("\n\n");
+
     const session = currentSession();
-    const messages = Array.isArray(session?.messages) ? session.messages.slice(-10) : [];
-    const text = messages
+    const storedMessages = Array.isArray(session?.messages) ? session.messages.slice(-10) : [];
+    const storedText = storedMessages
       .filter((message) => typeof message?.content === "string" && message.content.trim())
       .map((message) => `${message.role === "assistant" ? "AI" : "用户"}：${message.content.trim()}`)
       .join("\n\n");
+
+    const text = visibleText || storedText;
     return text.length > 18000 ? text.slice(-18000) : text;
   }
 
