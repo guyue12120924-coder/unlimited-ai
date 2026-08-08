@@ -5,6 +5,7 @@ import {
 } from "./models.js";
 import { getBuiltinPrompt } from "./prompts.js";
 import { buildCreativeContextMessage } from "./context.js";
+import { extractStoryMemories } from "./memory-extractor.js";
 
 const NVIDIA_CHAT_URL = "https://integrate.api.nvidia.com/v1/chat/completions";
 
@@ -16,6 +17,10 @@ function resp(body, contentType = "text/plain; charset=utf-8", status = 200, ext
       ...extraHeaders
     }
   });
+}
+
+function jsonResp(value, status = 200) {
+  return resp(JSON.stringify(value), "application/json; charset=utf-8", status);
 }
 
 function clientConfigJs() {
@@ -173,6 +178,17 @@ async function streamNvidia(payload, env, requestedModelId) {
   return resp(lastError, "text/plain; charset=utf-8", lastStatus);
 }
 
+async function handleMemoryExtract(request, env) {
+  let payload;
+  try {
+    payload = await request.json();
+  } catch {
+    return jsonResp({ error: "Bad JSON" }, 400);
+  }
+  const result = await extractStoryMemories(payload, env);
+  return jsonResp(result.body, result.status);
+}
+
 async function handleChat(request, env) {
   let payload;
   try {
@@ -195,6 +211,10 @@ export default {
 
     if (request.method === "POST" && url.pathname === "/api/chat") {
       return handleChat(request, env);
+    }
+
+    if (request.method === "POST" && url.pathname === "/api/memory/extract") {
+      return handleMemoryExtract(request, env);
     }
 
     if (env.ASSETS && typeof env.ASSETS.fetch === "function") {
