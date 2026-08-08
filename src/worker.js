@@ -6,6 +6,7 @@ import {
 import { getBuiltinPrompt } from "./prompts.js";
 import { buildCreativeContextMessage } from "./context.js";
 import { extractStoryMemories } from "./memory-extractor.js";
+import { reviewContinuity } from "./continuity-review.js";
 
 const NVIDIA_CHAT_URL = "https://integrate.api.nvidia.com/v1/chat/completions";
 
@@ -189,6 +190,17 @@ async function handleMemoryExtract(request, env) {
   return jsonResp(result.body, result.status);
 }
 
+async function handleContinuityReview(request, env) {
+  let payload;
+  try {
+    payload = await request.json();
+  } catch {
+    return jsonResp({ error: "Bad JSON" }, 400);
+  }
+  const result = await reviewContinuity(payload, env);
+  return jsonResp(result.body, result.status);
+}
+
 async function handleChat(request, env) {
   let payload;
   try {
@@ -215,6 +227,10 @@ export default {
 
     if (request.method === "POST" && url.pathname === "/api/memory/extract") {
       return handleMemoryExtract(request, env);
+    }
+
+    if (request.method === "POST" && url.pathname === "/api/continuity/review") {
+      return handleContinuityReview(request, env);
     }
 
     if (env.ASSETS && typeof env.ASSETS.fetch === "function") {
