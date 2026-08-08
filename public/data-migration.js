@@ -1,0 +1,150 @@
+// public/data-migration.js
+// Backward-compatible data normalization for persistent message IDs and manuscript links.
+(() => {
+  const LS_SESSIONS = "cfw_sessions_v2";
+  const LS_STUDIO = "cfw_studio_workspace_v1";
+  const originalSetItem = Storage.prototype.setItem;
+
+  function hashText(value) {
+    const source = String(value ?? "");
+    let hash = 2166136261;
+    for (let index = 0; index < source.length; index += 1) {
+      hash ^= source.charCodeAt(index);
+      hash = Math.imul(hash, 16777619);
+    }
+    return (hash >>> 0).toString(36);
+  }
+
+  function stableMessageId(sessionId, message, index, occurrence = 0) {
+    const role = message?.role === "assistant" ? "a" : "u";
+    const fingerprint = hashText(`${message?.content || ""}|${occurrence}`);
+    return `msg-${String(sessionId || "session")}-${role}-${index}-${fingerprint}`;
+  }
+
+  function normalizeSessions(value) {
+    const sessions = Array.isArray(value) ? value : [];
+    let changed = false;
+
+    sessions.forEach((session) => {
+      if (!session || typeof session !== "object") return;
+      if (!Array.isArray(session.messages)) {
+        session.messages = [];
+        changed = true;
+      }
+
+      const occurrences = new Map();
+      session.messages.forEach((message, index) => {
+        if (!message || typeof message !== "object") return;
+        const key = `${message.role || "unknown"}|${message.content || ""}`;
+        const occurrence = occurrences.get(key) || 0;
+        occurrences.set(key, occurrence + 1);
+
+        if (!message.id || typeof message.id !== "string") {
+          message.id = stableMessageId(session.id, message, index, occurrence);
+          changed = true;
+        }
+      });
+    });
+
+    return { value: sessions, changed };
+  }
+
+  function normalizeWorkspace(value, sessions) {
+    const workspace = value && typeof value === "object" ? value : {};
+    const sessionMap = new Map((sessions || []).map((session) => [session.id, session]));
+    let changed = false;
+
+    (workspace.projects || []).forEach((project) => {
+      if (!project || !Array.isArray(project.manuscriptClips)) return;
+      project.manuscriptClips.forEach((clip) => {
+        if (!clip || typeof clip !== "object") return;
+        const session = sessionMap.get(clip.sessionId);
+        if (!session || !Array.isArray(session.messages)) return;
+
+        if (clip.messageId) {
+          const nextIndex = session.messages.findIndex((message) => message?.id === clip.messageId);
+          if (nextIndex >= 0 && clip.messageIndex !== nextIndex) {
+            clip.messageIndex = nextIndex;
+            changed = true;
+          }
+          return;
+        }
+
+        if (Number.isInteger(clip.messageIndex)) {
+          const message = session.messages[clip.messageIndex];
+          if (message?.id) {
+            clip.messageId = message.id;
+            changed = true;
+          }
+        }
+      });
+    });
+
+    return { value: workspace, changed };
+  }
+
+  function parseJson(raw, fallback) {
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return fallback;
+    }
+  }
+
+  function normalizedSessionsFromStorage() {
+    const parsed = parseJson(localStorage.getItem(LS_SESSIONS) || "[]", []);
+    return normalizeSessions(parsed).value;
+  }
+
+  Storage.prototype.setItem = function patchedSetItem(key, value) {
+    if (this !== localStorage || typeof value !== "string") {
+      return originalSetItem.call(this, key, value);
+    }
+
+    if (key === LS_SESSIONS) {
+      const parsed = parseJson(value, null);
+      if (Array.isArray(parsed)) {
+        const normalized = normalizeSessions(parsed).value;
+        return originalSetItem.call(this, key, JSON.stringify(normalized));
+      }
+    }
+
+    if (key === LS_STUDIO) {
+      const parsed = parseJson(value, null);
+      if (parsed && typeof parsed === "object") {
+        const sessions = normalizedSessionsFromStorage();
+        const normalized = normalizeWorkspace(parsed, sessions).value;
+        return originalSetItem.call(this, key, JSON.stringify(normalized));
+      }
+    }
+
+    return originalSetItem.call(this, key, value);
+  };
+
+  function migrateExistingData() {
+    const sessionsRaw = localStorage.getItem(LS_SESSIONS);
+    let sessions = [];
+
+    if (sessionsRaw) {
+      const parsed = parseJson(sessionsRaw, []);
+      const result = normalizeSessions(parsed);
+      sessions = result.value;
+      if (result.changed) originalSetItem.call(localStorage, LS_SESSIONS, JSON.stringify(sessions));
+    }
+
+    const studioRaw = localStorage.getItem(LS_STUDIO);
+    if (studioRaw) {
+      const parsed = parseJson(studioRaw, {});
+      const result = normalizeWorkspace(parsed, sessions);
+      if (result.changed) originalSetItem.call(localStorage, LS_STUDIO, JSON.stringify(result.value));
+    }
+  }
+
+  window.UnlimitedData = {
+    normalizeSessions,
+    normalizeWorkspace,
+    stableMessageId
+  };
+
+  migrateExistingData();
+})();
