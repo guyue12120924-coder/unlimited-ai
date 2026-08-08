@@ -53,16 +53,22 @@
     if (!project) return null;
     const continuity = projectContinuity(project.id);
     const chapterReview = chapter?.id ? continuity.chapters?.[chapter.id] : null;
+    const chapterIndex = chapter ? (project.chapters || []).findIndex((item) => item.id === chapter.id) : -1;
+    const previousChapter = chapterIndex > 0 ? project.chapters[chapterIndex - 1] : null;
+    const previousChapterSummary = previousChapter?.id
+      ? continuity.chapters?.[previousChapter.id]?.summary || ""
+      : "";
     const characterStates = Object.values(continuity.characters || {})
       .filter((item) => item?.name && item?.state)
       .sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0))
       .slice(0, 30)
       .map((item) => ({ name: item.name, state: item.state }));
-    if (!chapterReview?.summary && !characterStates.length) return null;
+    if (!chapterReview?.summary && !previousChapterSummary && !characterStates.length) return null;
     return {
       version: 1,
       chapterId: chapter?.id || "",
       chapterSummary: chapterReview?.summary || "",
+      previousChapterSummary,
       characterStates
     };
   }
