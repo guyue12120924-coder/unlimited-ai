@@ -1,12 +1,10 @@
 (() => {
   const MODEL_LABELS = {
     "nvidia/nemotron-3-super-120b-a12b": "Nemotron 3 Super 120B",
-    "meta/llama-3.3-70b-instruct": "Llama 3.3 70B",
+    "nvidia/llama-3.3-nemotron-super-49b-v1.5": "Llama 3.3 Nemotron Super 49B",
     "openai/gpt-oss-120b": "GPT-OSS 120B"
   };
 
-  // Migrate an old saved DeepSeek/GLM selection so the dropdown never becomes blank
-  // after switching the site to the NVIDIA free-only model lineup.
   try {
     const allowed = new Set((window.APP_MODELS || []).map((m) => m.id));
     const saved = localStorage.getItem("cfw_model");
