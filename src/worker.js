@@ -55,7 +55,11 @@ function buildMessages(payload, modelConfig) {
     });
   }
 
-  const creativeContext = buildCreativeContextMessage(payload?.creative_context, payload?.memory_context);
+  const creativeContext = buildCreativeContextMessage(
+    payload?.creative_context,
+    payload?.memory_context,
+    payload?.continuity_context
+  );
   if (creativeContext) {
     upstreamMessages.push({
       role: "system",
