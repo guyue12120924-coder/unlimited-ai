@@ -8,6 +8,7 @@ const LIMITS = {
   notes: 4000,
   timeline: 5000,
   foreshadow: 5000,
+  relations: 4500,
   chapter: 5000,
   character: 2600,
   previousChapter: 3500
@@ -27,7 +28,12 @@ function section(title, value, limit) {
 }
 
 function characterText(character) {
+  if (typeof character === "string") {
+    const clean = text(character, LIMITS.character);
+    return clean ? `### 人物\n${clean}` : "";
+  }
   if (!character || typeof character !== "object") return "";
+
   const name = text(character.name || character.title || character.id || "人物", 120);
   const preferred = [
     ["身份", character.role || character.identity || character.job],
@@ -76,6 +82,7 @@ export function buildCreativeContextMessage(context) {
     ].filter(Boolean).join("\n"), LIMITS.chapter),
     section("上一章摘要", context.previousChapterSummary, LIMITS.previousChapter),
     characters.length ? `## 相关人物\n${characters.map(characterText).filter(Boolean).join("\n\n")}` : "",
+    section("人物关系", project.relations, LIMITS.relations),
     section("世界观与规则", project.world, LIMITS.world),
     section("时间线", project.timeline, LIMITS.timeline),
     section("伏笔", project.foreshadow, LIMITS.foreshadow),
