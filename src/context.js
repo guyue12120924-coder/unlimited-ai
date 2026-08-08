@@ -1,5 +1,5 @@
 // src/context.js
-// Formats structured novel/project context into a compact system message.
+// Formats structured novel/project context and long-term Story Memory into compact system context.
 
 const CREATIVE_CONTEXT_CHAR_BUDGET = 24000;
 
@@ -11,6 +11,7 @@ const LIMITS = {
   timeline: 5000,
   foreshadow: 5000,
   relations: 4500,
+  memories: 9000,
   chapter: 5000,
   character: 2600,
   previousChapter: 3500
@@ -60,6 +61,22 @@ function characterText(character) {
   return `### ${name}\n${text(lines.join("\n"), LIMITS.character)}`;
 }
 
+function memoryText(memory) {
+  if (!memory || typeof memory !== "object") return "";
+  const content = text(memory.content, 1200);
+  if (!content) return "";
+  const type = text(memory.type || "事件", 60);
+  const importance = Math.max(1, Math.min(5, Number(memory.importance) || 3));
+  const characters = Array.isArray(memory.characters) ? memory.characters.map((item) => text(item, 80)).filter(Boolean) : [];
+  const tags = Array.isArray(memory.tags) ? memory.tags.map((item) => text(item, 80)).filter(Boolean) : [];
+  const meta = [
+    characters.length ? `人物：${characters.join("、")}` : "",
+    tags.length ? `标签：${tags.join("、")}` : "",
+    memory.status === "resolved" ? "状态：已解决" : ""
+  ].filter(Boolean).join("；");
+  return `- [${type}｜重要度${importance}] ${content}${meta ? `（${meta}）` : ""}`;
+}
+
 function joinWithinBudget(header, sections) {
   let output = header.trim();
   for (const item of sections.filter(Boolean)) {
@@ -80,12 +97,14 @@ function joinWithinBudget(header, sections) {
   return output;
 }
 
-export function buildCreativeContextMessage(context) {
-  if (!context || typeof context !== "object") return "";
+export function buildCreativeContextMessage(context, memoryContext = null) {
+  if ((!context || typeof context !== "object") && (!memoryContext || typeof memoryContext !== "object")) return "";
 
-  const project = context.project && typeof context.project === "object" ? context.project : {};
-  const chapter = context.chapter && typeof context.chapter === "object" ? context.chapter : {};
-  const characters = Array.isArray(context.characters) ? context.characters.slice(0, 8) : [];
+  const safeContext = context && typeof context === "object" ? context : {};
+  const project = safeContext.project && typeof safeContext.project === "object" ? safeContext.project : {};
+  const chapter = safeContext.chapter && typeof safeContext.chapter === "object" ? safeContext.chapter : {};
+  const characters = Array.isArray(safeContext.characters) ? safeContext.characters.slice(0, 8) : [];
+  const memories = Array.isArray(memoryContext?.items) ? memoryContext.items.slice(0, 20) : [];
 
   const identity = section("作品", [
     project.name ? `名称：${text(project.name, 160)}` : "",
@@ -103,11 +122,17 @@ export function buildCreativeContextMessage(context) {
     ? `## 相关人物\n${characters.map(characterText).filter(Boolean).join("\n\n")}`
     : "";
 
+  const memoryLines = memories.map(memoryText).filter(Boolean).join("\n");
+  const memorySection = memoryLines
+    ? section("长期故事记忆", `以下记忆是跨章节仍需保持一致的重要事实。与用户本轮明确要求冲突时，以用户最新要求为准。\n${memoryLines}`, LIMITS.memories)
+    : "";
+
   const sections = [
     identity,
     currentChapter,
-    section("上一章摘要", context.previousChapterSummary, LIMITS.previousChapter),
+    section("上一章摘要", safeContext.previousChapterSummary, LIMITS.previousChapter),
     characterSection,
+    memorySection,
     section("人物关系", project.relations, LIMITS.relations),
     section("世界观与规则", project.world, LIMITS.world),
     section("时间线", project.timeline, LIMITS.timeline),
