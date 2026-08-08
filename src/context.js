@@ -118,6 +118,7 @@ export function buildCreativeContextMessage(context, memoryContext = null, conti
   const characters = Array.isArray(safeContext.characters) ? safeContext.characters.slice(0, 8) : [];
   const memories = Array.isArray(memoryContext?.items) ? memoryContext.items.slice(0, 20) : [];
   const reviewedChapterSummary = text(continuityContext?.chapterSummary, 2600);
+  const reviewedPreviousChapterSummary = text(continuityContext?.previousChapterSummary, LIMITS.previousChapter);
 
   const identity = section("作品", [
     project.name ? `名称：${text(project.name, 160)}` : "",
@@ -145,7 +146,7 @@ export function buildCreativeContextMessage(context, memoryContext = null, conti
   const sections = [
     identity,
     currentChapter,
-    section("上一章摘要", safeContext.previousChapterSummary, LIMITS.previousChapter),
+    section("上一章摘要", reviewedPreviousChapterSummary || safeContext.previousChapterSummary, LIMITS.previousChapter),
     characterSection,
     memorySection,
     section("人物关系", project.relations, LIMITS.relations),
