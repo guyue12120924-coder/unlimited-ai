@@ -6,6 +6,10 @@ import {
   PROMPT_3
 } from "./config.js";
 
+const GLM_51_MODEL = "z-ai/glm-5.1";
+const GLM_52_MODEL = "z-ai/glm-5.2";
+const DEEPSEEK_V4_MODEL = "deepseek-ai/deepseek-v4-pro";
+
 function resp(body, contentType = "text/plain; charset=utf-8", status = 200, extraHeaders = {}) {
   return new Response(body, {
     status,
@@ -16,12 +20,24 @@ function resp(body, contentType = "text/plain; charset=utf-8", status = 200, ext
   });
 }
 
+function clientModels() {
+  return MODELS.map((model) => {
+    if (model.id !== GLM_51_MODEL) return model;
+    return {
+      ...model,
+      id: GLM_52_MODEL,
+      label: "glm-5.2"
+    };
+  });
+}
+
 function isAllowedModel(modelId) {
-  return MODELS.some((m) => m.id === modelId);
+  return clientModels().some((m) => m.id === modelId);
 }
 
 function builtinPromptForModel(modelId) {
-  const meta = MODELS.find((m) => m.id === modelId);
+  const lookupId = modelId === GLM_52_MODEL ? GLM_51_MODEL : modelId;
+  const meta = MODELS.find((m) => m.id === lookupId);
   const persona = meta?.persona ?? 1;
 
   if (persona === 3) return PROMPT_3;
@@ -30,7 +46,7 @@ function builtinPromptForModel(modelId) {
 }
 
 function clientConfigJs() {
-  const models = MODELS.map((m) => ({
+  const models = clientModels().map((m) => ({
     id: m.id,
     label: m.label
   }));
@@ -90,26 +106,39 @@ async function handleChat(request, env) {
     );
   }
 
+  const requestBody = {
+    model,
+    stream: true,
+    messages: upstreamMessages
+  };
+
+  if (model === DEEPSEEK_V4_MODEL) {
+    requestBody.temperature = 1;
+    requestBody.top_p = 0.95;
+    requestBody.max_tokens = 16384;
+    requestBody.chat_template_kwargs = { thinking: false };
+  } else if (model === GLM_52_MODEL) {
+    requestBody.temperature = 1;
+    requestBody.top_p = 1;
+    requestBody.max_tokens = 16384;
+    requestBody.seed = 42;
+  }
+
   const upstream = await fetch("https://integrate.api.nvidia.com/v1/chat/completions", {
     method: "POST",
     headers: {
       "Authorization": `Bearer ${env.NVIDIA_API_KEY}`,
       "Content-Type": "application/json"
     },
-    body: JSON.stringify({
-      model,
-      stream: true,
-      stream_options: { include_usage: true },
-      messages: upstreamMessages
-    })
+    body: JSON.stringify(requestBody)
   });
 
   if (!upstream.ok) {
     const errorText = await upstream.text().catch(() => "");
     return resp(
-      `Upstream error ${upstream.status}: ${errorText}`,
+      `NVIDIA API error ${upstream.status}: ${errorText}`,
       "text/plain; charset=utf-8",
-      502
+      upstream.status
     );
   }
 
