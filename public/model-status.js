@@ -1,8 +1,7 @@
 (() => {
   const MODEL_LABELS = {
-    "deepseek-ai/deepseek-v4-pro": "DeepSeek V4 Pro",
-    "deepseek-ai/deepseek-v4-flash": "DeepSeek V4 Flash",
-    "z-ai/glm-5.2": "GLM-5.2",
+    "nvidia/nemotron-3-super-120b-a12b": "Nemotron 3 Super 120B",
+    "meta/llama-3.3-70b-instruct": "Llama 3.3 70B",
     "openai/gpt-oss-120b": "GPT-OSS 120B"
   };
 
