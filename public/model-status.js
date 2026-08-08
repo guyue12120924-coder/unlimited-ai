@@ -5,6 +5,19 @@
     "openai/gpt-oss-120b": "GPT-OSS 120B"
   };
 
+  // Migrate an old saved DeepSeek/GLM selection so the dropdown never becomes blank
+  // after switching the site to the NVIDIA free-only model lineup.
+  try {
+    const allowed = new Set((window.APP_MODELS || []).map((m) => m.id));
+    const saved = localStorage.getItem("cfw_model");
+    if (!saved || !allowed.has(saved)) {
+      const fallback = window.APP_DEFAULT_MODEL || window.APP_MODELS?.[0]?.id;
+      if (fallback) localStorage.setItem("cfw_model", fallback);
+    }
+  } catch {
+    // Storage migration is best-effort only.
+  }
+
   const originalFetch = window.fetch.bind(window);
 
   function labelFor(modelId) {
