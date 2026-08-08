@@ -9,7 +9,7 @@ import { extractStoryMemories } from "./memory-extractor.js";
 import { reviewContinuity } from "./continuity-review.js";
 
 const NVIDIA_CHAT_URL = "https://integrate.api.nvidia.com/v1/chat/completions";
-const APP_REVISION = "2026-08-09-assets-diagnostic-1";
+const APP_REVISION = "2026-08-09-v2-boot-1";
 
 function resp(body, contentType = "text/plain; charset=utf-8", status = 200, extraHeaders = {}) {
   return new Response(body, {
@@ -220,6 +220,30 @@ async function handleChat(request, env) {
   return streamNvidia(payload, env, requestedModelId);
 }
 
+function shouldNoStoreAsset(url, response) {
+  if (url.pathname === "/") return true;
+  if (/\.(?:html?|js|css|json)$/i.test(url.pathname)) return true;
+  const contentType = response.headers.get("content-type") || "";
+  return /text\/html|javascript|text\/css|application\/json/i.test(contentType);
+}
+
+async function serveAsset(request, env) {
+  const response = await env.ASSETS.fetch(request);
+  if (!response || !shouldNoStoreAsset(new URL(request.url), response)) return response;
+
+  const headers = new Headers(response.headers);
+  headers.set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
+  headers.set("Pragma", "no-cache");
+  headers.set("Expires", "0");
+  headers.set("X-Unlimited-Frontend", APP_REVISION);
+
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers
+  });
+}
+
 async function inspectAsset(request, env, pathname, markers = []) {
   if (!env.ASSETS || typeof env.ASSETS.fetch !== "function") {
     return {
@@ -248,6 +272,7 @@ async function inspectAsset(request, env, pathname, markers = []) {
       available: response.ok,
       status: response.status,
       bytes: body.length,
+      contentType: response.headers.get("content-type") || "",
       etag: response.headers.get("etag") || "",
       cacheControl: response.headers.get("cache-control") || "",
       markers: Object.fromEntries(markers.map((marker) => [marker, body.includes(marker)]))
@@ -266,11 +291,14 @@ async function inspectAsset(request, env, pathname, markers = []) {
 async function handleDiagnostics(request, env) {
   const assets = await Promise.all([
     inspectAsset(request, env, "/index.html", [
-      "/context-bridge.js?v=20260809-1",
-      "/continuity-bridge.js?v=20260809-1",
-      "/memory-bridge.js?v=20260809-1",
-      "/memory-suggest.js?v=20260809-1"
+      "2026-08-09-v2-boot-1",
+      "/boot-diagnostics.js?v=20260809-2",
+      "/context-bridge.js?v=20260809-2",
+      "/continuity-bridge.js?v=20260809-2",
+      "/memory-bridge.js?v=20260809-2",
+      "/memory-suggest.js?v=20260809-2"
     ]),
+    inspectAsset(request, env, "/boot-diagnostics.js", ["frontendBootFailure", "2026-08-09-v2-boot-1"]),
     inspectAsset(request, env, "/context-bridge.js", ["contextInspectorBtn", "creative_context"]),
     inspectAsset(request, env, "/continuity-bridge.js", ["continuityBtn", "continuity_context"]),
     inspectAsset(request, env, "/memory-bridge.js", ["storyMemoryBtn", "memory_context"]),
@@ -288,8 +316,8 @@ async function handleDiagnostics(request, env) {
     assetBindingPresent: Boolean(env.ASSETS && typeof env.ASSETS.fetch === "function"),
     frontendCurrent,
     conclusion: frontendCurrent
-      ? "Worker and static assets are on the new frontend revision. If the page still looks old, the client is serving cached HTML."
-      : "Worker is current but the ASSETS binding is serving an older or incomplete public directory. Check Workers Builds root/deploy command so ./public is uploaded with the Worker.",
+      ? "Worker and static assets are on the V2 boot revision. HTML/JS/CSS are now served through the Worker with no-store headers."
+      : "Worker is current but the ASSETS binding is serving an older or incomplete public directory.",
     assets
   });
 }
@@ -300,7 +328,10 @@ export default {
 
     if (request.method === "GET" && url.pathname === "/config.js") {
       return resp(clientConfigJs(), "text/javascript; charset=utf-8", 200, {
-        "Cache-Control": "no-store"
+        "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+        "Pragma": "no-cache",
+        "Expires": "0",
+        "X-Unlimited-Frontend": APP_REVISION
       });
     }
 
@@ -321,7 +352,7 @@ export default {
     }
 
     if (env.ASSETS && typeof env.ASSETS.fetch === "function") {
-      return env.ASSETS.fetch(request);
+      return serveAsset(request, env);
     }
 
     return resp(
