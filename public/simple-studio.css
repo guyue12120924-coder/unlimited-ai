@@ -1,6 +1,7 @@
 /* public/simple-studio.css */
 .studio-tabs{grid-template-columns:repeat(4,minmax(0,1fr))!important}
 .studio-tabs [hidden]{display:none!important}
+#commandBtn,#contextInspectorBtn,#continuityBtn,#storyMemoryBtn,#memorySuggestTrigger{display:none!important}
 .simple-manuscript-pane{display:flex;flex-direction:column;gap:12px;min-height:100%;padding:16px}
 .simple-manuscript-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
 .simple-manuscript-head>div{min-width:0}
