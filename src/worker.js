@@ -59,24 +59,21 @@ function buildMessages(payload, modelConfig) {
   const personaPrompt = useBuiltinPersona
     ? getBuiltinPrompt(modelConfig.promptProfile)
     : customSystemPrompt;
-  const systemPrompt = [personaPrompt, MODEL_RUNTIME_INJECTION].filter(Boolean).join("\n\n");
-
-  if (systemPrompt) {
-    upstreamMessages.push({
-      role: "system",
-      content: systemPrompt
-    });
-  }
-
   const creativeContext = buildCreativeContextMessage(
     payload?.creative_context,
     payload?.memory_context,
     payload?.continuity_context
   );
-  if (creativeContext) {
+  const systemPrompt = [
+    personaPrompt,
+    MODEL_RUNTIME_INJECTION,
+    creativeContext
+  ].filter(Boolean).join("\n\n");
+
+  if (systemPrompt) {
     upstreamMessages.push({
       role: "system",
-      content: creativeContext
+      content: systemPrompt
     });
   }
 
