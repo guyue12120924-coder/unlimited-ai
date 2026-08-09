@@ -37,3 +37,9 @@ jobs:
           set -euo pipefail
           cp src/context.js /tmp/context-under-test.mjs
           CONTEXT_MODULE="file:///tmp/context-under-test.mjs" node tests/context-quality.test.mjs
+
+      - name: Check user product flow contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          node tests/product-flow.test.mjs
