@@ -1,0 +1,175 @@
+/* public/v2-product-phase3.css
+   V2.11-V2.15: long-form performance, data safety, empty states, and final polish. */
+
+/* V2.11 — let the browser skip offscreen work in long books/chats. */
+body.v215-polished #chat .row,
+body.v215-polished #studioChapterList .chapter-item,
+body.v215-polished .character-card,
+body.v215-polished .workflow-backup-item{
+  content-visibility:auto;
+  contain-intrinsic-size:auto 76px;
+}
+body.v215-polished #chat .row{contain-intrinsic-size:auto 140px}
+body.v211-long-workspace #pointerGlow,
+body.v211-long-workspace #particle-canvas{display:none!important}
+body.v211-long-workspace #studioLibrary,
+body.v211-long-workspace #studioPanel,
+body.v211-long-workspace #conversationPane .input-floating{
+  backdrop-filter:none!important;
+}
+body.v211-long-workspace #blur-bg,
+body.v211-long-workspace #clear-img{transform:none!important}
+body.v211-long-workspace #chat .row{animation:none!important}
+
+/* V2.12 — one calm place for safety controls. */
+body.v215-polished .v212-data-section{display:grid;gap:12px}
+body.v215-polished .v212-data-status{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:7px;
+}
+body.v215-polished .v212-data-status>div{
+  display:grid;
+  gap:4px;
+  padding:10px 11px;
+  border:1px solid var(--border);
+  border-radius:9px;
+  background:rgba(255,255,255,.028);
+}
+body.v215-polished .v212-data-status span{color:var(--muted);font-size:9px}
+body.v215-polished .v212-data-status strong{color:var(--text-soft);font-size:12px;font-weight:680}
+body.v215-polished .v212-data-status strong.warning{color:var(--danger)}
+body.v215-polished .v212-data-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+body.v215-polished .v212-data-actions button{
+  min-height:38px;
+  border:1px solid var(--border);
+  border-radius:9px;
+  background:rgba(255,255,255,.04);
+  color:var(--text-soft);
+  cursor:pointer;
+  font-size:11px;
+}
+body.v215-polished .v212-data-actions button:first-child{
+  border-color:color-mix(in srgb,var(--accent) 32%,var(--border));
+  background:color-mix(in srgb,var(--accent) 8%,rgba(255,255,255,.025));
+  color:var(--accent-strong);
+}
+body.v215-polished .v212-data-help{margin:0;color:var(--muted);font-size:9px;line-height:1.65}
+
+/* V2.13 — same empty-state language everywhere. */
+body.v215-polished .v213-empty-inline{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  padding:11px 12px;
+  border:1px dashed color-mix(in srgb,var(--accent) 20%,var(--v2-line,var(--border)));
+  border-radius:9px;
+  background:color-mix(in srgb,var(--accent) 4%,rgba(255,255,255,.015));
+}
+body.v215-polished .v213-empty-inline[hidden]{display:none!important}
+body.v215-polished .v213-empty-inline>div:first-child{min-width:0}
+body.v215-polished .v213-empty-inline strong{display:block;color:var(--text-soft);font-size:11px}
+body.v215-polished .v213-empty-inline p{margin:4px 0 0;color:var(--muted);font-size:9px;line-height:1.55}
+body.v215-polished .v213-empty-inline button,
+body.v215-polished .v213-empty-action{
+  flex:0 0 auto;
+  min-height:31px;
+  padding:0 10px;
+  border:1px solid color-mix(in srgb,var(--accent) 28%,var(--v2-line,var(--border)));
+  border-radius:7px;
+  background:transparent;
+  color:var(--accent-strong);
+  cursor:pointer;
+  font-size:9px;
+}
+body.v215-polished .v213-empty-inline button.primary{
+  background:var(--v2-accent-soft,color-mix(in srgb,var(--accent) 9%,transparent));
+}
+body.v215-polished .v213-draft-empty{margin-bottom:-3px}
+body.v215-polished .v213-draft-empty>div:last-child{display:flex;gap:6px}
+body.v215-polished .studio-empty-state .v213-empty-action{margin-top:12px}
+
+/* V2.14 — final interaction polish. */
+body.v215-polished button,
+body.v215-polished input,
+body.v215-polished textarea,
+body.v215-polished select{
+  transition:border-color .14s ease,background .14s ease,color .14s ease,box-shadow .14s ease,opacity .14s ease,transform .12s ease;
+}
+body.v215-polished button:not(:disabled):active{transform:translateY(1px)}
+body.v215-polished button:focus-visible,
+body.v215-polished input:focus-visible,
+body.v215-polished textarea:focus-visible,
+body.v215-polished select:focus-visible{
+  outline:2px solid color-mix(in srgb,var(--accent) 58%,white 10%);
+  outline-offset:2px;
+}
+body.v215-polished button:disabled{filter:saturate(.55)}
+body.v215-polished #studioPanelBody,
+body.v215-polished #studioLibrary .studio-list,
+body.v215-polished #history{
+  scrollbar-color:rgba(255,255,255,.18) transparent;
+  scrollbar-width:thin;
+}
+body.v215-polished #studioPanelBody::-webkit-scrollbar,
+body.v215-polished #studioLibrary .studio-list::-webkit-scrollbar{width:8px}
+body.v215-polished #studioPanelBody::-webkit-scrollbar-thumb,
+body.v215-polished #studioLibrary .studio-list::-webkit-scrollbar-thumb{
+  border:2px solid transparent;
+  border-radius:8px;
+  background:rgba(255,255,255,.16);
+  background-clip:padding-box;
+}
+body.v215-polished .simple-manuscript-head h3,
+body.v215-polished .studio-item-main span,
+body.v215-polished .character-card strong{text-wrap:pretty}
+body.v215-polished #simpleManuscriptStatus[data-save-state="saved"]::before,
+body.v215-polished #simpleManuscriptStatus[data-save-state="backup"]::before{
+  content:"";
+  display:inline-block;
+  width:5px;
+  height:5px;
+  margin-right:6px;
+  border-radius:50%;
+  background:var(--accent);
+  vertical-align:1px;
+}
+body.v215-polished #simpleManuscriptStatus[data-save-state="saving"]::before{
+  content:"";
+  display:inline-block;
+  width:5px;
+  height:5px;
+  margin-right:6px;
+  border-radius:50%;
+  background:var(--muted);
+  vertical-align:1px;
+}
+
+/* Reduced motion is a product feature, not an afterthought. */
+@media(prefers-reduced-motion:reduce){
+  body.v215-polished *,
+  body.v215-polished *::before,
+  body.v215-polished *::after{
+    scroll-behavior:auto!important;
+    animation-duration:.01ms!important;
+    animation-iteration-count:1!important;
+    transition-duration:.01ms!important;
+  }
+}
+
+/* Small-screen final pass. */
+@media(max-width:720px){
+  body.v215-polished .v212-data-status{grid-template-columns:1fr 1fr}
+  body.v215-polished .v212-data-status>div:last-child{grid-column:1/-1}
+  body.v215-polished .v212-data-actions{grid-template-columns:1fr}
+  body.v215-polished .v213-empty-inline{align-items:stretch;flex-direction:column}
+  body.v215-polished .v213-empty-inline>button{width:100%;min-height:36px}
+  body.v215-polished .v213-draft-empty>div:last-child{display:grid;grid-template-columns:1fr 1fr}
+  body.v215-polished .v213-draft-empty>div:last-child button{min-height:36px}
+}
+
+@media(max-width:420px){
+  body.v215-polished .v212-data-status{grid-template-columns:1fr}
+  body.v215-polished .v212-data-status>div:last-child{grid-column:auto}
+}
