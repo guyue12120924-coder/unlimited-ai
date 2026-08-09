@@ -1,7 +1,7 @@
 // public/boot-diagnostics.js
 // Captures startup failures so the UI never silently falls back to the base chat shell.
 (() => {
-  const REVISION = "2026-08-09-v1.4-manuscript-1";
+  const REVISION = "2026-08-09-v1.4-manuscript-ai-1";
   const errors = [];
 
   document.documentElement.dataset.frontendRevision = REVISION;
@@ -60,6 +60,7 @@
     const expected = [
       ["creativeWorkspace", "创作工作区"],
       ["manuscriptWorkspace", "章节正文"],
+      ["manuscriptAiReviewMask", "正文 AI 编辑器"],
       ["contextInspectorBtn", "上下文"],
       ["continuityBtn", "连续性"],
       ["storyMemoryBtn", "记忆"]
