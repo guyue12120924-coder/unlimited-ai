@@ -9,15 +9,15 @@
     ["goal", "核心目标"],
     ["voice", "说话特点"],
     ["secret", "人物秘密"],
-    ["status", "当前状态"],
+    ["currentState", "当前状态"],
     ["notes", "备注"]
   ];
   const WORLD_FIELDS = [
-    ["overview", "世界观概述"],
-    ["rules", "世界规则"],
+    ["worldOverview", "世界观概述"],
+    ["worldRules", "世界规则"],
     ["locations", "地点"],
     ["factions", "势力 / 组织"],
-    ["items", "重要物品"]
+    ["importantItems", "重要物品"]
   ];
   let observer = null;
 
@@ -191,6 +191,7 @@
     const emptyText = body.querySelector(".studio-empty-state p");
     if (emptyText) emptyText.textContent = "添加人物后，可以分别记录性格、目标、说话方式和当前状态。";
 
+    const { project } = activeData();
     body.querySelectorAll(".character-card").forEach((card) => {
       if (card.dataset.simpleProfileReady === "1") return;
       const source = card.querySelector("textarea[data-character-note]");
@@ -199,7 +200,11 @@
       source.classList.add("simple-profile-source");
       source.hidden = true;
 
-      const values = parseLabeledText(source.value, CHARACTER_FIELDS, "notes");
+      const characterId = card.dataset.characterId;
+      const character = project?.characters?.find((item) => item.id === characterId) || {};
+      const legacy = parseLabeledText(source.value, CHARACTER_FIELDS, "notes");
+      const values = Object.fromEntries(CHARACTER_FIELDS.map(([key]) => [key, String(character[key] || legacy[key] || "")]));
+
       const profile = document.createElement("div");
       profile.className = "simple-character-profile";
       profile.innerHTML = CHARACTER_FIELDS.map(([key, label]) => `
@@ -214,6 +219,8 @@
         profile.querySelectorAll("[data-character-profile-field]").forEach((field) => {
           next[field.dataset.characterProfileField] = field.value;
         });
+        // Keep the legacy note field synchronized so studio.js can save through its
+        // existing state object. data-migration.js expands this into real fields in storage.
         source.value = serializeLabeledText(next, CHARACTER_FIELDS);
         source.dispatchEvent(new Event("input", { bubbles: true }));
       };
@@ -228,14 +235,17 @@
     if (source && source.dataset.simpleWorldReady !== "1") {
       source.dataset.simpleWorldReady = "1";
       const sourceLabel = source.closest("label");
-      const values = parseLabeledText(source.value, WORLD_FIELDS, "overview");
+      const { project } = activeData();
+      const legacy = parseLabeledText(source.value, WORLD_FIELDS, "worldOverview");
+      const values = Object.fromEntries(WORLD_FIELDS.map(([key]) => [key, String(project?.[key] || legacy[key] || "")]));
+
       const wrapper = document.createElement("section");
       wrapper.className = "simple-world-fields simple-section-card";
       wrapper.innerHTML = `
         <div class="simple-section-title"><strong>世界设定</strong><span>只填和故事真正有关的规则与信息</span></div>
         <div class="simple-world-grid">
           ${WORLD_FIELDS.map(([key, label]) => `
-            <label class="${key === "overview" || key === "rules" ? "wide" : ""}">
+            <label class="${key === "worldOverview" || key === "worldRules" ? "wide" : ""}">
               <span>${escapeHtml(label)}</span>
               <textarea data-world-field="${key}" rows="3" placeholder="填写${escapeHtml(label)}">${escapeHtml(values[key])}</textarea>
             </label>`).join("")}
@@ -248,6 +258,7 @@
         wrapper.querySelectorAll("[data-world-field]").forEach((field) => {
           next[field.dataset.worldField] = field.value;
         });
+        // Keep the legacy world field synchronized for compatibility with studio.js.
         source.value = serializeLabeledText(next, WORLD_FIELDS);
         source.dispatchEvent(new Event("input", { bubbles: true }));
       });
@@ -312,10 +323,15 @@
       if (!url.includes("/api/chat") || typeof init?.body !== "string") return previousFetch(input, init);
       try {
         const payload = JSON.parse(init.body);
-        const { chapter } = activeData();
+        const { project, chapter } = activeData();
         const manuscript = String(chapter?.manuscript || "").trim();
         if (manuscript && payload.creative_context?.chapter) {
           payload.creative_context.chapter.manuscriptExcerpt = manuscript.slice(-CONTEXT_TAIL_CHARS);
+        }
+        if (project && payload.creative_context?.project) {
+          WORLD_FIELDS.forEach(([key]) => {
+            if (project[key]) payload.creative_context.project[key] = project[key];
+          });
         }
         return previousFetch(input, { ...init, body: JSON.stringify(payload) });
       } catch {
