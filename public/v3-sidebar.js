@@ -1,5 +1,5 @@
 // public/v3-sidebar.js
-// Stabilizes left navigation metadata and keeps it visually consistent without
+// Stabilizes left navigation metadata and cross-version decorative labels without
 // rewriting the underlying workspace/storage model.
 (() => {
   if (window.__UNLIMITED_V3_SIDEBAR__) return;
@@ -9,6 +9,17 @@
   const LS_SESSIONS = "cfw_sessions_v2";
   const NativeMutationObserver = window.__UNLIMITED_NATIVE_MUTATION_OBSERVER__ || window.MutationObserver;
   let refreshFrame = 0;
+
+  const STATIC_LABELS = [
+    [".brand-copy > span", "AI 小说创作"],
+    ["#studioLibrary .studio-panel-head .studio-kicker", "WRITING"],
+    ["#studioLibrary .studio-panel-head strong", "作品"],
+    ["#studioLibrary .chapter-section .library-title > span", "章节"],
+    ["#studioLibrary .chapter-section .library-title > button", "新建"],
+    ["#studioLibrary .library-section:not(.chapter-section) .library-title > span", "AI 对话"],
+    ["#studioLibrary .library-section:not(.chapter-section) .library-title > button", "新对话"],
+    ["#studioPanel .studio-panel-head .studio-kicker", "STORY"]
+  ];
 
   function readJson(key, fallback) {
     try {
@@ -41,6 +52,90 @@
 
   function setTextIfChanged(node, value) {
     if (node && node.textContent !== value) node.textContent = value;
+  }
+
+  function ensureVisualLockStyle() {
+    if (document.getElementById("v3StaticLabelsStyle")) return;
+    const style = document.createElement("style");
+    style.id = "v3StaticLabelsStyle";
+    style.textContent = `
+      /* Decorative labels are visually sourced here, not from competing legacy text nodes. */
+      .brand-copy > span {
+        min-height: 13px;
+        font-size: 0 !important;
+        line-height: 13px !important;
+        white-space: nowrap;
+      }
+      .brand-copy > span::after {
+        content: "AI 小说创作";
+        color: inherit;
+        font-size: 10px;
+        font-weight: 500;
+        line-height: 13px;
+      }
+      #studioLibrary .studio-panel-head .studio-kicker,
+      #studioPanel .studio-panel-head .studio-kicker {
+        min-height: 10px;
+        font-size: 0 !important;
+        line-height: 10px !important;
+        white-space: nowrap;
+      }
+      #studioLibrary .studio-panel-head .studio-kicker::after,
+      #studioPanel .studio-panel-head .studio-kicker::after {
+        font-size: 8px;
+        font-weight: 760;
+        line-height: 10px;
+        letter-spacing: .16em;
+      }
+      #studioLibrary .studio-panel-head .studio-kicker::after { content: "WRITING"; }
+      #studioPanel .studio-panel-head .studio-kicker::after { content: "STORY"; }
+
+      #studioLibrary .studio-panel-head strong {
+        min-height: 20px;
+        font-size: 0 !important;
+        line-height: 20px !important;
+      }
+      #studioLibrary .studio-panel-head strong::after {
+        content: "作品";
+        font-size: 15px;
+        font-weight: 700;
+        line-height: 20px;
+        letter-spacing: -.015em;
+      }
+
+      #studioLibrary .chapter-section .library-title > span,
+      #studioLibrary .library-section:not(.chapter-section) .library-title > span {
+        min-width: 48px;
+        font-size: 0 !important;
+        line-height: 14px !important;
+      }
+      #studioLibrary .chapter-section .library-title > span::after,
+      #studioLibrary .library-section:not(.chapter-section) .library-title > span::after {
+        font-size: 10px;
+        font-weight: 690;
+        line-height: 14px;
+        letter-spacing: .02em;
+      }
+      #studioLibrary .chapter-section .library-title > span::after { content: "章节"; }
+      #studioLibrary .library-section:not(.chapter-section) .library-title > span::after { content: "AI 对话"; }
+
+      .brand-copy > span,
+      #studioLibrary .studio-kicker,
+      #studioPanel .studio-kicker,
+      #studioLibrary .studio-panel-head strong,
+      #studioLibrary .library-title > span {
+        transition: none !important;
+        animation: none !important;
+        opacity: 1 !important;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  function patchStaticLabels() {
+    STATIC_LABELS.forEach(([selector, value]) => {
+      document.querySelectorAll(selector).forEach((node) => setTextIfChanged(node, value));
+    });
   }
 
   function patchChapterList() {
@@ -84,6 +179,8 @@
 
   function patchSidebar() {
     refreshFrame = 0;
+    ensureVisualLockStyle();
+    patchStaticLabels();
     patchChapterList();
     patchSessionList();
     document.getElementById("studioLibrary")?.classList.add("v3-sidebar-stable");
@@ -119,9 +216,23 @@
     observer.observe(root, { childList: true, subtree: true, characterData: true });
   }
 
+  function observeStaticNode(node) {
+    if (!node) return;
+    const observer = new NativeMutationObserver(() => {
+      // Cosmetic copy must never alternate between legacy and product wording.
+      patchStaticLabels();
+    });
+    observer.observe(node, { childList: true, subtree: true, characterData: true });
+  }
+
   function init() {
+    ensureVisualLockStyle();
     observeList("studioChapterList");
     observeList("studioSessionList");
+    observeStaticNode(document.querySelector(".brand-copy"));
+    observeStaticNode(document.querySelector("#studioLibrary .studio-panel-head"));
+    document.querySelectorAll("#studioLibrary .library-title").forEach(observeStaticNode);
+    observeStaticNode(document.querySelector("#studioPanel .studio-panel-head"));
 
     document.addEventListener("input", (event) => {
       if (event.target?.id === "simpleManuscriptEditor") patchCurrentChapterFromEditor(event.target);
@@ -131,10 +242,13 @@
     window.addEventListener("pageshow", schedulePatch);
 
     patchSidebar();
+    setTimeout(patchSidebar, 80);
+    setTimeout(patchSidebar, 260);
   }
 
   window.UnlimitedV3Sidebar = {
-    refresh: patchSidebar
+    refresh: patchSidebar,
+    refreshStaticLabels: patchStaticLabels
   };
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init, { once: true });
