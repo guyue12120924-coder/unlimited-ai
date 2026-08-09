@@ -1,0 +1,21 @@
+/* public/v2-experience.css */
+.v2-prompt-shortcuts{display:flex;flex-wrap:wrap;justify-content:center;gap:7px;max-width:660px;margin:18px auto 0}
+.v2-prompt-chip{min-height:34px;padding:0 12px;border:1px solid var(--border);border-radius:999px;background:color-mix(in srgb,var(--surface-soft) 86%,transparent);color:var(--text-soft);cursor:pointer;font-size:10px;font-weight:650;transition:border-color .16s ease,background .16s ease,color .16s ease,transform .16s ease}
+.v2-prompt-chip:hover{border-color:color-mix(in srgb,var(--accent) 52%,var(--border));background:color-mix(in srgb,var(--accent) 10%,var(--surface-soft));color:var(--text);transform:translateY(-1px)}
+.v2-prompt-chip:active{transform:translateY(0)}
+
+.v2-panel-hint{margin:0 0 11px;padding:10px 12px;border:1px solid color-mix(in srgb,var(--accent) 18%,var(--border));border-radius:8px;background:color-mix(in srgb,var(--accent) 5%,var(--surface-soft));color:var(--muted);font-size:10px;line-height:1.65}
+
+#simpleManuscriptStatus{display:inline-flex;align-items:center;gap:6px;min-height:20px;transition:color .16s ease}
+#simpleManuscriptStatus::before{content:"";width:6px;height:6px;border-radius:50%;background:color-mix(in srgb,var(--muted) 68%,transparent);transition:background .16s ease,box-shadow .16s ease}
+#simpleManuscriptStatus[data-save-state="saving"]{color:var(--text-soft)}
+#simpleManuscriptStatus[data-save-state="saving"]::before{background:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 11%,transparent)}
+#simpleManuscriptStatus[data-save-state="saved"]::before{background:color-mix(in srgb,var(--accent) 72%,var(--muted))}
+#simpleManuscriptStatus[data-save-state="backup"]{color:var(--text-soft)}
+#simpleManuscriptStatus[data-save-state="backup"]::before{background:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 12%,transparent)}
+
+@media(max-width:620px){
+  .v2-prompt-shortcuts{justify-content:flex-start;gap:6px;margin-top:15px}
+  .v2-prompt-chip{min-height:36px;padding:0 11px;font-size:10px}
+  .v2-panel-hint{font-size:10px}
+}
