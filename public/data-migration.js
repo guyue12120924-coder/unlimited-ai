@@ -40,18 +40,20 @@
     return `msg-${String(sessionId || "session")}-${role}-${index}-${fingerprint}`;
   }
 
+  function labelPattern(fields) {
+    const labels = fields.map(([, label]) => label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+    return new RegExp(`【(${labels.join("|")})】`, "g");
+  }
+
   function parseLabeledText(value, fields, fallbackKey) {
     const source = String(value || "").trim();
     const result = Object.fromEntries(fields.map(([key]) => [key, ""]));
-    if (!source) return result;
+    if (!source) return { values: result, structured: false };
 
-    const labels = fields.map(([, label]) => label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
-    const marker = new RegExp(`【(${labels.join("|")})】`, "g");
-    const matches = [...source.matchAll(marker)];
-
+    const matches = [...source.matchAll(labelPattern(fields))];
     if (!matches.length) {
       if (fallbackKey && Object.hasOwn(result, fallbackKey)) result[fallbackKey] = source;
-      return result;
+      return { values: result, structured: false };
     }
 
     matches.forEach((match, index) => {
@@ -61,7 +63,7 @@
       const end = matches[index + 1]?.index ?? source.length;
       result[key] = source.slice(start, end).trim();
     });
-    return result;
+    return { values: result, structured: true };
   }
 
   function normalizeCharacter(character) {
@@ -74,8 +76,14 @@
         character[key] = "";
         changed = true;
       }
-      if (!character[key] && parsed[key]) {
-        character[key] = parsed[key];
+
+      if (parsed.structured) {
+        if (character[key] !== parsed.values[key]) {
+          character[key] = parsed.values[key];
+          changed = true;
+        }
+      } else if (!character[key] && parsed.values[key]) {
+        character[key] = parsed.values[key];
         changed = true;
       }
     });
@@ -93,8 +101,14 @@
         project[key] = "";
         changed = true;
       }
-      if (!project[key] && parsed[key]) {
-        project[key] = parsed[key];
+
+      if (parsed.structured) {
+        if (project[key] !== parsed.values[key]) {
+          project[key] = parsed.values[key];
+          changed = true;
+        }
+      } else if (!project[key] && parsed.values[key]) {
+        project[key] = parsed.values[key];
         changed = true;
       }
     });
