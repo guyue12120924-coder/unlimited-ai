@@ -44,11 +44,33 @@
     });
   }
 
+  function keepEditorFocus(editor) {
+    if (!editor || editor.dataset.focusGuard === "1") return;
+    editor.dataset.focusGuard = "1";
+
+    // The legacy workspace has several delegated mouse/click handlers. Keep events
+    // originating from the manuscript textarea inside the textarea so releasing the
+    // mouse button cannot hand focus back to another workspace control.
+    ["pointerdown", "mousedown", "mouseup", "click"].forEach((type) => {
+      editor.addEventListener(type, (event) => {
+        event.stopPropagation();
+        if (type === "mouseup" || type === "click") {
+          requestAnimationFrame(() => {
+            if (document.activeElement !== editor) editor.focus({ preventScroll: true });
+          });
+        }
+      });
+    });
+  }
+
   function renderSimpleDraft() {
     const body = document.getElementById("studioPanelBody");
     const draftButton = document.querySelector('.studio-tabs [data-studio-tab="draft"]');
     if (!body || !draftButton?.classList.contains("active")) return;
-    if (body.querySelector("#simpleManuscriptPane")) return;
+    if (body.querySelector("#simpleManuscriptPane")) {
+      keepEditorFocus(body.querySelector("#simpleManuscriptEditor"));
+      return;
+    }
 
     const { chapter } = activeData();
     if (!chapter) {
@@ -87,6 +109,8 @@
           </div>
         </div>
       </div>`;
+
+    keepEditorFocus(body.querySelector("#simpleManuscriptEditor"));
   }
 
   function syncCount(editor) {
