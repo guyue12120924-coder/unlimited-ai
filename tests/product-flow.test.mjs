@@ -30,7 +30,9 @@ assert(order.every((value) => value >= 0), "all product experience scripts must 
 assert(order.every((value, position) => position === 0 || value > order[position - 1]), "product experience scripts must load in order");
 assert(order.every((value) => value > sidebarIndex), "stable sidebar must load before every product experience adapter");
 assert.match(index, /v3-product\.css/);
-assert.match(index, /v3\.0-sidebar-fix-1/);
+assert.match(index, /v3\.0-static-label-lock-1/);
+assert.match(index, /<span>AI 小说创作<\/span>/, "initial brand subtitle must already match the final V3 copy");
+assert.match(index, /v3-sidebar\.js\?v=20260809-2/, "static label fix must use a fresh browser cache key");
 assert.doesNotMatch(index, /removeAttribute\("data-v2-outline-ready"\)/, "temporary outline inline patch must live in V3 runtime, not index.html");
 
 assert.match(runtime, /CoordinatedMutationObserver/);
@@ -42,11 +44,19 @@ assert.match(runtime, /runtimeDiagnostics/);
 assert.match(runtime, /data-unlimited-runtime|dataset\.unlimitedRuntime/);
 
 assert.match(sidebar, /__UNLIMITED_NATIVE_MUTATION_OBSERVER__/);
+assert.match(sidebar, /STATIC_LABELS/);
+assert.match(sidebar, /AI 小说创作/);
+assert.match(sidebar, /WRITING/);
+assert.match(sidebar, /STORY/);
+assert.match(sidebar, /ensureVisualLockStyle/);
+assert.match(sidebar, /font-size: 0 !important/);
+assert.match(sidebar, /function patchStaticLabels\(/);
 assert.match(sidebar, /function patchChapterList\(/);
 assert.match(sidebar, /function patchSessionList\(/);
 assert.match(sidebar, /setTextIfChanged/);
 assert.match(sidebar, /字 · \$\{done \? "已完成" : "写作中"\}/);
 assert.match(sidebar, /same microtask checkpoint/);
+assert.match(sidebar, /Cosmetic copy must never alternate/);
 assert.match(sidebar, /UnlimitedV3Sidebar/);
 
 assert.match(experience, /isPristineProject/);
@@ -83,4 +93,4 @@ assert.match(phase3, /LONG_BOOK_CHARS = 120000/);
 assert.match(phase3, /runDiagnostics/);
 assert.match(phase3, /产品自检/);
 
-console.log("V3 product contract passed: coordinated runtime -> stable sidebar -> first run -> AI -> manuscript -> chapter completion -> mobile/data safety.");
+console.log("V3 product contract passed: coordinated runtime -> locked labels/sidebar -> first run -> AI -> manuscript -> chapter completion -> mobile/data safety.");
