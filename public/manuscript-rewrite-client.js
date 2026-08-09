@@ -1,6 +1,25 @@
 // public/manuscript-rewrite-client.js
 // Adapts the manuscript rewrite UI to the existing streaming /api/chat endpoint.
 (() => {
+  function loadInteractionReliabilityLayer() {
+    if (!document.getElementById("manuscriptInteractionStyles")) {
+      const link = document.createElement("link");
+      link.id = "manuscriptInteractionStyles";
+      link.rel = "stylesheet";
+      link.href = "/manuscript-interaction-fix.css?v=20260809-1";
+      document.head.appendChild(link);
+    }
+    if (!document.getElementById("manuscriptInteractionScript")) {
+      const script = document.createElement("script");
+      script.id = "manuscriptInteractionScript";
+      script.src = "/manuscript-interaction-fix.js?v=20260809-1";
+      script.defer = true;
+      document.body.appendChild(script);
+    }
+  }
+
+  loadInteractionReliabilityLayer();
+
   const MODE_INSTRUCTIONS = {
     polish: "润色文字。保持原意、剧情事实、人物行动和叙事视角不变，改善措辞、句式、节奏和自然度。不要无故扩写剧情。",
     expand: "扩写选中文字。在不改变既有剧情事实的前提下，补充必要的动作、感官、心理或环境细节，使场景更完整；不要引入未经上下文支持的新设定。",
