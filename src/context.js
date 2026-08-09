@@ -57,7 +57,7 @@ function characterText(character, continuityContext) {
     ["秘密", character.secret || character.secrets],
     ["当前状态", reviewedState || character.currentState || character.state],
     ["说话方式", character.voice || character.speech],
-    ["补充", character.description || character.notes || character.bio]
+    ["补充", character.description || character.notes || character.note || character.bio]
   ];
   const lines = preferred
     .map(([label, value]) => [label, text(value, 900)])
