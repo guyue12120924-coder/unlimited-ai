@@ -1,0 +1,17 @@
+/* public/user-flow.css */
+.user-flow-empty-action{margin-top:14px;min-width:150px;min-height:38px;padding:0 16px;border:1px solid color-mix(in srgb,var(--accent) 45%,var(--border));border-radius:8px;background:color-mix(in srgb,var(--accent) 12%,var(--surface-soft));color:var(--text);cursor:pointer;font-size:11px;font-weight:700}
+.user-flow-empty-action:hover{background:color-mix(in srgb,var(--accent) 18%,var(--surface-soft))}
+.workflow-actions{grid-template-columns:repeat(2,minmax(0,1fr))}
+.workflow-actions>#workflowCompleteChapter,.workflow-actions>#userFlowNextChapter{order:0}
+.workflow-actions>#workflowExportTxt{order:1}
+.user-flow-next{border-color:color-mix(in srgb,var(--accent) 48%,var(--border))!important;background:color-mix(in srgb,var(--accent) 14%,var(--surface-soft))!important;color:var(--text)!important;font-weight:700}
+.user-flow-auto-note{margin:0;padding:2px 1px;color:var(--muted);font-size:9px;line-height:1.55}
+.user-flow-more{border:1px solid var(--border);border-radius:8px;background:color-mix(in srgb,var(--surface-soft) 75%,transparent)}
+.user-flow-more>summary{padding:9px 11px;cursor:pointer;list-style:none;color:var(--muted);font-size:9px}
+.user-flow-more>summary::-webkit-details-marker{display:none}
+.user-flow-more-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;padding:0 9px 9px}
+.user-flow-more-actions button{min-height:32px;padding:0 9px;border:1px solid var(--border);border-radius:7px;background:var(--surface-soft);color:var(--text-soft);cursor:pointer;font-size:9px}
+.user-flow-more-actions button:hover{background:var(--surface-raised);color:var(--text)}
+.user-flow-more-actions #workflowCompleteChapter{border-style:dashed}
+.workflow-backups{margin-top:0}
+@media(max-width:620px){.workflow-actions,.user-flow-more-actions{grid-template-columns:1fr}.user-flow-auto-note{font-size:9px}}
