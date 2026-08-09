@@ -1,9 +1,28 @@
 // public/data-migration.js
-// Backward-compatible data normalization for persistent message IDs and manuscript links.
+// Backward-compatible data normalization for persistent message IDs, manuscript links,
+// structured character profiles, and structured world-building fields.
 (() => {
   const LS_SESSIONS = "cfw_sessions_v2";
   const LS_STUDIO = "cfw_studio_workspace_v1";
   const originalSetItem = Storage.prototype.setItem;
+
+  const CHARACTER_FIELDS = [
+    ["personality", "性格"],
+    ["appearance", "外貌"],
+    ["goal", "核心目标"],
+    ["voice", "说话特点"],
+    ["secret", "人物秘密"],
+    ["currentState", "当前状态"],
+    ["notes", "备注"]
+  ];
+
+  const WORLD_FIELDS = [
+    ["worldOverview", "世界观概述"],
+    ["worldRules", "世界规则"],
+    ["locations", "地点"],
+    ["factions", "势力 / 组织"],
+    ["importantItems", "重要物品"]
+  ];
 
   function hashText(value) {
     const source = String(value ?? "");
@@ -19,6 +38,68 @@
     const role = message?.role === "assistant" ? "a" : "u";
     const fingerprint = hashText(`${message?.content || ""}|${occurrence}`);
     return `msg-${String(sessionId || "session")}-${role}-${index}-${fingerprint}`;
+  }
+
+  function parseLabeledText(value, fields, fallbackKey) {
+    const source = String(value || "").trim();
+    const result = Object.fromEntries(fields.map(([key]) => [key, ""]));
+    if (!source) return result;
+
+    const labels = fields.map(([, label]) => label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+    const marker = new RegExp(`【(${labels.join("|")})】`, "g");
+    const matches = [...source.matchAll(marker)];
+
+    if (!matches.length) {
+      if (fallbackKey && Object.hasOwn(result, fallbackKey)) result[fallbackKey] = source;
+      return result;
+    }
+
+    matches.forEach((match, index) => {
+      const key = fields.find(([, label]) => label === match[1])?.[0];
+      if (!key) return;
+      const start = match.index + match[0].length;
+      const end = matches[index + 1]?.index ?? source.length;
+      result[key] = source.slice(start, end).trim();
+    });
+    return result;
+  }
+
+  function normalizeCharacter(character) {
+    if (!character || typeof character !== "object") return false;
+    let changed = false;
+    const parsed = parseLabeledText(character.note, CHARACTER_FIELDS, "notes");
+
+    CHARACTER_FIELDS.forEach(([key]) => {
+      if (typeof character[key] !== "string") {
+        character[key] = "";
+        changed = true;
+      }
+      if (!character[key] && parsed[key]) {
+        character[key] = parsed[key];
+        changed = true;
+      }
+    });
+
+    return changed;
+  }
+
+  function normalizeWorld(project) {
+    if (!project || typeof project !== "object") return false;
+    let changed = false;
+    const parsed = parseLabeledText(project.world, WORLD_FIELDS, "worldOverview");
+
+    WORLD_FIELDS.forEach(([key]) => {
+      if (typeof project[key] !== "string") {
+        project[key] = "";
+        changed = true;
+      }
+      if (!project[key] && parsed[key]) {
+        project[key] = parsed[key];
+        changed = true;
+      }
+    });
+
+    return changed;
   }
 
   function normalizeSessions(value) {
@@ -54,8 +135,26 @@
     const sessionMap = new Map((sessions || []).map((session) => [session.id, session]));
     let changed = false;
 
-    (workspace.projects || []).forEach((project) => {
-      if (!project || !Array.isArray(project.manuscriptClips)) return;
+    if (!Array.isArray(workspace.projects)) workspace.projects = [];
+
+    workspace.projects.forEach((project) => {
+      if (!project || typeof project !== "object") return;
+
+      if (!Array.isArray(project.characters)) {
+        project.characters = [];
+        changed = true;
+      }
+      project.characters.forEach((character) => {
+        if (normalizeCharacter(character)) changed = true;
+      });
+
+      if (normalizeWorld(project)) changed = true;
+
+      if (!Array.isArray(project.manuscriptClips)) {
+        project.manuscriptClips = [];
+        changed = true;
+      }
+
       project.manuscriptClips.forEach((clip) => {
         if (!clip || typeof clip !== "object") return;
         const session = sessionMap.get(clip.sessionId);
