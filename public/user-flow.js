@@ -227,7 +227,61 @@
     });
   }
 
+  function syncModeControl() {
+    const button = document.getElementById("userFlowPersonaToggle");
+    if (!button) return;
+    const builtin = (localStorage.getItem("cfw_use_builtin") ?? "1") === "1";
+    setNodeText(button, builtin ? "AI 写作模式：内置小说模式" : "AI 写作模式：自定义指令");
+  }
+
+  function ensureSettingsModeControl() {
+    const settings = document.getElementById("settings");
+    const customPrompt = document.getElementById("customPrompt");
+    if (!settings || !customPrompt) return;
+
+    const customSection = customPrompt.closest(".settings-section");
+    const customHeading = customSection?.querySelector("h3");
+    const customDescription = customSection?.querySelector(".section-heading p");
+    setNodeText(customHeading, "自定义写作指令");
+    setNodeText(customDescription, "只有切换到“自定义指令”模式时才会使用这里的内容。");
+
+    if (!document.getElementById("userFlowModeSection")) {
+      const section = document.createElement("div");
+      section.id = "userFlowModeSection";
+      section.className = "settings-section user-flow-mode-section";
+      section.innerHTML = `<div class="section-heading"><div><h3>AI 写作模式</h3><p>一般直接使用内置小说模式即可；有特殊写作要求时再切换。</p></div></div><button id="userFlowPersonaToggle" type="button"></button>`;
+      if (customSection) customSection.before(section);
+      else settings.appendChild(section);
+      document.getElementById("userFlowPersonaToggle")?.addEventListener("click", () => {
+        document.getElementById("personaToggle")?.click();
+        setTimeout(syncModeControl, 0);
+      });
+    }
+    syncModeControl();
+  }
+
+  function simplifyChrome() {
+    setNodeText(document.querySelector(".brand-copy span"), "AI 小说创作工作台");
+    setNodeText(document.querySelector("#emptyState .empty-kicker"), "AI ASSIST");
+    setNodeText(document.querySelector("#emptyState h1"), "从一句想法开始写");
+    setNodeText(
+      document.querySelector("#emptyState p"),
+      "在下方告诉 AI 你想写什么；满意的内容直接整理到右侧“正文”，人物、设定和连续性会自动参与后续创作。"
+    );
+
+    const message = document.getElementById("msg");
+    if (message && message.placeholder !== "描述剧情、让 AI 续写，或提出修改要求…") {
+      message.placeholder = "描述剧情、让 AI 续写，或提出修改要求…";
+    }
+
+    setNodeText(document.getElementById("workspaceSearch"), "搜索全部内容");
+    setNodeText(document.getElementById("studioNewSession"), "新建对话");
+    setNodeText(document.getElementById("addChapter"), "新建章节");
+    ensureSettingsModeControl();
+  }
+
   function refresh() {
+    simplifyChrome();
     renderEmptyAction();
     simplifyWorkflow();
   }
@@ -260,6 +314,7 @@
     }
     document.getElementById("studioLibrary")?.addEventListener("click", () => scheduleRefresh(90));
     document.querySelector(".studio-tabs")?.addEventListener("click", () => scheduleRefresh(40));
+    document.getElementById("settingsBtn")?.addEventListener("click", () => setTimeout(ensureSettingsModeControl, 0));
     refresh();
   }
 
