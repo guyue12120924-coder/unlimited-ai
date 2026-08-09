@@ -24,6 +24,10 @@
     return { state, project, chapters, chapter };
   }
 
+  function setNodeText(node, value) {
+    if (node && node.textContent !== value) node.textContent = value;
+  }
+
   function scheduleRefresh(delay = 30) {
     clearTimeout(refreshTimer);
     refreshTimer = setTimeout(refresh, delay);
@@ -154,13 +158,13 @@
     const exportMd = panel.querySelector("#workflowExportMd");
     const more = ensureMoreOptions(panel, actions);
 
-    if (exportTxt) exportTxt.textContent = "导出整本";
+    setNodeText(exportTxt, "导出整本");
     if (exportMd) {
-      exportMd.textContent = "导出 Markdown";
+      setNodeText(exportMd, "导出 Markdown");
       if (exportMd.parentElement !== more) more.appendChild(exportMd);
     }
     if (summary) {
-      summary.textContent = "手动更新章节摘要";
+      setNodeText(summary, "手动更新章节摘要");
       if (summary.parentElement !== more) more.appendChild(summary);
     }
 
@@ -175,15 +179,15 @@
         next.type = "button";
         actions.prepend(next);
       }
-      next.textContent = hasNext ? "进入下一章" : "新建下一章";
+      setNodeText(next, hasNext ? "进入下一章" : "新建下一章");
       if (complete) {
-        complete.textContent = "重新编辑本章";
+        setNodeText(complete, "重新编辑本章");
         if (complete.parentElement !== more) more.prepend(complete);
       }
     } else {
       next?.remove();
       if (complete) {
-        complete.textContent = "完成本章";
+        setNodeText(complete, "完成本章");
         if (complete.parentElement !== actions) actions.prepend(complete);
       }
     }
@@ -197,12 +201,18 @@
       note.className = "user-flow-auto-note";
       actions.after(note);
     }
-    note.textContent = chapter.done
-      ? "本章已完成。章节摘要、人物状态和未解决伏笔会在后台自动整理。"
-      : "写完后只需点击“完成本章”，摘要、人物状态和伏笔会自动整理，无需额外操作。";
+    setNodeText(
+      note,
+      chapter.done
+        ? "本章已完成。章节摘要、人物状态和未解决伏笔会在后台自动整理。"
+        : "写完后只需点击“完成本章”，摘要、人物状态和伏笔会自动整理，无需额外操作。"
+    );
 
     const backupSummary = panel.querySelector(".workflow-backups > summary");
-    if (backupSummary) backupSummary.innerHTML = `<span>备份与恢复</span><small>自动</small>`;
+    if (backupSummary) {
+      setNodeText(backupSummary.querySelector("span"), "备份与恢复");
+      setNodeText(backupSummary.querySelector("small"), "自动");
+    }
 
     const labels = [
       ["workflowTotalWords", "全书"],
@@ -213,7 +223,7 @@
     labels.forEach(([id, label]) => {
       const value = panel.querySelector(`#${id}`);
       const caption = value?.parentElement?.querySelector("span");
-      if (caption) caption.textContent = label;
+      setNodeText(caption, label);
     });
   }
 
@@ -234,7 +244,7 @@
       const complete = event.target.closest("#workflowCompleteChapter");
       if (complete) {
         const { project, chapter } = activeData();
-        if (project && chapter && !chapter.done) {
+        if (project && chapter && chapter.done) {
           setTimeout(() => syncAutomaticSummary(project.id, chapter.id), 450);
         }
       }
