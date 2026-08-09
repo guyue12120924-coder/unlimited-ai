@@ -80,6 +80,13 @@
     return null;
   }
 
+  function flashEditor(editor) {
+    editor.classList.remove("user-flow-manuscript-updated");
+    void editor.offsetWidth;
+    editor.classList.add("user-flow-manuscript-updated");
+    setTimeout(() => editor.classList.remove("user-flow-manuscript-updated"), 900);
+  }
+
   function appendToEditor(editor, text) {
     const incoming = String(text || "").trim();
     if (!editor || !incoming) return false;
@@ -87,15 +94,15 @@
     editor.value = existing ? `${existing}\n\n${incoming}` : incoming;
     editor.dispatchEvent(new Event("input", { bubbles: true }));
     editor.selectionStart = editor.selectionEnd = editor.value.length;
-    try { editor.focus({ preventScroll: true }); } catch { editor.focus(); }
-    editor.scrollTop = editor.scrollHeight;
+    flashEditor(editor);
     return true;
   }
 
   async function addReply(button, bubble, preferredSelection = "") {
     if (button.disabled) return;
+    const fullText = String(bubble.textContent || "").trim();
     const chosen = String(preferredSelection || selectedTextInside(bubble)).trim();
-    const text = chosen || String(bubble.textContent || "").trim();
+    const text = chosen || fullText;
     if (!text || text.startsWith("错误:")) return;
 
     button.disabled = true;
@@ -113,12 +120,19 @@
     const selection = window.getSelection?.();
     selection?.removeAllRanges?.();
     button.classList.add("added");
-    button.textContent = chosen ? "选中内容已加入" : "已加入正文";
+
+    if (!chosen || chosen === fullText) {
+      button.textContent = "已加入正文";
+      button.title = "这条回复已经加入当前正文";
+      return;
+    }
+
+    button.textContent = "选中内容已加入";
     setTimeout(() => {
       if (!document.contains(button)) return;
       button.disabled = false;
       button.classList.remove("added");
-      button.textContent = "继续加入";
+      button.textContent = "加入正文";
     }, 1400);
   }
 
@@ -139,6 +153,11 @@
     button.className = "user-flow-add-manuscript";
     button.textContent = "加入正文";
     button.title = "直接加入当前章节；先选中部分文字可只加入选中内容";
+
+    bubble.addEventListener("mouseup", () => {
+      if (button.disabled) return;
+      button.textContent = selectedTextInside(bubble) ? "加入选中内容" : "加入正文";
+    });
     button.addEventListener("mousedown", (event) => {
       pendingSelection = selectedTextInside(bubble);
       if (pendingSelection) event.preventDefault();
@@ -154,6 +173,7 @@
   }
 
   function enhanceReplies() {
+    updateHelpText();
     document.querySelectorAll("#chat .row.ai").forEach(enhanceRow);
   }
 
