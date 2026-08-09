@@ -4,6 +4,9 @@
   const LS_STUDIO = "cfw_studio_workspace_v1";
   let observer = null;
   let enhanceTimer = null;
+  let selectionAction = null;
+  let selectionBubble = null;
+  let selectionText = "";
 
   function readWorkspace() {
     try {
@@ -27,15 +30,25 @@
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  function selectedTextInside(bubble) {
+  function selectionInside(bubble) {
     const selection = window.getSelection?.();
-    if (!selection || selection.isCollapsed || !selection.rangeCount) return "";
+    if (!selection || selection.isCollapsed || !selection.rangeCount) return null;
     const range = selection.getRangeAt(0);
     const common = range.commonAncestorContainer?.nodeType === Node.ELEMENT_NODE
       ? range.commonAncestorContainer
       : range.commonAncestorContainer?.parentElement;
-    if (!common || !bubble.contains(common)) return "";
-    return String(selection.toString() || "").trim();
+    if (!common || !bubble.contains(common)) return null;
+
+    const text = String(selection.toString() || "").trim();
+    if (!text) return null;
+
+    let rect = range.getBoundingClientRect();
+    if (!rect?.width && !rect?.height) {
+      const rects = range.getClientRects();
+      rect = rects.length ? rects[rects.length - 1] : null;
+    }
+    if (!rect) return null;
+    return { text, rect };
   }
 
   function clickDraftTab() {
@@ -98,6 +111,12 @@
     return true;
   }
 
+  async function appendTextToManuscript(text) {
+    const editor = await ensureEditor();
+    if (!editor) return false;
+    return appendToEditor(editor, text);
+  }
+
   function markFullReplyState(button, bubble) {
     const { chapter } = activeData();
     const fullText = String(bubble.textContent || "").trim();
@@ -108,7 +127,7 @@
       button.disabled = false;
       button.classList.remove("added");
       button.textContent = "加入正文";
-      button.title = "直接加入当前章节；先选中部分文字可只加入选中内容";
+      button.title = "把整条回复加入当前章节";
     }
 
     if (alreadyInChapter) {
@@ -120,17 +139,15 @@
     }
   }
 
-  async function addReply(button, bubble, preferredSelection = "") {
+  async function addReply(button, bubble) {
     if (button.disabled) return;
     const fullText = String(bubble.textContent || "").trim();
-    const chosen = String(preferredSelection || selectedTextInside(bubble)).trim();
-    const text = chosen || fullText;
-    if (!text || text.startsWith("错误:")) return;
+    if (!fullText || fullText.startsWith("错误:")) return;
 
     button.disabled = true;
     button.textContent = "正在加入…";
-    const editor = await ensureEditor();
-    if (!editor || !appendToEditor(editor, text)) {
+    const saved = await appendTextToManuscript(fullText);
+    if (!saved) {
       button.textContent = "加入失败";
       setTimeout(() => {
         button.disabled = false;
@@ -139,25 +156,83 @@
       return;
     }
 
-    const selection = window.getSelection?.();
-    selection?.removeAllRanges?.();
+    const { chapter } = activeData();
+    if (chapter?.id) button.dataset.addedChapterId = chapter.id;
     button.classList.add("added");
+    button.textContent = "已加入正文";
+    button.title = "这条回复已经加入当前章节";
+  }
 
-    if (!chosen || chosen === fullText) {
-      const { chapter } = activeData();
-      if (chapter?.id) button.dataset.addedChapterId = chapter.id;
-      button.textContent = "已加入正文";
-      button.title = "这条回复已经加入当前章节";
+  function hideSelectionAction() {
+    if (!selectionAction) return;
+    selectionAction.hidden = true;
+    selectionAction.disabled = false;
+    selectionAction.textContent = "加入正文";
+    selectionBubble = null;
+    selectionText = "";
+  }
+
+  function positionSelectionAction(rect) {
+    if (!selectionAction || !rect) return;
+    selectionAction.hidden = false;
+    selectionAction.style.left = "0px";
+    selectionAction.style.top = "0px";
+
+    const buttonRect = selectionAction.getBoundingClientRect();
+    const margin = 8;
+    let left = rect.left + rect.width / 2 - buttonRect.width / 2;
+    let top = rect.top - buttonRect.height - margin;
+
+    if (top < margin) top = rect.bottom + margin;
+    left = Math.max(margin, Math.min(left, window.innerWidth - buttonRect.width - margin));
+    top = Math.max(margin, Math.min(top, window.innerHeight - buttonRect.height - margin));
+
+    selectionAction.style.left = `${Math.round(left)}px`;
+    selectionAction.style.top = `${Math.round(top)}px`;
+  }
+
+  function showSelectionAction(bubble) {
+    const selected = selectionInside(bubble);
+    if (!selected) {
+      hideSelectionAction();
       return;
     }
+    selectionBubble = bubble;
+    selectionText = selected.text;
+    selectionAction.title = `把选中的 ${selectionText.length} 个字符加入当前章节`;
+    positionSelectionAction(selected.rect);
+  }
 
-    button.textContent = "选中内容已加入";
-    setTimeout(() => {
-      if (!document.contains(button)) return;
-      button.disabled = false;
-      button.classList.remove("added");
-      button.textContent = "加入正文";
-    }, 1400);
+  function ensureSelectionAction() {
+    if (selectionAction) return selectionAction;
+    selectionAction = document.createElement("button");
+    selectionAction.id = "userFlowSelectionAction";
+    selectionAction.type = "button";
+    selectionAction.hidden = true;
+    selectionAction.textContent = "加入正文";
+    selectionAction.setAttribute("aria-label", "把选中的文字加入正文");
+    selectionAction.addEventListener("pointerdown", (event) => event.preventDefault());
+    selectionAction.addEventListener("click", async (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const text = selectionText;
+      if (!text || !selectionBubble || selectionAction.disabled) return;
+
+      selectionAction.disabled = true;
+      selectionAction.textContent = "正在加入…";
+      const saved = await appendTextToManuscript(text);
+      if (!saved) {
+        selectionAction.textContent = "加入失败";
+        setTimeout(hideSelectionAction, 1000);
+        return;
+      }
+
+      window.getSelection?.()?.removeAllRanges?.();
+      selectionAction.textContent = "已加入";
+      setTimeout(hideSelectionAction, 550);
+    });
+    document.body.appendChild(selectionAction);
+    return selectionAction;
   }
 
   function enhanceRow(row) {
@@ -176,26 +251,19 @@
     }
 
     const button = document.createElement("button");
-    let pendingSelection = "";
     button.type = "button";
     button.className = "user-flow-add-manuscript";
     button.textContent = "加入正文";
-    button.title = "直接加入当前章节；先选中部分文字可只加入选中内容";
+    button.title = "把整条回复加入当前章节";
 
     bubble.addEventListener("mouseup", () => {
-      if (button.disabled) return;
-      button.textContent = selectedTextInside(bubble) ? "加入选中内容" : "加入正文";
-    });
-    button.addEventListener("mousedown", (event) => {
-      pendingSelection = selectedTextInside(bubble);
-      if (pendingSelection) event.preventDefault();
+      requestAnimationFrame(() => showSelectionAction(bubble));
     });
     button.addEventListener("click", (event) => {
       event.preventDefault();
       event.stopPropagation();
-      const selected = pendingSelection;
-      pendingSelection = "";
-      addReply(button, bubble, selected);
+      hideSelectionAction();
+      addReply(button, bubble);
     });
     tools.appendChild(button);
     markFullReplyState(button, bubble);
@@ -204,6 +272,7 @@
   function enhanceReplies() {
     updateHelpText();
     document.querySelectorAll("#chat .row.ai").forEach(enhanceRow);
+    if (selectionBubble && !document.contains(selectionBubble)) hideSelectionAction();
   }
 
   function scheduleEnhance() {
@@ -213,11 +282,27 @@
 
   function updateHelpText() {
     const empty = document.querySelector("#emptyState p");
-    const text = "告诉 AI 你想写什么。生成后点“加入正文”即可直接放进当前章节；选中一部分文字后再点，只会加入选中的内容。";
+    const text = "告诉 AI 你想写什么。整段内容可直接点“加入正文”；只想保留其中一部分时，选中文字，旁边会直接出现“加入正文”。";
     if (empty && empty.textContent !== text) empty.textContent = text;
   }
 
+  function bindSelectionDismiss() {
+    document.addEventListener("pointerdown", (event) => {
+      if (!selectionAction || selectionAction.hidden) return;
+      if (selectionAction.contains(event.target)) return;
+      if (event.target.closest?.(".bubble.ai")) return;
+      hideSelectionAction();
+    }, true);
+    window.addEventListener("scroll", hideSelectionAction, true);
+    window.addEventListener("resize", hideSelectionAction);
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") hideSelectionAction();
+    });
+  }
+
   function init() {
+    ensureSelectionAction();
+    bindSelectionDismiss();
     updateHelpText();
     enhanceReplies();
     const chat = document.getElementById("chat");
