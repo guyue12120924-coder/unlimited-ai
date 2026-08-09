@@ -1,7 +1,7 @@
 // public/boot-diagnostics.js
 // Captures startup failures so the UI never silently falls back to the base chat shell.
 (() => {
-  const REVISION = "2026-08-09-v1.4-manuscript-interaction-1";
+  const REVISION = "2026-08-09-v1.4-manuscript-interaction-2";
   const errors = [];
 
   document.documentElement.dataset.frontendRevision = REVISION;
@@ -56,6 +56,19 @@
     document.body.appendChild(panel);
   }
 
+  function manuscriptInteractionIssues() {
+    const editor = document.getElementById("chapterManuscriptEditor");
+    if (!editor) return [];
+    const issues = [];
+    if (editor.disabled) issues.push("正文编辑器处于 disabled 状态");
+    if (editor.readOnly) issues.push("正文编辑器处于 readOnly 状态");
+    if (editor.tabIndex < 0) issues.push("正文编辑器无法通过焦点导航进入");
+    const style = getComputedStyle(editor);
+    if (style.pointerEvents === "none") issues.push("正文编辑器 pointer-events=none");
+    if (style.visibility === "hidden" || style.display === "none") issues.push("正文编辑器被 CSS 隐藏");
+    return issues;
+  }
+
   function verifyBoot() {
     const expected = [
       ["creativeWorkspace", "创作工作区"],
@@ -67,22 +80,27 @@
       ["storyMemoryBtn", "记忆"]
     ];
     const missing = expected.filter(([id]) => !document.getElementById(id));
-    if (!missing.length && !errors.length) {
+    const interactionIssues = manuscriptInteractionIssues();
+    if (!missing.length && !errors.length && !interactionIssues.length) {
       window.__UNLIMITED_BOOT__.ready = true;
       return;
     }
 
-    const missingText = missing.length
-      ? `缺少：${missing.map(([, label]) => label).join("、")}`
-      : "界面组件已挂载，但启动阶段检测到 JavaScript 错误。";
+    const parts = [];
+    if (missing.length) parts.push(`缺少：${missing.map(([, label]) => label).join("、")}`);
+    if (interactionIssues.length) parts.push(`正文交互异常：${interactionIssues.join("；")}`);
+    if (!missing.length && !interactionIssues.length && errors.length) {
+      parts.push("界面组件已挂载，但启动阶段检测到 JavaScript 错误。");
+    }
+
     const details = errors.length
       ? `\n捕获到的错误：\n${errors.slice(0, 8).join("\n\n")}`
-      : "\n没有捕获到 JS 异常，可能是脚本未执行或资源被浏览器阻止。";
-    showFailure(`${missingText}${details}`);
+      : "";
+    showFailure(`${parts.join("\n")}${details}`);
   }
 
   function scheduleVerification() {
-    window.setTimeout(verifyBoot, 2600);
+    window.setTimeout(verifyBoot, 2800);
   }
 
   if (document.readyState === "loading") {
