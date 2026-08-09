@@ -1,20 +1,27 @@
 // src/continuity-review.js
-// Generates reviewable chapter summaries and character-state updates without writing user data.
+// Generates reviewable chapter summaries, character-state updates, and plot-thread updates.
 
 import { DEFAULT_MODEL_ID, getModelCandidates } from "./models.js";
 
 const NVIDIA_CHAT_URL = "https://integrate.api.nvidia.com/v1/chat/completions";
 
 const SYSTEM_PROMPT = `
-你是长篇小说的连续性编辑。根据用户提供的当前章节资料和最近剧情，生成两类“建议更新”：
-1. chapterSummary：当前章节到目前为止的事实性摘要，供后续章节保持连续性。只记录已经发生的关键剧情，不写评价，不预测未来。
-2. characterStates：只为材料中确实出现、且状态发生了有后续价值变化的人物生成当前状态。状态应覆盖位置、身体/情绪、当前目标、已知或未知的重要信息等真正 relevant 的内容；没有变化就不要输出。
+你是长篇小说的连续性编辑。根据当前章节、已知人物状态、已有连续性线索和本章正文，生成严格基于事实的连续性更新。
 
-只依据材料，不推测，不新增剧情。仅返回 JSON，不要 Markdown，不要解释。
+返回三类结果：
+1. chapterSummary：当前章节已经发生的事实性摘要。突出关键行动、关系变化、重要信息和章节结尾状态；不评价、不预测、不续写。
+2. characterStates：只更新本章确实出现且状态发生了后续价值变化的人物。状态可包含位置、身体状况、情绪、当前目标、掌握的重要信息、关系立场等。没有变化不要输出。
+3. threadUpdates：维护需要后续记住的“未解决伏笔或持续事件”。已有线索如果被明确解决，返回同一个 id 且 status="resolved"；已有线索只是发生实质变化，返回同一个 id 且 status="open"；没有变化的已有线索不要重复返回。新出现且确实需要后续处理的事项 id 留空。
+
+threadUpdates.type 只允许：foreshadow、event、object、relationship。
+threadUpdates.status 只允许：open、resolved。
+不要把普通背景描写、一次性动作、已经结束且无后续影响的事件当成线索。
+
+只依据提供材料，不推测，不新增剧情。仅返回 JSON，不要 Markdown，不要解释。
 格式：
-{"chapterSummary":"...","characterStates":[{"name":"人物名","state":"..."}]}
+{"chapterSummary":"...","characterStates":[{"name":"人物名","state":"..."}],"threadUpdates":[{"id":"已有ID或空字符串","type":"foreshadow","title":"简短标题","detail":"需要后续保持一致的事实","status":"open"}]}
 
-chapterSummary 控制在 600 中文字以内；characterStates 最多 8 个，每个 state 控制在 220 中文字以内。没有可更新人物时返回空数组。
+chapterSummary 控制在 600 中文字以内；characterStates 最多 8 个，每个 state 控制在 220 中文字以内；threadUpdates 最多 12 个，每项 detail 控制在 220 中文字以内。
 `.trim();
 
 function clean(value, limit) {
@@ -23,14 +30,23 @@ function clean(value, limit) {
   return text.length > limit ? text.slice(0, limit) : text;
 }
 
+function normalizedThreadType(value) {
+  const type = clean(value, 40).toLowerCase();
+  return ["foreshadow", "event", "object", "relationship"].includes(type) ? type : "event";
+}
+
+function normalizedThreadStatus(value) {
+  return clean(value, 30).toLowerCase() === "resolved" ? "resolved" : "open";
+}
+
 function parseJson(raw) {
-  const text = String(raw || "").trim();
-  const candidates = [text];
-  const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  const source = String(raw || "").trim();
+  const candidates = [source];
+  const fenced = source.match(/```(?:json)?\s*([\s\S]*?)```/i);
   if (fenced?.[1]) candidates.push(fenced[1].trim());
-  const start = text.indexOf("{");
-  const end = text.lastIndexOf("}");
-  if (start >= 0 && end > start) candidates.push(text.slice(start, end + 1));
+  const start = source.indexOf("{");
+  const end = source.lastIndexOf("}");
+  if (start >= 0 && end > start) candidates.push(source.slice(start, end + 1));
 
   for (const candidate of candidates) {
     try {
@@ -42,22 +58,36 @@ function parseJson(raw) {
               .map((item) => ({ name: clean(item?.name, 100), state: clean(item?.state, 700) }))
               .filter((item) => item.name && item.state)
               .slice(0, 8)
+          : [],
+        threadUpdates: Array.isArray(parsed?.threadUpdates)
+          ? parsed.threadUpdates
+              .map((item) => ({
+                id: clean(item?.id, 120),
+                type: normalizedThreadType(item?.type),
+                title: clean(item?.title, 120),
+                detail: clean(item?.detail, 700),
+                status: normalizedThreadStatus(item?.status)
+              }))
+              .filter((item) => item.title && item.detail)
+              .slice(0, 12)
           : []
       };
     } catch {}
   }
-  return { chapterSummary: "", characterStates: [] };
+  return { chapterSummary: "", characterStates: [], threadUpdates: [] };
 }
 
 function buildRequest(modelConfig, payload) {
   const chapter = payload?.chapter && typeof payload.chapter === "object" ? payload.chapter : {};
   const characters = Array.isArray(payload?.characters) ? payload.characters.slice(0, 30) : [];
+  const existingThreads = Array.isArray(payload?.existingThreads) ? payload.existingThreads.slice(0, 30) : [];
+
   return {
     model: modelConfig.id,
     stream: false,
-    temperature: 0.15,
+    temperature: 0.1,
     top_p: 0.9,
-    max_tokens: 2400,
+    max_tokens: 3200,
     messages: [
       { role: "system", content: SYSTEM_PROMPT },
       {
@@ -70,9 +100,17 @@ function buildRequest(modelConfig, payload) {
           },
           knownCharacters: characters.map((item) => ({
             name: clean(typeof item === "string" ? item : item?.name || item?.title, 100),
+            role: clean(typeof item === "object" ? item?.role || item?.identity : "", 300),
             currentState: clean(typeof item === "object" ? item?.currentState || item?.state : "", 700)
           })).filter((item) => item.name),
-          recentText: clean(payload?.recentText, 18000)
+          existingThreads: existingThreads.map((item) => ({
+            id: clean(item?.id, 120),
+            type: normalizedThreadType(item?.type),
+            title: clean(item?.title, 120),
+            detail: clean(item?.detail, 700),
+            status: normalizedThreadStatus(item?.status)
+          })).filter((item) => item.id && item.title && item.detail),
+          chapterText: clean(payload?.recentText || payload?.chapterText, 30000)
         })
       }
     ]
@@ -107,7 +145,9 @@ async function callModel(modelConfig, payload, env) {
 
 export async function reviewContinuity(payload, env) {
   if (!env.NVIDIA_API_KEY) return { status: 503, body: { error: "Missing NVIDIA_API_KEY" } };
-  if (!clean(payload?.recentText, 18000)) return { status: 400, body: { error: "No recent story text" } };
+  if (!clean(payload?.recentText || payload?.chapterText, 30000)) {
+    return { status: 400, body: { error: "No story text" } };
+  }
 
   const requested = typeof payload?.model === "string" ? payload.model : DEFAULT_MODEL_ID;
   const candidates = getModelCandidates(requested);
