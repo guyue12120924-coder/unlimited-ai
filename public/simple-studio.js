@@ -89,7 +89,7 @@
     panel.querySelectorAll("input, textarea, select, button").forEach(stabilizeControl);
   }
 
-  function parseLabeledText(value, fields) {
+  function parseLabeledText(value, fields, fallbackKey = null) {
     const text = String(value || "").trim();
     const result = Object.fromEntries(fields.map(([key]) => [key, ""]));
     if (!text) return result;
@@ -98,7 +98,8 @@
     const marker = new RegExp(`【(${labels.join("|")})】`, "g");
     const matches = [...text.matchAll(marker)];
     if (!matches.length) {
-      result[fields.at(-1)[0]] = text;
+      const target = fallbackKey && Object.hasOwn(result, fallbackKey) ? fallbackKey : fields.at(-1)[0];
+      result[target] = text;
       return result;
     }
 
@@ -158,8 +159,8 @@
 
   function enhanceOutline() {
     const body = document.getElementById("studioPanelBody");
-    if (!body || activeTab() !== "outline" || body.dataset.simpleOutlineReady === "1") return;
-    body.dataset.simpleOutlineReady = "1";
+    if (!body || activeTab() !== "outline") return;
+    if (body.querySelector(".simple-section-title[data-section='story']")) return;
 
     const chapterEditor = body.querySelector(".chapter-editor");
     if (chapterEditor) {
@@ -176,7 +177,7 @@
     outline?.closest("label")?.querySelector("span")?.replaceChildren("总体大纲");
 
     const firstProjectLabel = description?.closest("label");
-    if (firstProjectLabel && !body.querySelector(".simple-section-title[data-section='story']")) {
+    if (firstProjectLabel) {
       firstProjectLabel.insertAdjacentHTML("beforebegin", `<div class="simple-section-title" data-section="story"><strong>整部作品</strong><span>简介、核心冲突与整体结构</span></div>`);
     }
 
@@ -198,7 +199,7 @@
       source.classList.add("simple-profile-source");
       source.hidden = true;
 
-      const values = parseLabeledText(source.value, CHARACTER_FIELDS);
+      const values = parseLabeledText(source.value, CHARACTER_FIELDS, "notes");
       const profile = document.createElement("div");
       profile.className = "simple-character-profile";
       profile.innerHTML = CHARACTER_FIELDS.map(([key, label]) => `
@@ -227,7 +228,7 @@
     if (source && source.dataset.simpleWorldReady !== "1") {
       source.dataset.simpleWorldReady = "1";
       const sourceLabel = source.closest("label");
-      const values = parseLabeledText(source.value, WORLD_FIELDS);
+      const values = parseLabeledText(source.value, WORLD_FIELDS, "overview");
       const wrapper = document.createElement("section");
       wrapper.className = "simple-world-fields simple-section-card";
       wrapper.innerHTML = `
