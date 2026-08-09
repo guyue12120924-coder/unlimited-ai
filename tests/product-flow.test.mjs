@@ -4,6 +4,7 @@ import fs from "node:fs";
 const read = (path) => fs.readFileSync(path, "utf8");
 
 const index = read("public/index.html");
+const runtime = read("public/v3-runtime.js");
 const experience = read("public/v2-experience.js");
 const userFlow = read("public/user-flow.js");
 const aiToManuscript = read("public/ai-to-manuscript.js");
@@ -11,15 +12,31 @@ const phase1 = read("public/v2-product.js");
 const phase2 = read("public/v2-product-phase2.js");
 const phase3 = read("public/v2-product-phase3.js");
 
+const runtimeIndex = index.indexOf("/v3-runtime.js");
 const order = [
+  "/user-flow.js",
+  "/ai-to-manuscript.js",
   "/v2-experience.js",
   "/v2-product.js",
   "/v2-product-phase2.js",
   "/v2-product-phase3.js"
 ].map((item) => index.indexOf(item));
 
+assert(runtimeIndex >= 0, "V3 runtime must be loaded");
 assert(order.every((value) => value >= 0), "all product experience scripts must be loaded");
-assert(order.every((value, index) => index === 0 || value > order[index - 1]), "product experience scripts must load in order");
+assert(order.every((value, position) => position === 0 || value > order[position - 1]), "product experience scripts must load in order");
+assert(order.every((value) => value > runtimeIndex), "V3 runtime must load before every product experience adapter");
+assert.match(index, /v3-product\.css/);
+assert.match(index, /v3\.0-runtime-1/);
+assert.doesNotMatch(index, /removeAttribute\("data-v2-outline-ready"\)/, "temporary outline inline patch must live in V3 runtime, not index.html");
+
+assert.match(runtime, /CoordinatedMutationObserver/);
+assert.match(runtime, /requestAnimationFrame\(flushObservers\)/);
+assert.match(runtime, /window\.MutationObserver = CoordinatedMutationObserver/);
+assert.match(runtime, /function refreshAll\(/);
+assert.match(runtime, /UnlimitedV3/);
+assert.match(runtime, /runtimeDiagnostics/);
+assert.match(runtime, /data-unlimited-runtime|dataset\.unlimitedRuntime/);
 
 assert.match(experience, /isPristineProject/);
 assert.match(experience, /createFirstChapter/);
@@ -55,4 +72,4 @@ assert.match(phase3, /LONG_BOOK_CHARS = 120000/);
 assert.match(phase3, /runDiagnostics/);
 assert.match(phase3, /产品自检/);
 
-console.log("Product flow contract passed: first run -> AI -> manuscript -> chapter completion -> mobile/data safety.");
+console.log("V3 product contract passed: coordinated runtime -> first run -> AI -> manuscript -> chapter completion -> mobile/data safety.");
