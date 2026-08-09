@@ -12,7 +12,7 @@ export const MODELS = [
       temperature: 1,
       top_p: 0.95,
       max_tokens: 16384,
-      reasoning_effort: "none"
+      chat_template_kwargs: { thinking: false }
     }
   },
   {
