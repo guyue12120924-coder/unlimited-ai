@@ -53,11 +53,11 @@ function characterText(character, continuityContext) {
     ["身份", character.role || character.identity || character.job],
     ["性格", character.personality],
     ["外貌", character.appearance],
-    ["目标", character.goal || character.goals],
-    ["秘密", character.secret || character.secrets],
+    ["核心目标", character.goal || character.goals],
+    ["人物秘密", character.secret || character.secrets],
     ["当前状态", reviewedState || character.currentState || character.state],
-    ["说话方式", character.voice || character.speech],
-    ["补充", character.description || character.notes || character.note || character.bio]
+    ["说话特点", character.voice || character.speech],
+    ["备注", character.notes || character.description || character.note || character.bio]
   ];
   const lines = preferred
     .map(([label, value]) => [label, text(value, 900)])
@@ -70,6 +70,23 @@ function characterText(character, continuityContext) {
     return `### ${name}\n${text(fallback, LIMITS.character)}`;
   }
   return `### ${name}\n${text(lines.join("\n"), LIMITS.character)}`;
+}
+
+function worldText(project) {
+  if (!project || typeof project !== "object") return "";
+  const structured = [
+    ["世界观概述", project.worldOverview],
+    ["世界规则", project.worldRules],
+    ["地点", project.locations],
+    ["势力 / 组织", project.factions],
+    ["重要物品", project.importantItems]
+  ]
+    .map(([label, value]) => [label, text(value, 1800)])
+    .filter(([, value]) => value)
+    .map(([label, value]) => `${label}：\n${value}`)
+    .join("\n\n");
+
+  return structured || text(project.world, LIMITS.world);
 }
 
 function memoryText(memory) {
@@ -160,7 +177,7 @@ export function buildCreativeContextMessage(context, memoryContext = null, conti
     characterSection,
     memorySection,
     section("人物关系", project.relations, LIMITS.relations),
-    section("世界观与规则", project.world, LIMITS.world),
+    section("世界观与规则", worldText(project), LIMITS.world),
     section("时间线", project.timeline, LIMITS.timeline),
     section("伏笔", project.foreshadow, LIMITS.foreshadow),
     section("作品简介", project.synopsis, LIMITS.synopsis),
