@@ -1,0 +1,48 @@
+/* public/v3-product.css
+   V3 normalization layer. Keep this file small: it only owns cross-version polish
+   and runtime-level fixes, while feature styles stay with their feature adapters. */
+
+html[data-unlimited-runtime="v3"] {
+  --v3-focus-ring: color-mix(in srgb, var(--accent) 34%, transparent);
+}
+
+html[data-unlimited-runtime="v3"] body.v2-product-ready.library-collapsed #libraryToggleBtn,
+html[data-unlimited-runtime="v3"] body.v2-product-ready.studio-collapsed #studioToggleBtn {
+  display: inline-flex !important;
+}
+
+html[data-unlimited-runtime="v3"] body.v2-product-ready button,
+html[data-unlimited-runtime="v3"] body.v2-product-ready input,
+html[data-unlimited-runtime="v3"] body.v2-product-ready textarea,
+html[data-unlimited-runtime="v3"] body.v2-product-ready select {
+  -webkit-tap-highlight-color: transparent;
+}
+
+html[data-unlimited-runtime="v3"] body.v2-product-ready button:focus-visible,
+html[data-unlimited-runtime="v3"] body.v2-product-ready input:focus-visible,
+html[data-unlimited-runtime="v3"] body.v2-product-ready textarea:focus-visible,
+html[data-unlimited-runtime="v3"] body.v2-product-ready select:focus-visible {
+  outline: 2px solid var(--v3-focus-ring);
+  outline-offset: 2px;
+}
+
+html[data-unlimited-runtime="v3"] body.v2-product-ready .studio-list-item,
+html[data-unlimited-runtime="v3"] body.v2-product-ready .character-card,
+html[data-unlimited-runtime="v3"] body.v2-product-ready .workflow-panel,
+html[data-unlimited-runtime="v3"] body.v2-product-ready .v26-world-card {
+  contain: layout paint style;
+}
+
+html[data-unlimited-runtime="v3"] body.v2-product-ready .studio-panel-head,
+html[data-unlimited-runtime="v3"] body.v2-product-ready .studio-tabs,
+html[data-unlimited-runtime="v3"] body.v2-product-ready .simple-manuscript-head {
+  isolation: isolate;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-unlimited-runtime="v3"] *,
+  html[data-unlimited-runtime="v3"] *::before,
+  html[data-unlimited-runtime="v3"] *::after {
+    scroll-behavior: auto !important;
+  }
+}
