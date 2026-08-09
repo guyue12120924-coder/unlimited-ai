@@ -3,8 +3,8 @@
 
 export const MODELS = [
   {
-    id: "nvidia/nemotron-3-super-120b-a12b",
-    label: "nemotron-3-super-120b",
+    id: "deepseek-ai/deepseek-v4-pro",
+    label: "deepseek-v4-pro",
     promptProfile: "creative-primary",
     provider: "NVIDIA Free Endpoint",
     requestTimeoutMs: 30000,
@@ -12,8 +12,7 @@ export const MODELS = [
       temperature: 1,
       top_p: 0.95,
       max_tokens: 16384,
-      chat_template_kwargs: { enable_thinking: true },
-      reasoning_budget: 16384
+      reasoning_effort: "none"
     }
   },
   {
@@ -41,10 +40,10 @@ export const MODELS = [
   }
 ];
 
-export const DEFAULT_MODEL_ID = "nvidia/nemotron-3-super-120b-a12b";
+export const DEFAULT_MODEL_ID = "deepseek-ai/deepseek-v4-pro";
 
 export const MODEL_FALLBACK_ORDER = [
-  "nvidia/nemotron-3-super-120b-a12b",
+  "deepseek-ai/deepseek-v4-pro",
   "nvidia/nemotron-3-nano-30b-a3b",
   "openai/gpt-oss-120b"
 ];
