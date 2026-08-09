@@ -64,7 +64,7 @@
   }
 
   async function ensureEditor() {
-    let { chapters, chapter } = activeData();
+    const { chapters, chapter } = activeData();
     if (!chapter) {
       if (chapters.length) openChapter(chapters[0].id);
       else if (!createFirstChapter()) return null;
@@ -92,9 +92,9 @@
     return true;
   }
 
-  async function addReply(button, bubble) {
+  async function addReply(button, bubble, preferredSelection = "") {
     if (button.disabled) return;
-    const chosen = selectedTextInside(bubble);
+    const chosen = String(preferredSelection || selectedTextInside(bubble)).trim();
     const text = chosen || String(bubble.textContent || "").trim();
     if (!text || text.startsWith("错误:")) return;
 
@@ -110,7 +110,8 @@
       return;
     }
 
-    window.getSelection?.()?.removeAllRanges?.();
+    const selection = window.getSelection?.();
+    selection?.removeAllRanges?.();
     button.classList.add("added");
     button.textContent = chosen ? "选中内容已加入" : "已加入正文";
     setTimeout(() => {
@@ -133,14 +134,21 @@
     if (tools.querySelector(".user-flow-add-manuscript")) return;
 
     const button = document.createElement("button");
+    let pendingSelection = "";
     button.type = "button";
     button.className = "user-flow-add-manuscript";
     button.textContent = "加入正文";
     button.title = "直接加入当前章节；先选中部分文字可只加入选中内容";
+    button.addEventListener("mousedown", (event) => {
+      pendingSelection = selectedTextInside(bubble);
+      if (pendingSelection) event.preventDefault();
+    });
     button.addEventListener("click", (event) => {
       event.preventDefault();
       event.stopPropagation();
-      addReply(button, bubble);
+      const selected = pendingSelection;
+      pendingSelection = "";
+      addReply(button, bubble, selected);
     });
     tools.appendChild(button);
   }
