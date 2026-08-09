@@ -1,0 +1,22 @@
+/* public/simple-studio.css */
+.studio-tabs{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+.studio-tabs [hidden]{display:none!important}
+.simple-manuscript-pane{display:flex;flex-direction:column;gap:12px;min-height:100%;padding:16px}
+.simple-manuscript-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.simple-manuscript-head>div{min-width:0}
+.simple-manuscript-head span{display:block;color:var(--accent);font-size:10px;font-weight:700}
+.simple-manuscript-head h3{margin:5px 0 0;overflow:hidden;color:var(--text);font-size:18px;text-overflow:ellipsis;white-space:nowrap}
+.simple-manuscript-head>strong{flex:0 0 auto;color:var(--text-soft);font-size:11px;font-weight:600}
+#simpleManuscriptEditor{display:block;width:100%;min-height:520px;flex:1;resize:vertical;padding:16px;border:1px solid var(--border-default,var(--border));border-radius:8px;outline:none;background:var(--bg-surface,var(--surface-solid));color:var(--text);font:15px/1.9 Georgia,"Noto Serif SC","Songti SC",serif;caret-color:var(--accent);pointer-events:auto;user-select:text;-webkit-user-select:text}
+#simpleManuscriptEditor:focus{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 14%,transparent)}
+#simpleManuscriptEditor::placeholder{color:var(--muted);opacity:1}
+.simple-manuscript-footer{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.simple-manuscript-footer>span{color:var(--muted);font-size:10px}
+.simple-manuscript-footer>div{display:flex;gap:7px}
+.simple-manuscript-footer button{min-height:34px;padding:0 11px;border:1px solid var(--border-default,var(--border));border-radius:7px;background:var(--surface-soft);color:var(--text-soft);cursor:pointer}
+.simple-manuscript-footer button:hover{color:var(--text);background:var(--bg-surface-hover,var(--surface-raised))}
+.simple-manuscript-empty{display:grid;place-items:center;align-content:center;min-height:280px;text-align:center}
+.simple-manuscript-empty strong{font-size:16px;color:var(--text)}
+.simple-manuscript-empty p{max-width:260px;margin:8px 0 0;color:var(--muted);font-size:11px;line-height:1.7}
+@media(max-width:980px){#simpleManuscriptEditor{min-height:420px}}
+@media(max-width:620px){.simple-manuscript-pane{padding:12px}.simple-manuscript-head{flex-direction:column}#simpleManuscriptEditor{min-height:360px;padding:13px;font-size:14px}.simple-manuscript-footer{align-items:stretch;flex-direction:column}.simple-manuscript-footer>div{display:grid;grid-template-columns:1fr 1fr}.simple-manuscript-footer button{width:100%}}
