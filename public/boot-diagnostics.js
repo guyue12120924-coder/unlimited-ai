@@ -66,15 +66,18 @@
       ["storyMemoryBtn", "记忆"]
     ];
     const missing = expected.filter(([id]) => !document.getElementById(id));
-    if (!missing.length) {
+    if (!missing.length && !errors.length) {
       window.__UNLIMITED_BOOT__.ready = true;
       return;
     }
 
+    const missingText = missing.length
+      ? `缺少：${missing.map(([, label]) => label).join("、")}`
+      : "界面组件已挂载，但启动阶段检测到 JavaScript 错误。";
     const details = errors.length
       ? `\n捕获到的错误：\n${errors.slice(0, 8).join("\n\n")}`
       : "\n没有捕获到 JS 异常，可能是脚本未执行或资源被浏览器阻止。";
-    showFailure(`缺少：${missing.map(([, label]) => label).join("、")}${details}`);
+    showFailure(`${missingText}${details}`);
   }
 
   function scheduleVerification() {
