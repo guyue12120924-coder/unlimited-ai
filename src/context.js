@@ -13,6 +13,7 @@ const LIMITS = {
   relations: 4500,
   memories: 9000,
   chapter: 5000,
+  manuscript: 7000,
   character: 2600,
   previousChapter: 3500
 };
@@ -134,6 +135,14 @@ export function buildCreativeContextMessage(context, memoryContext = null, conti
     chapter.targetWords ? `目标字数：${chapter.targetWords}` : ""
   ].filter(Boolean).join("\n"), LIMITS.chapter);
 
+  const manuscriptSection = chapter.manuscriptExcerpt
+    ? section(
+      "当前章节正文末尾",
+      `这是已经写入章节正文的最近内容。续写时应直接承接其叙事视角、语气、人物位置和最后发生的动作，不要重复已有段落。\n${chapter.manuscriptExcerpt}`,
+      LIMITS.manuscript
+    )
+    : "";
+
   const characterSection = characters.length
     ? `## 相关人物\n${characters.map((character) => characterText(character, continuityContext)).filter(Boolean).join("\n\n")}`
     : "";
@@ -146,6 +155,7 @@ export function buildCreativeContextMessage(context, memoryContext = null, conti
   const sections = [
     identity,
     currentChapter,
+    manuscriptSection,
     section("上一章摘要", reviewedPreviousChapterSummary || safeContext.previousChapterSummary, LIMITS.previousChapter),
     characterSection,
     memorySection,
