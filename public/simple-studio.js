@@ -1,6 +1,5 @@
 // public/simple-studio.js
-// Minimal chapter writing layer: one native textarea, auto-save through studio.js,
-// and a small amount of context support. No modal editor or rewrite workflow.
+// Minimal chapter writing layer plus interaction stabilization for the four primary tabs.
 (() => {
   const LS_STUDIO = "cfw_studio_workspace_v1";
   const CONTEXT_TAIL_CHARS = 6500;
@@ -44,23 +43,34 @@
     });
   }
 
-  function keepEditorFocus(editor) {
-    if (!editor || editor.dataset.focusGuard === "1") return;
-    editor.dataset.focusGuard = "1";
+  function stabilizeControl(control) {
+    if (!control || control.dataset.simpleInteractionGuard === "1") return;
+    control.dataset.simpleInteractionGuard = "1";
 
-    // The legacy workspace has several delegated mouse/click handlers. Keep events
-    // originating from the manuscript textarea inside the textarea so releasing the
-    // mouse button cannot hand focus back to another workspace control.
+    const isField = control.matches("input, textarea, select");
     ["pointerdown", "mousedown", "mouseup", "click"].forEach((type) => {
-      editor.addEventListener(type, (event) => {
+      control.addEventListener(type, (event) => {
+        // Keep legacy delegated workspace mouse handlers from stealing focus or
+        // swallowing button clicks. Do not preventDefault: native caret/select/button
+        // behavior remains intact.
         event.stopPropagation();
-        if (type === "mouseup" || type === "click") {
+
+        if (isField && (type === "mouseup" || type === "click")) {
           requestAnimationFrame(() => {
-            if (document.activeElement !== editor) editor.focus({ preventScroll: true });
+            if (!document.contains(control) || control.disabled) return;
+            if (document.activeElement !== control) {
+              try { control.focus({ preventScroll: true }); } catch { control.focus(); }
+            }
           });
         }
       });
     });
+  }
+
+  function stabilizePanelControls() {
+    const panel = document.getElementById("studioPanelBody");
+    if (!panel) return;
+    panel.querySelectorAll("input, textarea, select, button").forEach(stabilizeControl);
   }
 
   function renderSimpleDraft() {
@@ -68,7 +78,7 @@
     const draftButton = document.querySelector('.studio-tabs [data-studio-tab="draft"]');
     if (!body || !draftButton?.classList.contains("active")) return;
     if (body.querySelector("#simpleManuscriptPane")) {
-      keepEditorFocus(body.querySelector("#simpleManuscriptEditor"));
+      stabilizePanelControls();
       return;
     }
 
@@ -110,7 +120,7 @@
         </div>
       </div>`;
 
-    keepEditorFocus(body.querySelector("#simpleManuscriptEditor"));
+    stabilizePanelControls();
   }
 
   function syncCount(editor) {
@@ -186,6 +196,7 @@
   function refresh() {
     simplifyTabs();
     renderSimpleDraft();
+    stabilizePanelControls();
   }
 
   function init() {
@@ -196,7 +207,7 @@
     const body = document.getElementById("studioPanelBody");
     if (body) {
       observer = new MutationObserver(() => requestAnimationFrame(refresh));
-      observer.observe(body, { childList: true, subtree: false });
+      observer.observe(body, { childList: true, subtree: true });
     }
 
     document.querySelector(".studio-tabs")?.addEventListener("click", () => setTimeout(refresh, 0));
