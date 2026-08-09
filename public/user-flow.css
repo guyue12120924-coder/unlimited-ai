@@ -2,6 +2,11 @@
 #readerBtn,#personaToggle,#donateBtn,#githubBtn{display:none!important}
 #readProject,#exportProject,#backupWorkspace,#restoreWorkspace{display:none!important}
 .library-footer{grid-template-columns:1fr!important}
+#chat .reader-toggle{display:none!important}
+.user-flow-add-manuscript{min-height:28px;padding:0 10px;border:1px solid color-mix(in srgb,var(--accent) 40%,var(--border));border-radius:7px;background:color-mix(in srgb,var(--accent) 10%,var(--surface-soft));color:var(--text-soft);cursor:pointer;font-size:9px;font-weight:700;white-space:nowrap;transition:background .15s ease,border-color .15s ease,color .15s ease}
+.user-flow-add-manuscript:hover{border-color:color-mix(in srgb,var(--accent) 58%,var(--border));background:color-mix(in srgb,var(--accent) 17%,var(--surface-soft));color:var(--text)}
+.user-flow-add-manuscript:disabled{cursor:default;opacity:.82}
+.user-flow-add-manuscript.added{border-color:color-mix(in srgb,var(--accent) 62%,var(--border));background:color-mix(in srgb,var(--accent) 20%,var(--surface-soft));color:var(--text)}
 .user-flow-empty-action{margin-top:14px;min-width:150px;min-height:38px;padding:0 16px;border:1px solid color-mix(in srgb,var(--accent) 45%,var(--border));border-radius:8px;background:color-mix(in srgb,var(--accent) 12%,var(--surface-soft));color:var(--text);cursor:pointer;font-size:11px;font-weight:700}
 .user-flow-empty-action:hover{background:color-mix(in srgb,var(--accent) 18%,var(--surface-soft))}
 .workflow-actions{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -21,4 +26,4 @@
 .user-flow-mode-section .section-heading{margin:0}
 #userFlowPersonaToggle{width:100%;min-height:38px;border:1px solid var(--border);border-radius:9px;background:var(--surface-soft);color:var(--text);cursor:pointer;font-size:11px;font-weight:700}
 #userFlowPersonaToggle:hover{background:var(--surface-raised)}
-@media(max-width:620px){.workflow-actions,.user-flow-more-actions{grid-template-columns:1fr}.user-flow-auto-note{font-size:9px}}
+@media(max-width:620px){.workflow-actions,.user-flow-more-actions{grid-template-columns:1fr}.user-flow-auto-note{font-size:9px}.user-flow-add-manuscript{min-height:30px;padding:0 9px}}
