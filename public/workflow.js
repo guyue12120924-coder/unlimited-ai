@@ -303,7 +303,10 @@
       if (!saveChapterFieldThroughStudio("summary", summary)) throw new Error("摘要保存失败");
       createBackup("生成章节摘要", true);
       button.textContent = "摘要已保存";
-      setTimeout(scheduleRefresh, 60);
+      setTimeout(() => {
+        if (document.contains(button)) button.textContent = "重新生成摘要";
+        scheduleRefresh();
+      }, 900);
     } catch (error) {
       alert(`生成摘要失败：${error.message}`);
       button.textContent = previousText;
@@ -475,7 +478,7 @@
 
       const remove = event.target.closest(".workflow-delete-backup");
       if (remove) deleteBackup(remove.closest("[data-backup-id]")?.dataset.backupId);
-    });
+    }, true);
   }
 
   function startAutomaticBackups() {
@@ -492,7 +495,7 @@
     const body = document.getElementById("studioPanelBody");
     if (body) {
       observer = new MutationObserver(scheduleRefresh);
-      observer.observe(body, { childList: true, subtree: true });
+      observer.observe(body, { childList: true, subtree: false });
     }
     document.getElementById("studioLibrary")?.addEventListener("click", () => setTimeout(scheduleRefresh, 70));
     document.querySelector(".studio-tabs")?.addEventListener("click", () => setTimeout(scheduleRefresh, 20));
