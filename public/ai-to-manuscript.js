@@ -98,6 +98,28 @@
     return true;
   }
 
+  function markFullReplyState(button, bubble) {
+    const { chapter } = activeData();
+    const fullText = String(bubble.textContent || "").trim();
+    const alreadyInChapter = Boolean(chapter?.id && fullText && String(chapter.manuscript || "").includes(fullText));
+
+    if (button.dataset.addedChapterId && button.dataset.addedChapterId !== (chapter?.id || "")) {
+      delete button.dataset.addedChapterId;
+      button.disabled = false;
+      button.classList.remove("added");
+      button.textContent = "加入正文";
+      button.title = "直接加入当前章节；先选中部分文字可只加入选中内容";
+    }
+
+    if (alreadyInChapter) {
+      button.dataset.addedChapterId = chapter.id;
+      button.disabled = true;
+      button.classList.add("added");
+      button.textContent = "已加入正文";
+      button.title = "这条回复已经加入当前章节";
+    }
+  }
+
   async function addReply(button, bubble, preferredSelection = "") {
     if (button.disabled) return;
     const fullText = String(bubble.textContent || "").trim();
@@ -122,8 +144,10 @@
     button.classList.add("added");
 
     if (!chosen || chosen === fullText) {
+      const { chapter } = activeData();
+      if (chapter?.id) button.dataset.addedChapterId = chapter.id;
       button.textContent = "已加入正文";
-      button.title = "这条回复已经加入当前正文";
+      button.title = "这条回复已经加入当前章节";
       return;
     }
 
@@ -145,7 +169,11 @@
     if (!text || text.startsWith("错误:")) return;
 
     tools.querySelectorAll(".reader-toggle").forEach((button) => button.remove());
-    if (tools.querySelector(".user-flow-add-manuscript")) return;
+    const existing = tools.querySelector(".user-flow-add-manuscript");
+    if (existing) {
+      markFullReplyState(existing, bubble);
+      return;
+    }
 
     const button = document.createElement("button");
     let pendingSelection = "";
@@ -170,6 +198,7 @@
       addReply(button, bubble, selected);
     });
     tools.appendChild(button);
+    markFullReplyState(button, bubble);
   }
 
   function enhanceReplies() {
@@ -197,6 +226,7 @@
       observer.observe(chat, { childList: true, subtree: true, characterData: true });
     }
     document.getElementById("sessionList")?.addEventListener("click", () => setTimeout(enhanceReplies, 80));
+    document.getElementById("studioLibrary")?.addEventListener("click", () => setTimeout(enhanceReplies, 80));
   }
 
   window.UnlimitedAiToManuscript = { enhance: enhanceReplies };
