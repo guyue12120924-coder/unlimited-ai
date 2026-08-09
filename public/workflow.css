@@ -1,0 +1,32 @@
+/* public/workflow.css */
+.workflow-panel{display:flex;flex-direction:column;gap:10px;padding-top:4px;border-top:1px solid var(--border)}
+.workflow-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
+.workflow-stats>div{min-width:0;padding:9px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface-soft)}
+.workflow-stats strong{display:block;overflow:hidden;color:var(--text);font-size:14px;line-height:1.2;text-overflow:ellipsis;white-space:nowrap}
+.workflow-stats span{display:block;margin-top:4px;color:var(--muted);font-size:9px}
+.workflow-progress{position:relative;height:22px;overflow:hidden;border:1px solid var(--border);border-radius:7px;background:var(--surface-soft)}
+.workflow-progress i{position:absolute;inset:0 auto 0 0;display:block;max-width:100%;background:color-mix(in srgb,var(--accent) 22%,transparent);transition:width .18s ease}
+.workflow-progress span{position:relative;z-index:1;display:flex;align-items:center;height:100%;padding:0 9px;color:var(--text-soft);font-size:9px}
+.workflow-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.workflow-actions button,.workflow-backups button{min-height:34px;padding:0 10px;border:1px solid var(--border);border-radius:7px;background:var(--surface-soft);color:var(--text-soft);cursor:pointer;font-size:10px}
+.workflow-actions button:hover,.workflow-backups button:hover{background:var(--surface-raised);color:var(--text)}
+.workflow-actions button.primary{border-color:color-mix(in srgb,var(--accent) 45%,var(--border));background:color-mix(in srgb,var(--accent) 12%,var(--surface-soft));color:var(--text)}
+.workflow-actions button:disabled{cursor:not-allowed;opacity:.45}
+.workflow-backups{border:1px solid var(--border);border-radius:8px;background:var(--surface-soft)}
+.workflow-backups>summary{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 11px;cursor:pointer;list-style:none;color:var(--text-soft);font-size:10px}
+.workflow-backups>summary::-webkit-details-marker{display:none}
+.workflow-backups>summary small{color:var(--muted);font-size:9px;font-weight:400}
+.workflow-backup-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 10px 8px;color:var(--muted);font-size:9px}
+.workflow-backup-head button{min-height:30px;white-space:nowrap}
+#workflowBackupList{display:flex;flex-direction:column;border-top:1px solid var(--border)}
+.workflow-backup-item{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:7px;padding:8px 10px;border-bottom:1px solid var(--border)}
+.workflow-backup-item:last-child{border-bottom:0}
+.workflow-backup-item>div{min-width:0}
+.workflow-backup-item strong,.workflow-backup-item span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.workflow-backup-item strong{color:var(--text-soft);font-size:10px}
+.workflow-backup-item span{margin-top:3px;color:var(--muted);font-size:8px}
+.workflow-backup-item button{min-height:28px;padding:0 8px}
+.workflow-delete-backup{width:28px;padding:0!important}
+.workflow-backup-empty{margin:0;padding:11px;color:var(--muted);font-size:9px;line-height:1.6}
+@media(max-width:1100px){.workflow-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:620px){.workflow-actions{grid-template-columns:1fr}.workflow-backup-head{align-items:stretch;flex-direction:column}.workflow-backup-head button{width:100%}}
