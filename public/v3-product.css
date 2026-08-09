@@ -26,11 +26,12 @@ html[data-unlimited-runtime="v3"] body.v2-product-ready select:focus-visible {
   outline-offset: 2px;
 }
 
+/* Avoid paint containment here: chapter and card actions may intentionally pop out. */
 html[data-unlimited-runtime="v3"] body.v2-product-ready .studio-list-item,
 html[data-unlimited-runtime="v3"] body.v2-product-ready .character-card,
 html[data-unlimited-runtime="v3"] body.v2-product-ready .workflow-panel,
 html[data-unlimited-runtime="v3"] body.v2-product-ready .v26-world-card {
-  contain: layout paint style;
+  contain: layout style;
 }
 
 html[data-unlimited-runtime="v3"] body.v2-product-ready .studio-panel-head,
