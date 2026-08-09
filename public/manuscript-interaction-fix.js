@@ -61,7 +61,12 @@
 
   function rescueEditorPointer(event) {
     const node = editor();
-    if (!node) return;
+    const panel = document.getElementById("studioPanel");
+    if (!node || !panel) return;
+
+    // Never steal focus from actual modal/dialog layers.
+    if (!event.target.closest("#studioPanel")) return;
+
     const rect = node.getBoundingClientRect();
     const inside = event.clientX >= rect.left && event.clientX <= rect.right
       && event.clientY >= rect.top && event.clientY <= rect.bottom;
@@ -138,8 +143,6 @@
       });
     }
 
-    // If a transparent layer ever covers the textarea, this document-level rescue
-    // still moves keyboard focus into the editor when the pointer is inside its bounds.
     document.addEventListener("pointerdown", rescueEditorPointer, true);
     document.addEventListener("click", explainInactiveControl, true);
     document.addEventListener("selectionchange", () => requestAnimationFrame(makeControlsActionable));
