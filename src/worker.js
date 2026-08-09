@@ -10,6 +10,17 @@ import { reviewContinuity } from "./continuity-review.js";
 
 const NVIDIA_CHAT_URL = "https://integrate.api.nvidia.com/v1/chat/completions";
 const APP_REVISION = "2026-08-09-v2-boot-1";
+const MODEL_RUNTIME_INJECTION = `
+运行约束（由 Worker 注入）：
+- 用户使用中文时默认使用自然、流畅的中文回复；用户明确指定其他语言时服从用户要求。
+- 小说创作、续写、润色、改写任务直接输出可使用的正文，不解释“我将如何写”，除非用户明确要求分析。
+- 不输出内部思维链、推理草稿、reasoning trace、<think> 标签或隐藏分析过程，只返回最终可用内容。
+- 系统提供的当前正文、当前章节计划、人物状态、人物关系、世界规则、上一章摘要、未解决伏笔与连续性信息属于事实约束。
+- 当不同背景信息出现冲突时，优先采用更近期、更具体、更接近当前章节的信息，不要用旧设定覆盖当前事实。
+- 除非用户明确要求修改设定，不擅自改变已经确定的人名、身份、关系、伤势、位置、时间、知识状态、重要物品和世界规则。
+- 长篇续写保持视角、时态、人物口吻、叙事节奏与前文事实一致，避免重复前文、机械总结和无依据新增设定。
+- 用户要求大纲、分析、检查或建议时，再按对应任务输出结构化结果；不要把小说正文任务写成教程或说明。
+`.trim();
 
 function resp(body, contentType = "text/plain; charset=utf-8", status = 200, extraHeaders = {}) {
   return new Response(body, {
@@ -45,16 +56,15 @@ function buildMessages(payload, modelConfig) {
 
   const messages = Array.isArray(payload?.messages) ? payload.messages : [];
   const upstreamMessages = [];
+  const personaPrompt = useBuiltinPersona
+    ? getBuiltinPrompt(modelConfig.promptProfile)
+    : customSystemPrompt;
+  const systemPrompt = [personaPrompt, MODEL_RUNTIME_INJECTION].filter(Boolean).join("\n\n");
 
-  if (useBuiltinPersona) {
+  if (systemPrompt) {
     upstreamMessages.push({
       role: "system",
-      content: getBuiltinPrompt(modelConfig.promptProfile)
-    });
-  } else if (customSystemPrompt) {
-    upstreamMessages.push({
-      role: "system",
-      content: customSystemPrompt
+      content: systemPrompt
     });
   }
 
@@ -100,6 +110,7 @@ function shouldFallback(status) {
     || status === 404
     || status === 408
     || status === 409
+    || status === 410
     || status === 429
     || status >= 500;
 }
