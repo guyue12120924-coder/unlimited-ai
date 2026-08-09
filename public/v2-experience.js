@@ -255,10 +255,6 @@
 
   function monitorBackups() {
     const current = currentBackupId();
-    if (!lastBackupId) {
-      lastBackupId = current;
-      return;
-    }
     if (!current || current === lastBackupId) return;
     lastBackupId = current;
 
