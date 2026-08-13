@@ -6,10 +6,14 @@ import {
 import { buildCreativeContextMessage } from "./context.js";
 import { extractStoryMemories } from "./memory-extractor.js";
 import { reviewContinuity } from "./continuity-review.js";
-import { buildCompanionSystemPrompt } from "./companion.js";
+import {
+  getCompanionRoleCard,
+  buildCompanionRuntimeContext
+} from "./companion.js";
 
+// Compatibility marker: buildCompanionSystemPrompt(payload) remains available in companion.js for preview/testing only.
 const NVIDIA_CHAT_URL = "https://integrate.api.nvidia.com/v1/chat/completions";
-const APP_REVISION = "2026-08-13-v6.0-worker-prompt-restore-1";
+const APP_REVISION = "2026-08-13-v6.1-companion-role-card-1";
 
 // ============================================================
 // 小说模式默认 System Prompt
@@ -71,12 +75,27 @@ function buildMessages(payload, modelConfig) {
   const mode = payload?.mode === "companion" ? "companion" : "novel";
   const messages = Array.isArray(payload?.messages) ? payload.messages : [];
   const upstreamMessages = [];
-  let systemPrompt = "";
 
   if (mode === "companion") {
     // Important isolation boundary: companion requests never receive story
     // context, story memory, continuity context, or the novel system prompt.
-    systemPrompt = buildCompanionSystemPrompt(payload);
+    // The editable role card is the ONLY application system-role message.
+    const roleCard = getCompanionRoleCard();
+    const runtimeContext = buildCompanionRuntimeContext(payload);
+
+    if (roleCard) {
+      upstreamMessages.push({
+        role: "system",
+        content: roleCard
+      });
+    }
+
+    if (runtimeContext) {
+      upstreamMessages.push({
+        role: "user",
+        content: runtimeContext
+      });
+    }
   } else {
     const useBuiltinPersona = payload?.use_builtin_persona !== false;
     const customSystemPrompt =
@@ -84,7 +103,6 @@ function buildMessages(payload, modelConfig) {
         ? payload.custom_system_prompt.trim()
         : "";
 
-    // 恢复旧逻辑：默认提示词直接来自 worker.js；旧页面自定义人物模板仍可替换基础人格。
     const personaPrompt = useBuiltinPersona
       ? NOVEL_SYSTEM_PROMPT
       : (customSystemPrompt || NOVEL_SYSTEM_PROMPT);
@@ -95,18 +113,18 @@ function buildMessages(payload, modelConfig) {
       payload?.continuity_context
     );
 
-    systemPrompt = [
+    const systemPrompt = [
       personaPrompt,
       MODEL_RUNTIME_INJECTION,
       creativeContext
     ].filter(Boolean).join("\n\n");
-  }
 
-  if (systemPrompt) {
-    upstreamMessages.push({
-      role: "system",
-      content: systemPrompt
-    });
+    if (systemPrompt) {
+      upstreamMessages.push({
+        role: "system",
+        content: systemPrompt
+      });
+    }
   }
 
   for (const msg of messages) {
@@ -352,9 +370,12 @@ async function handleDiagnostics(request, env) {
     assetBindingPresent: Boolean(env.ASSETS && typeof env.ASSETS.fetch === "function"),
     frontendCurrent,
     modes: ["novel", "companion"],
-    promptLocation: "src/worker.js",
+    promptLocation: {
+      novel: "src/worker.js -> NOVEL_SYSTEM_PROMPT",
+      companion: "src/companion.js -> COMPANION_ROLE_CARD"
+    },
     conclusion: frontendCurrent
-      ? "Dual-mode frontend is current and novel system prompt is stored in worker.js."
+      ? "Dual-mode frontend is current. Companion role card is isolated as its system message."
       : "Worker is current but one or more static assets are older or incomplete.",
     assets
   });
