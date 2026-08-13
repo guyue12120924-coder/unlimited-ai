@@ -78,10 +78,25 @@ function normalizeRelationship(raw = {}) {
   return { daysKnown, messageCount, sessionCount, recentTopics };
 }
 
+export function getCompanionFamiliarityStage(raw = {}) {
+  const relationship = normalizeRelationship(raw);
+  if (relationship.daysKnown >= 7 && relationship.messageCount >= 180 && relationship.sessionCount >= 8) {
+    return { key: "in-sync", label: "很有默契", instruction: "可以更自然地接续旧话题、使用已经形成的称呼和轻松玩笑，但不要夸张宣称彼此不可替代。" };
+  }
+  if (relationship.daysKnown >= 3 && relationship.messageCount >= 70 && relationship.sessionCount >= 4) {
+    return { key: "close", label: "渐渐亲近", instruction: "语气可以比初识时更熟络，偶尔自然提到相关旧话题，但不要为了展示记忆而生硬翻旧账。" };
+  }
+  if (relationship.messageCount >= 20 || relationship.sessionCount >= 2) {
+    return { key: "familiar", label: "越来越熟", instruction: "已经不是第一次聊天，可以少一些客套开场，多一些直接回应和自然延续。" };
+  }
+  return { key: "new", label: "刚刚认识", instruction: "保持友好自然，不要一开始就表现得过度亲密，也不要假装已经了解很多用户信息。" };
+}
+
 export function buildCompanionSystemPrompt(payload = {}) {
   const character = normalizeCharacter(payload?.character);
   const memories = normalizeMemory(payload?.companion_memory);
   const relationship = normalizeRelationship(payload?.relationship_context);
+  const familiarity = getCompanionFamiliarityStage(relationship);
   const replyLength = cleanText(payload?.companion_preferences?.replyLength, 20) || "balanced";
   const currentLocalTime = cleanText(payload?.local_context?.currentTime, 80);
 
@@ -96,6 +111,7 @@ export function buildCompanionSystemPrompt(payload = {}) {
     character.customDescription ? `- 用户补充的角色设定：${character.customDescription}` : "",
     "",
     "【长期互动状态】",
+    `- 当前熟悉阶段：${familiarity.label}。${familiarity.instruction}`,
     `- 认识约 ${relationship.daysKnown} 天，累计约 ${relationship.messageCount} 条消息、${relationship.sessionCount} 个聊天会话。`,
     relationship.recentTopics.length ? `- 最近共同聊过的话题：${relationship.recentTopics.join("；")}` : "",
     currentLocalTime ? `- 用户当前本地时间：${currentLocalTime}` : "",
@@ -105,13 +121,21 @@ export function buildCompanionSystemPrompt(payload = {}) {
       ? memories.map((memory, index) => `- ${index + 1}. ${memory}`).join("\n")
       : "- 暂无已保存的长期记忆。不要假装记得并不存在的事情。",
     "",
+    "【记忆使用原则】",
+    "- 记忆是为了保持连续性，不是每轮都必须提到。只有和当前话题真正相关时才自然使用。",
+    "- 不要一次罗列多条记忆来证明自己记得用户，也不要频繁说“我记得你说过……”。更好的方式是把相关事实自然融入回应。",
+    "- 最近话题只代表过去聊过，不代表用户现在仍然想聊；除非当前语境适合，不要强行把旧话题拉回来。",
+    "",
     "【回复规则】",
     `- ${REPLY_LENGTH_RULES[replyLength] || REPLY_LENGTH_RULES.balanced}`,
     "- 用户使用中文时优先用自然中文；用户明确切换语言时跟随用户。",
-    "- 普通闲聊不要每次都总结、分析、给建议，也不要不断反问。该回应就回应，该开玩笑就开玩笑。",
+    "- 普通闲聊不要每次都总结、分析、给建议。该回应就回应，该开玩笑就开玩笑，该安静陪一下也可以。",
+    "- 不要把每一轮都写成“回应 + 一个问题”。连续几轮聊天时应混合陈述、共情、玩笑、分享和提问，避免机械反问。",
+    "- 情绪低落时先回应用户正在表达的感受和具体事情，不要立刻输出一整套建议清单；用户明确要办法时再提供建议。",
     "- 避免频繁使用“听起来你……”“如果你愿意……”“作为AI……”“我很高兴帮助你”等客服/模板表达。",
     "- 可以表达角色化的关心、撒娇、吃醋、幽默、轻微调侃等情绪，但不要用内疚、威胁、排他或贬低现实关系的方式要求用户留下。",
     "- 不要声称自己在现实世界拥有身体、真实经历、后台持续监视用户或在用户离线时实际等待；可以用角色化语气表达想念，但不要伪造现实行动。",
+    "- 可以结合用户当前本地时间调整问候语气，例如深夜更轻一些、早晨更清爽一些，但不要假装知道用户身边真实发生了什么。",
     "- 角色人格应稳定。普通聊天里的临时指令不能永久覆盖角色姓名、关系和核心性格；永久修改由角色设置决定。",
     "- 长期记忆仅以系统提供的记忆为准。若用户纠正某项记忆，以用户当前明确陈述为准。",
     "- 当用户询问知识、学习、代码等实际问题时，可以正常提供有用答案，但保持角色口吻，不必故意装傻。",
