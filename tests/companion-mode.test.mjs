@@ -9,14 +9,19 @@ const companionClient = read("public/companion-mode.js");
 const companionCss = read("public/companion-mode.css");
 const companionPolish = read("public/companion-v2.js");
 const companionPolishCss = read("public/companion-v2.css");
+const companionMulti = read("public/companion-v3.js");
+const companionMultiCss = read("public/companion-v3.css");
 const worker = read("src/worker.js");
 const companionSource = read("src/companion.js");
 
-assert.match(boot, /2026-08-13-v4\.1-dual-mode-1/);
+assert.match(boot, /2026-08-13-v4\.2-dual-mode-1/);
 assert.match(boot, /mode-router\.js/);
 assert.match(boot, /companion-v2\.js/);
 assert.match(boot, /companion-v2\.css/);
+assert.match(boot, /companion-v3\.js/);
+assert.match(boot, /companion-v3\.css/);
 assert.match(boot, /companionPolishReady/);
+assert.match(boot, /companionMultiReady/);
 assert.match(boot, /uai-mode-gate-pending/);
 
 assert.match(router, /uaiEnterNovel/);
@@ -54,6 +59,23 @@ assert.doesNotMatch(companionPolish, /creative_context/);
 assert.doesNotMatch(companionPolish, /continuity_context/);
 assert.doesNotMatch(companionPolish, /storyMemory/);
 
+assert.match(companionMulti, /uai_companion_characters_v1/);
+assert.match(companionMulti, /uai_companion_active_character_v1/);
+assert.match(companionMulti, /MAX_CHARACTERS = 6/);
+assert.match(companionMulti, /function persistActiveCharacter\(/);
+assert.match(companionMulti, /function loadCharacterIntoSlots\(/);
+assert.match(companionMulti, /function switchCharacter\(/);
+assert.match(companionMulti, /function showCharacterManager\(/);
+assert.match(companionMulti, /function editAndResend\(/);
+assert.match(companionMulti, /function regenerateAssistant\(/);
+assert.match(companionMulti, /function extractStructuredMemories\(/);
+assert.match(companionMulti, /v3GreetingEnhanced/);
+assert.match(companionMulti, /UnlimitedCompanionMulti/);
+assert.doesNotMatch(companionMulti, /cfw_sessions_v2/);
+assert.doesNotMatch(companionMulti, /creative_context/);
+assert.doesNotMatch(companionMulti, /continuity_context/);
+assert.doesNotMatch(companionMulti, /storyMemory/);
+
 assert.match(companionCss, /#uaiCompanionRoot/);
 assert.match(companionCss, /@media \(max-width: 780px\)/);
 assert.match(companionCss, /100dvh/);
@@ -62,6 +84,10 @@ assert.match(companionPolishCss, /uai-c-v2-quickbar/);
 assert.match(companionPolishCss, /uai-c-v2-return-card/);
 assert.match(companionPolishCss, /uai-c-v2-message-actions/);
 assert.match(companionPolishCss, /uai-c-v2-scroll-bottom/);
+assert.match(companionMultiCss, /uai-c-v3-character-bar/);
+assert.match(companionMultiCss, /uai-c-v3-character-card/);
+assert.match(companionMultiCss, /uai-c-v3-actions/);
+assert.match(companionMultiCss, /@media \(max-width: 780px\)/);
 
 assert.match(worker, /payload\?\.mode === "companion" \? "companion" : "novel"/);
 assert.match(worker, /buildCompanionSystemPrompt\(payload\)/);
@@ -120,4 +146,4 @@ assert.match(prompt, /不要把每一轮都写成/);
 assert.doesNotMatch(prompt, /当前正文/);
 assert.doesNotMatch(prompt, /未解决伏笔/);
 
-console.log("Companion V2 contract passed: isolated storage -> relationship stage -> quick chat/return UX -> memory controls -> companion-only prompt context.");
+console.log("Companion V3 contract passed: isolated slots -> multi-character snapshots -> edit/regenerate -> structured memory -> companion-only prompt context.");
