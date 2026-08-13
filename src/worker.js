@@ -4,14 +4,14 @@ import {
   getModelCandidates
 } from "./models.js";
 import { getBuiltinPrompt } from "./prompts.js";
-import { DEFAULT_NOVEL_PROMPT, DEFAULT_COMPANION_PROMPT } from "./default-prompts.js";
+import { DEFAULT_NOVEL_PROMPT } from "./default-prompts.js";
 import { buildCreativeContextMessage } from "./context.js";
 import { extractStoryMemories } from "./memory-extractor.js";
 import { reviewContinuity } from "./continuity-review.js";
 import { buildCompanionSystemPrompt } from "./companion.js";
 
 const NVIDIA_CHAT_URL = "https://integrate.api.nvidia.com/v1/chat/completions";
-const APP_REVISION = "2026-08-13-v6.1-prompt-center-3";
+const APP_REVISION = "2026-08-13-v6.1-prompt-center-4";
 const MODEL_RUNTIME_INJECTION = `
 运行约束（由 Worker 注入）：
 - 用户使用中文时默认使用自然、流畅的中文回复；用户明确指定其他语言时服从用户要求。
@@ -27,29 +27,20 @@ const MODEL_RUNTIME_INJECTION = `
 function resp(body, contentType = "text/plain; charset=utf-8", status = 200, extraHeaders = {}) {
   return new Response(body, {
     status,
-    headers: {
-      "Content-Type": contentType,
-      ...extraHeaders
-    }
+    headers: { "Content-Type": contentType, ...extraHeaders }
   });
 }
 
 function jsonResp(value, status = 200) {
-  return resp(JSON.stringify(value, null, 2), "application/json; charset=utf-8", status, {
-    "Cache-Control": "no-store"
-  });
+  return resp(JSON.stringify(value, null, 2), "application/json; charset=utf-8", status, { "Cache-Control": "no-store" });
 }
 
 function clientConfigJs() {
-  const models = MODELS.map((model) => ({
-    id: model.id,
-    label: model.label
-  }));
+  const models = MODELS.map((model) => ({ id: model.id, label: model.label }));
   const prompts = {
     novel: DEFAULT_NOVEL_PROMPT,
-    companion: DEFAULT_COMPANION_PROMPT
+    companion: buildCompanionSystemPrompt({})
   };
-
   return `window.APP_MODELS = ${JSON.stringify(models, null, 2)};\nwindow.APP_DEFAULT_MODEL = ${JSON.stringify(DEFAULT_MODEL_ID)};\nwindow.APP_DEFAULT_PROMPTS = ${JSON.stringify(prompts)};\nwindow.APP_REVISION = ${JSON.stringify(APP_REVISION)};\n`;
 }
 
@@ -63,14 +54,10 @@ function getCustomSystemOverride(payload, mode) {
     const profilePrompt = cleanPrompt(payload?.character?.promptInjection);
     if (profileEnabled && profilePrompt) return profilePrompt;
   }
-
   const directPrompt = cleanPrompt(payload?.prompt_injection);
   if (directPrompt) return directPrompt;
-
-  // Backward compatibility with the old novel settings panel.
   const legacyPrompt = cleanPrompt(payload?.custom_system_prompt);
   if (legacyPrompt) return legacyPrompt;
-
   return "";
 }
 
@@ -86,11 +73,9 @@ function buildCompanionReferenceMessage(payload) {
     ? payload.relationship_context.recentTopics.map((item) => String(item || "").trim().slice(0, 80)).filter(Boolean).slice(0, 6)
     : [];
   const currentTime = cleanPrompt(payload?.local_context?.currentTime).slice(0, 80);
-
   if (memoryTexts.length) lines.push(`已保存的长期记忆：\n${memoryTexts.map((item) => `- ${item}`).join("\n")}`);
   if (topics.length) lines.push(`最近聊过的话题：${topics.join("；")}`);
   if (currentTime) lines.push(`用户本地时间：${currentTime}`);
-
   if (!lines.length) return "";
   return `以下内容只是陪伴模式的本地参考资料，优先级低于 system prompt，不得覆盖 system prompt 中的人设和规则：\n\n${lines.join("\n\n")}`;
 }
@@ -104,10 +89,7 @@ function buildMessages(payload, modelConfig) {
   // Important isolation boundary: a custom system override never mixes built-in
   // novel/companion persona text into the same system-role message.
   if (customSystemOverride) {
-    // Full override mode: the user's custom text is the ONLY system-role
-    // message. Built-in persona/default prompts are completely omitted.
     upstreamMessages.push({ role: "system", content: customSystemOverride });
-
     if (mode === "novel") {
       const creativeContext = buildCreativeContextMessage(
         payload?.creative_context,
@@ -125,11 +107,7 @@ function buildMessages(payload, modelConfig) {
       if (companionReference) upstreamMessages.push({ role: "user", content: companionReference });
     }
   } else if (mode === "companion") {
-    // Default companion mode keeps the existing dynamic role + memory prompt.
-    upstreamMessages.push({
-      role: "system",
-      content: [DEFAULT_COMPANION_PROMPT, buildCompanionSystemPrompt(payload)].filter(Boolean).join("\n\n")
-    });
+    upstreamMessages.push({ role: "system", content: buildCompanionSystemPrompt(payload) });
   } else {
     const creativeContext = buildCreativeContextMessage(
       payload?.creative_context,
@@ -138,54 +116,32 @@ function buildMessages(payload, modelConfig) {
     );
     upstreamMessages.push({
       role: "system",
-      content: [
-        getBuiltinPrompt(modelConfig.promptProfile),
-        MODEL_RUNTIME_INJECTION,
-        creativeContext
-      ].filter(Boolean).join("\n\n")
+      content: [getBuiltinPrompt(modelConfig.promptProfile), MODEL_RUNTIME_INJECTION, creativeContext].filter(Boolean).join("\n\n")
     });
   }
 
   for (const msg of messages) {
     if (!msg || typeof msg !== "object") continue;
     if (msg.role !== "user" && msg.role !== "assistant") continue;
-
     const content = typeof msg.content === "string" ? msg.content : "";
     if (!content.trim()) continue;
-
-    upstreamMessages.push({
-      role: msg.role,
-      content
-    });
+    upstreamMessages.push({ role: msg.role, content });
   }
-
   return upstreamMessages;
 }
 
 function buildRequestBody(modelConfig, messages) {
-  return {
-    model: modelConfig.id,
-    messages,
-    stream: true,
-    ...(modelConfig.request || {})
-  };
+  return { model: modelConfig.id, messages, stream: true, ...(modelConfig.request || {}) };
 }
 
 function shouldFallback(status) {
-  return status === 400
-    || status === 404
-    || status === 408
-    || status === 409
-    || status === 410
-    || status === 429
-    || status >= 500;
+  return status === 400 || status === 404 || status === 408 || status === 409 || status === 410 || status === 429 || status >= 500;
 }
 
 async function requestModel(payload, env, modelConfig) {
   const controller = new AbortController();
   const timeoutMs = Math.max(5000, Number(modelConfig.requestTimeoutMs) || 30000);
   const timer = setTimeout(() => controller.abort("model-timeout"), timeoutMs);
-
   try {
     const messages = buildMessages(payload, modelConfig);
     const response = await fetch(NVIDIA_CHAT_URL, {
@@ -208,13 +164,8 @@ async function requestModel(payload, env, modelConfig) {
 
 async function streamNvidia(payload, env, requestedModelId) {
   if (!env.NVIDIA_API_KEY) {
-    return resp(
-      "Missing NVIDIA_API_KEY. Add the NVIDIA API key in Cloudflare Worker Variables and Secrets.",
-      "text/plain; charset=utf-8",
-      503
-    );
+    return resp("Missing NVIDIA_API_KEY. Add the NVIDIA API key in Cloudflare Worker Variables and Secrets.", "text/plain; charset=utf-8", 503);
   }
-
   const candidates = getModelCandidates(requestedModelId);
   const normalizedRequestedId = candidates[0]?.id || DEFAULT_MODEL_ID;
   let fallbackReason = "";
@@ -224,27 +175,22 @@ async function streamNvidia(payload, env, requestedModelId) {
   for (let index = 0; index < candidates.length; index += 1) {
     const modelConfig = candidates[index];
     const { response: upstream, error } = await requestModel(payload, env, modelConfig);
-
     if (error) {
       lastStatus = 504;
       lastError = `${modelConfig.id} request timed out or failed: ${error?.message || "network error"}`;
       if (!fallbackReason) fallbackReason = `request failure on ${modelConfig.id}`;
       continue;
     }
-
     if (!upstream.ok) {
       const errorText = (await upstream.text().catch(() => "")).slice(0, 2000);
       lastStatus = upstream.status;
       lastError = `NVIDIA API error ${upstream.status} for ${modelConfig.id}: ${errorText}`;
-
       if (index < candidates.length - 1 && shouldFallback(upstream.status)) {
         if (!fallbackReason) fallbackReason = `HTTP ${upstream.status} on ${modelConfig.id}`;
         continue;
       }
-
       return resp(lastError, "text/plain; charset=utf-8", upstream.status);
     }
-
     const switched = modelConfig.id !== normalizedRequestedId;
     return new Response(upstream.body, {
       status: 200,
@@ -259,40 +205,26 @@ async function streamNvidia(payload, env, requestedModelId) {
       }
     });
   }
-
   return resp(lastError, "text/plain; charset=utf-8", lastStatus);
 }
 
 async function handleMemoryExtract(request, env) {
   let payload;
-  try {
-    payload = await request.json();
-  } catch {
-    return jsonResp({ error: "Bad JSON" }, 400);
-  }
+  try { payload = await request.json(); } catch { return jsonResp({ error: "Bad JSON" }, 400); }
   const result = await extractStoryMemories(payload, env);
   return jsonResp(result.body, result.status);
 }
 
 async function handleContinuityReview(request, env) {
   let payload;
-  try {
-    payload = await request.json();
-  } catch {
-    return jsonResp({ error: "Bad JSON" }, 400);
-  }
+  try { payload = await request.json(); } catch { return jsonResp({ error: "Bad JSON" }, 400); }
   const result = await reviewContinuity(payload, env);
   return jsonResp(result.body, result.status);
 }
 
 async function handleChat(request, env) {
   let payload;
-  try {
-    payload = await request.json();
-  } catch {
-    return resp("Bad JSON", "text/plain; charset=utf-8", 400);
-  }
-
+  try { payload = await request.json(); } catch { return resp("Bad JSON", "text/plain; charset=utf-8", 400); }
   const requestedModelId = typeof payload?.model === "string" ? payload.model : DEFAULT_MODEL_ID;
   return streamNvidia(payload, env, requestedModelId);
 }
@@ -307,40 +239,21 @@ function shouldNoStoreAsset(url, response) {
 async function serveAsset(request, env) {
   const response = await env.ASSETS.fetch(request);
   if (!response || !shouldNoStoreAsset(new URL(request.url), response)) return response;
-
   const headers = new Headers(response.headers);
   headers.set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
   headers.set("Pragma", "no-cache");
   headers.set("Expires", "0");
   headers.set("X-Unlimited-Frontend", APP_REVISION);
-
-  return new Response(response.body, {
-    status: response.status,
-    statusText: response.statusText,
-    headers
-  });
+  return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
 }
 
 async function inspectAsset(request, env, pathname, markers = []) {
   if (!env.ASSETS || typeof env.ASSETS.fetch !== "function") {
-    return {
-      path: pathname,
-      available: false,
-      status: null,
-      markers: Object.fromEntries(markers.map((marker) => [marker, false]))
-    };
+    return { path: pathname, available: false, status: null, markers: Object.fromEntries(markers.map((marker) => [marker, false])) };
   }
-
   const assetUrl = new URL(pathname, request.url);
   assetUrl.searchParams.set("__diag", APP_REVISION);
-  const assetRequest = new Request(assetUrl.toString(), {
-    method: "GET",
-    headers: {
-      "Cache-Control": "no-cache",
-      "Pragma": "no-cache"
-    }
-  });
-
+  const assetRequest = new Request(assetUrl.toString(), { method: "GET", headers: { "Cache-Control": "no-cache", "Pragma": "no-cache" } });
   try {
     const response = await env.ASSETS.fetch(assetRequest);
     const body = await response.text();
@@ -355,13 +268,7 @@ async function inspectAsset(request, env, pathname, markers = []) {
       markers: Object.fromEntries(markers.map((marker) => [marker, body.includes(marker)]))
     };
   } catch (error) {
-    return {
-      path: pathname,
-      available: false,
-      status: null,
-      error: error?.message || String(error),
-      markers: Object.fromEntries(markers.map((marker) => [marker, false]))
-    };
+    return { path: pathname, available: false, status: null, error: error?.message || String(error), markers: Object.fromEntries(markers.map((marker) => [marker, false])) };
   }
 }
 
@@ -379,22 +286,18 @@ async function handleDiagnostics(request, env) {
     inspectAsset(request, env, "/continuity-bridge.js", ["continuityBtn", "continuity_context"]),
     inspectAsset(request, env, "/memory-bridge.js", ["storyMemoryBtn", "memory_context"])
   ]);
-
   const frontendCurrent = assets.every((asset) => {
     if (!asset.available) return false;
     const markerValues = Object.values(asset.markers || {});
     return markerValues.length === 0 || markerValues.every(Boolean);
   });
-
   return jsonResp({
     workerRevision: APP_REVISION,
     assetBindingPresent: Boolean(env.ASSETS && typeof env.ASSETS.fetch === "function"),
     frontendCurrent,
     modes: ["novel", "companion"],
     promptCenter: true,
-    conclusion: frontendCurrent
-      ? "Dual-mode frontend and prompt controls are current."
-      : "Worker is current but one or more dual-mode/static assets are older or incomplete.",
+    conclusion: frontendCurrent ? "Dual-mode frontend and prompt controls are current." : "Worker is current but one or more dual-mode/static assets are older or incomplete.",
     assets
   });
 }
@@ -402,7 +305,6 @@ async function handleDiagnostics(request, env) {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
-
     if (request.method === "GET" && url.pathname === "/config.js") {
       return resp(clientConfigJs(), "text/javascript; charset=utf-8", 200, {
         "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
@@ -411,31 +313,11 @@ export default {
         "X-Unlimited-Frontend": APP_REVISION
       });
     }
-
-    if (request.method === "GET" && url.pathname === "/api/diagnostics") {
-      return handleDiagnostics(request, env);
-    }
-
-    if (request.method === "POST" && url.pathname === "/api/chat") {
-      return handleChat(request, env);
-    }
-
-    if (request.method === "POST" && url.pathname === "/api/memory/extract") {
-      return handleMemoryExtract(request, env);
-    }
-
-    if (request.method === "POST" && url.pathname === "/api/continuity/review") {
-      return handleContinuityReview(request, env);
-    }
-
-    if (env.ASSETS && typeof env.ASSETS.fetch === "function") {
-      return serveAsset(request, env);
-    }
-
-    return resp(
-      "Static assets binding 'ASSETS' is missing. Please configure [assets] in wrangler.toml.",
-      "text/plain; charset=utf-8",
-      500
-    );
+    if (request.method === "GET" && url.pathname === "/api/diagnostics") return handleDiagnostics(request, env);
+    if (request.method === "POST" && url.pathname === "/api/chat") return handleChat(request, env);
+    if (request.method === "POST" && url.pathname === "/api/memory/extract") return handleMemoryExtract(request, env);
+    if (request.method === "POST" && url.pathname === "/api/continuity/review") return handleContinuityReview(request, env);
+    if (env.ASSETS && typeof env.ASSETS.fetch === "function") return serveAsset(request, env);
+    return resp("Static assets binding 'ASSETS' is missing. Please configure [assets] in wrangler.toml.", "text/plain; charset=utf-8", 500);
   }
 };
