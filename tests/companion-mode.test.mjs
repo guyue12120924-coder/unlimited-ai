@@ -14,10 +14,12 @@ const companionMultiCss = read("public/companion-v3.css");
 const companionGuard = read("public/companion-v3-guard.js");
 const companionMemorySearch = read("public/companion-v4.js");
 const companionMemorySearchCss = read("public/companion-v4.css");
+const companionRelationship = read("public/companion-v5.js");
+const companionRelationshipCss = read("public/companion-v5.css");
 const worker = read("src/worker.js");
 const companionSource = read("src/companion.js");
 
-assert.match(boot, /2026-08-13-v4\.3-dual-mode-1/);
+assert.match(boot, /2026-08-13-v5\.0-dual-mode-1/);
 assert.match(boot, /mode-router\.js/);
 assert.match(boot, /companion-v2\.js/);
 assert.match(boot, /companion-v2\.css/);
@@ -26,10 +28,13 @@ assert.match(boot, /companion-v3\.css/);
 assert.match(boot, /companion-v3-guard\.js/);
 assert.match(boot, /companion-v4\.js/);
 assert.match(boot, /companion-v4\.css/);
+assert.match(boot, /companion-v5\.js/);
+assert.match(boot, /companion-v5\.css/);
 assert.match(boot, /companionPolishReady/);
 assert.match(boot, /companionMultiReady/);
 assert.match(boot, /companionGuardReady/);
 assert.match(boot, /companionMemorySearchReady/);
+assert.match(boot, /companionRelationshipReady/);
 assert.match(boot, /uai-mode-gate-pending/);
 
 assert.match(router, /uaiEnterNovel/);
@@ -111,6 +116,24 @@ assert.doesNotMatch(companionMemorySearch, /creative_context/);
 assert.doesNotMatch(companionMemorySearch, /continuity_context/);
 assert.doesNotMatch(companionMemorySearch, /storyMemory/);
 
+assert.match(companionRelationship, /uai_companion_characters_v1/);
+assert.match(companionRelationship, /function buildTimeline\(/);
+assert.match(companionRelationship, /function showProfile\(/);
+assert.match(companionRelationship, /function showAlbum\(/);
+assert.match(companionRelationship, /function showTemplates\(/);
+assert.match(companionRelationship, /function createFromTemplate\(/);
+assert.match(companionRelationship, /function validateCharacter\(/);
+assert.match(companionRelationship, /function importBackup\(/);
+assert.match(companionRelationship, /unlimited-ai-companion-multichar-backup/);
+assert.match(companionRelationship, /importantMomentsByCharacter/);
+assert.match(companionRelationship, /memoryArchiveByCharacter/);
+assert.match(companionRelationship, /这会替换当前全部陪伴角色数据；小说数据不会受到影响/);
+assert.match(companionRelationship, /UnlimitedCompanionRelationship/);
+assert.doesNotMatch(companionRelationship, /cfw_sessions_v2/);
+assert.doesNotMatch(companionRelationship, /creative_context/);
+assert.doesNotMatch(companionRelationship, /continuity_context/);
+assert.doesNotMatch(companionRelationship, /storyMemory/);
+
 assert.match(companionCss, /#uaiCompanionRoot/);
 assert.match(companionCss, /@media \(max-width: 780px\)/);
 assert.match(companionCss, /100dvh/);
@@ -129,6 +152,12 @@ assert.match(companionMemorySearchCss, /uai-c-v4-search-result/);
 assert.match(companionMemorySearchCss, /uai-c-v4-moment/);
 assert.match(companionMemorySearchCss, /uai-c-v4-roster-summary/);
 assert.match(companionMemorySearchCss, /@media \(max-width: 780px\)/);
+assert.match(companionRelationshipCss, /uai-c-v5-dashboard/);
+assert.match(companionRelationshipCss, /uai-c-v5-timeline/);
+assert.match(companionRelationshipCss, /uai-c-v5-album-grid/);
+assert.match(companionRelationshipCss, /uai-c-v5-template-grid/);
+assert.match(companionRelationshipCss, /uai-c-v5-drop/);
+assert.match(companionRelationshipCss, /@media \(max-width: 780px\)/);
 
 assert.match(worker, /payload\?\.mode === "companion" \? "companion" : "novel"/);
 assert.match(worker, /buildCompanionSystemPrompt\(payload\)/);
@@ -165,22 +194,9 @@ assert.equal(rankedMemory[0], "用户希望记住：下次先问论文进度");
 assert.ok(rankedMemory.indexOf("用户的生日是 8 月 18 日") < rankedMemory.indexOf("用户最近正在整理桌面"));
 
 const prompt = buildCompanionSystemPrompt({
-  character: {
-    name: "小雨",
-    relationship: "girlfriend",
-    personality: ["温柔", "傲娇"],
-    customDescription: "说话自然一点"
-  },
-  companion_memory: [
-    { text: "用户喜欢喝拿铁" },
-    { text: "用户最近在准备保研" }
-  ],
-  relationship_context: {
-    daysKnown: 3,
-    messageCount: 28,
-    sessionCount: 2,
-    recentTopics: ["论文修改"]
-  },
+  character: { name: "小雨", relationship: "girlfriend", personality: ["温柔", "傲娇"], customDescription: "说话自然一点" },
+  companion_memory: [{ text: "用户喜欢喝拿铁" }, { text: "用户最近在准备保研" }],
+  relationship_context: { daysKnown: 3, messageCount: 28, sessionCount: 2, recentTopics: ["论文修改"] },
   companion_preferences: { replyLength: "short" },
   local_context: { currentTime: "2026/8/13 18:15:00" }
 });
@@ -198,4 +214,4 @@ assert.match(prompt, /不要把每一轮都写成/);
 assert.doesNotMatch(prompt, /当前正文/);
 assert.doesNotMatch(prompt, /未解决伏笔/);
 
-console.log("Companion V4 contract passed: isolated multi-character companion -> memory organizer/ranking -> chat search -> important moments -> novel isolation.");
+console.log("Companion V5 contract passed: isolated companion -> multi-character -> memory/search/moments -> relationship timeline/album -> validated backup restore -> templates.");
