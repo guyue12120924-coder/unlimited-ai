@@ -2,7 +2,7 @@
 // Startup guard + dual-mode bootstrap. The existing novel workspace still boots
 // normally behind the mode lobby so old data and feature adapters remain intact.
 (() => {
-  const REVISION = "2026-08-13-v4.2-dual-mode-2";
+  const REVISION = "2026-08-13-v4.3-dual-mode-1";
   const errors = [];
 
   document.documentElement.dataset.frontendRevision = REVISION;
@@ -63,9 +63,11 @@
     ensureStyle(`/companion-mode.css?v=${REVISION}`, "uaiCompanionCss");
     ensureStyle(`/companion-v2.css?v=${REVISION}`, "uaiCompanionV2Css");
     ensureStyle(`/companion-v3.css?v=${REVISION}`, "uaiCompanionV3Css");
+    ensureStyle(`/companion-v4.css?v=${REVISION}`, "uaiCompanionV4Css");
     ensureScript(`/companion-v2.js?v=${REVISION}`, "uaiCompanionV2Script");
     ensureScript(`/companion-v3.js?v=${REVISION}`, "uaiCompanionV3Script");
     ensureScript(`/companion-v3-guard.js?v=${REVISION}`, "uaiCompanionV3GuardScript");
+    ensureScript(`/companion-v4.js?v=${REVISION}`, "uaiCompanionV4Script");
     if (document.getElementById("uaiModeRouterScript")) return;
     const script = document.createElement("script");
     script.id = "uaiModeRouterScript";
@@ -94,6 +96,7 @@
       window.__UNLIMITED_BOOT__.companionPolishReady = Boolean(window.UnlimitedCompanionPolish);
       window.__UNLIMITED_BOOT__.companionMultiReady = Boolean(window.UnlimitedCompanionMulti);
       window.__UNLIMITED_BOOT__.companionGuardReady = Boolean(window.UnlimitedCompanionGuard);
+      window.__UNLIMITED_BOOT__.companionMemorySearchReady = Boolean(window.UnlimitedCompanionMemorySearch);
       return;
     }
     const parts = [];
@@ -103,7 +106,7 @@
   }
 
   loadModeRouter();
-  const schedule = () => window.setTimeout(verifyBoot, 3200);
+  const schedule = () => window.setTimeout(verifyBoot, 3400);
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", schedule, { once: true });
   else schedule();
 })();
