@@ -1,7 +1,7 @@
 // public/companion-v3-guard.js
 // Safety/data companion for the multi-character layers.
 (() => {
-  const REVISION = "2026-08-13-v4.3-companion-guard-1";
+  const REVISION = "2026-08-13-v4.3-companion-guard-2";
   const CHARACTERS_KEY = "uai_companion_characters_v1";
   const ACTIVE_KEY = "uai_companion_active_character_v1";
   const PROFILE_KEY = "uai_companion_profile_v1";
@@ -65,6 +65,23 @@
     else footer.appendChild(button);
   }
 
+  function pruneOrphanedRoleData() {
+    const characters = safeParse(localStorage.getItem(CHARACTERS_KEY), []);
+    if (!Array.isArray(characters) || !characters.length) return;
+    const ids = new Set(characters.map((item) => item?.id).filter(Boolean));
+    for (const key of [MOMENTS_KEY, ARCHIVE_KEY]) {
+      const map = safeParse(localStorage.getItem(key), {});
+      if (!map || typeof map !== "object" || Array.isArray(map)) continue;
+      let changed = false;
+      for (const id of Object.keys(map)) {
+        if (ids.has(id)) continue;
+        delete map[id];
+        changed = true;
+      }
+      if (changed) localStorage.setItem(key, JSON.stringify(map));
+    }
+  }
+
   function reconcileReset() {
     const characters = safeParse(localStorage.getItem(CHARACTERS_KEY), []);
     if (!Array.isArray(characters) || !characters.length) return;
@@ -82,6 +99,7 @@
     scheduled = false;
     if (document.body.dataset.uaiMode !== "companion") return;
     reconcileReset();
+    pruneOrphanedRoleData();
     ensureExportButton();
   }
 
@@ -99,7 +117,7 @@
     schedule();
   }
 
-  window.UnlimitedCompanionGuard = { revision: REVISION, exportAllCharacters };
+  window.UnlimitedCompanionGuard = { revision: REVISION, exportAllCharacters, pruneOrphanedRoleData };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init, { once: true });
   else init();
 })();
