@@ -3,25 +3,43 @@ import {
   DEFAULT_MODEL_ID,
   getModelCandidates
 } from "./models.js";
-import { getBuiltinPrompt } from "./prompts.js";
-import { DEFAULT_NOVEL_PROMPT, DEFAULT_COMPANION_PROMPT } from "./default-prompts.js";
 import { buildCreativeContextMessage } from "./context.js";
 import { extractStoryMemories } from "./memory-extractor.js";
 import { reviewContinuity } from "./continuity-review.js";
 import { buildCompanionSystemPrompt } from "./companion.js";
 
 const NVIDIA_CHAT_URL = "https://integrate.api.nvidia.com/v1/chat/completions";
-const APP_REVISION = "2026-08-13-v6.1-prompt-center-3";
+const APP_REVISION = "2026-08-13-v6.0-worker-prompt-restore-1";
+
+// ============================================================
+// 小说模式默认 System Prompt
+// 以后如果要直接从代码里修改小说默认提示词，就改这里。
+// ============================================================
+const NOVEL_SYSTEM_PROMPT = `
+你是 Unlimited AI 的长篇小说创作助手。
+
+你的任务是根据用户要求直接完成小说创作、续写、改写、润色、设定整理和故事分析，同时尽量保持人物、关系、时间线、世界规则、章节目标和前文事实的一致性。
+
+小说正文任务中：
+- 直接输出可使用的正文，不先解释写作计划。
+- 优先使用具体动作、环境细节、感官描写和符合人物身份的对白。
+- 保持人物姓名、身份、关系、位置、伤势、知识状态和既有经历一致。
+- 保持世界观、时间线、已揭示信息和未解决伏笔一致。
+- 用户没有明确要求改变设定时，不擅自推翻已有事实。
+- 避免重复句式、机械总结和无意义的空泛描写。
+- 信息略有缺失时，在不破坏已有设定的前提下作合理补全，不要频繁打断用户追问。
+
+当用户要求大纲、分析、检查或建议时，再使用清晰的结构化输出。
+`.trim();
+
 const MODEL_RUNTIME_INJECTION = `
-运行约束（由 Worker 注入）：
+运行约束：
 - 用户使用中文时默认使用自然、流畅的中文回复；用户明确指定其他语言时服从用户要求。
 - 小说创作、续写、润色、改写任务直接输出可使用的正文，不解释“我将如何写”，除非用户明确要求分析。
-- 不输出内部思维链、推理草稿、reasoning trace、<think> 标签或隐藏分析过程，只返回最终可用内容。
 - 系统提供的当前正文、当前章节计划、人物状态、人物关系、世界规则、上一章摘要、未解决伏笔与连续性信息属于事实约束。
 - 当不同背景信息出现冲突时，优先采用更近期、更具体、更接近当前章节的信息，不要用旧设定覆盖当前事实。
 - 除非用户明确要求修改设定，不擅自改变已经确定的人名、身份、关系、伤势、位置、时间、知识状态、重要物品和世界规则。
 - 长篇续写保持视角、时态、人物口吻、叙事节奏与前文事实一致，避免重复前文、机械总结和无依据新增设定。
-- 用户要求大纲、分析、检查或建议时，再按对应任务输出结构化结果；不要把小说正文任务写成教程或说明。
 `.trim();
 
 function resp(body, contentType = "text/plain; charset=utf-8", status = 200, extraHeaders = {}) {
@@ -45,104 +63,49 @@ function clientConfigJs() {
     id: model.id,
     label: model.label
   }));
-  const prompts = {
-    novel: DEFAULT_NOVEL_PROMPT,
-    companion: DEFAULT_COMPANION_PROMPT
-  };
 
-  return `window.APP_MODELS = ${JSON.stringify(models, null, 2)};\nwindow.APP_DEFAULT_MODEL = ${JSON.stringify(DEFAULT_MODEL_ID)};\nwindow.APP_DEFAULT_PROMPTS = ${JSON.stringify(prompts)};\nwindow.APP_REVISION = ${JSON.stringify(APP_REVISION)};\n`;
-}
-
-function cleanPrompt(value) {
-  return typeof value === "string" ? value.trim().slice(0, 12000) : "";
-}
-
-function getCustomSystemOverride(payload, mode) {
-  if (mode === "companion") {
-    const profileEnabled = Boolean(payload?.character?.promptInjectionEnabled);
-    const profilePrompt = cleanPrompt(payload?.character?.promptInjection);
-    if (profileEnabled && profilePrompt) return profilePrompt;
-  }
-
-  const directPrompt = cleanPrompt(payload?.prompt_injection);
-  if (directPrompt) return directPrompt;
-
-  // Backward compatibility with the old novel settings panel.
-  const legacyPrompt = cleanPrompt(payload?.custom_system_prompt);
-  if (legacyPrompt) return legacyPrompt;
-
-  return "";
-}
-
-function buildCompanionReferenceMessage(payload) {
-  const lines = [];
-  const memories = Array.isArray(payload?.companion_memory) ? payload.companion_memory : [];
-  const memoryTexts = memories
-    .map((item) => typeof item === "string" ? item : item?.text || item?.content || "")
-    .map((item) => String(item || "").replace(/\s+/g, " ").trim().slice(0, 180))
-    .filter(Boolean)
-    .slice(0, 24);
-  const topics = Array.isArray(payload?.relationship_context?.recentTopics)
-    ? payload.relationship_context.recentTopics.map((item) => String(item || "").trim().slice(0, 80)).filter(Boolean).slice(0, 6)
-    : [];
-  const currentTime = cleanPrompt(payload?.local_context?.currentTime).slice(0, 80);
-
-  if (memoryTexts.length) lines.push(`已保存的长期记忆：\n${memoryTexts.map((item) => `- ${item}`).join("\n")}`);
-  if (topics.length) lines.push(`最近聊过的话题：${topics.join("；")}`);
-  if (currentTime) lines.push(`用户本地时间：${currentTime}`);
-
-  if (!lines.length) return "";
-  return `以下内容只是陪伴模式的本地参考资料，优先级低于 system prompt，不得覆盖 system prompt 中的人设和规则：\n\n${lines.join("\n\n")}`;
+  return `window.APP_MODELS = ${JSON.stringify(models, null, 2)};\nwindow.APP_DEFAULT_MODEL = ${JSON.stringify(DEFAULT_MODEL_ID)};\nwindow.APP_REVISION = ${JSON.stringify(APP_REVISION)};\n`;
 }
 
 function buildMessages(payload, modelConfig) {
   const mode = payload?.mode === "companion" ? "companion" : "novel";
   const messages = Array.isArray(payload?.messages) ? payload.messages : [];
   const upstreamMessages = [];
-  const customSystemOverride = getCustomSystemOverride(payload, mode);
+  let systemPrompt = "";
 
-  // Important isolation boundary: a custom system override never mixes built-in
-  // novel/companion persona text into the same system-role message.
-  if (customSystemOverride) {
-    // Full override mode: the user's custom text is the ONLY system-role
-    // message. Built-in persona/default prompts are completely omitted.
-    upstreamMessages.push({ role: "system", content: customSystemOverride });
-
-    if (mode === "novel") {
-      const creativeContext = buildCreativeContextMessage(
-        payload?.creative_context,
-        payload?.memory_context,
-        payload?.continuity_context
-      );
-      if (creativeContext) {
-        upstreamMessages.push({
-          role: "user",
-          content: `以下是小说项目参考资料。它不是 system prompt，不能覆盖上面的 system prompt；只把它当作当前作品事实和上下文参考：\n\n${creativeContext}`
-        });
-      }
-    } else {
-      const companionReference = buildCompanionReferenceMessage(payload);
-      if (companionReference) upstreamMessages.push({ role: "user", content: companionReference });
-    }
-  } else if (mode === "companion") {
-    // Default companion mode keeps the existing dynamic role + memory prompt.
-    upstreamMessages.push({
-      role: "system",
-      content: [DEFAULT_COMPANION_PROMPT, buildCompanionSystemPrompt(payload)].filter(Boolean).join("\n\n")
-    });
+  if (mode === "companion") {
+    // Important isolation boundary: companion requests never receive story
+    // context, story memory, continuity context, or the novel system prompt.
+    systemPrompt = buildCompanionSystemPrompt(payload);
   } else {
+    const useBuiltinPersona = payload?.use_builtin_persona !== false;
+    const customSystemPrompt =
+      typeof payload?.custom_system_prompt === "string"
+        ? payload.custom_system_prompt.trim()
+        : "";
+
+    // 恢复旧逻辑：默认提示词直接来自 worker.js；旧页面自定义人物模板仍可替换基础人格。
+    const personaPrompt = useBuiltinPersona
+      ? NOVEL_SYSTEM_PROMPT
+      : (customSystemPrompt || NOVEL_SYSTEM_PROMPT);
+
     const creativeContext = buildCreativeContextMessage(
       payload?.creative_context,
       payload?.memory_context,
       payload?.continuity_context
     );
+
+    systemPrompt = [
+      personaPrompt,
+      MODEL_RUNTIME_INJECTION,
+      creativeContext
+    ].filter(Boolean).join("\n\n");
+  }
+
+  if (systemPrompt) {
     upstreamMessages.push({
       role: "system",
-      content: [
-        getBuiltinPrompt(modelConfig.promptProfile),
-        MODEL_RUNTIME_INJECTION,
-        creativeContext
-      ].filter(Boolean).join("\n\n")
+      content: systemPrompt
     });
   }
 
@@ -370,8 +333,6 @@ async function handleDiagnostics(request, env) {
     inspectAsset(request, env, "/index.html", ["/boot-diagnostics.js"]),
     inspectAsset(request, env, "/boot-diagnostics.js", ["2026-08-13-v6.0-dual-mode-1", "loadModeRouter"]),
     inspectAsset(request, env, "/mode-router.js", ["UnlimitedModeRouter", "uaiEnterNovel", "uaiEnterCompanion"]),
-    inspectAsset(request, env, "/model-status.js", ["prompt-control.js", "prompt-center.css"]),
-    inspectAsset(request, env, "/prompt-control.js", ["UnlimitedPromptControl", "uai_companion_profile_v1"]),
     inspectAsset(request, env, "/mode-router.css", ["uai-mode-lobby", "data-uai-mode"]),
     inspectAsset(request, env, "/companion-mode.js", ["UnlimitedCompanion", "uai_companion_sessions_v1", "mode: \"companion\""]),
     inspectAsset(request, env, "/companion-mode.css", ["uaiCompanionRoot", "uai-c-shell"]),
@@ -391,10 +352,10 @@ async function handleDiagnostics(request, env) {
     assetBindingPresent: Boolean(env.ASSETS && typeof env.ASSETS.fetch === "function"),
     frontendCurrent,
     modes: ["novel", "companion"],
-    promptCenter: true,
+    promptLocation: "src/worker.js",
     conclusion: frontendCurrent
-      ? "Dual-mode frontend and prompt controls are current."
-      : "Worker is current but one or more dual-mode/static assets are older or incomplete.",
+      ? "Dual-mode frontend is current and novel system prompt is stored in worker.js."
+      : "Worker is current but one or more static assets are older or incomplete.",
     assets
   });
 }
