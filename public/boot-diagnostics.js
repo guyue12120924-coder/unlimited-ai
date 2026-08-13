@@ -1,11 +1,30 @@
 // public/boot-diagnostics.js
-// Small startup check for the simplified writing workspace.
+// Startup guard + dual-mode bootstrap. The existing novel workspace still boots
+// normally behind the mode lobby so old data and feature adapters remain intact.
 (() => {
-  const REVISION = "2026-08-09-v1.4-simple-studio-1";
+  const REVISION = "2026-08-13-v4.0-dual-mode-1";
   const errors = [];
 
   document.documentElement.dataset.frontendRevision = REVISION;
+  document.documentElement.classList.add("uai-mode-gate-pending");
   window.__UNLIMITED_BOOT__ = { revision: REVISION, startedAt: Date.now(), errors };
+
+  const gateStyle = document.createElement("style");
+  gateStyle.id = "uaiModeGateCriticalCss";
+  gateStyle.textContent = `
+    html.uai-mode-gate-pending #app { visibility: hidden !important; pointer-events: none !important; }
+    html.uai-mode-gate-pending body { background: #0d0f14 !important; }
+  `;
+  document.head.appendChild(gateStyle);
+
+  function ensureStyle(href, id) {
+    if (document.getElementById(id)) return;
+    const link = document.createElement("link");
+    link.id = id;
+    link.rel = "stylesheet";
+    link.href = href;
+    document.head.appendChild(link);
+  }
 
   function describeError(event) {
     if (event?.reason) return event.reason?.stack || event.reason?.message || String(event.reason);
@@ -29,8 +48,25 @@
     document.body.appendChild(panel);
   }
 
+  function loadModeRouter() {
+    ensureStyle(`/mode-router.css?v=${REVISION}`, "uaiModeRouterCss");
+    ensureStyle(`/companion-mode.css?v=${REVISION}`, "uaiCompanionCss");
+    if (document.getElementById("uaiModeRouterScript")) return;
+    const script = document.createElement("script");
+    script.id = "uaiModeRouterScript";
+    script.src = `/mode-router.js?v=${REVISION}`;
+    script.async = true;
+    script.addEventListener("error", () => {
+      document.documentElement.classList.remove("uai-mode-gate-pending");
+      document.body.dataset.uaiMode = "novel";
+      showFailure("模式选择模块加载失败，已回退到原小说工作台。刷新页面后可重试。");
+    }, { once: true });
+    document.body.appendChild(script);
+  }
+
   function verifyBoot() {
     const expected = [
+      ["uaiModeRoot", "模式选择大厅"],
       ["creativeWorkspace", "创作工作区"],
       ["contextInspectorBtn", "上下文"],
       ["continuityBtn", "连续性"],
@@ -39,6 +75,7 @@
     const missing = expected.filter(([id]) => !document.getElementById(id));
     if (!missing.length && !errors.length) {
       window.__UNLIMITED_BOOT__.ready = true;
+      window.__UNLIMITED_BOOT__.modeRouterReady = Boolean(window.UnlimitedModeRouter);
       return;
     }
     const parts = [];
@@ -47,7 +84,8 @@
     showFailure(parts.join("\n"));
   }
 
-  const schedule = () => window.setTimeout(verifyBoot, 2600);
+  loadModeRouter();
+  const schedule = () => window.setTimeout(verifyBoot, 3200);
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", schedule, { once: true });
   else schedule();
 })();

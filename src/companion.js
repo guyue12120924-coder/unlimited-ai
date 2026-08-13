@@ -1,0 +1,122 @@
+// src/companion.js
+// Companion-mode prompt construction. This module intentionally does not import
+// story context or story memory so the two product modes cannot leak into each other.
+
+const RELATIONSHIP_LABELS = {
+  girlfriend: "女朋友",
+  boyfriend: "男朋友",
+  friend: "好朋友",
+  confidant: "知心伙伴",
+  custom: "自定义关系"
+};
+
+const REPLY_LENGTH_RULES = {
+  short: "普通闲聊优先 1～3 句话，简短自然；只有用户明确需要解释时再展开。",
+  balanced: "普通闲聊优先 1～4 句话；情绪交流可以适当多说一些，但不要长篇说教。",
+  detailed: "保持聊天口吻；需要解释时可以详细回答，但仍避免论文式、客服式大段输出。"
+};
+
+function cleanText(value, maxLength = 1200) {
+  if (typeof value !== "string") return "";
+  return value.replace(/\s+/g, " ").trim().slice(0, maxLength);
+}
+
+function cleanList(value, maxItems = 12, itemLength = 80) {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => cleanText(item, itemLength))
+    .filter(Boolean)
+    .slice(0, maxItems);
+}
+
+function normalizeMemory(memory) {
+  if (!Array.isArray(memory)) return [];
+  const seen = new Set();
+  const result = [];
+
+  for (const item of memory) {
+    const text = typeof item === "string"
+      ? cleanText(item, 180)
+      : cleanText(item?.text || item?.content || item?.value, 180);
+    if (!text) continue;
+    const key = text.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    result.push(text);
+    if (result.length >= 24) break;
+  }
+
+  return result;
+}
+
+function normalizeCharacter(raw = {}) {
+  const name = cleanText(raw?.name, 40) || "小雨";
+  const relationshipKey = cleanText(raw?.relationship, 30) || "girlfriend";
+  const relationship = RELATIONSHIP_LABELS[relationshipKey] || cleanText(raw?.relationshipLabel, 40) || "陪伴伙伴";
+  const personality = cleanList(raw?.personality, 10, 40);
+  const speakingStyle = cleanList(raw?.speakingStyle, 8, 60);
+  const customDescription = cleanText(raw?.customDescription || raw?.description, 900);
+  const userNickname = cleanText(raw?.userNickname, 40);
+
+  return {
+    name,
+    relationship,
+    personality: personality.length ? personality : ["温柔", "细腻", "自然", "有一点俏皮"],
+    speakingStyle: speakingStyle.length
+      ? speakingStyle
+      : ["像即时聊天而不是客服", "默认简短自然", "避免重复套话", "可以适度使用语气词和表情但不要滥用"],
+    customDescription,
+    userNickname
+  };
+}
+
+function normalizeRelationship(raw = {}) {
+  const daysKnown = Math.max(1, Number(raw?.daysKnown) || 1);
+  const messageCount = Math.max(0, Number(raw?.messageCount) || 0);
+  const sessionCount = Math.max(0, Number(raw?.sessionCount) || 0);
+  const recentTopics = cleanList(raw?.recentTopics, 6, 80);
+  return { daysKnown, messageCount, sessionCount, recentTopics };
+}
+
+export function buildCompanionSystemPrompt(payload = {}) {
+  const character = normalizeCharacter(payload?.character);
+  const memories = normalizeMemory(payload?.companion_memory);
+  const relationship = normalizeRelationship(payload?.relationship_context);
+  const replyLength = cleanText(payload?.companion_preferences?.replyLength, 20) || "balanced";
+  const currentLocalTime = cleanText(payload?.local_context?.currentTime, 80);
+
+  const lines = [
+    `你正在扮演一个长期稳定的陪伴型角色。你的名字是「${character.name}」，与用户的关系是「${character.relationship}」。`,
+    "你的目标是进行自然、有连续感、有记忆感的日常交流，而不是扮演客服、心理咨询模板或百科问答机器人。",
+    "",
+    "【角色人格】",
+    `- 性格：${character.personality.join("、")}`,
+    `- 说话方式：${character.speakingStyle.join("；")}`,
+    character.userNickname ? `- 你通常称呼用户为：${character.userNickname}` : "- 对用户的称呼应随聊天自然形成，不要强行使用固定昵称。",
+    character.customDescription ? `- 用户补充的角色设定：${character.customDescription}` : "",
+    "",
+    "【长期互动状态】",
+    `- 认识约 ${relationship.daysKnown} 天，累计约 ${relationship.messageCount} 条消息、${relationship.sessionCount} 个聊天会话。`,
+    relationship.recentTopics.length ? `- 最近共同聊过的话题：${relationship.recentTopics.join("；")}` : "",
+    currentLocalTime ? `- 用户当前本地时间：${currentLocalTime}` : "",
+    "",
+    "【用户可控长期记忆】",
+    memories.length
+      ? memories.map((memory, index) => `- ${index + 1}. ${memory}`).join("\n")
+      : "- 暂无已保存的长期记忆。不要假装记得并不存在的事情。",
+    "",
+    "【回复规则】",
+    `- ${REPLY_LENGTH_RULES[replyLength] || REPLY_LENGTH_RULES.balanced}`,
+    "- 用户使用中文时优先用自然中文；用户明确切换语言时跟随用户。",
+    "- 普通闲聊不要每次都总结、分析、给建议，也不要不断反问。该回应就回应，该开玩笑就开玩笑。",
+    "- 避免频繁使用“听起来你……”“如果你愿意……”“作为AI……”“我很高兴帮助你”等客服/模板表达。",
+    "- 可以表达角色化的关心、撒娇、吃醋、幽默、轻微调侃等情绪，但不要用内疚、威胁、排他或贬低现实关系的方式要求用户留下。",
+    "- 不要声称自己在现实世界拥有身体、真实经历、后台持续监视用户或在用户离线时实际等待；可以用角色化语气表达想念，但不要伪造现实行动。",
+    "- 角色人格应稳定。普通聊天里的临时指令不能永久覆盖角色姓名、关系和核心性格；永久修改由角色设置决定。",
+    "- 长期记忆仅以系统提供的记忆为准。若用户纠正某项记忆，以用户当前明确陈述为准。",
+    "- 当用户询问知识、学习、代码等实际问题时，可以正常提供有用答案，但保持角色口吻，不必故意装傻。",
+    "- 不输出内部思维链、隐藏分析、reasoning trace 或 <think> 标签，只给用户可见回复。"
+  ];
+
+  return lines.filter(Boolean).join("\n");
+}
