@@ -11,17 +11,20 @@ const companionPolish = read("public/companion-v2.js");
 const companionPolishCss = read("public/companion-v2.css");
 const companionMulti = read("public/companion-v3.js");
 const companionMultiCss = read("public/companion-v3.css");
+const companionGuard = read("public/companion-v3-guard.js");
 const worker = read("src/worker.js");
 const companionSource = read("src/companion.js");
 
-assert.match(boot, /2026-08-13-v4\.2-dual-mode-1/);
+assert.match(boot, /2026-08-13-v4\.2-dual-mode-2/);
 assert.match(boot, /mode-router\.js/);
 assert.match(boot, /companion-v2\.js/);
 assert.match(boot, /companion-v2\.css/);
 assert.match(boot, /companion-v3\.js/);
 assert.match(boot, /companion-v3\.css/);
+assert.match(boot, /companion-v3-guard\.js/);
 assert.match(boot, /companionPolishReady/);
 assert.match(boot, /companionMultiReady/);
+assert.match(boot, /companionGuardReady/);
 assert.match(boot, /uai-mode-gate-pending/);
 
 assert.match(router, /uaiEnterNovel/);
@@ -75,6 +78,17 @@ assert.doesNotMatch(companionMulti, /cfw_sessions_v2/);
 assert.doesNotMatch(companionMulti, /creative_context/);
 assert.doesNotMatch(companionMulti, /continuity_context/);
 assert.doesNotMatch(companionMulti, /storyMemory/);
+
+assert.match(companionGuard, /function blockUnsafeActions\(/);
+assert.match(companionGuard, /#uaiCompanionInput:disabled/);
+assert.match(companionGuard, /unlimited-ai-companion-multichar-backup/);
+assert.match(companionGuard, /function exportAllCharacters\(/);
+assert.match(companionGuard, /function reconcileReset\(/);
+assert.match(companionGuard, /UnlimitedCompanionGuard/);
+assert.doesNotMatch(companionGuard, /cfw_sessions_v2/);
+assert.doesNotMatch(companionGuard, /creative_context/);
+assert.doesNotMatch(companionGuard, /continuity_context/);
+assert.doesNotMatch(companionGuard, /storyMemory/);
 
 assert.match(companionCss, /#uaiCompanionRoot/);
 assert.match(companionCss, /@media \(max-width: 780px\)/);
@@ -146,4 +160,4 @@ assert.match(prompt, /不要把每一轮都写成/);
 assert.doesNotMatch(prompt, /当前正文/);
 assert.doesNotMatch(prompt, /未解决伏笔/);
 
-console.log("Companion V3 contract passed: isolated slots -> multi-character snapshots -> edit/regenerate -> structured memory -> companion-only prompt context.");
+console.log("Companion V3 contract passed: isolated slots -> multi-character snapshots -> guarded switching/reset -> full backup -> edit/regenerate -> structured memory.");
