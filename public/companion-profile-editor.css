@@ -1,1 +1,14 @@
 #uaiV7Background,#uaiV7NewBackground,#uaiOnboardDesc{min-height:240px;line-height:1.65;resize:vertical}.uai-c-v7-note{display:block;margin-top:8px;line-height:1.6;opacity:.68}
+
+/* Make the existing character controls unmistakable on the companion page. */
+#uaiCompanionCharacterBtn{border:1px solid rgba(255,255,255,.16)!important;background:rgba(255,255,255,.08)!important;min-height:44px!important;font-weight:700!important}
+#uaiCompanionCharacterBtn span{font-size:0!important}
+#uaiCompanionCharacterBtn span::after{content:"＋ 自定义角色";font-size:13px!important;letter-spacing:.01em}
+#uaiCompanionCharacterBtn b{font-size:0!important}
+#uaiCompanionCharacterBtn b::after{content:"编辑";font-size:12px!important;opacity:.78}
+
+#uaiCompanionSwitchCharacter{border:1px solid rgba(255,255,255,.14)!important;background:rgba(255,255,255,.055)!important}
+#uaiCompanionSwitchCharacter span{font-size:0!important}
+#uaiCompanionSwitchCharacter span::after{content:"角色管理";font-size:11px!important;opacity:.72}
+#uaiCompanionSwitchCharacter b{font-size:0!important}
+#uaiCompanionSwitchCharacter b::after{content:"切换 / 新建 ›";font-size:11px!important;opacity:.82}
