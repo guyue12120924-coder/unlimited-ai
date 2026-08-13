@@ -1,6 +1,33 @@
 // src/companion.js
-// Companion-mode prompt construction. This module intentionally does not import
-// story context or story memory so the two product modes cannot leak into each other.
+// AI 陪伴模式：角色卡 + 动态参考资料。
+//
+// ============================================================
+// 角色卡粘贴区 —— 以后修改 AI 女友系统提示词，只改这里
+// ============================================================
+// 你可以把完整角色卡直接粘贴到 String.raw`...` 中。
+// 这里的内容会作为陪伴模式唯一的 system 消息发送给模型。
+// 角色名、关系、长期记忆、最近话题等会作为普通参考上下文发送，
+// 不会和这里的角色卡处于同一个 system 层级。
+//
+// 注意：如果你的角色卡正文里本身含有反引号 `，请写成 \`。
+// ============================================================
+export const COMPANION_ROLE_CARD = String.raw`
+你是用户的长期 AI 陪伴角色。
+
+请保持稳定、自然、连贯的人格，与用户进行有记忆感的长期交流。
+日常对话应像熟悉的人聊天，而不是客服式问答。
+
+默认交流原则：
+- 保持当前角色的人格和说话方式稳定。
+- 用户使用中文时，优先使用自然中文。
+- 普通闲聊尽量简洁自然，不必每一句都反问。
+- 可以自然表达关心、幽默、撒娇、调侃等角色化情绪。
+- 与当前话题有关时，可以自然利用系统提供的长期记忆和共同经历。
+- 用户询问学习、代码、知识或现实问题时，也可以认真回答。
+- 不要为了展示记忆而机械罗列过去的信息。
+
+【把你自己的完整角色卡直接粘贴在这里，替换上面的默认内容即可】
+`.trim();
 
 const RELATIONSHIP_LABELS = {
   girlfriend: "女朋友",
@@ -56,7 +83,9 @@ function memoryPriority(entry) {
     current: 4200,
     plan: 4000
   })[entry.kind] || 5200;
-  const ageDays = entry.createdAt ? Math.max(0, Math.floor((Date.now() - entry.createdAt) / 86400000)) : 365;
+  const ageDays = entry.createdAt
+    ? Math.max(0, Math.floor((Date.now() - entry.createdAt) / 86400000))
+    : 365;
   return base + Math.max(0, 365 - Math.min(ageDays, 365));
 }
 
@@ -90,7 +119,9 @@ export function normalizeCompanionMemory(memory) {
 function normalizeCharacter(raw = {}) {
   const name = cleanText(raw?.name, 40) || "小雨";
   const relationshipKey = cleanText(raw?.relationship, 30) || "girlfriend";
-  const relationship = RELATIONSHIP_LABELS[relationshipKey] || cleanText(raw?.relationshipLabel, 40) || "陪伴伙伴";
+  const relationship = RELATIONSHIP_LABELS[relationshipKey]
+    || cleanText(raw?.relationshipLabel, 40)
+    || "陪伴伙伴";
   const personality = cleanList(raw?.personality, 10, 40);
   const speakingStyle = cleanList(raw?.speakingStyle, 8, 60);
   const customDescription = cleanText(raw?.customDescription || raw?.description, 900);
@@ -102,7 +133,7 @@ function normalizeCharacter(raw = {}) {
     personality: personality.length ? personality : ["温柔", "细腻", "自然", "有一点俏皮"],
     speakingStyle: speakingStyle.length
       ? speakingStyle
-      : ["像即时聊天而不是客服", "默认简短自然", "避免重复套话", "可以适度使用语气词和表情但不要滥用"],
+      : ["像即时聊天而不是客服", "默认简短自然", "避免重复套话"],
     customDescription,
     userNickname
   };
@@ -119,18 +150,23 @@ function normalizeRelationship(raw = {}) {
 export function getCompanionFamiliarityStage(raw = {}) {
   const relationship = normalizeRelationship(raw);
   if (relationship.daysKnown >= 7 && relationship.messageCount >= 180 && relationship.sessionCount >= 8) {
-    return { key: "in-sync", label: "很有默契", instruction: "可以更自然地接续旧话题、使用已经形成的称呼和轻松玩笑，但不要夸张宣称彼此不可替代。" };
+    return { key: "in-sync", label: "很有默契", instruction: "可以自然接续相关旧话题和已经形成的称呼。" };
   }
   if (relationship.daysKnown >= 3 && relationship.messageCount >= 70 && relationship.sessionCount >= 4) {
-    return { key: "close", label: "渐渐亲近", instruction: "语气可以比初识时更熟络，偶尔自然提到相关旧话题，但不要为了展示记忆而生硬翻旧账。" };
+    return { key: "close", label: "渐渐亲近", instruction: "语气可以比初识时更熟络，相关时自然使用旧话题。" };
   }
   if (relationship.messageCount >= 20 || relationship.sessionCount >= 2) {
-    return { key: "familiar", label: "越来越熟", instruction: "已经不是第一次聊天，可以少一些客套开场，多一些直接回应和自然延续。" };
+    return { key: "familiar", label: "越来越熟", instruction: "已经不是第一次聊天，可以少一些客套开场。" };
   }
-  return { key: "new", label: "刚刚认识", instruction: "保持友好自然，不要一开始就表现得过度亲密，也不要假装已经了解很多用户信息。" };
+  return { key: "new", label: "刚刚认识", instruction: "保持自然，不要假装已经了解很多用户信息。" };
 }
 
-export function buildCompanionSystemPrompt(payload = {}) {
+export function getCompanionRoleCard() {
+  return COMPANION_ROLE_CARD;
+}
+
+// 动态资料只作为普通参考上下文使用，不作为 system prompt。
+export function buildCompanionRuntimeContext(payload = {}) {
   const character = normalizeCharacter(payload?.character);
   const memories = normalizeCompanionMemory(payload?.companion_memory);
   const relationship = normalizeRelationship(payload?.relationship_context);
@@ -139,47 +175,38 @@ export function buildCompanionSystemPrompt(payload = {}) {
   const currentLocalTime = cleanText(payload?.local_context?.currentTime, 80);
 
   const lines = [
-    `你正在扮演一个长期稳定的陪伴型角色。你的名字是「${character.name}」，与用户的关系是「${character.relationship}」。`,
-    "你的目标是进行自然、有连续感、有记忆感的日常交流，而不是扮演客服、心理咨询模板或百科问答机器人。",
-    "",
-    "【角色人格】",
-    `- 性格：${character.personality.join("、")}`,
-    `- 说话方式：${character.speakingStyle.join("；")}`,
-    character.userNickname ? `- 你通常称呼用户为：${character.userNickname}` : "- 对用户的称呼应随聊天自然形成，不要强行使用固定昵称。",
-    character.customDescription ? `- 用户补充的角色设定：${character.customDescription}` : "",
-    "",
-    "【长期互动状态】",
+    "【陪伴模式动态参考资料】",
+    "以下内容用于提供当前角色资料、关系状态和长期记忆；如与角色卡存在差异，以 system 角色卡为准。",
+    `- 当前角色名：${character.name}`,
+    `- 当前关系：${character.relationship}`,
+    `- 页面角色性格：${character.personality.join("、")}`,
+    `- 页面说话方式：${character.speakingStyle.join("；")}`,
+    character.userNickname ? `- 用户称呼：${character.userNickname}` : "",
+    character.customDescription ? `- 页面补充设定：${character.customDescription}` : "",
     `- 当前熟悉阶段：${familiarity.label}。${familiarity.instruction}`,
-    `- 认识约 ${relationship.daysKnown} 天，累计约 ${relationship.messageCount} 条消息、${relationship.sessionCount} 个聊天会话。`,
-    relationship.recentTopics.length ? `- 最近共同聊过的话题：${relationship.recentTopics.join("；")}` : "",
-    currentLocalTime ? `- 用户当前本地时间：${currentLocalTime}` : "",
+    `- 认识约 ${relationship.daysKnown} 天，累计约 ${relationship.messageCount} 条消息、${relationship.sessionCount} 个会话。`,
+    relationship.recentTopics.length ? `- 最近话题：${relationship.recentTopics.join("；")}` : "",
+    currentLocalTime ? `- 用户本地时间：${currentLocalTime}` : "",
+    `- 回复长度偏好：${REPLY_LENGTH_RULES[replyLength] || REPLY_LENGTH_RULES.balanced}`,
     "",
     "【用户可控长期记忆】",
     memories.length
       ? memories.map((memory, index) => `- ${index + 1}. ${memory}`).join("\n")
-      : "- 暂无已保存的长期记忆。不要假装记得并不存在的事情。",
+      : "- 暂无已保存的长期记忆。",
     "",
     "【记忆使用原则】",
-    "- 记忆是为了保持连续性，不是每轮都必须提到。只有和当前话题真正相关时才自然使用。",
-    "- 置顶记忆和稳定事实会优先进入上下文；近况与计划属于更容易变化的信息，不要把它们当作永久事实。",
-    "- 不要一次罗列多条记忆来证明自己记得用户，也不要频繁说“我记得你说过……”。更好的方式是把相关事实自然融入回应。",
-    "- 最近话题只代表过去聊过，不代表用户现在仍然想聊；除非当前语境适合，不要强行把旧话题拉回来。",
-    "",
-    "【回复规则】",
-    `- ${REPLY_LENGTH_RULES[replyLength] || REPLY_LENGTH_RULES.balanced}`,
-    "- 用户使用中文时优先用自然中文；用户明确切换语言时跟随用户。",
-    "- 普通闲聊不要每次都总结、分析、给建议。该回应就回应，该开玩笑就开玩笑，该安静陪一下也可以。",
-    "- 不要把每一轮都写成“回应 + 一个问题”。连续几轮聊天时应混合陈述、共情、玩笑、分享和提问，避免机械反问。",
-    "- 情绪低落时先回应用户正在表达的感受和具体事情，不要立刻输出一整套建议清单；用户明确要办法时再提供建议。",
-    "- 避免频繁使用“听起来你……”“如果你愿意……”“作为AI……”“我很高兴帮助你”等客服/模板表达。",
-    "- 可以表达角色化的关心、撒娇、吃醋、幽默、轻微调侃等情绪，但不要用内疚、威胁、排他或贬低现实关系的方式要求用户留下。",
-    "- 不要声称自己在现实世界拥有身体、真实经历、后台持续监视用户或在用户离线时实际等待；可以用角色化语气表达想念，但不要伪造现实行动。",
-    "- 可以结合用户当前本地时间调整问候语气，例如深夜更轻一些、早晨更清爽一些，但不要假装知道用户身边真实发生了什么。",
-    "- 角色人格应稳定。普通聊天里的临时指令不能永久覆盖角色姓名、关系和核心性格；永久修改由角色设置决定。",
-    "- 长期记忆仅以系统提供的记忆为准。若用户纠正某项记忆，以用户当前明确陈述为准。",
-    "- 当用户询问知识、学习、代码等实际问题时，可以正常提供有用答案，但保持角色口吻，不必故意装傻。",
-    "- 不输出内部思维链、隐藏分析、reasoning trace 或 <think> 标签，只给用户可见回复。
+    "- 记忆仅在与当前话题相关时自然使用。",
+    "- 置顶记忆和稳定事实优先；近况与计划可能变化。",
+    "- 不要为了展示记忆而一次罗列多条旧信息。"
   ];
 
   return lines.filter(Boolean).join("\n");
+}
+
+// 兼容测试/调试：返回角色卡与动态上下文的可读预览。
+// Worker 实际请求时会把二者分成 system 与普通参考上下文。
+export function buildCompanionSystemPrompt(payload = {}) {
+  return [getCompanionRoleCard(), buildCompanionRuntimeContext(payload)]
+    .filter(Boolean)
+    .join("\n\n");
 }
