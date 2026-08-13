@@ -1,10 +1,11 @@
 // Companion primary navigation and role controls.
 (() => {
-  const REVISION = "2026-08-13-v8.0-primary-ux-1";
+  const REVISION = "2026-08-13-v8.0-primary-ux-2";
   const KEYS = {
     characters: "uai_companion_characters_v1",
     activeCharacter: "uai_companion_active_character_v1"
   };
+  const LONG_REPLY_THRESHOLD = 1800;
   let scheduled = false;
 
   function safeParse(value, fallback) {
@@ -34,6 +35,11 @@
 
   function openManager() {
     window.UnlimitedCompanionMulti?.showCharacterManager?.();
+  }
+
+  function openRelationshipRecord() {
+    document.getElementById("uaiCompanionV3Mask")?.remove();
+    window.UnlimitedCompanionProfileRestore?.showCharacterProfile?.();
   }
 
   function ensureRoleToolbar(root) {
@@ -90,12 +96,25 @@
   function simplifyCharacterManager() {
     const manager = document.getElementById("uaiCompanionV3Mask");
     if (!manager) return;
-    const title = manager.querySelector(".uai-c-v3-modal:not(.compact) header h3");
-    const desc = manager.querySelector(".uai-c-v3-modal:not(.compact) header p");
-    const add = manager.querySelector("#uaiCompanionAddCharacter");
+    const modal = manager.querySelector(".uai-c-v3-modal:not(.compact)");
+    if (!modal) return;
+    const title = modal.querySelector("header h3");
+    const desc = modal.querySelector("header p");
+    const footer = modal.querySelector(":scope > footer");
+    const add = modal.querySelector("#uaiCompanionAddCharacter");
     if (title) title.textContent = "我的角色";
     if (desc) desc.textContent = "每个角色拥有独立的设定、聊天、长期记忆和模型设置。";
     if (add) add.textContent = "＋ 新增角色";
+
+    if (footer && !footer.querySelector("#uaiV8RelationshipRecord") && window.UnlimitedCompanionProfileRestore?.showCharacterProfile) {
+      const relationship = document.createElement("button");
+      relationship.type = "button";
+      relationship.id = "uaiV8RelationshipRecord";
+      relationship.className = "secondary";
+      relationship.textContent = "关系记录";
+      relationship.addEventListener("click", openRelationshipRecord);
+      footer.insertBefore(relationship, add || null);
+    }
   }
 
   function simplifyHeader(root) {
@@ -104,6 +123,31 @@
     if (input && profile?.name) input.placeholder = `和${profile.name}说点什么……`;
     const hint = root.querySelector(".uai-c-composer-hint");
     if (hint) hint.textContent = "Enter 发送 · Shift + Enter 换行";
+  }
+
+  function enhanceLongReplies(root) {
+    root.querySelectorAll("#uaiCompanionMessages .uai-c-message-row.assistant").forEach((row) => {
+      const bubble = row.querySelector(".uai-c-bubble");
+      if (!bubble || bubble.querySelector(".uai-c-typing")) return;
+      const text = bubble.textContent || "";
+      if (text.length <= LONG_REPLY_THRESHOLD) {
+        row.classList.remove("uai-c-long-reply", "expanded");
+        row.querySelector(".uai-c-long-toggle")?.remove();
+        return;
+      }
+
+      row.classList.add("uai-c-long-reply");
+      if (row.querySelector(".uai-c-long-toggle")) return;
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "uai-c-long-toggle";
+      button.textContent = "展开全文";
+      button.addEventListener("click", () => {
+        const expanded = row.classList.toggle("expanded");
+        button.textContent = expanded ? "收起" : "展开全文";
+      });
+      bubble.insertAdjacentElement("afterend", button);
+    });
   }
 
   function enhance() {
@@ -116,6 +160,7 @@
     ensureRoleToolbar(root);
     simplifyHeader(root);
     simplifyCharacterManager();
+    enhanceLongReplies(root);
   }
 
   function schedule() {
@@ -129,6 +174,7 @@
     new MutationObserver(schedule).observe(document.body, {
       subtree: true,
       childList: true,
+      characterData: true,
       attributes: true,
       attributeFilter: ["data-uai-mode", "hidden", "class"]
     });
