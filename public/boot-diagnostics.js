@@ -2,7 +2,7 @@
 // Startup guard + dual-mode bootstrap. The existing novel workspace still boots
 // normally behind the mode lobby so old data and feature adapters remain intact.
 (() => {
-  const REVISION = "2026-08-13-v4.2-dual-mode-1";
+  const REVISION = "2026-08-13-v4.2-dual-mode-2";
   const errors = [];
 
   document.documentElement.dataset.frontendRevision = REVISION;
@@ -65,6 +65,7 @@
     ensureStyle(`/companion-v3.css?v=${REVISION}`, "uaiCompanionV3Css");
     ensureScript(`/companion-v2.js?v=${REVISION}`, "uaiCompanionV2Script");
     ensureScript(`/companion-v3.js?v=${REVISION}`, "uaiCompanionV3Script");
+    ensureScript(`/companion-v3-guard.js?v=${REVISION}`, "uaiCompanionV3GuardScript");
     if (document.getElementById("uaiModeRouterScript")) return;
     const script = document.createElement("script");
     script.id = "uaiModeRouterScript";
@@ -92,6 +93,7 @@
       window.__UNLIMITED_BOOT__.modeRouterReady = Boolean(window.UnlimitedModeRouter);
       window.__UNLIMITED_BOOT__.companionPolishReady = Boolean(window.UnlimitedCompanionPolish);
       window.__UNLIMITED_BOOT__.companionMultiReady = Boolean(window.UnlimitedCompanionMulti);
+      window.__UNLIMITED_BOOT__.companionGuardReady = Boolean(window.UnlimitedCompanionGuard);
       return;
     }
     const parts = [];
