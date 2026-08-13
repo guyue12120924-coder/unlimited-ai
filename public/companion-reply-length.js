@@ -1,5 +1,5 @@
 (() => {
-  const REVISION = "2026-08-13-v7.2-reply-length-1";
+  const REVISION = "2026-08-13-v8.0-reply-length-2";
   const PRESETS = {
     short: { chars: 500, label: "约 500 字" },
     balanced: { chars: 1000, label: "约 1000 字 · 默认" },
@@ -42,7 +42,15 @@
     payload.companion_preferences = { ...(payload.companion_preferences || {}), replyLength: "detailed" };
 
     const messages = Array.isArray(payload.messages) ? payload.messages.map((item) => ({ ...item })) : [];
-    const hint = `【回复长度】本轮以约 ${preset.chars} 个中文字符为目标，可自然上下浮动约 20%。保持内容完整、自然、有互动感，不要重复或灌水。`;
+    const parts = [
+      `【回复长度】本轮以约 ${preset.chars} 个中文字符为目标，可自然上下浮动约 20%。保持内容完整、自然、有互动感，不要重复或灌水。`
+    ];
+    const profileText = typeof payload?.character?.customDescription === "string"
+      ? payload.character.customDescription.trim().slice(0, 5000)
+      : "";
+    if (profileText) parts.push(`【当前角色完整设定】\n${profileText}`);
+    const hint = parts.join("\n\n");
+
     let attached = false;
     for (let i = messages.length - 1; i >= 0; i -= 1) {
       if (messages[i]?.role === "user" && typeof messages[i]?.content === "string") {
