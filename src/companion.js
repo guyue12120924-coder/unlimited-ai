@@ -29,10 +29,41 @@ function cleanList(value, maxItems = 12, itemLength = 80) {
     .slice(0, maxItems);
 }
 
-function normalizeMemory(memory) {
+function inferMemoryKind(item, text) {
+  const declared = cleanText(item?.kind, 30);
+  if (declared) return declared;
+  if (/^用户希望被称为/.test(text)) return "nickname";
+  if (/^用户的生日是/.test(text)) return "birthday";
+  if (/^用户喜欢/.test(text)) return "like";
+  if (/^用户不喜欢/.test(text)) return "dislike";
+  if (/过敏|不吃/.test(text)) return "constraint";
+  if (/^用户最近正在/.test(text)) return "current";
+  if (/^用户打算/.test(text)) return "plan";
+  if (/^用户希望记住/.test(text)) return "explicit";
+  return "fact";
+}
+
+function memoryPriority(entry) {
+  if (entry.pinned) return 10000;
+  const base = ({
+    nickname: 8000,
+    birthday: 7600,
+    constraint: 7400,
+    explicit: 7000,
+    like: 6500,
+    dislike: 6500,
+    fact: 5600,
+    current: 4200,
+    plan: 4000
+  })[entry.kind] || 5200;
+  const ageDays = entry.createdAt ? Math.max(0, Math.floor((Date.now() - entry.createdAt) / 86400000)) : 365;
+  return base + Math.max(0, 365 - Math.min(ageDays, 365));
+}
+
+export function normalizeCompanionMemory(memory) {
   if (!Array.isArray(memory)) return [];
   const seen = new Set();
-  const result = [];
+  const entries = [];
 
   for (const item of memory) {
     const text = typeof item === "string"
@@ -42,11 +73,18 @@ function normalizeMemory(memory) {
     const key = text.toLowerCase();
     if (seen.has(key)) continue;
     seen.add(key);
-    result.push(text);
-    if (result.length >= 24) break;
+    entries.push({
+      text,
+      kind: typeof item === "string" ? "fact" : inferMemoryKind(item, text),
+      pinned: typeof item !== "string" && String(item?.source || "").startsWith("pinned-v4"),
+      createdAt: typeof item === "string" ? 0 : Number(item?.updatedAt || item?.createdAt || 0)
+    });
   }
 
-  return result;
+  return entries
+    .sort((a, b) => memoryPriority(b) - memoryPriority(a))
+    .slice(0, 24)
+    .map((entry) => entry.text);
 }
 
 function normalizeCharacter(raw = {}) {
@@ -94,7 +132,7 @@ export function getCompanionFamiliarityStage(raw = {}) {
 
 export function buildCompanionSystemPrompt(payload = {}) {
   const character = normalizeCharacter(payload?.character);
-  const memories = normalizeMemory(payload?.companion_memory);
+  const memories = normalizeCompanionMemory(payload?.companion_memory);
   const relationship = normalizeRelationship(payload?.relationship_context);
   const familiarity = getCompanionFamiliarityStage(relationship);
   const replyLength = cleanText(payload?.companion_preferences?.replyLength, 20) || "balanced";
@@ -123,6 +161,7 @@ export function buildCompanionSystemPrompt(payload = {}) {
     "",
     "【记忆使用原则】",
     "- 记忆是为了保持连续性，不是每轮都必须提到。只有和当前话题真正相关时才自然使用。",
+    "- 置顶记忆和稳定事实会优先进入上下文；近况与计划属于更容易变化的信息，不要把它们当作永久事实。",
     "- 不要一次罗列多条记忆来证明自己记得用户，也不要频繁说“我记得你说过……”。更好的方式是把相关事实自然融入回应。",
     "- 最近话题只代表过去聊过，不代表用户现在仍然想聊；除非当前语境适合，不要强行把旧话题拉回来。",
     "",
