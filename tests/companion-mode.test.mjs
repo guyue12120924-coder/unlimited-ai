@@ -12,19 +12,24 @@ const companionPolishCss = read("public/companion-v2.css");
 const companionMulti = read("public/companion-v3.js");
 const companionMultiCss = read("public/companion-v3.css");
 const companionGuard = read("public/companion-v3-guard.js");
+const companionMemorySearch = read("public/companion-v4.js");
+const companionMemorySearchCss = read("public/companion-v4.css");
 const worker = read("src/worker.js");
 const companionSource = read("src/companion.js");
 
-assert.match(boot, /2026-08-13-v4\.2-dual-mode-2/);
+assert.match(boot, /2026-08-13-v4\.3-dual-mode-1/);
 assert.match(boot, /mode-router\.js/);
 assert.match(boot, /companion-v2\.js/);
 assert.match(boot, /companion-v2\.css/);
 assert.match(boot, /companion-v3\.js/);
 assert.match(boot, /companion-v3\.css/);
 assert.match(boot, /companion-v3-guard\.js/);
+assert.match(boot, /companion-v4\.js/);
+assert.match(boot, /companion-v4\.css/);
 assert.match(boot, /companionPolishReady/);
 assert.match(boot, /companionMultiReady/);
 assert.match(boot, /companionGuardReady/);
+assert.match(boot, /companionMemorySearchReady/);
 assert.match(boot, /uai-mode-gate-pending/);
 
 assert.match(router, /uaiEnterNovel/);
@@ -90,6 +95,22 @@ assert.doesNotMatch(companionGuard, /creative_context/);
 assert.doesNotMatch(companionGuard, /continuity_context/);
 assert.doesNotMatch(companionGuard, /storyMemory/);
 
+assert.match(companionMemorySearch, /uai_companion_moments_v1/);
+assert.match(companionMemorySearch, /uai_companion_memory_archive_v1/);
+assert.match(companionMemorySearch, /function showMemoryOrganizer\(/);
+assert.match(companionMemorySearch, /function dedupeMemories\(/);
+assert.match(companionMemorySearch, /function archiveAllStale\(/);
+assert.match(companionMemorySearch, /function showSearch\(/);
+assert.match(companionMemorySearch, /function searchSessions\(/);
+assert.match(companionMemorySearch, /function showMoments\(/);
+assert.match(companionMemorySearch, /data-v4-moment/);
+assert.match(companionMemorySearch, /uaiCompanionV4Context/);
+assert.match(companionMemorySearch, /UnlimitedCompanionMemorySearch/);
+assert.doesNotMatch(companionMemorySearch, /cfw_sessions_v2/);
+assert.doesNotMatch(companionMemorySearch, /creative_context/);
+assert.doesNotMatch(companionMemorySearch, /continuity_context/);
+assert.doesNotMatch(companionMemorySearch, /storyMemory/);
+
 assert.match(companionCss, /#uaiCompanionRoot/);
 assert.match(companionCss, /@media \(max-width: 780px\)/);
 assert.match(companionCss, /100dvh/);
@@ -102,6 +123,12 @@ assert.match(companionMultiCss, /uai-c-v3-character-bar/);
 assert.match(companionMultiCss, /uai-c-v3-character-card/);
 assert.match(companionMultiCss, /uai-c-v3-actions/);
 assert.match(companionMultiCss, /@media \(max-width: 780px\)/);
+assert.match(companionMemorySearchCss, /uai-c-v4-context/);
+assert.match(companionMemorySearchCss, /uai-c-v4-memory/);
+assert.match(companionMemorySearchCss, /uai-c-v4-search-result/);
+assert.match(companionMemorySearchCss, /uai-c-v4-moment/);
+assert.match(companionMemorySearchCss, /uai-c-v4-roster-summary/);
+assert.match(companionMemorySearchCss, /@media \(max-width: 780px\)/);
 
 assert.match(worker, /payload\?\.mode === "companion" \? "companion" : "novel"/);
 assert.match(worker, /buildCompanionSystemPrompt\(payload\)/);
@@ -116,15 +143,26 @@ assert.match(companionSource, /用户可控长期记忆/);
 assert.match(companionSource, /记忆使用原则/);
 assert.match(companionSource, /不要用内疚、威胁、排他/);
 assert.match(companionSource, /getCompanionFamiliarityStage/);
+assert.match(companionSource, /normalizeCompanionMemory/);
+assert.match(companionSource, /置顶记忆和稳定事实会优先进入上下文/);
 
 const moduleUrl = process.env.COMPANION_MODULE;
 assert.ok(moduleUrl, "COMPANION_MODULE must point to the copied companion module");
-const { buildCompanionSystemPrompt, getCompanionFamiliarityStage } = await import(moduleUrl);
+const { buildCompanionSystemPrompt, getCompanionFamiliarityStage, normalizeCompanionMemory } = await import(moduleUrl);
 
 assert.equal(getCompanionFamiliarityStage({ daysKnown: 1, messageCount: 6, sessionCount: 1 }).key, "new");
 assert.equal(getCompanionFamiliarityStage({ daysKnown: 2, messageCount: 30, sessionCount: 2 }).key, "familiar");
 assert.equal(getCompanionFamiliarityStage({ daysKnown: 4, messageCount: 90, sessionCount: 5 }).key, "close");
 assert.equal(getCompanionFamiliarityStage({ daysKnown: 10, messageCount: 220, sessionCount: 10 }).key, "in-sync");
+
+const rankedMemory = normalizeCompanionMemory([
+  { text: "用户最近正在整理桌面", kind: "current", createdAt: Date.now() },
+  { text: "用户喜欢喝拿铁", kind: "like", createdAt: Date.now() - 30 * 86400000 },
+  { text: "用户希望记住：下次先问论文进度", source: "pinned-v4", kind: "explicit", createdAt: Date.now() - 100 * 86400000 },
+  { text: "用户的生日是 8 月 18 日", kind: "birthday", createdAt: Date.now() - 200 * 86400000 }
+]);
+assert.equal(rankedMemory[0], "用户希望记住：下次先问论文进度");
+assert.ok(rankedMemory.indexOf("用户的生日是 8 月 18 日") < rankedMemory.indexOf("用户最近正在整理桌面"));
 
 const prompt = buildCompanionSystemPrompt({
   character: {
@@ -160,4 +198,4 @@ assert.match(prompt, /不要把每一轮都写成/);
 assert.doesNotMatch(prompt, /当前正文/);
 assert.doesNotMatch(prompt, /未解决伏笔/);
 
-console.log("Companion V3 contract passed: isolated slots -> multi-character snapshots -> guarded switching/reset -> full backup -> edit/regenerate -> structured memory.");
+console.log("Companion V4 contract passed: isolated multi-character companion -> memory organizer/ranking -> chat search -> important moments -> novel isolation.");

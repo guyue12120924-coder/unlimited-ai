@@ -1,10 +1,12 @@
 // public/companion-v3-guard.js
-// Small safety/data companion for the V3 multi-character layer.
+// Safety/data companion for the multi-character layers.
 (() => {
-  const REVISION = "2026-08-13-v4.2-companion-guard-1";
+  const REVISION = "2026-08-13-v4.3-companion-guard-2";
   const CHARACTERS_KEY = "uai_companion_characters_v1";
   const ACTIVE_KEY = "uai_companion_active_character_v1";
   const PROFILE_KEY = "uai_companion_profile_v1";
+  const MOMENTS_KEY = "uai_companion_moments_v1";
+  const ARCHIVE_KEY = "uai_companion_memory_archive_v1";
   let scheduled = false;
 
   function safeParse(value, fallback) {
@@ -30,10 +32,12 @@
     if (!Array.isArray(characters) || !characters.length) return;
     const payload = {
       format: "unlimited-ai-companion-multichar-backup",
-      version: 1,
+      version: 2,
       exportedAt: new Date().toISOString(),
       activeCharacterId: localStorage.getItem(ACTIVE_KEY) || "",
-      characters
+      characters,
+      importantMomentsByCharacter: safeParse(localStorage.getItem(MOMENTS_KEY), {}),
+      memoryArchiveByCharacter: safeParse(localStorage.getItem(ARCHIVE_KEY), {})
     };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
@@ -61,21 +65,41 @@
     else footer.appendChild(button);
   }
 
+  function pruneOrphanedRoleData() {
+    const characters = safeParse(localStorage.getItem(CHARACTERS_KEY), []);
+    if (!Array.isArray(characters) || !characters.length) return;
+    const ids = new Set(characters.map((item) => item?.id).filter(Boolean));
+    for (const key of [MOMENTS_KEY, ARCHIVE_KEY]) {
+      const map = safeParse(localStorage.getItem(key), {});
+      if (!map || typeof map !== "object" || Array.isArray(map)) continue;
+      let changed = false;
+      for (const id of Object.keys(map)) {
+        if (ids.has(id)) continue;
+        delete map[id];
+        changed = true;
+      }
+      if (changed) localStorage.setItem(key, JSON.stringify(map));
+    }
+  }
+
   function reconcileReset() {
     const characters = safeParse(localStorage.getItem(CHARACTERS_KEY), []);
     if (!Array.isArray(characters) || !characters.length) return;
     const profile = safeParse(localStorage.getItem(PROFILE_KEY), null);
     if (profile && typeof profile === "object") return;
     // The legacy reset action removes all active companion slots. When that
-    // happens, also drop the V3 snapshots so “重置陪伴模式” really means all roles.
+    // happens, also drop multi-character snapshots and V4 companion metadata.
     localStorage.removeItem(CHARACTERS_KEY);
     localStorage.removeItem(ACTIVE_KEY);
+    localStorage.removeItem(MOMENTS_KEY);
+    localStorage.removeItem(ARCHIVE_KEY);
   }
 
   function enhance() {
     scheduled = false;
     if (document.body.dataset.uaiMode !== "companion") return;
     reconcileReset();
+    pruneOrphanedRoleData();
     ensureExportButton();
   }
 
@@ -93,7 +117,7 @@
     schedule();
   }
 
-  window.UnlimitedCompanionGuard = { revision: REVISION, exportAllCharacters };
+  window.UnlimitedCompanionGuard = { revision: REVISION, exportAllCharacters, pruneOrphanedRoleData };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init, { once: true });
   else init();
 })();
