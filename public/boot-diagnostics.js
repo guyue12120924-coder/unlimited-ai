@@ -2,7 +2,7 @@
 // Startup guard + dual-mode bootstrap. The existing novel workspace still boots
 // normally behind the mode lobby so old data and feature adapters remain intact.
 (() => {
-  const REVISION = "2026-08-13-v5.0-dual-mode-1";
+  const REVISION = "2026-08-13-v6.0-dual-mode-1";
   const errors = [];
 
   document.documentElement.dataset.frontendRevision = REVISION;
@@ -65,12 +65,14 @@
     ensureStyle(`/companion-v3.css?v=${REVISION}`, "uaiCompanionV3Css");
     ensureStyle(`/companion-v4.css?v=${REVISION}`, "uaiCompanionV4Css");
     ensureStyle(`/companion-v5.css?v=${REVISION}`, "uaiCompanionV5Css");
+    ensureStyle(`/companion-v6.css?v=${REVISION}`, "uaiCompanionV6Css");
     ensureScript(`/companion-v2.js?v=${REVISION}`, "uaiCompanionV2Script");
     ensureScript(`/companion-v3.js?v=${REVISION}`, "uaiCompanionV3Script");
     ensureScript(`/companion-v3-guard.js?v=${REVISION}`, "uaiCompanionV3GuardScript");
     ensureScript(`/companion-v4.js?v=${REVISION}`, "uaiCompanionV4Script");
     ensureScript(`/companion-v5.js?v=${REVISION}`, "uaiCompanionV5Script");
     ensureScript(`/companion-v5-guard.js?v=${REVISION}`, "uaiCompanionV5GuardScript");
+    ensureScript(`/companion-v6.js?v=${REVISION}`, "uaiCompanionV6Script");
     if (document.getElementById("uaiModeRouterScript")) return;
     const script = document.createElement("script");
     script.id = "uaiModeRouterScript";
@@ -102,6 +104,7 @@
       window.__UNLIMITED_BOOT__.companionMemorySearchReady = Boolean(window.UnlimitedCompanionMemorySearch);
       window.__UNLIMITED_BOOT__.companionProfileRestoreReady = Boolean(window.UnlimitedCompanionProfileRestore);
       window.__UNLIMITED_BOOT__.companionRestoreGuardReady = Boolean(window.UnlimitedCompanionRestoreGuard);
+      window.__UNLIMITED_BOOT__.companionReviewExportReady = Boolean(window.UnlimitedCompanionReviewExport);
       return;
     }
     const parts = [];
@@ -111,7 +114,7 @@
   }
 
   loadModeRouter();
-  const schedule = () => window.setTimeout(verifyBoot, 3800);
+  const schedule = () => window.setTimeout(verifyBoot, 4000);
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", schedule, { once: true });
   else schedule();
 })();
