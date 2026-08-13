@@ -11,7 +11,7 @@ import { reviewContinuity } from "./continuity-review.js";
 import { buildCompanionSystemPrompt } from "./companion.js";
 
 const NVIDIA_CHAT_URL = "https://integrate.api.nvidia.com/v1/chat/completions";
-const APP_REVISION = "2026-08-13-v6.1-prompt-center-2";
+const APP_REVISION = "2026-08-13-v6.1-prompt-center-3";
 const MODEL_RUNTIME_INJECTION = `
 运行约束（由 Worker 注入）：
 - 用户使用中文时默认使用自然、流畅的中文回复；用户明确指定其他语言时服从用户要求。
@@ -101,6 +101,8 @@ function buildMessages(payload, modelConfig) {
   const upstreamMessages = [];
   const customSystemOverride = getCustomSystemOverride(payload, mode);
 
+  // Important isolation boundary: a custom system override never mixes built-in
+  // novel/companion persona text into the same system-role message.
   if (customSystemOverride) {
     // Full override mode: the user's custom text is the ONLY system-role
     // message. Built-in persona/default prompts are completely omitted.
@@ -367,8 +369,9 @@ async function handleDiagnostics(request, env) {
   const assets = await Promise.all([
     inspectAsset(request, env, "/index.html", ["/boot-diagnostics.js"]),
     inspectAsset(request, env, "/boot-diagnostics.js", ["2026-08-13-v6.0-dual-mode-1", "loadModeRouter"]),
-    inspectAsset(request, env, "/mode-router.js", ["UnlimitedModeRouter", "prompt-center.js", "uaiEnterNovel", "uaiEnterCompanion"]),
-    inspectAsset(request, env, "/prompt-center.js", ["UnlimitedPromptCenter", "自定义注入提示词"]),
+    inspectAsset(request, env, "/mode-router.js", ["UnlimitedModeRouter", "uaiEnterNovel", "uaiEnterCompanion"]),
+    inspectAsset(request, env, "/model-status.js", ["prompt-control.js", "prompt-center.css"]),
+    inspectAsset(request, env, "/prompt-control.js", ["UnlimitedPromptControl", "uai_companion_profile_v1"]),
     inspectAsset(request, env, "/mode-router.css", ["uai-mode-lobby", "data-uai-mode"]),
     inspectAsset(request, env, "/companion-mode.js", ["UnlimitedCompanion", "uai_companion_sessions_v1", "mode: \"companion\""]),
     inspectAsset(request, env, "/companion-mode.css", ["uaiCompanionRoot", "uai-c-shell"]),
@@ -390,7 +393,7 @@ async function handleDiagnostics(request, env) {
     modes: ["novel", "companion"],
     promptCenter: true,
     conclusion: frontendCurrent
-      ? "Dual-mode frontend and prompt center are current."
+      ? "Dual-mode frontend and prompt controls are current."
       : "Worker is current but one or more dual-mode/static assets are older or incomplete.",
     assets
   });
