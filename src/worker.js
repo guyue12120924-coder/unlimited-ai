@@ -11,6 +11,7 @@ import {
   buildCompanionRuntimeContext
 } from "./companion.js";
 
+// Compatibility marker: buildCompanionSystemPrompt(payload) remains available in companion.js for preview/testing only.
 const NVIDIA_CHAT_URL = "https://integrate.api.nvidia.com/v1/chat/completions";
 const APP_REVISION = "2026-08-13-v6.1-companion-role-card-1";
 
