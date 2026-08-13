@@ -1,0 +1,4 @@
+Unlimited AI deployment trigger
+Date: 2026-08-13
+Reason: force Cloudflare Git deployment to build the latest main after companion role-card syntax fix.
+Expected companion prompt source: src/companion.js -> COMPANION_ROLE_CARD
