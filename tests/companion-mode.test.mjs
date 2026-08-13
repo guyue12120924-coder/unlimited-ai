@@ -7,11 +7,16 @@ const boot = read("public/boot-diagnostics.js");
 const router = read("public/mode-router.js");
 const companionClient = read("public/companion-mode.js");
 const companionCss = read("public/companion-mode.css");
+const companionPolish = read("public/companion-v2.js");
+const companionPolishCss = read("public/companion-v2.css");
 const worker = read("src/worker.js");
 const companionSource = read("src/companion.js");
 
-assert.match(boot, /2026-08-13-v4\.0-dual-mode-1/);
+assert.match(boot, /2026-08-13-v4\.1-dual-mode-1/);
 assert.match(boot, /mode-router\.js/);
+assert.match(boot, /companion-v2\.js/);
+assert.match(boot, /companion-v2\.css/);
+assert.match(boot, /companionPolishReady/);
 assert.match(boot, /uai-mode-gate-pending/);
 
 assert.match(router, /uaiEnterNovel/);
@@ -37,9 +42,26 @@ assert.doesNotMatch(companionClient, /creative_context/);
 assert.doesNotMatch(companionClient, /continuity_context/);
 assert.doesNotMatch(companionClient, /storyMemory/);
 
+assert.match(companionPolish, /uai_companion_meta_v2/);
+assert.match(companionPolish, /function relationshipStage\(/);
+assert.match(companionPolish, /uaiCompanionQuickBar/);
+assert.match(companionPolish, /uaiCompanionReturnCard/);
+assert.match(companionPolish, /function pinMemory\(/);
+assert.match(companionPolish, /uaiCompanionScrollBottom/);
+assert.match(companionPolish, /UnlimitedCompanionPolish/);
+assert.doesNotMatch(companionPolish, /cfw_sessions_v2/);
+assert.doesNotMatch(companionPolish, /creative_context/);
+assert.doesNotMatch(companionPolish, /continuity_context/);
+assert.doesNotMatch(companionPolish, /storyMemory/);
+
 assert.match(companionCss, /#uaiCompanionRoot/);
 assert.match(companionCss, /@media \(max-width: 780px\)/);
 assert.match(companionCss, /100dvh/);
+assert.match(companionPolishCss, /uai-c-v2-stage/);
+assert.match(companionPolishCss, /uai-c-v2-quickbar/);
+assert.match(companionPolishCss, /uai-c-v2-return-card/);
+assert.match(companionPolishCss, /uai-c-v2-message-actions/);
+assert.match(companionPolishCss, /uai-c-v2-scroll-bottom/);
 
 assert.match(worker, /payload\?\.mode === "companion" \? "companion" : "novel"/);
 assert.match(worker, /buildCompanionSystemPrompt\(payload\)/);
@@ -51,11 +73,19 @@ assert.doesNotMatch(companionSource, /\.\/context\.js/);
 assert.doesNotMatch(companionSource, /memory-extractor/);
 assert.doesNotMatch(companionSource, /continuity-review/);
 assert.match(companionSource, /用户可控长期记忆/);
+assert.match(companionSource, /记忆使用原则/);
 assert.match(companionSource, /不要用内疚、威胁、排他/);
+assert.match(companionSource, /getCompanionFamiliarityStage/);
 
 const moduleUrl = process.env.COMPANION_MODULE;
 assert.ok(moduleUrl, "COMPANION_MODULE must point to the copied companion module");
-const { buildCompanionSystemPrompt } = await import(moduleUrl);
+const { buildCompanionSystemPrompt, getCompanionFamiliarityStage } = await import(moduleUrl);
+
+assert.equal(getCompanionFamiliarityStage({ daysKnown: 1, messageCount: 6, sessionCount: 1 }).key, "new");
+assert.equal(getCompanionFamiliarityStage({ daysKnown: 2, messageCount: 30, sessionCount: 2 }).key, "familiar");
+assert.equal(getCompanionFamiliarityStage({ daysKnown: 4, messageCount: 90, sessionCount: 5 }).key, "close");
+assert.equal(getCompanionFamiliarityStage({ daysKnown: 10, messageCount: 220, sessionCount: 10 }).key, "in-sync");
+
 const prompt = buildCompanionSystemPrompt({
   character: {
     name: "小雨",
@@ -69,7 +99,7 @@ const prompt = buildCompanionSystemPrompt({
   ],
   relationship_context: {
     daysKnown: 3,
-    messageCount: 18,
+    messageCount: 28,
     sessionCount: 2,
     recentTopics: ["论文修改"]
   },
@@ -83,8 +113,11 @@ assert.match(prompt, /温柔、傲娇/);
 assert.match(prompt, /用户喜欢喝拿铁/);
 assert.match(prompt, /用户最近在准备保研/);
 assert.match(prompt, /论文修改/);
+assert.match(prompt, /越来越熟/);
 assert.match(prompt, /1～3 句话/);
+assert.match(prompt, /不要一次罗列多条记忆/);
+assert.match(prompt, /不要把每一轮都写成/);
 assert.doesNotMatch(prompt, /当前正文/);
 assert.doesNotMatch(prompt, /未解决伏笔/);
 
-console.log("Companion contract passed: lobby -> isolated client storage -> mode-routed worker -> companion-only prompt context.");
+console.log("Companion V2 contract passed: isolated storage -> relationship stage -> quick chat/return UX -> memory controls -> companion-only prompt context.");

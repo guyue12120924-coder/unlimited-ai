@@ -2,7 +2,7 @@
 // Startup guard + dual-mode bootstrap. The existing novel workspace still boots
 // normally behind the mode lobby so old data and feature adapters remain intact.
 (() => {
-  const REVISION = "2026-08-13-v4.0-dual-mode-1";
+  const REVISION = "2026-08-13-v4.1-dual-mode-1";
   const errors = [];
 
   document.documentElement.dataset.frontendRevision = REVISION;
@@ -24,6 +24,16 @@
     link.rel = "stylesheet";
     link.href = href;
     document.head.appendChild(link);
+  }
+
+  function ensureScript(src, id) {
+    if (document.getElementById(id)) return;
+    const script = document.createElement("script");
+    script.id = id;
+    script.src = src;
+    script.async = true;
+    script.addEventListener("error", () => errors.push(`资源加载失败：${src}`), { once: true });
+    document.body.appendChild(script);
   }
 
   function describeError(event) {
@@ -51,6 +61,8 @@
   function loadModeRouter() {
     ensureStyle(`/mode-router.css?v=${REVISION}`, "uaiModeRouterCss");
     ensureStyle(`/companion-mode.css?v=${REVISION}`, "uaiCompanionCss");
+    ensureStyle(`/companion-v2.css?v=${REVISION}`, "uaiCompanionV2Css");
+    ensureScript(`/companion-v2.js?v=${REVISION}`, "uaiCompanionV2Script");
     if (document.getElementById("uaiModeRouterScript")) return;
     const script = document.createElement("script");
     script.id = "uaiModeRouterScript";
@@ -76,6 +88,7 @@
     if (!missing.length && !errors.length) {
       window.__UNLIMITED_BOOT__.ready = true;
       window.__UNLIMITED_BOOT__.modeRouterReady = Boolean(window.UnlimitedModeRouter);
+      window.__UNLIMITED_BOOT__.companionPolishReady = Boolean(window.UnlimitedCompanionPolish);
       return;
     }
     const parts = [];
