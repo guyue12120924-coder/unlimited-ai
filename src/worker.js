@@ -54,12 +54,19 @@ function clientConfigJs() {
 }
 
 function getPromptInjection(payload) {
-  const raw = typeof payload?.prompt_injection === "string"
+  const direct = typeof payload?.prompt_injection === "string"
     ? payload.prompt_injection
     : typeof payload?.custom_system_prompt === "string"
       ? payload.custom_system_prompt
       : "";
-  return raw.trim().slice(0, 12000);
+  if (direct.trim()) return direct.trim().slice(0, 12000);
+
+  const companionProfilePrompt = payload?.mode === "companion"
+    && payload?.character?.promptInjectionEnabled
+    && typeof payload?.character?.promptInjection === "string"
+      ? payload.character.promptInjection
+      : "";
+  return companionProfilePrompt.trim().slice(0, 12000);
 }
 
 function formatPromptInjection(payload) {
@@ -329,7 +336,7 @@ async function handleDiagnostics(request, env) {
   const assets = await Promise.all([
     inspectAsset(request, env, "/index.html", ["/boot-diagnostics.js"]),
     inspectAsset(request, env, "/boot-diagnostics.js", ["loadModeRouter", "prompt-center.js"]),
-    inspectAsset(request, env, "/prompt-center.js", ["UnlimitedPromptCenter", "prompt_injection"]),
+    inspectAsset(request, env, "/prompt-center.js", ["UnlimitedPromptCenter", "自定义注入提示词"]),
     inspectAsset(request, env, "/mode-router.js", ["UnlimitedModeRouter", "uaiEnterNovel", "uaiEnterCompanion"]),
     inspectAsset(request, env, "/mode-router.css", ["uai-mode-lobby", "data-uai-mode"]),
     inspectAsset(request, env, "/companion-mode.js", ["UnlimitedCompanion", "uai_companion_sessions_v1", "mode: \"companion\""]),
