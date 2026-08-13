@@ -7,9 +7,10 @@ import { getBuiltinPrompt } from "./prompts.js";
 import { buildCreativeContextMessage } from "./context.js";
 import { extractStoryMemories } from "./memory-extractor.js";
 import { reviewContinuity } from "./continuity-review.js";
+import { buildCompanionSystemPrompt } from "./companion.js";
 
 const NVIDIA_CHAT_URL = "https://integrate.api.nvidia.com/v1/chat/completions";
-const APP_REVISION = "2026-08-09-v2-boot-1";
+const APP_REVISION = "2026-08-13-v4.0-dual-mode-1";
 const MODEL_RUNTIME_INJECTION = `
 运行约束（由 Worker 注入）：
 - 用户使用中文时默认使用自然、流畅的中文回复；用户明确指定其他语言时服从用户要求。
@@ -48,27 +49,35 @@ function clientConfigJs() {
 }
 
 function buildMessages(payload, modelConfig) {
-  const useBuiltinPersona = payload?.use_builtin_persona !== false;
-  const customSystemPrompt =
-    typeof payload?.custom_system_prompt === "string"
-      ? payload.custom_system_prompt.trim()
-      : "";
-
+  const mode = payload?.mode === "companion" ? "companion" : "novel";
   const messages = Array.isArray(payload?.messages) ? payload.messages : [];
   const upstreamMessages = [];
-  const personaPrompt = useBuiltinPersona
-    ? getBuiltinPrompt(modelConfig.promptProfile)
-    : customSystemPrompt;
-  const creativeContext = buildCreativeContextMessage(
-    payload?.creative_context,
-    payload?.memory_context,
-    payload?.continuity_context
-  );
-  const systemPrompt = [
-    personaPrompt,
-    MODEL_RUNTIME_INJECTION,
-    creativeContext
-  ].filter(Boolean).join("\n\n");
+  let systemPrompt = "";
+
+  if (mode === "companion") {
+    // Important isolation boundary: companion requests never receive the story
+    // context, story memory, continuity context, or novel persona prompt.
+    systemPrompt = buildCompanionSystemPrompt(payload);
+  } else {
+    const useBuiltinPersona = payload?.use_builtin_persona !== false;
+    const customSystemPrompt =
+      typeof payload?.custom_system_prompt === "string"
+        ? payload.custom_system_prompt.trim()
+        : "";
+    const personaPrompt = useBuiltinPersona
+      ? getBuiltinPrompt(modelConfig.promptProfile)
+      : customSystemPrompt;
+    const creativeContext = buildCreativeContextMessage(
+      payload?.creative_context,
+      payload?.memory_context,
+      payload?.continuity_context
+    );
+    systemPrompt = [
+      personaPrompt,
+      MODEL_RUNTIME_INJECTION,
+      creativeContext
+    ].filter(Boolean).join("\n\n");
+  }
 
   if (systemPrompt) {
     upstreamMessages.push({
@@ -298,34 +307,31 @@ async function inspectAsset(request, env, pathname, markers = []) {
 
 async function handleDiagnostics(request, env) {
   const assets = await Promise.all([
-    inspectAsset(request, env, "/index.html", [
-      "2026-08-09-v2-boot-1",
-      "/boot-diagnostics.js?v=20260809-2",
-      "/context-bridge.js?v=20260809-2",
-      "/continuity-bridge.js?v=20260809-2",
-      "/memory-bridge.js?v=20260809-2",
-      "/memory-suggest.js?v=20260809-2"
-    ]),
-    inspectAsset(request, env, "/boot-diagnostics.js", ["frontendBootFailure", "2026-08-09-v2-boot-1"]),
+    inspectAsset(request, env, "/index.html", ["/boot-diagnostics.js"]),
+    inspectAsset(request, env, "/boot-diagnostics.js", ["2026-08-13-v4.0-dual-mode-1", "loadModeRouter"]),
+    inspectAsset(request, env, "/mode-router.js", ["UnlimitedModeRouter", "uaiEnterNovel", "uaiEnterCompanion"]),
+    inspectAsset(request, env, "/mode-router.css", ["uai-mode-lobby", "data-uai-mode"]),
+    inspectAsset(request, env, "/companion-mode.js", ["UnlimitedCompanion", "uai_companion_sessions_v1", "mode: \"companion\""]),
+    inspectAsset(request, env, "/companion-mode.css", ["uaiCompanionRoot", "uai-c-shell"]),
     inspectAsset(request, env, "/context-bridge.js", ["contextInspectorBtn", "creative_context"]),
     inspectAsset(request, env, "/continuity-bridge.js", ["continuityBtn", "continuity_context"]),
-    inspectAsset(request, env, "/memory-bridge.js", ["storyMemoryBtn", "memory_context"]),
-    inspectAsset(request, env, "/memory-suggest.js", ["memorySuggestTrigger", "/api/memory/extract"])
+    inspectAsset(request, env, "/memory-bridge.js", ["storyMemoryBtn", "memory_context"])
   ]);
 
-  const index = assets[0];
-  const expectedIndexMarkers = Object.values(index.markers || {});
-  const frontendCurrent = expectedIndexMarkers.length > 0
-    && expectedIndexMarkers.every(Boolean)
-    && assets.slice(1).every((asset) => asset.available);
+  const frontendCurrent = assets.every((asset) => {
+    if (!asset.available) return false;
+    const markerValues = Object.values(asset.markers || {});
+    return markerValues.length === 0 || markerValues.every(Boolean);
+  });
 
   return jsonResp({
     workerRevision: APP_REVISION,
     assetBindingPresent: Boolean(env.ASSETS && typeof env.ASSETS.fetch === "function"),
     frontendCurrent,
+    modes: ["novel", "companion"],
     conclusion: frontendCurrent
-      ? "Worker and static assets are on the V2 boot revision. HTML/JS/CSS are now served through the Worker with no-store headers."
-      : "Worker is current but the ASSETS binding is serving an older or incomplete public directory.",
+      ? "Dual-mode frontend is current: novel workspace is preserved and companion mode is isolated behind the mode router."
+      : "Worker is current but one or more dual-mode/static assets are older or incomplete.",
     assets
   });
 }
