@@ -50,3 +50,9 @@ jobs:
           set -euo pipefail
           cp src/companion.js /tmp/companion-under-test.mjs
           COMPANION_MODULE="file:///tmp/companion-under-test.mjs" node tests/companion-mode.test.mjs
+
+      - name: Check companion V5 restore guard contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          node tests/companion-v5-guard.test.mjs
