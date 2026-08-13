@@ -83,21 +83,4 @@
     }
   `;
   document.head.appendChild(style);
-
-  // Prompt controls are loaded from this stable bootstrap point so both the
-  // novel workspace and the dynamically mounted companion UI can use them.
-  if (!document.getElementById("uaiPromptControlCss")) {
-    const link = document.createElement("link");
-    link.id = "uaiPromptControlCss";
-    link.rel = "stylesheet";
-    link.href = `/prompt-center.css?v=${encodeURIComponent(window.APP_REVISION || "prompt-control-2")}`;
-    document.head.appendChild(link);
-  }
-  if (!document.getElementById("uaiPromptControlScript")) {
-    const script = document.createElement("script");
-    script.id = "uaiPromptControlScript";
-    script.src = `/prompt-control.js?v=${encodeURIComponent(window.APP_REVISION || "prompt-control-2")}`;
-    script.async = true;
-    document.body.appendChild(script);
-  }
 })();
