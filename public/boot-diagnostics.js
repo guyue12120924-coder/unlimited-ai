@@ -2,7 +2,7 @@
 // Startup guard + dual-mode bootstrap. The existing novel workspace still boots
 // normally behind the mode lobby so old data and feature adapters remain intact.
 (() => {
-  const REVISION = "2026-08-13-v5.0-dual-mode-1";
+  const REVISION = "2026-08-13-v5.0-dual-mode-2";
   const errors = [];
 
   document.documentElement.dataset.frontendRevision = REVISION;
@@ -70,6 +70,7 @@
     ensureScript(`/companion-v3-guard.js?v=${REVISION}`, "uaiCompanionV3GuardScript");
     ensureScript(`/companion-v4.js?v=${REVISION}`, "uaiCompanionV4Script");
     ensureScript(`/companion-v5.js?v=${REVISION}`, "uaiCompanionV5Script");
+    ensureScript(`/companion-v5-guard.js?v=${REVISION}`, "uaiCompanionV5GuardScript");
     if (document.getElementById("uaiModeRouterScript")) return;
     const script = document.createElement("script");
     script.id = "uaiModeRouterScript";
@@ -100,6 +101,7 @@
       window.__UNLIMITED_BOOT__.companionGuardReady = Boolean(window.UnlimitedCompanionGuard);
       window.__UNLIMITED_BOOT__.companionMemorySearchReady = Boolean(window.UnlimitedCompanionMemorySearch);
       window.__UNLIMITED_BOOT__.companionProfileRestoreReady = Boolean(window.UnlimitedCompanionProfileRestore);
+      window.__UNLIMITED_BOOT__.companionRestoreGuardReady = Boolean(window.UnlimitedCompanionRestoreGuard);
       return;
     }
     const parts = [];
@@ -109,7 +111,7 @@
   }
 
   loadModeRouter();
-  const schedule = () => window.setTimeout(verifyBoot, 3600);
+  const schedule = () => window.setTimeout(verifyBoot, 3800);
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", schedule, { once: true });
   else schedule();
 })();
