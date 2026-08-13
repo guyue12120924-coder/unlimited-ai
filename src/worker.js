@@ -4,13 +4,14 @@ import {
   getModelCandidates
 } from "./models.js";
 import { getBuiltinPrompt } from "./prompts.js";
+import { DEFAULT_NOVEL_PROMPT, DEFAULT_COMPANION_PROMPT } from "./default-prompts.js";
 import { buildCreativeContextMessage } from "./context.js";
 import { extractStoryMemories } from "./memory-extractor.js";
 import { reviewContinuity } from "./continuity-review.js";
 import { buildCompanionSystemPrompt } from "./companion.js";
 
 const NVIDIA_CHAT_URL = "https://integrate.api.nvidia.com/v1/chat/completions";
-const APP_REVISION = "2026-08-13-v4.0-dual-mode-1";
+const APP_REVISION = "2026-08-13-v6.1-prompt-center-1";
 const MODEL_RUNTIME_INJECTION = `
 运行约束（由 Worker 注入）：
 - 用户使用中文时默认使用自然、流畅的中文回复；用户明确指定其他语言时服从用户要求。
@@ -44,29 +45,47 @@ function clientConfigJs() {
     id: model.id,
     label: model.label
   }));
+  const prompts = {
+    novel: DEFAULT_NOVEL_PROMPT,
+    companion: DEFAULT_COMPANION_PROMPT
+  };
 
-  return `window.APP_MODELS = ${JSON.stringify(models, null, 2)};\nwindow.APP_DEFAULT_MODEL = ${JSON.stringify(DEFAULT_MODEL_ID)};\nwindow.APP_REVISION = ${JSON.stringify(APP_REVISION)};\n`;
+  return `window.APP_MODELS = ${JSON.stringify(models, null, 2)};\nwindow.APP_DEFAULT_MODEL = ${JSON.stringify(DEFAULT_MODEL_ID)};\nwindow.APP_DEFAULT_PROMPTS = ${JSON.stringify(prompts)};\nwindow.APP_REVISION = ${JSON.stringify(APP_REVISION)};\n`;
+}
+
+function getPromptInjection(payload) {
+  const raw = typeof payload?.prompt_injection === "string"
+    ? payload.prompt_injection
+    : typeof payload?.custom_system_prompt === "string"
+      ? payload.custom_system_prompt
+      : "";
+  return raw.trim().slice(0, 12000);
+}
+
+function formatPromptInjection(payload) {
+  const injection = getPromptInjection(payload);
+  return injection ? `【用户自定义注入提示词】\n${injection}` : "";
 }
 
 function buildMessages(payload, modelConfig) {
   const mode = payload?.mode === "companion" ? "companion" : "novel";
   const messages = Array.isArray(payload?.messages) ? payload.messages : [];
   const upstreamMessages = [];
+  const promptInjection = formatPromptInjection(payload);
   let systemPrompt = "";
 
   if (mode === "companion") {
-    // Important isolation boundary: companion requests never receive the story
-    // context, story memory, continuity context, or novel persona prompt.
-    systemPrompt = buildCompanionSystemPrompt(payload);
+    // Important isolation boundary: companion requests never receive story
+    // context, story memory, continuity context, or the novel persona prompt.
+    systemPrompt = [
+      DEFAULT_COMPANION_PROMPT,
+      buildCompanionSystemPrompt(payload),
+      promptInjection
+    ].filter(Boolean).join("\n\n");
   } else {
-    const useBuiltinPersona = payload?.use_builtin_persona !== false;
-    const customSystemPrompt =
-      typeof payload?.custom_system_prompt === "string"
-        ? payload.custom_system_prompt.trim()
-        : "";
-    const personaPrompt = useBuiltinPersona
-      ? getBuiltinPrompt(modelConfig.promptProfile)
-      : customSystemPrompt;
+    // Novel mode always keeps the built-in default prompt. The browser custom
+    // prompt is now an additive injection instead of replacing the default.
+    const personaPrompt = getBuiltinPrompt(modelConfig.promptProfile);
     const creativeContext = buildCreativeContextMessage(
       payload?.creative_context,
       payload?.memory_context,
@@ -75,6 +94,7 @@ function buildMessages(payload, modelConfig) {
     systemPrompt = [
       personaPrompt,
       MODEL_RUNTIME_INJECTION,
+      promptInjection,
       creativeContext
     ].filter(Boolean).join("\n\n");
   }
@@ -308,7 +328,8 @@ async function inspectAsset(request, env, pathname, markers = []) {
 async function handleDiagnostics(request, env) {
   const assets = await Promise.all([
     inspectAsset(request, env, "/index.html", ["/boot-diagnostics.js"]),
-    inspectAsset(request, env, "/boot-diagnostics.js", ["2026-08-13-v4.0-dual-mode-1", "loadModeRouter"]),
+    inspectAsset(request, env, "/boot-diagnostics.js", ["loadModeRouter", "prompt-center.js"]),
+    inspectAsset(request, env, "/prompt-center.js", ["UnlimitedPromptCenter", "prompt_injection"]),
     inspectAsset(request, env, "/mode-router.js", ["UnlimitedModeRouter", "uaiEnterNovel", "uaiEnterCompanion"]),
     inspectAsset(request, env, "/mode-router.css", ["uai-mode-lobby", "data-uai-mode"]),
     inspectAsset(request, env, "/companion-mode.js", ["UnlimitedCompanion", "uai_companion_sessions_v1", "mode: \"companion\""]),
@@ -329,8 +350,9 @@ async function handleDiagnostics(request, env) {
     assetBindingPresent: Boolean(env.ASSETS && typeof env.ASSETS.fetch === "function"),
     frontendCurrent,
     modes: ["novel", "companion"],
+    promptCenter: true,
     conclusion: frontendCurrent
-      ? "Dual-mode frontend is current: novel workspace is preserved and companion mode is isolated behind the mode router."
+      ? "Dual-mode frontend and prompt center are current."
       : "Worker is current but one or more dual-mode/static assets are older or incomplete.",
     assets
   });
