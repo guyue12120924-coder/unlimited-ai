@@ -1,8 +1,8 @@
 Unlimited AI deployment trigger
 Date: 2026-08-14
-Frontend revision: 2026-08-14-v10.1-dual-mode-1
+Frontend revision: 2026-08-14-v10.2-dual-mode-1
 Worker revision: 2026-08-14-v10.0-worker-1
-Reason: finalize V10.1 companion UI polish, stop repeated message actions, brighten the visual hierarchy, and prevent horizontal overflow.
+Reason: refine the V10.2 companion visual hierarchy, tighten the reading column, improve starter prompts, soften the sidebar, and polish the floating composer.
 Companion prompt source: src/companion.js -> COMPANION_ROLE_CARD
 Novel prompt source: src/worker.js -> NOVEL_SYSTEM_PROMPT
-Current architecture: V10.1 conversation-first companion UI with stable deduplicated message actions, warmer/lighter surfaces, role menu, readable message layout, and compact composer.
+Current architecture: V10.2 conversation-first companion UI with stable deduplicated message actions, warmer layered surfaces, focused 900px reading/composer column, compact role menu, and responsive mobile layout.
