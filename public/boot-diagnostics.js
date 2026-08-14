@@ -2,7 +2,7 @@
 // Startup guard + dual-mode bootstrap. The existing novel workspace still boots
 // normally behind the mode lobby so old data and feature adapters remain intact.
 (() => {
-  const REVISION = "2026-08-14-v8.4-dual-mode-1";
+  const REVISION = "2026-08-14-v9.0-dual-mode-1";
   const errors = [];
 
   document.documentElement.dataset.frontendRevision = REVISION;
@@ -65,6 +65,7 @@
     ensureStyle(`/companion-v4.css?v=${REVISION}`, "uaiCompanionV4Css");
     ensureStyle(`/companion-v5.css?v=${REVISION}`, "uaiCompanionV5Css");
     ensureStyle(`/companion-profile-editor.css?v=${REVISION}`, "uaiCompanionProfileEditorCss");
+    ensureStyle(`/companion-v9.css?v=${REVISION}`, "uaiCompanionV9Css");
 
     ensureScript(`/companion-v3.js?v=${REVISION}`, "uaiCompanionV3Script");
     ensureScript(`/companion-v3-guard.js?v=${REVISION}`, "uaiCompanionV3GuardScript");
@@ -73,6 +74,7 @@
     ensureScript(`/companion-create-controls.js?v=${REVISION}`, "uaiCompanionCreateControlsScript");
     ensureScript(`/companion-reply-length.js?v=${REVISION}`, "uaiCompanionReplyLengthScript");
     ensureScript(`/companion-v8-secondary.js?v=${REVISION}`, "uaiCompanionV8SecondaryScript");
+    ensureScript(`/companion-v9-shell.js?v=${REVISION}`, "uaiCompanionV9ShellScript");
 
     if (document.getElementById("uaiModeRouterScript")) return;
     const script = document.createElement("script");
@@ -106,6 +108,7 @@
       window.__UNLIMITED_BOOT__.companionCharacterControlsReady = Boolean(window.UnlimitedCompanionCharacterControls);
       window.__UNLIMITED_BOOT__.companionReplyLengthReady = Boolean(window.UnlimitedCompanionReplyLength);
       window.__UNLIMITED_BOOT__.companionV8SecondaryReady = Boolean(window.UnlimitedCompanionV8Secondary);
+      window.__UNLIMITED_BOOT__.companionV9ShellReady = Boolean(window.UnlimitedCompanionV9Shell);
       return;
     }
     const parts = [];

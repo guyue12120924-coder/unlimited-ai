@@ -1,0 +1,356 @@
+/* Companion V9 visual shell: one role card, one conversation column, one composer width. */
+#uaiCompanionRoot{
+  --v9-bg:#17181f;
+  --v9-panel:#111218;
+  --v9-panel-soft:#1d1e26;
+  --v9-line:rgba(255,255,255,.065);
+  --v9-text:#f4f2f5;
+  --v9-muted:rgba(255,255,255,.48);
+  --v9-soft:rgba(255,255,255,.30);
+  --v9-accent:#d96596;
+  --v9-accent-soft:rgba(217,101,150,.14);
+  background:var(--v9-bg)!important;
+  color:var(--v9-text)!important;
+}
+
+#uaiCompanionRoot .uai-c-shell{
+  grid-template-columns:252px minmax(0,1fr)!important;
+  background:var(--v9-bg);
+}
+
+#uaiCompanionRoot .uai-c-sidebar{
+  padding:18px 14px 14px!important;
+  gap:12px!important;
+  border-right:1px solid var(--v9-line)!important;
+  background:var(--v9-panel)!important;
+  box-shadow:none!important;
+  backdrop-filter:none!important;
+}
+
+#uaiCompanionRoot .uai-c-profile-card{
+  position:relative;
+  display:grid!important;
+  grid-template-columns:48px minmax(0,1fr) auto!important;
+  align-items:center;
+  gap:11px!important;
+  min-height:68px;
+  padding:10px!important;
+  border:1px solid transparent!important;
+  border-radius:15px!important;
+  background:transparent!important;
+  cursor:pointer;
+  transition:background .16s ease,border-color .16s ease;
+}
+#uaiCompanionRoot .uai-c-profile-card:hover{
+  border-color:var(--v9-line)!important;
+  background:rgba(255,255,255,.035)!important;
+}
+#uaiCompanionRoot .uai-c-profile-card .uai-c-avatar{
+  width:48px!important;
+  height:48px!important;
+  border-radius:15px!important;
+  font-size:21px!important;
+}
+#uaiCompanionRoot .uai-c-profile-copy strong{
+  font-size:15px!important;
+  line-height:1.25;
+  font-weight:700;
+}
+#uaiCompanionRoot .uai-c-profile-copy span{
+  margin-top:5px!important;
+  font-size:11px!important;
+  color:var(--v9-muted)!important;
+}
+.uai-c-v9-profile-actions{display:flex;align-items:center;gap:4px}
+.uai-c-v9-profile-actions button{
+  appearance:none;
+  width:30px;height:30px;
+  display:grid;place-items:center;
+  border:0;border-radius:9px;
+  background:transparent;
+  color:rgba(255,255,255,.46);
+  font:inherit;font-size:15px;cursor:pointer;
+}
+.uai-c-v9-profile-actions button:hover{background:rgba(255,255,255,.07);color:#fff}
+.uai-c-v9-profile-actions .uai-c-v9-add{color:#f0b5cf;background:var(--v9-accent-soft)}
+#uaiCompanionRoleToolbar{display:none!important}
+
+#uaiCompanionRoot .uai-c-new-chat{
+  min-height:42px!important;
+  padding:0 12px!important;
+  border:1px solid var(--v9-line)!important;
+  border-radius:11px!important;
+  background:rgba(255,255,255,.045)!important;
+  font-size:13px!important;
+  font-weight:650!important;
+}
+#uaiCompanionRoot .uai-c-new-chat:hover{background:rgba(255,255,255,.075)!important}
+
+#uaiCompanionRoot .uai-c-side-label{
+  padding:2px 8px 0!important;
+  color:var(--v9-soft)!important;
+  font-size:11px!important;
+  letter-spacing:0!important;
+  text-transform:none!important;
+}
+#uaiCompanionRoot .uai-c-session-list{gap:2px!important;padding-right:1px}
+#uaiCompanionRoot .uai-c-session{
+  min-height:47px;
+  padding:8px 10px!important;
+  border-radius:9px!important;
+  color:rgba(255,255,255,.62)!important;
+}
+#uaiCompanionRoot .uai-c-session:hover{background:rgba(255,255,255,.045)!important;color:#fff!important}
+#uaiCompanionRoot .uai-c-session.active{
+  background:rgba(217,101,150,.12)!important;
+  box-shadow:inset 2px 0 0 var(--v9-accent)!important;
+  color:#fff!important;
+}
+#uaiCompanionRoot .uai-c-session-title{font-size:13.5px!important;line-height:1.35}
+#uaiCompanionRoot .uai-c-session-time{margin-top:4px!important;font-size:10.5px!important;color:var(--v9-soft)!important}
+#uaiCompanionRoot .uai-c-session-delete{font-size:14px;opacity:0}
+#uaiCompanionRoot .uai-c-session:hover .uai-c-session-delete{opacity:.72}
+
+#uaiCompanionRoot .uai-c-side-actions{
+  display:flex!important;
+  flex-direction:column;
+  gap:2px!important;
+  padding-top:10px!important;
+  border-top:1px solid var(--v9-line)!important;
+}
+#uaiCompanionRoot .uai-c-sidebar-action{
+  min-height:38px!important;
+  padding:0 9px!important;
+  border:0!important;
+  border-radius:9px!important;
+  background:transparent!important;
+  font-size:12.5px!important;
+}
+#uaiCompanionRoot .uai-c-sidebar-action:hover{background:rgba(255,255,255,.045)!important}
+#uaiCompanionRoot #uaiCompanionExitBtn{
+  margin-top:2px;
+  color:rgba(255,255,255,.38)!important;
+}
+
+#uaiCompanionRoot .uai-c-main{
+  grid-template-rows:minmax(0,1fr) auto!important;
+  background:var(--v9-bg)!important;
+}
+#uaiCompanionRoot .uai-c-header{display:none!important}
+
+#uaiCompanionRoot .uai-c-messages{
+  min-height:0;
+  padding:34px clamp(28px,4vw,64px) 46px!important;
+  background:var(--v9-bg)!important;
+  scroll-padding-bottom:120px;
+}
+#uaiCompanionRoot .uai-c-message-row{
+  width:min(100%,1040px);
+  margin:22px auto!important;
+}
+#uaiCompanionRoot .uai-c-message-row>div{max-width:100%}
+#uaiCompanionRoot .uai-c-message-row.assistant{justify-content:flex-start}
+#uaiCompanionRoot .uai-c-message-row.user{justify-content:flex-end}
+#uaiCompanionRoot .uai-c-message-row.assistant>div{width:min(100%,920px)}
+#uaiCompanionRoot .uai-c-v9-message-author{
+  margin:0 0 7px;
+  color:rgba(255,255,255,.55);
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:.01em;
+}
+
+#uaiCompanionRoot .uai-c-bubble{
+  line-height:1.82!important;
+  word-break:break-word;
+  overflow-wrap:anywhere;
+}
+#uaiCompanionRoot .uai-c-message-row.assistant .uai-c-bubble{
+  max-width:100%!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  color:rgba(255,255,255,.91)!important;
+  font-size:16px!important;
+  letter-spacing:.005em;
+}
+#uaiCompanionRoot .uai-c-message-row.user .uai-c-bubble{
+  max-width:min(74%,720px)!important;
+  padding:11px 15px!important;
+  border:1px solid rgba(255,255,255,.04)!important;
+  border-radius:15px 15px 5px 15px!important;
+  background:#34303a!important;
+  box-shadow:none!important;
+  color:#fff!important;
+  font-size:15px!important;
+  line-height:1.7!important;
+}
+#uaiCompanionRoot .uai-c-message-time{
+  margin-top:8px!important;
+  font-size:11px!important;
+  color:rgba(255,255,255,.30)!important;
+}
+#uaiCompanionRoot .uai-c-v8-message-actions{gap:3px!important;margin-left:7px!important}
+#uaiCompanionRoot .uai-c-v8-message-actions button{
+  padding:4px 6px!important;
+  font-size:11px!important;
+  color:rgba(255,255,255,.38)!important;
+}
+#uaiCompanionRoot .uai-c-v8-message-actions button:hover{color:rgba(255,255,255,.82)!important}
+#uaiCompanionRoot .uai-c-long-toggle{
+  min-height:34px!important;
+  margin-top:12px!important;
+  padding:0 12px!important;
+  font-size:11.5px!important;
+}
+
+#uaiCompanionRoot .uai-c-welcome{
+  max-width:680px!important;
+  margin:14vh auto 0!important;
+}
+#uaiCompanionRoot .uai-c-welcome h2{font-size:28px!important}
+#uaiCompanionRoot .uai-c-welcome p{font-size:14px;line-height:1.8}
+
+#uaiCompanionRoot .uai-c-composer-wrap{
+  padding:14px clamp(28px,4vw,64px) 18px!important;
+  background:linear-gradient(to top,var(--v9-bg) 72%,rgba(23,24,31,.88),transparent)!important;
+}
+#uaiCompanionRoot .uai-c-composer{
+  width:min(100%,1040px);
+  min-height:58px;
+  margin:0 auto;
+  padding:8px 8px 8px 16px!important;
+  gap:10px!important;
+  border:1px solid rgba(255,255,255,.085)!important;
+  border-radius:16px!important;
+  background:#24252e!important;
+  box-shadow:0 14px 40px rgba(0,0,0,.15)!important;
+}
+#uaiCompanionRoot .uai-c-composer:focus-within{
+  border-color:rgba(217,101,150,.38)!important;
+  box-shadow:0 0 0 3px rgba(217,101,150,.06)!important;
+}
+#uaiCompanionRoot .uai-c-input{
+  min-height:38px!important;
+  max-height:220px!important;
+  padding:8px 0!important;
+  color:#fff!important;
+  font-size:15.5px!important;
+  line-height:1.6!important;
+}
+#uaiCompanionRoot .uai-c-input::placeholder{color:rgba(255,255,255,.31)!important}
+#uaiCompanionRoot .uai-c-send,#uaiCompanionRoot .uai-c-stop{
+  min-width:72px!important;
+  height:42px!important;
+  border-radius:11px!important;
+  font-size:13px!important;
+  font-weight:700!important;
+}
+#uaiCompanionRoot .uai-c-send{background:var(--v9-accent)!important}
+#uaiCompanionRoot .uai-c-stop{background:rgba(255,255,255,.09)!important}
+#uaiCompanionRoot .uai-c-composer-hint{
+  width:min(100%,1040px);
+  margin:0 auto;
+  padding-top:6px!important;
+  text-align:left!important;
+  font-size:10.5px!important;
+  color:rgba(255,255,255,.22)!important;
+}
+
+#uaiCompanionRoot .uai-c-v8-scroll-bottom{
+  right:clamp(30px,4.5vw,72px)!important;
+  bottom:98px!important;
+}
+
+/* Dialogs */
+#uaiCompanionRoot .uai-c-modal,.uai-c-v3-modal,.uai-c-v4-modal,.uai-c-v5-modal,.uai-c-v8-review-modal{
+  border:1px solid var(--v9-line)!important;
+  border-radius:18px!important;
+  background:#202129!important;
+  box-shadow:0 28px 80px rgba(0,0,0,.36)!important;
+}
+#uaiCompanionRoot .uai-c-modal-head h3,.uai-c-v3-modal h3,.uai-c-v4-modal h3,.uai-c-v5-modal h3{font-size:19px!important}
+#uaiCompanionRoot .uai-c-field>label,.uai-c-v3-form label{font-size:12.5px!important}
+#uaiCompanionRoot .uai-c-field input,#uaiCompanionRoot .uai-c-field select,#uaiCompanionRoot .uai-c-field textarea,.uai-c-v3-form input,.uai-c-v3-form select,.uai-c-v3-form textarea{
+  border-color:rgba(255,255,255,.085)!important;
+  border-radius:11px!important;
+  background:#292a33!important;
+  font-size:14px!important;
+}
+.uai-c-v9-role-manager{width:min(880px,calc(100vw - 40px))!important}
+.uai-c-v9-role-manager .uai-c-v3-character-list{
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px!important;
+  padding:18px!important;
+}
+.uai-c-v9-role-manager .uai-c-v3-character-card{
+  grid-template-columns:52px minmax(0,1fr)!important;
+  align-items:center!important;
+  gap:12px!important;
+  min-height:128px;
+  padding:14px!important;
+  border-radius:14px!important;
+  background:#262730!important;
+}
+.uai-c-v9-role-manager .uai-c-v3-character-card.active{
+  border-color:rgba(217,101,150,.35)!important;
+  background:rgba(217,101,150,.08)!important;
+}
+.uai-c-v9-role-manager .uai-c-v3-avatar{width:52px!important;height:52px!important;border-radius:16px!important}
+.uai-c-v9-role-manager .uai-c-v3-character-card strong{font-size:15px!important}
+.uai-c-v9-role-manager .uai-c-v3-character-card span{font-size:11.5px!important}
+.uai-c-v9-role-manager .uai-c-v3-character-card small{margin-top:3px;font-size:10.5px!important}
+.uai-c-v9-role-manager .uai-c-v3-character-actions{
+  grid-column:1/-1;
+  justify-content:flex-end!important;
+  padding-top:10px;
+  border-top:1px solid rgba(255,255,255,.05);
+}
+.uai-c-v9-role-manager .uai-c-v3-character-actions button,.uai-c-v9-role-manager .uai-c-v3-character-actions em{
+  min-height:32px;
+  padding:0 10px!important;
+  border-radius:9px!important;
+  font-size:11px!important;
+}
+
+@media (max-width:1200px){
+  #uaiCompanionRoot .uai-c-shell{grid-template-columns:236px minmax(0,1fr)!important}
+  #uaiCompanionRoot .uai-c-messages{padding-inline:28px!important}
+  #uaiCompanionRoot .uai-c-composer-wrap{padding-inline:28px!important}
+}
+
+@media (max-width:860px){
+  #uaiCompanionRoot .uai-c-shell{grid-template-columns:minmax(0,1fr)!important}
+  #uaiCompanionRoot .uai-c-main{grid-template-rows:52px minmax(0,1fr) auto!important}
+  #uaiCompanionRoot .uai-c-header{
+    display:flex!important;
+    min-height:52px!important;
+    padding:7px 12px!important;
+    border-bottom:1px solid var(--v9-line)!important;
+    background:#181920!important;
+  }
+  #uaiCompanionRoot .uai-c-header-left{gap:8px!important}
+  #uaiCompanionRoot #uaiCompanionHeaderAvatar{display:none!important}
+  #uaiCompanionRoot .uai-c-title strong{font-size:13px!important}
+  #uaiCompanionRoot .uai-c-title span{font-size:10px!important}
+  #uaiCompanionRoot .uai-c-sidebar{width:min(86vw,300px)!important}
+  #uaiCompanionRoot .uai-c-messages{padding:22px 16px 30px!important}
+  #uaiCompanionRoot .uai-c-message-row{margin:17px auto!important}
+  #uaiCompanionRoot .uai-c-message-row.assistant .uai-c-bubble{font-size:15.5px!important;line-height:1.76!important}
+  #uaiCompanionRoot .uai-c-message-row.user .uai-c-bubble{max-width:88%!important;font-size:14.5px!important}
+  #uaiCompanionRoot .uai-c-composer-wrap{padding:10px 10px 12px!important}
+  #uaiCompanionRoot .uai-c-composer{min-height:54px;border-radius:14px!important}
+  #uaiCompanionRoot .uai-c-composer-hint{display:none!important}
+  .uai-c-v9-role-manager{width:100%!important}
+  .uai-c-v9-role-manager .uai-c-v3-character-list{grid-template-columns:1fr!important}
+}
+
+@media (max-width:460px){
+  #uaiCompanionRoot .uai-c-messages{padding:18px 12px 24px!important}
+  #uaiCompanionRoot .uai-c-message-row.assistant .uai-c-bubble{font-size:15px!important}
+  #uaiCompanionRoot .uai-c-message-row.user .uai-c-bubble{max-width:92%!important;padding:10px 13px!important}
+  #uaiCompanionRoot .uai-c-send,#uaiCompanionRoot .uai-c-stop{min-width:62px!important;height:40px!important}
+  .uai-c-v9-profile-actions button{width:28px;height:28px}
+}
