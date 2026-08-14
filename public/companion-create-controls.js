@@ -1,6 +1,6 @@
 // Companion V8 primary navigation, role editing, settings and long-reply UX.
 (() => {
-  const REVISION = "2026-08-13-v8.0-primary-ux-4";
+  const REVISION = "2026-08-14-v8.1-primary-ux-1";
   const MAX_CHARACTERS = 6;
   const PROFILE_LIMIT = 5000;
   const PROFILE_MARKER = ["以完整角色设定为准"];
@@ -95,7 +95,7 @@
     closeRoleModal();
     const mask = document.createElement("div");
     mask.id = "uaiV8RoleEditorMask";
-    mask.className = "uai-c-v3-mask uai-c-v7-mask";
+    mask.className = "uai-c-v3-mask uai-c-v8-mask";
     mask.innerHTML = html;
     document.body.appendChild(mask);
     mask.addEventListener("click", (event) => { if (event.target === mask) closeRoleModal(); });
@@ -106,9 +106,9 @@
     window.UnlimitedCompanion?.unmount?.();
     window.setTimeout(() => {
       window.UnlimitedCompanion?.mount?.();
-      window.UnlimitedCompanionPolish?.refresh?.();
       window.UnlimitedCompanionMulti?.refresh?.();
-      window.UnlimitedCompanionCharacterControls?.refresh?.();
+      window.UnlimitedCompanionV8Secondary?.refresh?.();
+      schedule();
     }, 30);
   }
   function findRole(id = getActiveId()) {
@@ -164,12 +164,12 @@
     const profile = target.profile;
     let avatar = profile.avatarData || "";
     openRoleModal(`
-      <section class="uai-c-v3-modal compact uai-c-v7-editor uai-c-v8-role-editor" role="dialog" aria-modal="true" aria-label="编辑角色">
+      <section class="uai-c-v3-modal compact uai-c-v8-role-editor" role="dialog" aria-modal="true" aria-label="编辑角色">
         <header><div><span>CHARACTER</span><h3>编辑角色</h3><p>名字和关系单独填写，其余角色资料直接整段粘贴到一个框里。</p></div><button type="button" data-v8-close>×</button></header>
         <div class="uai-c-v3-form">
           <label>名字<input id="uaiV8Name" value="${esc(profile.name || "")}" maxlength="40" /></label>
           <label>关系<select id="uaiV8Relation">${relationOptions(profile.relationship || "girlfriend")}</select></label>
-          <label class="uai-c-v7-background">完整角色设定<textarea id="uaiV8Background" maxlength="${PROFILE_LIMIT}" placeholder="年龄：\n身份：\n外貌：\n性格：\n背景经历：\n与用户的关系细节：\n说话方式：\n其他设定：">${esc(legacyProfileText(profile))}</textarea><small>可直接粘贴完整人物卡，最多 ${PROFILE_LIMIT} 字。</small></label>
+          <label class="uai-c-v8-background">完整角色设定<textarea id="uaiV8Background" maxlength="${PROFILE_LIMIT}" placeholder="年龄：\n身份：\n外貌：\n性格：\n背景经历：\n与用户的关系细节：\n说话方式：\n其他设定：">${esc(legacyProfileText(profile))}</textarea><small>可直接粘贴完整人物卡，最多 ${PROFILE_LIMIT} 字。</small></label>
           <label>头像（可选）<input id="uaiV8Avatar" type="file" accept="image/png,image/jpeg,image/webp" /><small>头像保存在当前浏览器，建议小于 700 KB。</small></label>
         </div>
         <footer><button type="button" class="secondary" data-v8-close>取消</button><button type="button" id="uaiV8SaveRole">保存角色</button></footer>
@@ -208,12 +208,12 @@
     }
     let avatar = "";
     openRoleModal(`
-      <section class="uai-c-v3-modal compact uai-c-v7-editor uai-c-v8-role-editor" role="dialog" aria-modal="true" aria-label="新增角色">
+      <section class="uai-c-v3-modal compact uai-c-v8-role-editor" role="dialog" aria-modal="true" aria-label="新增角色">
         <header><div><span>NEW CHARACTER</span><h3>新增角色</h3><p>创建后会自动切换到新角色，聊天、记忆和设置与其他角色完全分开。</p></div><button type="button" data-v8-close>×</button></header>
         <div class="uai-c-v3-form">
           <label>名字<input id="uaiV8NewName" value="新伙伴" maxlength="40" /></label>
           <label>关系<select id="uaiV8NewRelation">${relationOptions("girlfriend")}</select></label>
-          <label class="uai-c-v7-background">完整角色设定<textarea id="uaiV8NewBackground" maxlength="${PROFILE_LIMIT}" placeholder="可以直接整段复制粘贴：\n年龄：\n身份：\n外貌：\n性格：\n背景经历：\n与用户的关系细节：\n说话方式：\n其他设定："></textarea><small>可直接粘贴完整人物卡，最多 ${PROFILE_LIMIT} 字。</small></label>
+          <label class="uai-c-v8-background">完整角色设定<textarea id="uaiV8NewBackground" maxlength="${PROFILE_LIMIT}" placeholder="可以直接整段复制粘贴：\n年龄：\n身份：\n外貌：\n性格：\n背景经历：\n与用户的关系细节：\n说话方式：\n其他设定："></textarea><small>可直接粘贴完整人物卡，最多 ${PROFILE_LIMIT} 字。</small></label>
           <label>头像（可选）<input id="uaiV8NewAvatar" type="file" accept="image/png,image/jpeg,image/webp" /></label>
         </div>
         <footer><button type="button" class="secondary" data-v8-close>取消</button><button type="button" id="uaiV8CreateRole">创建并切换</button></footer>
@@ -448,8 +448,15 @@
     const field = textarea.closest(".uai-c-field");
     const label = field?.querySelector("label");
     if (label) label.textContent = "完整角色设定";
-    const note = field?.querySelector(".uai-c-v7-note");
-    if (note) note.textContent = `年龄、性格等全部写这里即可，最多 ${PROFILE_LIMIT} 字。`;
+    if (field && !field.querySelector(".uai-c-v8-note")) {
+      const note = document.createElement("small");
+      note.className = "uai-c-v8-note";
+      note.textContent = `年龄、身份、性格、经历和说话方式等都写在这里，最多 ${PROFILE_LIMIT} 字。`;
+      field.appendChild(note);
+    }
+    mask.querySelector(".uai-c-chip-grid")?.closest(".uai-c-field")?.remove();
+    const intro = mask.querySelector(".uai-c-onboard-top p");
+    if (intro) intro.textContent = "填写名字、关系和完整角色设定，就可以直接开始聊天。";
   }
 
   function enhanceLongReplies(root) {
@@ -476,21 +483,12 @@
     });
   }
 
-  function interceptLegacyRoleActions(event) {
+  function interceptRoleActions(event) {
     if (document.body.dataset.uaiMode !== "companion") return;
-    const add = event.target?.closest?.("#uaiCompanionAddCharacter");
-    if (add) {
+    if (event.target?.closest?.("#uaiCompanionAddCharacter")) {
       event.preventDefault();
       event.stopImmediatePropagation();
       openCreate();
-      return;
-    }
-    const edit = event.target?.closest?.("[data-v7-edit-character]");
-    if (edit) {
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      const id = edit.closest("[data-character-id]")?.dataset.characterId;
-      if (id) openEditor(id);
       return;
     }
     if (event.target?.closest?.("#uaiOnboardCreate")) {
@@ -513,25 +511,35 @@
     enhanceOnboarding();
     enhanceLongReplies(root);
   }
+
   function schedule() {
     if (scheduled) return;
     scheduled = true;
     requestAnimationFrame(enhance);
   }
+
   function init() {
     document.documentElement.dataset.companionCharacterControlsRevision = REVISION;
-    window.addEventListener("click", interceptLegacyRoleActions, true);
+    window.addEventListener("click", interceptRoleActions, true);
     window.addEventListener("keydown", (event) => { if (event.key === "Escape") closeRoleModal(); }, true);
     new MutationObserver(schedule).observe(document.body, {
       subtree: true,
       childList: true,
       characterData: true,
       attributes: true,
-      attributeFilter: ["data-uai-mode", "hidden", "class"]
+      attributeFilter: ["data-uai-mode", "hidden"]
     });
     schedule();
   }
-  window.UnlimitedCompanionCharacterControls = { revision: REVISION, refresh: schedule, openCreate, openEditor, openManager };
+
+  window.UnlimitedCompanionCharacterControls = {
+    revision: REVISION,
+    refresh: schedule,
+    openCreate,
+    openEditor,
+    openManager
+  };
+
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init, { once: true });
   else init();
 })();
