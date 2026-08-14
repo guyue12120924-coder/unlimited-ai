@@ -7,9 +7,12 @@ const editor = fs.readFileSync("public/companion-character-editor.js", "utf8");
 const settings = fs.readFileSync("public/companion-settings.js", "utf8");
 const extras = fs.readFileSync("public/companion-extras.js", "utf8");
 const css = fs.readFileSync("public/companion-v9.css", "utf8");
+const support = fs.readFileSync("public/companion-support.css", "utf8");
 
-assert.match(boot, /v9\.4-dual-mode/);
+assert.match(boot, /v9\.5-dual-mode/);
 assert.match(boot, /companion-v9\.css/);
+assert.match(boot, /companion-support\.css/);
+assert.doesNotMatch(boot, /companion-profile-editor\.css/);
 assert.match(boot, /companion-v9-shell\.js/);
 assert.match(boot, /companion-runtime\.js/);
 assert.match(boot, /companion-extras\.js/);
@@ -75,5 +78,8 @@ assert.match(css, /uai-c-v9-role-manager/);
 assert.match(css, /grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
 assert.match(css, /@media \(max-width:900px\)/);
 assert.match(css, /@media \(max-width:520px\)/);
+assert.match(support, /#uaiV9RoleBackground/);
+assert.match(support, /uai-c-v8-scroll-bottom/);
+assert.match(support, /uai-c-v8-review-mask/);
 
-console.log("Companion V9.4 focused module and UX contract passed.");
+console.log("Companion V9.5 focused module and CSS contract passed.");
