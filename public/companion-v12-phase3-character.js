@@ -1,6 +1,6 @@
 // Companion V12.6 phase 3 — living central character interactions.
 (() => {
-  const REVISION = "2026-08-14-v12.6-phase3-1";
+  const REVISION = "2026-08-14-v12.6-phase3-audit-2";
   let scheduled = false;
   let heartTimer = 0;
   let pointerBoundScene = null;
@@ -48,9 +48,15 @@
 
   function scheduleNextHeart() {
     clearTimeout(heartTimer);
+    const root = getRoot();
+    if (!root) {
+      heartTimer = 0;
+      return;
+    }
     heartTimer = window.setTimeout(() => {
-      const root = getRoot();
-      if (root) spawnHeart(root);
+      heartTimer = 0;
+      const liveRoot = getRoot();
+      if (liveRoot) spawnHeart(liveRoot);
       scheduleNextHeart();
     }, 1250 + Math.random() * 2300);
   }
@@ -105,12 +111,17 @@
   function enhance() {
     scheduled = false;
     const root = getRoot();
-    if (!root) return;
+    if (!root) {
+      clearTimeout(heartTimer);
+      heartTimer = 0;
+      return;
+    }
     root.dataset.v126Phase3 = REVISION;
     ensureHeartField(root);
     seedHearts(root);
     bindCharacterParallax(root);
     bindPromptFeedback(root);
+    if (!heartTimer) scheduleNextHeart();
   }
 
   function schedule() {
@@ -130,7 +141,6 @@
     window.addEventListener("storage", schedule);
     window.UnlimitedCompanionV126Phase3 = { revision: REVISION, refresh: schedule };
     schedule();
-    scheduleNextHeart();
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init, { once: true });
