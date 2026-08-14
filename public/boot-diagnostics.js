@@ -2,8 +2,8 @@
 // Startup guard + dual-mode bootstrap. The existing novel workspace still boots
 // normally behind the mode lobby so old data and feature adapters remain intact.
 (() => {
-  const REVISION = "2026-08-14-v10.8-dual-mode-1";
-  // Diagnostics compatibility markers: 2026-08-14-v10.7-dual-mode-1 / 2026-08-14-v10.6-dual-mode-1 / 2026-08-14-v10.5-dual-mode-1 / 2026-08-14-v10.4-dual-mode-1 / 2026-08-14-v10.3-dual-mode-1 / 2026-08-14-v10.2-dual-mode-1 / 2026-08-14-v10.1-dual-mode-1 / 2026-08-14-v10.0-dual-mode-1
+  const REVISION = "2026-08-14-v10.9-dual-mode-1";
+  // Diagnostics compatibility markers: 2026-08-14-v10.8-dual-mode-1 / 2026-08-14-v10.7-dual-mode-1 / 2026-08-14-v10.6-dual-mode-1 / 2026-08-14-v10.5-dual-mode-1 / 2026-08-14-v10.4-dual-mode-1 / 2026-08-14-v10.3-dual-mode-1 / 2026-08-14-v10.2-dual-mode-1 / 2026-08-14-v10.1-dual-mode-1 / 2026-08-14-v10.0-dual-mode-1
   const errors = [];
 
   document.documentElement.dataset.frontendRevision = REVISION;
@@ -72,6 +72,7 @@
     ensureStyle(`/companion-v10-stage3.css?v=${REVISION}`, "uaiCompanionV10Stage3Css");
     ensureStyle(`/companion-v10-stage4.css?v=${REVISION}`, "uaiCompanionV10Stage4Css");
     ensureStyle(`/companion-v10-stage5.css?v=${REVISION}`, "uaiCompanionV10Stage5Css");
+    ensureStyle(`/companion-v10-stage6.css?v=${REVISION}`, "uaiCompanionV10Stage6Css");
 
     ensureScript(`/companion-characters-core.js?v=${REVISION}`, "uaiCompanionCharactersCoreScript");
     ensureScript(`/companion-character-editor.js?v=${REVISION}`, "uaiCompanionCharacterEditorScript");
