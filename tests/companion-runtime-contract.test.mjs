@@ -12,7 +12,7 @@ const restoreCore = fs.readFileSync("public/companion-records.js", "utf8");
 const extras = fs.readFileSync("public/companion-extras.js", "utf8");
 const css = fs.readFileSync("public/companion-support.css", "utf8");
 
-assert.match(boot, /v12\.4-dual-mode/);
+assert.match(boot, /v12\.9-live2d/);
 assert.match(boot, /companion-support\.css/);
 assert.match(boot, /companion-v10\.css/);
 assert.match(boot, /companion-v10-shell\.js/);
@@ -26,6 +26,7 @@ assert.match(boot, /companion-memory\.js/);
 assert.match(boot, /companion-records\.js/);
 assert.match(boot, /companion-runtime\.js/);
 assert.match(boot, /companion-extras\.js/);
+assert.match(boot, /companion-live2d\.js/);
 assert.doesNotMatch(boot, /ensureScript\(`\/companion-characters-ui\.js/);
 
 for (const retired of [
@@ -110,4 +111,4 @@ assert.match(css, /uai-c-v8-message-actions/);
 assert.match(css, /uai-c-v8-review-modal/);
 assert.match(css, /uai-c-v8-data-panel/);
 
-console.log("Companion semantic module contract passed under V12.4 shell.");
+console.log("Companion semantic module contract passed under V12.9 Live2D shell.");
