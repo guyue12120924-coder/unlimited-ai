@@ -1,0 +1,127 @@
+/* Companion V12.12 — Live2D response/emotion polish. */
+#uaiCompanionRoot .uai-c-live2d-presence{
+  position:absolute;
+  z-index:9;
+  right:6.2%;
+  top:102px;
+  min-width:118px;
+  max-width:220px;
+  padding:7px 12px;
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:999px;
+  background:linear-gradient(135deg,rgba(29,18,78,.70),rgba(66,29,104,.44));
+  color:rgba(250,244,255,.82);
+  box-shadow:0 10px 30px rgba(9,4,36,.18),inset 0 1px 0 rgba(255,255,255,.06);
+  backdrop-filter:blur(15px) saturate(1.1);
+  font:600 11px/1.35 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  text-align:center;
+  letter-spacing:.02em;
+  opacity:0;
+  transform:translateY(-5px) scale(.96);
+  pointer-events:none;
+  transition:opacity .24s ease,transform .24s ease,border-color .24s ease,background .24s ease;
+}
+#uaiCompanionRoot .uai-c-live2d-presence.show{opacity:.84;transform:translateY(0) scale(1)}
+#uaiCompanionRoot .uai-c-live2d-presence[data-state="speaking"],
+#uaiCompanionRoot .uai-c-live2d-presence[data-state="streaming"]{
+  border-color:rgba(239,185,255,.20);
+  background:linear-gradient(135deg,rgba(54,28,112,.76),rgba(107,49,139,.52));
+  box-shadow:0 10px 30px rgba(9,4,36,.20),0 0 24px rgba(203,121,255,.10);
+}
+
+/* Replying state: stronger aura, tiny stage pulse, no distracting whole-body bounce. */
+#uaiCompanionRoot.uai-c-live2d-speaking .uai-c-live2d-stage::before{
+  opacity:.78;
+  animation:uaiLive2DSpeakingAura 1.8s ease-in-out infinite alternate!important;
+}
+#uaiCompanionRoot.uai-c-live2d-speaking .uai-c-live2d-floor{
+  opacity:.66;
+  animation-duration:2.4s!important;
+}
+#uaiCompanionRoot.uai-c-live2d-speaking .uai-c-live2d-canvas{
+  filter:
+    drop-shadow(0 20px 32px rgba(18,7,65,.28))
+    drop-shadow(0 0 18px rgba(233,179,255,.18))
+    drop-shadow(0 0 38px rgba(112,119,255,.10));
+}
+
+/* Scene-aware character lighting. */
+#uaiCompanionRoot[data-v127-theme="galaxy"] .uai-c-live2d-stage::before{
+  background:radial-gradient(ellipse at 54% 42%,rgba(255,196,242,.20),rgba(182,103,255,.18) 25%,rgba(102,119,255,.08) 48%,transparent 71%);
+}
+#uaiCompanionRoot[data-v127-theme="sakura"] .uai-c-live2d-stage::before{
+  background:radial-gradient(ellipse at 54% 42%,rgba(255,224,236,.24),rgba(255,132,186,.18) 27%,rgba(214,145,255,.07) 50%,transparent 72%);
+}
+#uaiCompanionRoot[data-v127-theme="moonlight"] .uai-c-live2d-stage::before{
+  background:radial-gradient(ellipse at 54% 42%,rgba(230,244,255,.25),rgba(148,186,255,.17) 29%,rgba(118,119,255,.06) 50%,transparent 72%);
+}
+#uaiCompanionRoot[data-v127-theme="neon"] .uai-c-live2d-stage::before{
+  background:radial-gradient(ellipse at 54% 42%,rgba(83,231,255,.17),rgba(194,73,255,.20) 28%,rgba(255,65,174,.08) 51%,transparent 72%);
+}
+
+/* Emotion tint lives in the aura instead of recoloring the character texture. */
+#uaiCompanionRoot[data-v129-live2d-emotion="happy"] .uai-c-live2d-stage::before{
+  background:radial-gradient(ellipse at 54% 42%,rgba(255,239,175,.25),rgba(255,150,218,.21) 26%,rgba(176,122,255,.08) 49%,transparent 72%);
+}
+#uaiCompanionRoot[data-v129-live2d-emotion="shy"] .uai-c-live2d-stage::before,
+#uaiCompanionRoot[data-v129-live2d-emotion="caring"] .uai-c-live2d-stage::before{
+  background:radial-gradient(ellipse at 54% 42%,rgba(255,218,236,.27),rgba(255,117,190,.21) 27%,rgba(182,111,255,.07) 50%,transparent 72%);
+}
+#uaiCompanionRoot[data-v129-live2d-emotion="sad"] .uai-c-live2d-stage::before{
+  background:radial-gradient(ellipse at 54% 42%,rgba(212,235,255,.22),rgba(100,145,255,.17) 28%,rgba(92,87,183,.06) 52%,transparent 74%);
+}
+#uaiCompanionRoot[data-v129-live2d-emotion="angry"] .uai-c-live2d-stage::before{
+  background:radial-gradient(ellipse at 54% 42%,rgba(255,188,213,.22),rgba(255,68,140,.17) 28%,rgba(130,72,198,.06) 52%,transparent 74%);
+}
+
+/* Slightly safer reading column for long answers. */
+#uaiCompanionRoot.uai-c-live2d-active .uai-c-messages{
+  padding-right:38%!important;
+}
+#uaiCompanionRoot.uai-c-live2d-active .uai-c-message-row.assistant>div{
+  max-width:620px!important;
+}
+#uaiCompanionRoot.uai-c-live2d-active .uai-c-message-row.assistant .uai-c-bubble{
+  line-height:1.74!important;
+}
+
+/* Tap / reply particle burst. */
+#uaiCompanionRoot .uai-c-live2d-burst{
+  position:absolute;
+  z-index:11;
+  width:1px;
+  height:1px;
+  pointer-events:none;
+}
+#uaiCompanionRoot .uai-c-live2d-burst i{
+  position:absolute;
+  left:0;
+  top:0;
+  color:#f8deff;
+  font-style:normal;
+  font-size:14px;
+  line-height:1;
+  text-shadow:0 0 8px rgba(255,255,255,.78),0 0 18px rgba(211,117,255,.72);
+  opacity:0;
+  transform:translate(-50%,-50%) scale(.35);
+  animation:uaiLive2DBurst .94s cubic-bezier(.2,.75,.2,1) var(--delay,0s) forwards;
+}
+#uaiCompanionRoot .uai-c-live2d-burst.caring i,
+#uaiCompanionRoot .uai-c-live2d-burst.shy i{color:#ff9ed7;text-shadow:0 0 8px rgba(255,255,255,.82),0 0 18px rgba(255,105,198,.72)}
+#uaiCompanionRoot .uai-c-live2d-burst.sad i{color:#b9d9ff;text-shadow:0 0 8px rgba(255,255,255,.75),0 0 18px rgba(112,153,255,.68)}
+
+@keyframes uaiLive2DSpeakingAura{
+  from{transform:rotate(-4deg) scale(.98);filter:blur(22px) saturate(1)}
+  to{transform:rotate(-2deg) scale(1.055);filter:blur(25px) saturate(1.16)}
+}
+@keyframes uaiLive2DBurst{
+  0%{opacity:0;transform:translate(-50%,-50%) scale(.35)}
+  18%{opacity:1}
+  70%{opacity:.82;transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(1.08) rotate(6deg)}
+  100%{opacity:0;transform:translate(calc(-50% + var(--dx) * 1.16),calc(-50% + var(--dy) * 1.16)) scale(.72) rotate(14deg)}
+}
+
+@media (prefers-reduced-motion:reduce){
+  #uaiCompanionRoot.uai-c-live2d-speaking .uai-c-live2d-stage::before{animation:none!important}
+  #uaiCompanionRoot .uai-c-live2d-burst i{animation-duration:1.4s}
+}
