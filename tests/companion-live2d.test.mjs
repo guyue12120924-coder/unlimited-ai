@@ -5,6 +5,9 @@ const read = (path) => fs.readFileSync(path, "utf8");
 const boot = read("public/boot-diagnostics.js");
 const runtime = read("public/companion-live2d.js");
 const css = read("public/companion-live2d.css");
+const interaction = read("public/companion-live2d-interaction.js");
+const interactionCss = read("public/companion-live2d-interaction.css");
+const themeLoader = read("public/companion-v12-phase4-themes.js");
 const config = JSON.parse(read("public/live2d/characters.json"));
 const readme = read("public/live2d/README.md");
 
@@ -58,6 +61,28 @@ assert.match(css, /display:none!important/);
 assert.match(css, /\.uai-c-live2d-credit/);
 assert.match(css, /\.uai-c-live2d-status-note/);
 
+// V12.12 behavior bridge is loaded from the existing scene enhancement chain.
+assert.match(themeLoader, /v12\.12-phase4-live2d-interaction/);
+assert.match(themeLoader, /companion-live2d-interaction\.css/);
+assert.match(themeLoader, /companion-live2d-interaction\.js/);
+assert.match(interaction, /v12\.12-live2d-interaction/);
+assert.match(interaction, /function classifyEmotion\(/);
+assert.match(interaction, /uai-c-live2d-speaking/);
+assert.match(interaction, /setMouthOpen/);
+assert.match(interaction, /playMotion\?\.\("TapBody"/);
+assert.match(interaction, /uai-c-live2d-burst/);
+assert.match(interaction, /uai-c-live2d-presence/);
+assert.match(interaction, /uaiCompanionComposerWrap\.generating/);
+assert.match(interaction, /window\.UnlimitedCompanionLive2DInteraction/);
+assert.match(interactionCss, /padding-right:38%!important/);
+assert.match(interactionCss, /data-v127-theme="sakura"/);
+assert.match(interactionCss, /data-v127-theme="moonlight"/);
+assert.match(interactionCss, /data-v127-theme="neon"/);
+assert.match(interactionCss, /data-v129-live2d-emotion="caring"/);
+assert.match(interactionCss, /uaiLive2DSpeakingAura/);
+assert.match(interactionCss, /uaiLive2DBurst/);
+assert.doesNotMatch(interactionCss, /var\(--d[xy]\)\s*\*/);
+
 assert.equal(config.version, 5);
 assert.match(config.defaultModel?.model || "", /^https:\/\/cdn\.jsdelivr\.net\/gh\/Live2D\/CubismWebSamples@/);
 assert.match(config.defaultModel?.model || "", /\/Samples\/Resources\/Mao\/Mao\.model3\.json$/);
@@ -85,4 +110,4 @@ assert.match(readme, /setModelForCharacter/);
 
 assert.equal(fs.existsSync("public/live2d/vendor/live2dcubismcore.min.js"), false);
 
-console.log("Companion Live2D contract passed: hosted runtime + jsDelivr Mao + polished right-side stage + interaction API.");
+console.log("Companion Live2D contract passed: hosted runtime + polished stage + reply emotion bridge + tap feedback.");
