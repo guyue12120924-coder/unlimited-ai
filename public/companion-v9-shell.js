@@ -1,6 +1,6 @@
 // Companion V9 interaction shell: removes duplicate chrome and turns the profile card into the role hub.
 (() => {
-  const REVISION = "2026-08-14-v9.0-shell-3";
+  const REVISION = "2026-08-14-v9.0-shell-4";
   const PROFILE_LIMIT = 5000;
   let scheduled = false;
 
@@ -148,14 +148,15 @@
 
     const actions = modal.querySelector("#uaiMemorySave")?.closest(".uai-c-modal-actions");
     if (!actions) return;
-    actions.querySelector("#uaiV8AdvancedMemory")?.classList.add("uai-c-v9-legacy-advanced");
+    const oldAdvanced = actions.querySelector("#uaiV8AdvancedMemory");
+    if (oldAdvanced) oldAdvanced.style.display = "none";
 
     let details = modal.querySelector("#uaiV9MemoryAdvanced");
     if (!details) {
       details = document.createElement("details");
       details.id = "uaiV9MemoryAdvanced";
-      details.className = "uai-c-v9-memory-advanced";
-      details.innerHTML = `<summary><span>高级整理</span><b>›</b></summary><div class="uai-c-v9-memory-advanced-body"><button type="button" id="uaiV9MemoryOrganizer">整理、归档与去重</button></div>`;
+      details.className = "uai-c-v8-data-panel uai-c-v9-memory-advanced";
+      details.innerHTML = `<summary><span>高级整理</span><b>›</b></summary><div class="uai-c-v8-data-body uai-c-v9-memory-advanced-body"><div class="uai-c-v8-data-row"><button type="button" id="uaiV9MemoryOrganizer">整理、归档与去重</button></div></div>`;
       actions.insertAdjacentElement("beforebegin", details);
       details.querySelector("#uaiV9MemoryOrganizer")?.addEventListener("click", () => {
         mask.hidden = true;
@@ -165,10 +166,10 @@
     }
 
     const clear = modal.querySelector("#uaiMemoryClear");
-    const body = details.querySelector(".uai-c-v9-memory-advanced-body");
-    if (clear && body && clear.parentElement !== body) {
+    const row = details.querySelector(".uai-c-v8-data-row");
+    if (clear && row && clear.parentElement !== row) {
       clear.textContent = "清空全部记忆";
-      body.appendChild(clear);
+      row.appendChild(clear);
     }
   }
 
