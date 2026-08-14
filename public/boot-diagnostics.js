@@ -2,7 +2,7 @@
 // Startup guard + dual-mode bootstrap. The existing novel workspace still boots
 // normally behind the mode lobby so old data and feature adapters remain intact.
 (() => {
-  const REVISION = "2026-08-14-v9.1-dual-mode-2";
+  const REVISION = "2026-08-14-v9.2-dual-mode-1";
   const errors = [];
 
   document.documentElement.dataset.frontendRevision = REVISION;
@@ -61,16 +61,16 @@
   function loadModeRouter() {
     ensureStyle(`/mode-router.css?v=${REVISION}`, "uaiModeRouterCss");
     ensureStyle(`/companion-mode.css?v=${REVISION}`, "uaiCompanionCss");
-    ensureStyle(`/companion-v3.css?v=${REVISION}`, "uaiCompanionV3Css");
-    ensureStyle(`/companion-v4.css?v=${REVISION}`, "uaiCompanionV4Css");
-    ensureStyle(`/companion-v5.css?v=${REVISION}`, "uaiCompanionV5Css");
+    ensureStyle(`/companion-characters.css?v=${REVISION}`, "uaiCompanionCharactersCss");
+    ensureStyle(`/companion-memory.css?v=${REVISION}`, "uaiCompanionMemoryCss");
+    ensureStyle(`/companion-records.css?v=${REVISION}`, "uaiCompanionRecordsCss");
     ensureStyle(`/companion-profile-editor.css?v=${REVISION}`, "uaiCompanionProfileEditorCss");
     ensureStyle(`/companion-v9.css?v=${REVISION}`, "uaiCompanionV9Css");
 
-    ensureScript(`/companion-v3.js?v=${REVISION}`, "uaiCompanionV3Script");
-    ensureScript(`/companion-v4.js?v=${REVISION}`, "uaiCompanionV4Script");
-    ensureScript(`/companion-v5.js?v=${REVISION}`, "uaiCompanionV5Script");
-    ensureScript(`/companion-create-controls.js?v=${REVISION}`, "uaiCompanionCreateControlsScript");
+    ensureScript(`/companion-characters-core.js?v=${REVISION}`, "uaiCompanionCharactersCoreScript");
+    ensureScript(`/companion-memory.js?v=${REVISION}`, "uaiCompanionMemoryScript");
+    ensureScript(`/companion-records.js?v=${REVISION}`, "uaiCompanionRecordsScript");
+    ensureScript(`/companion-characters-ui.js?v=${REVISION}`, "uaiCompanionCharactersUiScript");
     ensureScript(`/companion-runtime.js?v=${REVISION}`, "uaiCompanionRuntimeScript");
     ensureScript(`/companion-extras.js?v=${REVISION}`, "uaiCompanionExtrasScript");
     ensureScript(`/companion-v9-shell.js?v=${REVISION}`, "uaiCompanionV9ShellScript");
