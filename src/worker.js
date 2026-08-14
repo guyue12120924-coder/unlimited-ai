@@ -13,7 +13,7 @@ import {
 
 // Compatibility marker: buildCompanionSystemPrompt(payload) remains available in companion.js for preview/testing only.
 const NVIDIA_CHAT_URL = "https://integrate.api.nvidia.com/v1/chat/completions";
-const APP_REVISION = "2026-08-13-v6.1-companion-role-card-1";
+const APP_REVISION = "2026-08-14-v9.6-worker-1";
 
 // ============================================================
 // 小说模式默认 System Prompt
@@ -348,12 +348,15 @@ async function inspectAsset(request, env, pathname, markers = []) {
 
 async function handleDiagnostics(request, env) {
   const assets = await Promise.all([
-    inspectAsset(request, env, "/index.html", ["/boot-diagnostics.js"]),
-    inspectAsset(request, env, "/boot-diagnostics.js", ["2026-08-13-v6.0-dual-mode-1", "loadModeRouter"]),
-    inspectAsset(request, env, "/mode-router.js", ["UnlimitedModeRouter", "uaiEnterNovel", "uaiEnterCompanion"]),
+    inspectAsset(request, env, "/index.html", ["2026-08-14-v9.6-dual-mode-1", "/boot-diagnostics.js?v=20260814-v9.6-1"]),
+    inspectAsset(request, env, "/boot-diagnostics.js", ["2026-08-14-v9.6-dual-mode-1", "companion-v9.css", "companion-runtime.js"]),
+    inspectAsset(request, env, "/mode-router.js", ["2026-08-14-v9.6-mode-router-1", "UnlimitedModeRouter", "uaiEnterCompanion"]),
     inspectAsset(request, env, "/mode-router.css", ["uai-mode-lobby", "data-uai-mode"]),
     inspectAsset(request, env, "/companion-mode.js", ["UnlimitedCompanion", "uai_companion_sessions_v1", "mode: \"companion\""]),
     inspectAsset(request, env, "/companion-mode.css", ["uaiCompanionRoot", "uai-c-shell"]),
+    inspectAsset(request, env, "/companion-v9.css", ["width:min(100%,1120px)", "font-size:16.5px!important", ".uai-c-header{display:none!important}"]),
+    inspectAsset(request, env, "/companion-runtime.js", ["2026-08-14-v9.6-runtime-1", "chars: 5000", "patchCompanionBody"]),
+    inspectAsset(request, env, "/companion-character-editor.js", ["PROFILE_LIMIT = 5000", "MAX_CHARACTERS = 6", "uaiV9NewRoleBackground"]),
     inspectAsset(request, env, "/context-bridge.js", ["contextInspectorBtn", "creative_context"]),
     inspectAsset(request, env, "/continuity-bridge.js", ["continuityBtn", "continuity_context"]),
     inspectAsset(request, env, "/memory-bridge.js", ["storyMemoryBtn", "memory_context"])
@@ -375,8 +378,8 @@ async function handleDiagnostics(request, env) {
       companion: "src/companion.js -> COMPANION_ROLE_CARD"
     },
     conclusion: frontendCurrent
-      ? "Dual-mode frontend is current. Companion role card is isolated as its system message."
-      : "Worker is current but one or more static assets are older or incomplete.",
+      ? "V9.6 frontend assets are current and loaded from this Worker deployment."
+      : "This Worker deployment is missing one or more V9.6 frontend assets. Redeploy the current main branch.",
     assets
   });
 }
