@@ -1,9 +1,7 @@
 // public/companion-v3.js
-// Multi-character compatibility layer for Companion mode.
-// It keeps the proven single-character client intact by swapping isolated
-// character snapshots into the existing active storage slots.
+// Multi-character core: isolated role snapshots, switching, message retry and memory extraction.
 (() => {
-  const REVISION = "2026-08-13-v4.2-companion-multichar-1";
+  const REVISION = "2026-08-14-v8.1-multichar-core-1";
   const KEYS = {
     characters: "uai_companion_characters_v1",
     activeCharacter: "uai_companion_active_character_v1",
@@ -13,7 +11,6 @@
     settings: "uai_companion_settings_v1"
   };
   const MAX_CHARACTERS = 6;
-  const PERSONALITIES = ["温柔", "可爱", "傲娇", "成熟", "活泼", "安静", "毒舌", "黏人", "理性", "幽默"];
   const RELATIONS = [
     ["girlfriend", "💗 女朋友"],
     ["boyfriend", "💙 男朋友"],
@@ -29,31 +26,16 @@
   let lastExtractAt = 0;
 
   function safeParse(value, fallback) {
-    try {
-      const parsed = JSON.parse(value);
-      return parsed ?? fallback;
-    } catch {
-      return fallback;
-    }
+    try { return JSON.parse(value) ?? fallback; } catch { return fallback; }
   }
 
-  function readJson(key, fallback) {
-    return safeParse(localStorage.getItem(key), fallback);
-  }
-
-  function writeJson(key, value) {
-    localStorage.setItem(key, JSON.stringify(value));
-  }
-
+  function readJson(key, fallback) { return safeParse(localStorage.getItem(key), fallback); }
+  function writeJson(key, value) { localStorage.setItem(key, JSON.stringify(value)); }
   function makeId(prefix) {
     const token = globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(16).slice(2)}`;
     return `${prefix}-${token}`;
   }
-
-  function cleanText(value, max = 180) {
-    return String(value || "").replace(/\s+/g, " ").trim().slice(0, max);
-  }
-
+  function cleanText(value, max = 180) { return String(value || "").replace(/\s+/g, " ").trim().slice(0, max); }
   function escapeHtml(value) {
     return String(value ?? "")
       .replaceAll("&", "&amp;")
@@ -69,17 +51,9 @@
     return raw.filter((item) => item && typeof item.id === "string" && item.profile && typeof item.profile === "object");
   }
 
-  function saveCharacters(characters) {
-    writeJson(KEYS.characters, characters.slice(0, MAX_CHARACTERS));
-  }
-
-  function getActiveId() {
-    return localStorage.getItem(KEYS.activeCharacter) || "";
-  }
-
-  function setActiveId(id) {
-    localStorage.setItem(KEYS.activeCharacter, id);
-  }
+  function saveCharacters(characters) { writeJson(KEYS.characters, characters.slice(0, MAX_CHARACTERS)); }
+  function getActiveId() { return localStorage.getItem(KEYS.activeCharacter) || ""; }
+  function setActiveId(id) { localStorage.setItem(KEYS.activeCharacter, id); }
 
   function slotSnapshot(id = getActiveId()) {
     const profile = readJson(KEYS.profile, null);
@@ -113,7 +87,6 @@
       setActiveId(activeId);
       loadCharacterIntoSlots(characters[0], false);
     }
-
     return characters;
   }
 
@@ -144,7 +117,7 @@
 
   function schedulePersist() {
     clearTimeout(syncTimer);
-    syncTimer = setTimeout(persistActiveCharacter, 700);
+    syncTimer = setTimeout(persistActiveCharacter, 500);
   }
 
   function loadCharacterIntoSlots(character, remount = true) {
@@ -164,7 +137,7 @@
       window.UnlimitedCompanion.unmount?.();
       window.setTimeout(() => {
         window.UnlimitedCompanion.mount();
-        window.UnlimitedCompanionPolish?.refresh?.();
+        window.UnlimitedCompanionV8Secondary?.refresh?.();
         scheduleEnhance();
       }, 20);
     }
@@ -179,9 +152,7 @@
     loadCharacterIntoSlots(character, true);
   }
 
-  function relationLabel(value) {
-    return RELATIONS.find(([key]) => key === value)?.[1] || "✨ 陪伴伙伴";
-  }
+  function relationLabel(value) { return RELATIONS.find(([key]) => key === value)?.[1] || "✨ 陪伴伙伴"; }
 
   function avatarMarkup(profile) {
     if (profile?.avatarData) {
@@ -197,26 +168,7 @@
     return { sessions: sessions.length, messages, memories: Array.isArray(character?.memories) ? character.memories.length : 0 };
   }
 
-  function ensureCharacterBar(root) {
-    const card = root.querySelector("#uaiCompanionProfileCard");
-    if (!card || !readJson(KEYS.profile, null)) return;
-    let bar = root.querySelector("#uaiCompanionCharacterBar");
-    if (!bar) {
-      bar = document.createElement("div");
-      bar.id = "uaiCompanionCharacterBar";
-      bar.className = "uai-c-v3-character-bar";
-      card.insertAdjacentElement("afterend", bar);
-    }
-    const characters = ensureRepository();
-    const active = characters.find((item) => item.id === getActiveId()) || characters[0];
-    if (!active) return;
-    bar.innerHTML = `<button type="button" id="uaiCompanionSwitchCharacter"><span>角色</span><strong>${escapeHtml(active.profile?.name || "未命名")}</strong><b>${characters.length}/${MAX_CHARACTERS} ▾</b></button>`;
-    bar.querySelector("#uaiCompanionSwitchCharacter")?.addEventListener("click", showCharacterManager);
-  }
-
-  function closeModal() {
-    document.getElementById("uaiCompanionV3Mask")?.remove();
-  }
+  function closeModal() { document.getElementById("uaiCompanionV3Mask")?.remove(); }
 
   function openModal(html, bind) {
     closeModal();
@@ -248,7 +200,7 @@
             </article>`;
           }).join("")}
         </div>
-        <footer><span>最多 ${MAX_CHARACTERS} 个角色</span><button type="button" id="uaiCompanionAddCharacter"${characters.length >= MAX_CHARACTERS ? " disabled" : ""}>＋ 新建伙伴</button></footer>
+        <footer><span>最多 ${MAX_CHARACTERS} 个角色</span><button type="button" id="uaiCompanionAddCharacter"${characters.length >= MAX_CHARACTERS ? " disabled" : ""}>＋ 新增角色</button></footer>
       </section>`, (mask) => {
         mask.querySelectorAll("[data-switch-character]").forEach((button) => {
           button.addEventListener("click", () => switchCharacter(button.closest("[data-character-id]")?.dataset.characterId));
@@ -256,87 +208,8 @@
         mask.querySelectorAll("[data-delete-character]").forEach((button) => {
           button.addEventListener("click", () => deleteCharacter(button.closest("[data-character-id]")?.dataset.characterId));
         });
-        mask.querySelector("#uaiCompanionAddCharacter")?.addEventListener("click", showCreateCharacter);
       });
-  }
-
-  function personalityMarkup(selected = []) {
-    const set = new Set(selected);
-    return PERSONALITIES.map((item) => `<button type="button" data-v3-personality="${escapeHtml(item)}" class="${set.has(item) ? "selected" : ""}">${escapeHtml(item)}</button>`).join("");
-  }
-
-  function relationOptions(selected = "girlfriend") {
-    return RELATIONS.map(([key, label]) => `<option value="${key}"${key === selected ? " selected" : ""}>${escapeHtml(label)}</option>`).join("");
-  }
-
-  function timeGreeting(profile, history = []) {
-    const hour = new Date().getHours();
-    const prefix = hour < 6 ? "这么晚还没睡呀。" : hour < 11 ? "早呀～" : hour < 14 ? "中午好呀。" : hour < 18 ? "下午好呀。" : hour < 23 ? "晚上好呀。" : "这么晚才来呀～";
-    const latest = [...history]
-      .filter((session) => session?.title && session.title !== "新的聊天")
-      .sort((a, b) => Number(b.updatedAt || 0) - Number(a.updatedAt || 0))[0];
-    if (latest?.title) return `${prefix}上次我们聊到「${cleanText(latest.title, 24)}」，我还记得。今天慢慢聊就好。`;
-    return `${prefix}我是${profile?.name || "你的 AI 伙伴"}。不用想好聊什么，想到哪儿说到哪儿就行。`;
-  }
-
-  function createInitialSession(profile, history = []) {
-    const now = Date.now();
-    return {
-      id: makeId("companion-session"),
-      title: "新的聊天",
-      createdAt: now,
-      updatedAt: now,
-      v3GreetingEnhanced: true,
-      messages: [{ role: "assistant", content: timeGreeting(profile, history), createdAt: now }]
-    };
-  }
-
-  function showCreateCharacter() {
-    openModal(`
-      <section class="uai-c-v3-modal compact" role="dialog" aria-modal="true" aria-label="新建 AI 伙伴">
-        <header><div><span>NEW COMPANION</span><h3>创建新的 AI 伙伴</h3><p>角色之间的聊天和记忆完全分开。</p></div><button type="button" data-v3-close>×</button></header>
-        <div class="uai-c-v3-form">
-          <label>名字<input id="uaiV3CharacterName" value="小晴" maxlength="40" /></label>
-          <label>关系<select id="uaiV3CharacterRelation">${relationOptions("friend")}</select></label>
-          <div><span>性格</span><div class="uai-c-v3-personalities">${personalityMarkup(["温柔", "活泼", "幽默"])}</div></div>
-          <label>补充设定<textarea id="uaiV3CharacterDesc" maxlength="900" placeholder="例如：说话直接一点，喜欢开玩笑，但认真讨论问题时很靠谱。"></textarea></label>
-        </div>
-        <footer><button type="button" class="secondary" id="uaiV3BackCharacters">返回</button><button type="button" id="uaiV3CreateCharacter">创建并切换</button></footer>
-      </section>`, (mask) => {
-        mask.querySelectorAll("[data-v3-personality]").forEach((button) => button.addEventListener("click", () => button.classList.toggle("selected")));
-        mask.querySelector("#uaiV3BackCharacters")?.addEventListener("click", showCharacterManager);
-        mask.querySelector("#uaiV3CreateCharacter")?.addEventListener("click", () => {
-          persistActiveCharacter();
-          const characters = getCharacters();
-          if (characters.length >= MAX_CHARACTERS) return;
-          const name = cleanText(mask.querySelector("#uaiV3CharacterName")?.value, 40) || "新伙伴";
-          const relationship = mask.querySelector("#uaiV3CharacterRelation")?.value || "friend";
-          const personality = Array.from(mask.querySelectorAll("[data-v3-personality].selected")).map((item) => item.dataset.v3Personality).filter(Boolean).slice(0, 8);
-          const profile = {
-            name,
-            relationship,
-            personality: personality.length ? personality : ["温柔", "自然", "幽默"],
-            speakingStyle: ["像即时聊天而不是客服", "默认简短自然", "不要每句话都反问", "自然使用已经知道的共同信息"],
-            customDescription: cleanText(mask.querySelector("#uaiV3CharacterDesc")?.value, 900),
-            userNickname: "",
-            avatarData: "",
-            createdAt: Date.now()
-          };
-          const character = {
-            id: makeId("companion-character"),
-            profile,
-            sessions: [createInitialSession(profile)],
-            memories: [],
-            settings: readJson(KEYS.settings, {}),
-            createdAt: Date.now(),
-            updatedAt: Date.now()
-          };
-          characters.push(character);
-          saveCharacters(characters);
-          closeModal();
-          loadCharacterIntoSlots(character, true);
-        });
-      });
+    window.UnlimitedCompanionV8Secondary?.refresh?.();
   }
 
   function deleteCharacter(id) {
@@ -356,7 +229,7 @@
     const state = window.UnlimitedCompanion?.getState?.();
     const sessions = Array.isArray(state?.sessions) ? state.sessions : [];
     const session = sessions.find((item) => item.id === state?.currentSessionId) || sessions[0] || null;
-    return { state, sessions, session };
+    return { sessions, session };
   }
 
   function saveSessionsAndRefresh(sessions) {
@@ -365,7 +238,7 @@
     window.UnlimitedCompanion?.unmount?.();
     window.setTimeout(() => {
       window.UnlimitedCompanion?.mount?.();
-      window.UnlimitedCompanionPolish?.refresh?.();
+      window.UnlimitedCompanionV8Secondary?.refresh?.();
       scheduleEnhance();
     }, 20);
   }
@@ -426,8 +299,6 @@
       if (!bubble || bubble.querySelector(".uai-c-typing")) return;
       const message = session.messages[index];
       if (!message) return;
-      const actionsHost = row.querySelector(".uai-c-v2-message-actions") || bubble.parentElement;
-      if (!actionsHost) return;
       const group = document.createElement("span");
       group.className = "uai-c-v3-actions";
       if (message.role === "user") {
@@ -444,29 +315,29 @@
         regenerate.addEventListener("click", () => regenerateAssistant(index));
         group.appendChild(regenerate);
       }
-      if (group.childElementCount) actionsHost.appendChild(group);
+      if (group.childElementCount) bubble.parentElement?.appendChild(group);
     });
   }
 
   function upsertMemory(text, kind = "fact") {
-    const clean = cleanText(text, 180);
-    if (!clean) return false;
+    const normalized = cleanText(text, 180);
+    if (!normalized) return false;
     let memories = readJson(KEYS.memories, []);
     if (!Array.isArray(memories)) memories = [];
 
     if (kind === "nickname") memories = memories.filter((item) => !String(item?.text || "").startsWith("用户希望被称为"));
     if (kind === "birthday") memories = memories.filter((item) => !String(item?.text || "").startsWith("用户的生日是"));
     if (kind === "like") {
-      const object = clean.replace(/^用户喜欢/, "");
+      const object = normalized.replace(/^用户喜欢/, "");
       memories = memories.filter((item) => String(item?.text || "") !== `用户不喜欢${object}`);
     }
     if (kind === "dislike") {
-      const object = clean.replace(/^用户不喜欢/, "");
+      const object = normalized.replace(/^用户不喜欢/, "");
       memories = memories.filter((item) => String(item?.text || "") !== `用户喜欢${object}`);
     }
 
-    if (memories.some((item) => String(item?.text || "").trim().toLowerCase() === clean.toLowerCase())) return false;
-    memories.push({ id: makeId("memory"), text: clean, source: "auto-v3", kind, createdAt: Date.now() });
+    if (memories.some((item) => String(item?.text || "").trim().toLowerCase() === normalized.toLowerCase())) return false;
+    memories.push({ id: makeId("memory"), text: normalized, source: "auto-v8", kind, createdAt: Date.now() });
     writeJson(KEYS.memories, memories.slice(-100));
     schedulePersist();
     return true;
@@ -513,6 +384,16 @@
     }
   }
 
+  function timeGreeting(profile, history = []) {
+    const hour = new Date().getHours();
+    const prefix = hour < 6 ? "这么晚还没睡呀。" : hour < 11 ? "早呀～" : hour < 14 ? "中午好呀。" : hour < 18 ? "下午好呀。" : hour < 23 ? "晚上好呀。" : "这么晚才来呀～";
+    const latest = [...history]
+      .filter((session) => session?.title && session.title !== "新的聊天")
+      .sort((a, b) => Number(b.updatedAt || 0) - Number(a.updatedAt || 0))[0];
+    if (latest?.title) return `${prefix}上次我们聊到「${cleanText(latest.title, 24)}」，我还记得。今天慢慢聊就好。`;
+    return `${prefix}我是${profile?.name || "你的 AI 伙伴"}。不用想好聊什么，想到哪儿说到哪儿就行。`;
+  }
+
   function enhanceNewChatGreeting() {
     const state = window.UnlimitedCompanion?.getState?.();
     const sessions = Array.isArray(state?.sessions) ? state.sessions : [];
@@ -538,7 +419,6 @@
     const root = document.getElementById("uaiCompanionRoot");
     if (!root || document.body.dataset.uaiMode !== "companion") return;
     ensureRepository();
-    ensureCharacterBar(root);
     ensureV3MessageActions(root);
     schedulePersist();
   }
@@ -558,8 +438,12 @@
     document.addEventListener("keydown", (event) => {
       if (event.key === "Escape" && document.getElementById("uaiCompanionV3Mask")) closeModal();
     });
-    const observer = new MutationObserver(scheduleEnhance);
-    observer.observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ["data-uai-mode", "hidden", "class"] });
+    new MutationObserver(scheduleEnhance).observe(document.body, {
+      subtree: true,
+      childList: true,
+      attributes: true,
+      attributeFilter: ["data-uai-mode"]
+    });
     scheduleEnhance();
   }
 
