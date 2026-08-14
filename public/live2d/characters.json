@@ -1,7 +1,7 @@
 {
-  "version": 3,
+  "version": 4,
   "defaultModel": {
-    "model": "https://raw.githubusercontent.com/Live2D/CubismWebSamples/b1de66b0b1f1cb881d95fb6158622aeb6a2827bd/Samples/Resources/Mao/Mao.model3.json",
+    "model": "https://cdn.jsdelivr.net/gh/Live2D/CubismWebSamples@b1de66b0b1f1cb881d95fb6158622aeb6a2827bd/Samples/Resources/Mao/Mao.model3.json",
     "idleMotionGroup": "Idle",
     "position": {
       "x": 0.74,
@@ -43,7 +43,7 @@
         "thinking": ["Thinking", "thinking"]
       },
       "fallback": {
-        "model": "https://raw.githubusercontent.com/Live2D/CubismWebSamples/b1de66b0b1f1cb881d95fb6158622aeb6a2827bd/Samples/Resources/Mao/Mao.model3.json",
+        "model": "https://cdn.jsdelivr.net/gh/Live2D/CubismWebSamples@b1de66b0b1f1cb881d95fb6158622aeb6a2827bd/Samples/Resources/Mao/Mao.model3.json",
         "idleMotionGroup": "Idle",
         "position": {
           "x": 0.74,
