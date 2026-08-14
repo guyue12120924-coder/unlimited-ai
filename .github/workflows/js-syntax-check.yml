@@ -69,8 +69,8 @@ jobs:
           set -euo pipefail
           node tests/companion-runtime-contract.test.mjs
 
-      - name: Check companion V9 UX contract
+      - name: Check companion V10 UX contract
         shell: bash
         run: |
           set -euo pipefail
-          node tests/companion-v9-ux.test.mjs
+          node tests/companion-v10-ux.test.mjs
