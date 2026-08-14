@@ -55,7 +55,13 @@ assert.match(css, /\.uai-c-v122-portrait-wrap/);
 assert.match(css, /\.uai-c-live2d-credit/);
 assert.match(css, /\.uai-c-live2d-status-note/);
 
-assert.equal(config.version, 2);
+assert.equal(config.version, 3);
+assert.equal(typeof config.defaultModel, "object", "every role should receive the official Mao model until a real model is configured");
+assert.match(config.defaultModel?.model || "", /^https:\/\/raw\.githubusercontent\.com\/Live2D\/CubismWebSamples\//);
+assert.match(config.defaultModel?.model || "", /\/Samples\/Resources\/Mao\/Mao\.model3\.json$/);
+assert.equal(config.defaultModel?.sample?.name, "Mao");
+assert.equal(config.defaultModel?.sample?.owner, "Live2D Inc.");
+
 assert.equal(config.byName?.["李萌"]?.model, "/live2d/characters/limeng/limeng.model3.json");
 assert.equal(config.byName?.["李萌"]?.idleMotionGroup, "Idle");
 assert.ok(Array.isArray(config.byName?.["李萌"]?.tapMotionGroups));
@@ -75,4 +81,4 @@ assert.match(readme, /setModelForCharacter/);
 // Cubism Core stays outside this public repository; hosted Core or an optional local copy is used at runtime.
 assert.equal(fs.existsSync("public/live2d/vendor/live2dcubismcore.min.js"), false);
 
-console.log("Companion Live2D contract passed: local model -> official Mao fallback -> local/official hosted Core -> interactions/API.");
+console.log("Companion Live2D contract passed: every role -> official Mao fallback -> local/hosted Core -> interactions/API.");
