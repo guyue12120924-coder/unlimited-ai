@@ -1,12 +1,13 @@
-// Companion V12.10 — Live2D virtual character stage with official sample fallback.
+// Companion V12.11 — Live2D virtual character stage with zero-setup hosted Core.
 (() => {
-  const REVISION = "2026-08-14-v12.10-live2d-sample-1";
+  const REVISION = "2026-08-14-v12.11-live2d-hosted-core-1";
   const ACTIVE_KEY = "uai_companion_active_character_v1";
   const MODEL_ASSIGNMENTS_KEY = "uai_companion_live2d_assignments_v1";
   const CONFIG_URL = "/live2d/characters.json";
   const PIXI_URL = "https://cdn.jsdelivr.net/npm/pixi.js@6.5.10/dist/browser/pixi.min.js";
   const LIVE2D_PLUGIN_URL = "https://cdn.jsdelivr.net/npm/pixi-live2d-display@0.4.0/dist/cubism4.min.js";
   const LOCAL_CORE_URL = "/live2d/vendor/live2dcubismcore.min.js";
+  const OFFICIAL_CORE_URL = "https://cubism.live2d.com/sdk-web/cubismcore/live2dcubismcore.min.js";
 
   let scheduled = false;
   let enhanceToken = 0;
@@ -57,7 +58,7 @@
     if (state === "runtime-error") {
       note.hidden = false;
       note.textContent = /Cubism Core/i.test(message)
-        ? "Live2D 已接入 · 还缺 Cubism Core"
+        ? "Live2D Core 暂时加载失败"
         : "Live2D 运行环境加载失败";
       note.title = message;
       return;
@@ -86,7 +87,9 @@
 
   function normalizeSpec(raw) {
     if (!raw) return null;
-    if (typeof raw === "string") return { model: raw, position: {}, expressions: {}, motions: {}, tapMotionGroups: [], fallback: null, sample: null };
+    if (typeof raw === "string") {
+      return { model: raw, position: {}, expressions: {}, motions: {}, tapMotionGroups: [], fallback: null, sample: null };
+    }
     if (typeof raw !== "object" || Array.isArray(raw)) return null;
     const model = String(raw.model || raw.url || "").trim();
     if (!model) return null;
@@ -121,8 +124,7 @@
   }
 
   async function resolveSpec(character) {
-    const assignments = localAssignments();
-    const direct = normalizeSpec(assignments[character.id]);
+    const direct = normalizeSpec(localAssignments()[character.id]);
     if (direct) return direct;
     const config = await readConfig();
     const byId = config?.byId && typeof config.byId === "object" ? config.byId : {};
@@ -189,18 +191,31 @@
     });
   }
 
+  async function ensureCubismCore() {
+    if (window.Live2DCubismCore) return;
+
+    const hasLocalCore = await resourceExists(LOCAL_CORE_URL);
+    if (hasLocalCore) {
+      try {
+        await loadScript(LOCAL_CORE_URL, "uaiCompanionCubismCoreLocal", () => window.Live2DCubismCore);
+      } catch (error) {
+        console.warn("[Unlimited AI] Local Cubism Core failed; trying official hosted Core.", error);
+      }
+    }
+
+    if (!window.Live2DCubismCore) {
+      await loadScript(OFFICIAL_CORE_URL, "uaiCompanionCubismCoreOfficial", () => window.Live2DCubismCore);
+    }
+
+    if (!window.Live2DCubismCore) throw new Error("Cubism Core 未初始化");
+  }
+
   async function ensureRuntime() {
     if (window.PIXI?.live2d?.Live2DModel && window.Live2DCubismCore) return;
     if (runtimePromise) return runtimePromise;
     runtimePromise = (async () => {
-      if (!window.Live2DCubismCore) {
-        const hasLocalCore = await resourceExists(LOCAL_CORE_URL);
-        if (!hasLocalCore) {
-          throw new Error("缺少 Cubism Core。请从 Live2D 官方 Cubism SDK for Web 下载包中取得 live2dcubismcore.min.js，并放到 /live2d/vendor/live2dcubismcore.min.js。");
-        }
-        await loadScript(LOCAL_CORE_URL, "uaiCompanionCubismCore", () => window.Live2DCubismCore);
-      }
       await loadScript(PIXI_URL, "uaiCompanionPixiV6", () => window.PIXI?.Application);
+      await ensureCubismCore();
       await loadScript(LIVE2D_PLUGIN_URL, "uaiCompanionPixiLive2D", () => window.PIXI?.live2d?.Live2DModel);
     })().catch((error) => {
       runtimePromise = null;
@@ -402,8 +417,14 @@
     const root = liveRoot();
     if (root) root.dataset.v129Live2dEmotion = key;
     if (!currentModel) return false;
-    const expressionChanged = await firstSuccessful(asList(currentSpec?.expressions?.[key], defaultExpressionNames(key)), (name) => currentModel.expression(name));
-    const motionChanged = await firstSuccessful(asList(currentSpec?.motions?.[key], defaultMotionGroups(key)), (group) => currentModel.motion(group));
+    const expressionChanged = await firstSuccessful(
+      asList(currentSpec?.expressions?.[key], defaultExpressionNames(key)),
+      (name) => currentModel.expression(name)
+    );
+    const motionChanged = await firstSuccessful(
+      asList(currentSpec?.motions?.[key], defaultMotionGroups(key)),
+      (group) => currentModel.motion(group)
+    );
     return expressionChanged || motionChanged;
   }
 
@@ -428,10 +449,12 @@
       if (token !== loadToken) return;
       ensureApp();
       if (!app) throw new Error("PixiJS 初始化失败");
+
       if (currentModel) {
         try { app.stage.removeChild(currentModel); } catch {}
         try { currentModel.destroy?.({ children: true }); } catch { try { currentModel.destroy?.(); } catch {} }
       }
+
       const Live2DModel = window.PIXI?.live2d?.Live2DModel;
       if (!Live2DModel) throw new Error("Live2DModel 不可用");
       const model = await Live2DModel.from(spec.model, {
@@ -443,6 +466,7 @@
         try { model.destroy?.({ children: true }); } catch {}
         return;
       }
+
       currentModel = model;
       currentSpec = spec;
       currentCharacterId = character.id;
@@ -475,16 +499,19 @@
       stopTicker();
       return;
     }
+
     root.dataset.v129Live2d = REVISION;
     ensureLayer(root);
     const character = activeCharacter();
     const configured = await resolveSpec(character);
     if (run !== enhanceToken) return;
+
     if (!configured?.model) {
       currentSignature = `${character.id}|none`;
       destroyCurrentModel(root, "unconfigured");
       return;
     }
+
     const spec = await selectAvailableSpec(configured);
     if (run !== enhanceToken) return;
     if (!spec?.model) {
@@ -492,6 +519,7 @@
       destroyCurrentModel(root, "model-missing", "正式模型和官方测试模型都无法访问");
       return;
     }
+
     const signature = `${character.id}|${spec.model}|${spec.sample?.name || "custom"}`;
     if (signature === currentSignature && currentModel) {
       root.classList.add("uai-c-live2d-active");
@@ -500,6 +528,7 @@
       startTicker();
       return;
     }
+
     currentSignature = signature;
     await loadModel(root, character, spec, signature);
   }
@@ -554,6 +583,7 @@
     document.addEventListener("visibilitychange", () => {
       if (document.hidden) stopTicker(); else schedule();
     });
+
     window.UnlimitedCompanionLive2D = {
       revision: REVISION,
       refresh,
