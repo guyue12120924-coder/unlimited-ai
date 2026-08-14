@@ -1,0 +1,200 @@
+/* Companion V12.8 phase 5 — persisted per-character scene variants + settings UI. */
+
+#uaiCompanionRoot[data-v127-theme] .uai-c-v127-theme-band{
+  margin-top:var(--v128-band-offset,0px)!important;
+}
+#uaiCompanionRoot[data-v127-theme] .uai-c-v127-theme-wash{
+  margin-left:var(--v128-wash-x,0px)!important;
+  margin-top:var(--v128-wash-y,0px)!important;
+}
+
+/* Deterministic particle-shape variations saved per character. */
+#uaiCompanionRoot[data-v127-theme="sakura"][data-v128-particle-style="1"] .uai-c-v127-particle.uai-c-v128-shape-1{
+  border-radius:18% 72% 22% 70%!important;
+  transform:rotate(26deg);
+}
+#uaiCompanionRoot[data-v127-theme="sakura"][data-v128-particle-style="2"] .uai-c-v127-particle.uai-c-v128-shape-2{
+  border-radius:80% 25% 75% 30%!important;
+  filter:saturate(1.10) brightness(1.05);
+}
+#uaiCompanionRoot[data-v127-theme="moonlight"][data-v128-particle-style="1"] .uai-c-v127-particle:nth-child(4n){
+  width:calc(var(--particle-size,4px) * 1.7)!important;
+  height:1px!important;
+  border-radius:999px!important;
+}
+#uaiCompanionRoot[data-v127-theme="moonlight"][data-v128-particle-style="2"] .uai-c-v127-particle:nth-child(5n){
+  background:#fff!important;
+  box-shadow:0 0 9px #d8e8ff,0 0 24px rgba(145,180,255,.45)!important;
+}
+#uaiCompanionRoot[data-v127-theme="neon"][data-v128-particle-style="1"] .uai-c-v127-particle.uai-c-v128-shape-1{
+  border-radius:1px!important;
+  rotate:45deg;
+}
+#uaiCompanionRoot[data-v127-theme="neon"][data-v128-particle-style="2"] .uai-c-v127-particle.uai-c-v128-shape-2{
+  width:calc(var(--particle-size,6px) * 1.8)!important;
+  height:2px!important;
+  border-radius:999px!important;
+}
+
+/* Small welcome-area scene identity; deliberately lighter than the main greeting. */
+#uaiCompanionRoot .uai-c-v128-scene-decor{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  margin-left:6px;
+  padding:3px 7px;
+  border:1px solid color-mix(in srgb,var(--v127-primary) 24%,transparent);
+  border-radius:999px;
+  background:color-mix(in srgb,var(--v127-primary) 9%,transparent);
+  color:color-mix(in srgb,var(--v127-soft) 82%,transparent);
+  font-size:9px;
+  letter-spacing:.025em;
+  text-shadow:0 0 10px color-mix(in srgb,var(--v127-primary) 20%,transparent);
+}
+#uaiCompanionRoot .uai-c-v128-scene-note{
+  width:max-content;
+  max-width:min(100%,560px);
+  margin-top:10px;
+  padding-left:12px;
+  position:relative;
+  color:color-mix(in srgb,var(--v127-soft) 63%,transparent);
+  font-size:10.5px;
+  line-height:1.5;
+  letter-spacing:.01em;
+}
+#uaiCompanionRoot .uai-c-v128-scene-note::before{
+  content:"";
+  position:absolute;
+  left:0;
+  top:4px;
+  bottom:4px;
+  width:2px;
+  border-radius:999px;
+  background:linear-gradient(var(--v127-secondary),var(--v127-primary));
+  box-shadow:0 0 10px color-mix(in srgb,var(--v127-primary) 42%,transparent);
+}
+
+/* Settings: scene selection belongs to the current role and applies instantly. */
+#uaiCompanionRoot .uai-c-v128-scene-settings{
+  margin:15px 0 2px;
+  padding:14px;
+  border:1px solid rgba(216,184,255,.16);
+  border-radius:16px;
+  background:
+    radial-gradient(circle at 88% 0%,rgba(255,87,194,.07),transparent 35%),
+    linear-gradient(145deg,rgba(78,53,159,.20),rgba(30,27,81,.30));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.055);
+}
+#uaiCompanionRoot .uai-c-v128-scene-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:14px;
+}
+#uaiCompanionRoot .uai-c-v128-scene-head>div{
+  display:grid;
+  gap:4px;
+}
+#uaiCompanionRoot .uai-c-v128-scene-head strong{
+  color:#fff;
+  font-size:13px;
+  font-weight:760;
+}
+#uaiCompanionRoot .uai-c-v128-scene-head span{
+  color:rgba(226,211,255,.50);
+  font-size:10px;
+}
+#uaiCompanionRoot .uai-c-v128-scene-head>b{
+  flex:0 0 auto;
+  padding:6px 9px;
+  border:1px solid rgba(222,190,255,.18);
+  border-radius:999px;
+  background:rgba(116,77,210,.18);
+  color:#f4e8ff;
+  font-size:10px;
+  font-weight:700;
+}
+#uaiCompanionRoot .uai-c-v128-scene-actions{
+  margin-top:11px;
+}
+#uaiCompanionRoot .uai-c-v128-shuffle{
+  min-height:34px;
+  padding:0 12px;
+  border:1px solid rgba(219,181,255,.26);
+  border-radius:10px;
+  background:linear-gradient(135deg,rgba(131,76,236,.38),rgba(255,77,186,.11));
+  color:#fff;
+  font-size:10.5px;
+  font-weight:700;
+  cursor:pointer;
+  transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease;
+}
+#uaiCompanionRoot .uai-c-v128-shuffle:hover{
+  transform:translateY(-1px);
+  border-color:rgba(239,210,255,.43);
+  box-shadow:0 0 21px rgba(162,88,255,.16);
+}
+#uaiCompanionRoot .uai-c-v128-theme-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+  margin-top:10px;
+}
+#uaiCompanionRoot .uai-c-v128-theme-grid>button{
+  min-height:64px;
+  padding:9px 10px;
+  border:1px solid rgba(213,187,255,.13);
+  border-radius:12px;
+  display:grid;
+  grid-template-columns:26px minmax(0,1fr);
+  grid-template-rows:auto auto;
+  column-gap:8px;
+  text-align:left;
+  background:rgba(55,47,116,.20);
+  color:#eee5ff;
+  cursor:pointer;
+  transition:transform .16s ease,border-color .16s ease,background .16s ease,box-shadow .16s ease;
+}
+#uaiCompanionRoot .uai-c-v128-theme-grid>button i{
+  grid-row:1/3;
+  width:26px;
+  height:26px;
+  align-self:center;
+  display:grid;
+  place-items:center;
+  border-radius:9px;
+  font-style:normal;
+  background:rgba(143,91,240,.15);
+  color:#ff9bd9;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06);
+}
+#uaiCompanionRoot .uai-c-v128-theme-grid>button strong{
+  align-self:end;
+  color:#f7f1ff;
+  font-size:10.5px;
+}
+#uaiCompanionRoot .uai-c-v128-theme-grid>button span{
+  align-self:start;
+  color:rgba(222,208,255,.43);
+  font-size:9px;
+}
+#uaiCompanionRoot .uai-c-v128-theme-grid>button:hover{
+  transform:translateY(-1px);
+  border-color:rgba(226,198,255,.27);
+  background:rgba(91,61,174,.27);
+}
+#uaiCompanionRoot .uai-c-v128-theme-grid>button.selected{
+  border-color:color-mix(in srgb,var(--v127-primary) 54%,rgba(255,255,255,.18));
+  background:linear-gradient(135deg,color-mix(in srgb,var(--v127-primary) 32%,transparent),color-mix(in srgb,var(--v127-secondary) 9%,transparent));
+  box-shadow:0 0 0 1px color-mix(in srgb,var(--v127-primary) 12%,transparent),0 0 24px color-mix(in srgb,var(--v127-primary) 13%,transparent);
+}
+#uaiCompanionRoot .uai-c-v128-theme-grid>button.selected i{
+  color:#fff;
+  background:linear-gradient(145deg,var(--v127-secondary),var(--v127-primary));
+  box-shadow:0 0 16px color-mix(in srgb,var(--v127-primary) 30%,transparent);
+}
+
+@media (max-width:680px){
+  #uaiCompanionRoot .uai-c-v128-theme-grid{grid-template-columns:1fr}
+  #uaiCompanionRoot .uai-c-v128-scene-head{align-items:flex-start;flex-direction:column}
+}
