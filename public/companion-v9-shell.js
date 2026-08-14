@@ -1,6 +1,6 @@
 // Companion V9 interaction shell: one role hub, one conversation surface, low-frequency tools kept out of the main chat.
 (() => {
-  const REVISION = "2026-08-14-v9.2-shell-1";
+  const REVISION = "2026-08-14-v9.2-shell-2";
   const PROFILE_LIMIT = 5000;
   let scheduled = false;
 
@@ -64,8 +64,13 @@
     const button = document.createElement("button");
     button.id = "uaiV9ChatSearch";
     button.type = "button";
-    button.className = "uai-c-v9-chat-search";
-    button.innerHTML = `<span>⌕ 搜索聊天</span><b>Ctrl K</b>`;
+    button.className = "uai-c-new-chat uai-c-v9-chat-search";
+    button.innerHTML = `<span>⌕ 搜索聊天</span><b style="margin-left:auto;font-size:10px;font-weight:500;opacity:.38">Ctrl K</b>`;
+    button.style.display = "flex";
+    button.style.alignItems = "center";
+    button.style.gap = "8px";
+    button.style.fontWeight = "500";
+    button.style.color = "rgba(255,255,255,.62)";
     button.addEventListener("click", () => window.UnlimitedCompanionMemorySearch?.showSearch?.());
     newChat.insertAdjacentElement("afterend", button);
   }
