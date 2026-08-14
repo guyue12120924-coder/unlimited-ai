@@ -1,6 +1,6 @@
 // Companion V8 primary navigation, role editing, settings and long-reply UX.
 (() => {
-  const REVISION = "2026-08-14-v8.1-primary-ux-1";
+  const REVISION = "2026-08-14-v8.2-primary-ux-1";
   const MAX_CHARACTERS = 6;
   const PROFILE_LIMIT = 5000;
   const PROFILE_MARKER = ["以完整角色设定为准"];
@@ -25,6 +25,13 @@
     ["short", "约 500 字", "短一些"],
     ["balanced", "约 1000 字", "默认"],
     ["detailed", "约 5000 字", "长回复"]
+  ];
+  const LEGACY_SHELL_CONTROLS = [
+    "#uaiCompanionCharacterBtn",
+    "#uaiCompanionHeaderMemory",
+    "#uaiCompanionHeaderSettings",
+    "#uaiCompanionEditProfileInline",
+    "#uaiCompanionCreateCharacterBtn"
   ];
   let scheduled = false;
 
@@ -303,7 +310,12 @@
     toolbar.querySelector("#uaiCompanionRoleAdd")?.addEventListener("click", openCreate);
   }
 
+  function removeLegacyShellControls(root) {
+    LEGACY_SHELL_CONTROLS.forEach((selector) => root.querySelector(selector)?.remove());
+  }
+
   function simplifySidebar(root) {
+    removeLegacyShellControls(root);
     const sideLabel = root.querySelector(".uai-c-sidebar > .uai-c-side-label");
     if (sideLabel) sideLabel.textContent = "聊天记录";
     const memory = root.querySelector("#uaiCompanionMemoryBtn span");
@@ -312,7 +324,6 @@
     if (settings) settings.textContent = "设置";
     const exit = root.querySelector("#uaiCompanionExitBtn span");
     if (exit) exit.textContent = "返回模式大厅";
-    root.querySelector("#uaiCompanionCreateCharacterBtn")?.remove();
   }
 
   function simplifyCharacterManager() {
