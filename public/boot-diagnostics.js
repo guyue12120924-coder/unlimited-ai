@@ -2,8 +2,8 @@
 // Startup guard + dual-mode bootstrap. The existing novel workspace still boots
 // normally behind the mode lobby so old data and feature adapters remain intact.
 (() => {
-  const REVISION = "2026-08-14-v11.2-dual-mode-1";
-  // Diagnostics compatibility markers: 2026-08-14-v11.1-dual-mode-1 / 2026-08-14-v11.0-dual-mode-1 / 2026-08-14-v10.9-dual-mode-1 / 2026-08-14-v10.8-dual-mode-1 / 2026-08-14-v10.7-dual-mode-1 / 2026-08-14-v10.6-dual-mode-1 / 2026-08-14-v10.5-dual-mode-1 / 2026-08-14-v10.4-dual-mode-1 / 2026-08-14-v10.3-dual-mode-1 / 2026-08-14-v10.2-dual-mode-1 / 2026-08-14-v10.1-dual-mode-1 / 2026-08-14-v10.0-dual-mode-1
+  const REVISION = "2026-08-14-v11.5-dual-mode-1";
+  // Diagnostics compatibility markers: 2026-08-14-v11.2-dual-mode-1 / 2026-08-14-v11.1-dual-mode-1 / 2026-08-14-v11.0-dual-mode-1 / 2026-08-14-v10.9-dual-mode-1 / 2026-08-14-v10.8-dual-mode-1 / 2026-08-14-v10.7-dual-mode-1 / 2026-08-14-v10.6-dual-mode-1 / 2026-08-14-v10.5-dual-mode-1 / 2026-08-14-v10.4-dual-mode-1 / 2026-08-14-v10.3-dual-mode-1 / 2026-08-14-v10.2-dual-mode-1 / 2026-08-14-v10.1-dual-mode-1 / 2026-08-14-v10.0-dual-mode-1
   const errors = [];
 
   document.documentElement.dataset.frontendRevision = REVISION;
@@ -76,6 +76,7 @@
     ensureStyle(`/companion-v11.css?v=${REVISION}`, "uaiCompanionV11Css");
     ensureStyle(`/companion-v11-stage1.css?v=${REVISION}`, "uaiCompanionV11Stage1Css");
     ensureStyle(`/companion-v11-stage2.css?v=${REVISION}`, "uaiCompanionV11Stage2Css");
+    ensureStyle(`/companion-v11-stage3.css?v=${REVISION}`, "uaiCompanionV11Stage3Css");
 
     ensureScript(`/companion-characters-core.js?v=${REVISION}`, "uaiCompanionCharactersCoreScript");
     ensureScript(`/companion-character-editor.js?v=${REVISION}`, "uaiCompanionCharacterEditorScript");
@@ -91,6 +92,7 @@
     ensureScript(`/companion-v11.js?v=${REVISION}`, "uaiCompanionV11Script");
     ensureScript(`/companion-v11-stage1.js?v=${REVISION}`, "uaiCompanionV11Stage1Script");
     ensureScript(`/companion-v11-stage2.js?v=${REVISION}`, "uaiCompanionV11Stage2Script");
+    ensureScript(`/companion-v11-stage3.js?v=${REVISION}`, "uaiCompanionV11Stage3Script");
 
     if (document.getElementById("uaiModeRouterScript")) return;
     const script = document.createElement("script");
@@ -131,6 +133,7 @@
       window.__UNLIMITED_BOOT__.companionV11Ready = Boolean(window.UnlimitedCompanionV11);
       window.__UNLIMITED_BOOT__.companionV11Stage1Ready = Boolean(window.UnlimitedCompanionV11Stage1);
       window.__UNLIMITED_BOOT__.companionV11Stage2Ready = Boolean(window.UnlimitedCompanionV11Stage2);
+      window.__UNLIMITED_BOOT__.companionV11Stage3Ready = Boolean(window.UnlimitedCompanionV11Stage3);
       return;
     }
     const parts = [];
