@@ -1,9 +1,10 @@
 // Companion V12.5 phase 2 — five-layer animated background renderer.
 (() => {
-  const REVISION = "2026-08-14-v12.5-phase2-1";
+  const REVISION = "2026-08-14-v12.5-phase2-audit-2";
   let canvas = null;
   let ctx = null;
   let frame = 0;
+  let scheduled = false;
   let stars = [];
   let meteors = [];
   let resizeKey = "";
@@ -12,6 +13,13 @@
 
   function rgba(rgb, alpha) {
     return `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${alpha})`;
+  }
+
+  function liveRoot() {
+    const root = lastRoot || document.getElementById("uaiCompanionRoot");
+    if (document.body.dataset.uaiMode !== "companion") return null;
+    if (!root || root.hidden || !root.isConnected) return null;
+    return root;
   }
 
   function currentPalette(root) {
@@ -55,7 +63,7 @@
     ctx = canvas?.getContext("2d", { alpha: true }) || null;
     lastRoot = root;
     resizeCanvas();
-    if (!frame && ctx) frame = requestAnimationFrame(animate);
+    if (!frame && ctx && liveRoot()) frame = requestAnimationFrame(animate);
     return scene;
   }
 
@@ -141,8 +149,14 @@
   }
 
   function animate() {
+    const root = liveRoot();
+    if (!canvas || !ctx || !root) {
+      frame = 0;
+      return;
+    }
     frame = requestAnimationFrame(animate);
-    if (!canvas || !ctx || !lastRoot || document.hidden) return;
+    if (document.hidden) return;
+
     const rect = canvas.getBoundingClientRect();
     const width = rect.width;
     const height = rect.height;
@@ -153,11 +167,11 @@
     pointer.y += (pointer.ty - pointer.y) * 0.045;
     const px = (pointer.x - 0.5) * 10;
     const py = (pointer.y - 0.5) * 8;
-    lastRoot.style.setProperty("--v125-parallax-x", `${px.toFixed(2)}px`);
-    lastRoot.style.setProperty("--v125-parallax-y", `${py.toFixed(2)}px`);
+    root.style.setProperty("--v125-parallax-x", `${px.toFixed(2)}px`);
+    root.style.setProperty("--v125-parallax-y", `${py.toFixed(2)}px`);
 
     ctx.clearRect(0, 0, width, height);
-    const palette = currentPalette(lastRoot);
+    const palette = currentPalette(root);
 
     for (const star of stars) {
       star.x += star.vx;
@@ -238,7 +252,12 @@
   }
 
   function schedule() {
-    requestAnimationFrame(enhance);
+    if (scheduled) return;
+    scheduled = true;
+    requestAnimationFrame(() => {
+      scheduled = false;
+      enhance();
+    });
   }
 
   function init() {
