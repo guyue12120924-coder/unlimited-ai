@@ -1,6 +1,6 @@
 // Companion V12.0 — animated galaxy ambience + persistent desktop companion panel.
 (() => {
-  const REVISION = "2026-08-14-v12.0-galaxy-1";
+  const REVISION = "2026-08-14-v12.0-galaxy-audit-1";
   const ACTIVE_CHARACTER_KEY = "uai_companion_active_character_v1";
   const MOMENTS_KEY = "uai_companion_moments_v1";
   let scheduled = false;
@@ -20,6 +20,20 @@
 
   function activeCharacterId() {
     return localStorage.getItem(ACTIVE_CHARACTER_KEY) || "legacy";
+  }
+
+  function liveRoot() {
+    if (document.body.dataset.uaiMode !== "companion") return null;
+    const root = document.getElementById("uaiCompanionRoot");
+    return root && !root.hidden && root.isConnected ? root : null;
+  }
+
+  function shouldRunLegacyRenderer() {
+    const root = liveRoot();
+    if (!root) return false;
+    // V12.5 is the primary animated background. Keep this renderer only as a
+    // fallback while the newer scene has not mounted yet.
+    return !root.querySelector(".uai-c-v125-scene");
   }
 
   function relationLabel(value) {
@@ -145,7 +159,7 @@
     canvas = layer.querySelector("canvas");
     ctx = canvas?.getContext("2d", { alpha: true }) || null;
     resizeCanvas();
-    if (!frame && ctx) frame = requestAnimationFrame(animate);
+    if (!frame && ctx && shouldRunLegacyRenderer()) frame = requestAnimationFrame(animate);
   }
 
   function resizeCanvas() {
@@ -194,8 +208,11 @@
   }
 
   function animate() {
+    frame = 0;
+    if (!canvas || !ctx || !shouldRunLegacyRenderer()) return;
     frame = requestAnimationFrame(animate);
-    if (!canvas || !ctx || document.hidden) return;
+    if (document.hidden) return;
+
     const rect = canvas.getBoundingClientRect();
     const width = rect.width;
     const height = rect.height;
@@ -359,9 +376,8 @@
 
   function enhance() {
     scheduled = false;
-    if (document.body.dataset.uaiMode !== "companion") return;
-    const root = document.getElementById("uaiCompanionRoot");
-    if (!root || root.hidden) return;
+    const root = liveRoot();
+    if (!root) return;
     root.dataset.v12Galaxy = REVISION;
     refreshPalette(root);
     ensureGalaxyLayer(root);
@@ -380,8 +396,8 @@
     document.addEventListener("pointermove", (event) => {
       pointer.tx = event.clientX / Math.max(1, window.innerWidth);
       pointer.ty = event.clientY / Math.max(1, window.innerHeight);
-      const root = document.getElementById("uaiCompanionRoot");
-      if (root && !root.hidden) {
+      const root = liveRoot();
+      if (root) {
         root.style.setProperty("--v12-mx", `${(pointer.tx - 0.5) * 18}px`);
         root.style.setProperty("--v12-my", `${(pointer.ty - 0.5) * 12}px`);
       }
@@ -392,6 +408,7 @@
       schedule();
     }, { passive: true });
     window.addEventListener("storage", schedule);
+    document.addEventListener("visibilitychange", schedule);
     new MutationObserver(schedule).observe(document.body, {
       subtree: true,
       childList: true,
