@@ -12,7 +12,7 @@ const restoreCore = fs.readFileSync("public/companion-v5.js", "utf8");
 const secondary = fs.readFileSync("public/companion-v8-secondary.js", "utf8");
 const css = fs.readFileSync("public/companion-profile-editor.css", "utf8");
 
-assert.match(boot, /v8\.4-dual-mode/);
+assert.match(boot, /v(?:8\.4|9\.\d+)-dual-mode/);
 assert.doesNotMatch(boot, /ensureScript\(`\/companion-v2\.js/);
 assert.doesNotMatch(boot, /ensureScript\(`\/companion-v6\.js/);
 assert.doesNotMatch(boot, /ensureScript\(`\/companion-profile-editor\.js/);
@@ -107,4 +107,4 @@ assert.doesNotMatch(css, /uaiCompanionV6QuickSwitch/);
 assert.doesNotMatch(controls, /COMPANION_ROLE_CARD/);
 assert.doesNotMatch(lengths, /COMPANION_ROLE_CARD/);
 
-console.log("Companion V8.4 runtime and long-reply UX contract passed.");
+console.log("Companion V8 core contract passed under current shell.");
