@@ -1,6 +1,6 @@
 // Companion V9 interaction shell: one role hub, one conversation surface, low-frequency tools kept out of the main chat.
 (() => {
-  const REVISION = "2026-08-14-v9.2-shell-2";
+  const REVISION = "2026-08-14-v9.2-shell-3";
   const PROFILE_LIMIT = 5000;
   let scheduled = false;
 
@@ -18,7 +18,6 @@
   }
 
   function decorateProfileCard(root) {
-    root.querySelector("#uaiCompanionRoleToolbar")?.remove();
     const card = root.querySelector("#uaiCompanionProfileCard .uai-c-profile-card");
     const profile = activeProfile();
     if (!card || !profile) return;
