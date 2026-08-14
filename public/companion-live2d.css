@@ -7,48 +7,27 @@
   pointer-events:none;
   opacity:0;
   transition:opacity .55s ease,filter .55s ease;
-  filter:saturate(.96) brightness(.96);
+  filter:saturate(.98) brightness(.98);
 }
 
-/*
- * Final stacking contract.
- * Phase-1 injects scene/messages at z-index:5 !important after this stylesheet.
- * Use higher specificity here so the Live2D canvas sits above visual backgrounds,
- * while actual copy/messages/buttons remain above the character.
- */
-html body #uaiCompanionRoot .uai-c-live2d-layer{
-  z-index:6!important;
-}
+/* Final stacking contract: background < Live2D < copy/messages < header/composer. */
+html body #uaiCompanionRoot .uai-c-live2d-layer{z-index:6!important}
 html body #uaiCompanionRoot .uai-c-v122-scene,
-html body #uaiCompanionRoot .uai-c-messages{
-  z-index:auto!important;
-}
+html body #uaiCompanionRoot .uai-c-messages{z-index:auto!important}
 html body #uaiCompanionRoot .uai-c-v122-scene-copy,
-html body #uaiCompanionRoot .uai-c-message-row{
-  position:relative!important;
-  z-index:8!important;
-}
-html body #uaiCompanionRoot:not(.uai-c-live2d-active) .uai-c-v122-portrait-wrap{
-  position:relative!important;
-  z-index:8!important;
-}
-html body #uaiCompanionRoot .uai-c-header{
-  z-index:10!important;
-}
-html body #uaiCompanionRoot .uai-c-composer-wrap{
-  z-index:12!important;
-}
+html body #uaiCompanionRoot .uai-c-message-row{position:relative!important;z-index:8!important}
+html body #uaiCompanionRoot:not(.uai-c-live2d-active) .uai-c-v122-portrait-wrap{position:relative!important;z-index:8!important}
+html body #uaiCompanionRoot .uai-c-header{z-index:10!important}
+html body #uaiCompanionRoot .uai-c-composer-wrap{z-index:12!important}
 
 #uaiCompanionRoot.uai-c-live2d-active .uai-c-live2d-layer,
 #uaiCompanionRoot[data-v129-live2d-status="loading"] .uai-c-live2d-layer,
 #uaiCompanionRoot[data-v129-live2d-status="runtime-error"] .uai-c-live2d-layer,
 #uaiCompanionRoot[data-v129-live2d-status="model-missing"] .uai-c-live2d-layer,
-#uaiCompanionRoot[data-v129-live2d-status="unconfigured"] .uai-c-live2d-layer{
-  opacity:1;
-}
+#uaiCompanionRoot[data-v129-live2d-status="unconfigured"] .uai-c-live2d-layer{opacity:1}
 
 #uaiCompanionRoot.uai-c-live2d-active .uai-c-live2d-layer{
-  filter:saturate(1.05) brightness(1.02);
+  filter:saturate(1.08) brightness(1.035) contrast(1.015);
 }
 
 #uaiCompanionRoot .uai-c-live2d-stage{
@@ -56,57 +35,98 @@ html body #uaiCompanionRoot .uai-c-composer-wrap{
   inset:0;
   overflow:hidden;
   pointer-events:none;
+  isolation:isolate;
+}
+
+/* Soft backlight makes the model feel embedded in the current scene. */
+#uaiCompanionRoot .uai-c-live2d-stage::before{
+  content:"";
+  position:absolute;
+  z-index:1;
+  left:60%;
+  top:5%;
+  width:42%;
+  height:82%;
+  border-radius:48% 52% 46% 54%;
+  pointer-events:none;
+  opacity:.58;
+  background:
+    radial-gradient(ellipse at 54% 42%,rgba(255,198,244,.18) 0%,rgba(var(--v127-accent-rgb,186,116,255),.17) 24%,rgba(111,117,255,.08) 46%,transparent 70%);
+  filter:blur(22px);
+  transform:rotate(-4deg);
+  animation:uaiLive2DAura 6.8s ease-in-out infinite alternate;
+}
+
+#uaiCompanionRoot .uai-c-live2d-stage::after{
+  content:"";
+  position:absolute;
+  z-index:1;
+  left:67%;
+  bottom:8.5%;
+  width:28%;
+  height:7%;
+  border-radius:50%;
+  pointer-events:none;
+  opacity:.58;
+  background:radial-gradient(ellipse,rgba(224,184,255,.31) 0%,rgba(var(--v127-accent-rgb,186,116,255),.17) 38%,transparent 73%);
+  filter:blur(12px);
 }
 
 #uaiCompanionRoot .uai-c-live2d-canvas{
   position:absolute;
+  z-index:3;
   inset:0;
   width:100%!important;
   height:100%!important;
   display:block;
   pointer-events:none;
   opacity:1;
-  filter:drop-shadow(0 18px 35px rgba(29,13,80,.20));
+  filter:
+    drop-shadow(0 20px 32px rgba(18,7,65,.26))
+    drop-shadow(0 0 14px rgba(210,164,255,.13))
+    drop-shadow(0 0 34px rgba(112,119,255,.07));
 }
 
 #uaiCompanionRoot .uai-c-live2d-floor{
   position:absolute;
-  left:48%;
-  bottom:2%;
-  width:42%;
-  height:12%;
-  transform:translateX(-10%);
+  z-index:2;
+  left:80%;
+  bottom:8%;
+  width:31%;
+  height:10%;
+  transform:translateX(-50%);
   border-radius:50%;
   pointer-events:none;
-  opacity:.52;
-  background:radial-gradient(ellipse,rgba(var(--v127-accent-rgb,186,116,255),.28) 0%,rgba(var(--v127-accent-rgb,186,116,255),.10) 38%,transparent 72%);
-  filter:blur(12px);
+  opacity:.50;
+  background:radial-gradient(ellipse,rgba(var(--v127-accent-rgb,186,116,255),.33) 0%,rgba(146,119,255,.14) 40%,transparent 73%);
+  filter:blur(14px);
   animation:uaiLive2DFloorBreath 5.8s ease-in-out infinite;
 }
 
 #uaiCompanionRoot .uai-c-live2d-wash{
   position:absolute;
+  z-index:4;
   inset:0;
   pointer-events:none;
   background:
-    linear-gradient(90deg,rgba(7,7,28,.14) 0%,rgba(7,7,28,.03) 40%,transparent 58%),
-    radial-gradient(circle at 74% 46%,rgba(var(--v127-accent-rgb,186,116,255),.10),transparent 30%);
+    linear-gradient(90deg,rgba(7,7,28,.10) 0%,rgba(7,7,28,.025) 44%,transparent 62%),
+    radial-gradient(circle at 80% 42%,rgba(255,218,247,.045),transparent 22%);
 }
 
 #uaiCompanionRoot .uai-c-live2d-credit{
   position:absolute;
-  right:18px;
-  bottom:18px;
+  right:22px;
+  bottom:112px;
   z-index:30;
   max-width:360px;
-  padding:6px 10px;
-  border:1px solid rgba(255,255,255,.10);
+  padding:5px 9px;
+  border:1px solid rgba(255,255,255,.08);
   border-radius:999px;
-  background:rgba(10,8,34,.62);
-  color:rgba(239,230,255,.72);
-  box-shadow:0 8px 24px rgba(0,0,0,.14);
+  background:rgba(10,8,34,.48);
+  color:rgba(239,230,255,.58);
+  box-shadow:0 8px 24px rgba(0,0,0,.11);
   backdrop-filter:blur(12px);
-  font:500 11px/1.35 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font:500 10px/1.3 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
   letter-spacing:.02em;
 }
 
@@ -128,57 +148,92 @@ html body #uaiCompanionRoot .uai-c-composer-wrap{
 #uaiCompanionRoot[data-v129-live2d-status="loading"] .uai-c-live2d-status-note,
 #uaiCompanionRoot[data-v129-live2d-status="runtime-error"] .uai-c-live2d-status-note,
 #uaiCompanionRoot[data-v129-live2d-status="model-missing"] .uai-c-live2d-status-note,
-#uaiCompanionRoot[data-v129-live2d-status="unconfigured"] .uai-c-live2d-status-note{
-  display:block!important;
-}
-#uaiCompanionRoot[data-v129-live2d-status="loading"] .uai-c-live2d-status-note::before{
-  content:"Live2D 正在加载…";
-}
-#uaiCompanionRoot[data-v129-live2d-status="unconfigured"] .uai-c-live2d-status-note::before{
-  content:"Live2D 暂无角色模型配置";
-}
+#uaiCompanionRoot[data-v129-live2d-status="unconfigured"] .uai-c-live2d-status-note{display:block!important}
+#uaiCompanionRoot[data-v129-live2d-status="loading"] .uai-c-live2d-status-note::before{content:"Live2D 正在加载…"}
+#uaiCompanionRoot[data-v129-live2d-status="unconfigured"] .uai-c-live2d-status-note::before{content:"Live2D 暂无角色模型配置"}
 
+/* With Live2D active, the old circular portrait is no longer the hero visual. */
 #uaiCompanionRoot.uai-c-live2d-active .uai-c-v122-portrait-wrap{
+  display:none!important;
   opacity:0!important;
-  transform:translateY(8px) scale(.88)!important;
   pointer-events:none!important;
 }
 
+/* Turn the top hero into copy on the left + an open character stage on the right. */
 #uaiCompanionRoot.uai-c-live2d-active .uai-c-v122-scene{
+  grid-template-columns:minmax(0,58%) minmax(280px,42%)!important;
+  gap:0!important;
+  padding:20px clamp(42px,5vw,76px) 22px!important;
   background:
-    radial-gradient(circle at 24% 50%,rgba(255,100,205,.07),transparent 30%),
-    linear-gradient(180deg,rgba(22,12,67,.12),rgba(10,8,40,.03))!important;
+    linear-gradient(90deg,rgba(17,11,58,.18) 0%,rgba(20,12,67,.08) 49%,rgba(31,16,81,.02) 70%,transparent 100%),
+    radial-gradient(circle at 27% 48%,rgba(255,100,205,.065),transparent 30%)!important;
 }
 
 #uaiCompanionRoot.uai-c-live2d-active .uai-c-v122-scene-copy{
+  grid-column:1!important;
   position:relative;
   z-index:8!important;
-  max-width:min(560px,64%);
-  margin-right:auto;
+  width:min(100%,610px)!important;
+  max-width:610px!important;
+  margin:0!important;
+  align-self:center!important;
 }
 
+#uaiCompanionRoot.uai-c-live2d-active .uai-c-v122-prompts{max-width:590px!important}
+
+/* Keep long conversations readable and off the character's face/body. */
 #uaiCompanionRoot.uai-c-live2d-active .uai-c-messages{
-  background:linear-gradient(90deg,rgba(9,8,34,.10),rgba(9,8,34,.035) 58%,rgba(9,8,34,.015))!important;
+  padding-left:clamp(32px,4vw,58px)!important;
+  padding-right:35%!important;
+  background:
+    linear-gradient(90deg,rgba(9,8,34,.13) 0%,rgba(9,8,34,.075) 61%,rgba(9,8,34,.015) 100%)!important;
+}
+#uaiCompanionRoot.uai-c-live2d-active .uai-c-message-row{
+  width:min(100%,760px)!important;
+  margin-left:auto!important;
+  margin-right:auto!important;
+}
+#uaiCompanionRoot.uai-c-live2d-active .uai-c-message-row.assistant>div{max-width:650px!important}
+
+/* Composer remains full and acts as a foreground plane in front of the lower body. */
+#uaiCompanionRoot.uai-c-live2d-active .uai-c-composer-wrap{
+  isolation:isolate;
+}
+#uaiCompanionRoot.uai-c-live2d-active .uai-c-composer-wrap::before{
+  content:"";
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:0;
+  height:150%;
+  z-index:-1;
+  pointer-events:none;
+  background:linear-gradient(180deg,transparent,rgba(8,7,29,.10) 34%,rgba(8,7,29,.26) 100%);
 }
 
-#uaiCompanionRoot[data-v129-live2d-status="loading"] .uai-c-live2d-layer{
-  filter:saturate(.96) brightness(.98);
-}
-
+#uaiCompanionRoot[data-v129-live2d-status="loading"] .uai-c-live2d-layer{filter:saturate(.96) brightness(.98)}
 #uaiCompanionRoot[data-v129-live2d-status="runtime-error"] .uai-c-live2d-canvas,
 #uaiCompanionRoot[data-v129-live2d-status="runtime-error"] .uai-c-live2d-floor,
 #uaiCompanionRoot[data-v129-live2d-status="model-missing"] .uai-c-live2d-canvas,
 #uaiCompanionRoot[data-v129-live2d-status="model-missing"] .uai-c-live2d-floor,
 #uaiCompanionRoot[data-v129-live2d-status="unconfigured"] .uai-c-live2d-canvas,
-#uaiCompanionRoot[data-v129-live2d-status="unconfigured"] .uai-c-live2d-floor{
-  opacity:0;
-}
+#uaiCompanionRoot[data-v129-live2d-status="unconfigured"] .uai-c-live2d-floor{opacity:0}
 
 @keyframes uaiLive2DFloorBreath{
-  0%,100%{transform:translateX(-10%) scaleX(.94);opacity:.34}
-  50%{transform:translateX(-10%) scaleX(1.06);opacity:.62}
+  0%,100%{transform:translateX(-50%) scaleX(.94);opacity:.34}
+  50%{transform:translateX(-50%) scaleX(1.08);opacity:.62}
+}
+@keyframes uaiLive2DAura{
+  0%{transform:translate3d(-1%,0,0) rotate(-4deg) scale(.98);opacity:.46}
+  100%{transform:translate3d(2%,-1%,0) rotate(-1deg) scale(1.04);opacity:.68}
+}
+
+@media (max-width:1500px){
+  #uaiCompanionRoot.uai-c-live2d-active .uai-c-messages{padding-right:32%!important}
+  #uaiCompanionRoot.uai-c-live2d-active .uai-c-v122-scene{grid-template-columns:minmax(0,60%) minmax(250px,40%)!important}
 }
 
 @media (prefers-reduced-motion:reduce){
-  #uaiCompanionRoot .uai-c-live2d-floor{animation-duration:12s}
+  #uaiCompanionRoot .uai-c-live2d-floor,
+  #uaiCompanionRoot .uai-c-live2d-stage::before{animation-duration:12s}
 }
