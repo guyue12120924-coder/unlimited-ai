@@ -1,0 +1,35 @@
+/* Companion V9 support components. Main layout lives in companion-v9.css. */
+#uaiOnboardDesc,#uaiV9RoleBackground,#uaiV9NewRoleBackground{min-height:300px;line-height:1.72;resize:vertical}
+.uai-c-v8-hidden,.uai-c-v8-native-hidden{display:none!important}
+
+.uai-c-v8-length-pills{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.uai-c-v8-length-pills button{appearance:none;min-height:64px;padding:10px;border:1px solid rgba(255,255,255,.07);border-radius:11px;background:rgba(255,255,255,.03);color:rgba(255,255,255,.68);font:inherit;cursor:pointer;text-align:left}
+.uai-c-v8-length-pills button strong,.uai-c-v8-length-pills button span{display:block}.uai-c-v8-length-pills button strong{font-size:12px;color:rgba(255,255,255,.86)}.uai-c-v8-length-pills button span{margin-top:4px;font-size:10px;color:rgba(255,255,255,.38)}
+.uai-c-v8-length-pills button.selected{border-color:rgba(215,101,148,.36);background:rgba(215,101,148,.14)}
+
+.uai-c-v8-data-panel{margin-top:18px;border-top:1px solid rgba(255,255,255,.07)}
+.uai-c-v8-data-panel summary{display:flex;align-items:center;justify-content:space-between;min-height:48px;color:rgba(255,255,255,.62);font-size:12.5px;cursor:pointer;list-style:none}
+.uai-c-v8-data-panel summary::-webkit-details-marker{display:none}.uai-c-v8-data-panel summary b{font-weight:500;color:rgba(255,255,255,.3);transition:transform .16s ease}.uai-c-v8-data-panel[open] summary b{transform:rotate(90deg)}
+.uai-c-v8-data-body{padding:3px 0 5px}.uai-c-v8-data-row,.uai-c-v8-danger-row{display:flex;gap:8px;flex-wrap:wrap}
+.uai-c-v8-data-row button,.uai-c-v8-danger-row button{appearance:none;min-height:36px;padding:0 11px;border:1px solid rgba(255,255,255,.075);border-radius:9px;background:rgba(255,255,255,.04);color:rgba(255,255,255,.65);font:inherit;font-size:11px;cursor:pointer}
+.uai-c-v8-danger-title{margin:16px 0 8px;color:rgba(255,145,155,.72);font-size:10px}.uai-c-v8-danger-row button{border-color:rgba(255,110,125,.14);color:rgba(255,160,170,.78);background:rgba(255,90,110,.045)}
+
+.uai-c-v8-message-actions,.uai-c-v9-message-toolbar{display:inline-flex;align-items:center;gap:3px;margin-left:6px}
+.uai-c-v8-message-actions button,.uai-c-v9-message-toolbar button{appearance:none;border:0;background:transparent;color:rgba(255,255,255,.38);font:inherit;font-size:11px;cursor:pointer;padding:3px 6px;border-radius:6px}
+.uai-c-v8-message-actions button:hover,.uai-c-v9-message-toolbar button:hover{color:rgba(255,255,255,.85);background:rgba(255,255,255,.04)}
+.uai-c-long-toggle{appearance:none;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+
+.uai-c-v8-scroll-bottom{position:absolute;right:32px;bottom:100px;z-index:18;transform:translateY(8px);opacity:0;pointer-events:none;appearance:none;min-height:34px;padding:0 12px;border:1px solid rgba(255,255,255,.08);border-radius:999px;background:rgba(35,36,46,.96);color:rgba(255,255,255,.64);font:inherit;font-size:11px;box-shadow:0 8px 24px rgba(0,0,0,.18);transition:.16s ease}
+.uai-c-v8-scroll-bottom.show{transform:translateY(0);opacity:1;pointer-events:auto;cursor:pointer}
+.uai-c-v8-toast{position:absolute;left:50%;bottom:96px;z-index:30;transform:translate(-50%,8px);opacity:0;pointer-events:none;padding:8px 11px;border:1px solid rgba(255,255,255,.08);border-radius:9px;background:rgba(24,25,33,.96);color:rgba(255,255,255,.82);font-size:11px;transition:.16s ease}.uai-c-v8-toast.show{transform:translate(-50%,0);opacity:1}
+
+.uai-c-v8-inline-action{appearance:none;min-height:34px;padding:0 10px;border:1px solid rgba(255,255,255,.07);border-radius:9px;background:rgba(255,255,255,.035);color:rgba(255,255,255,.58);font:inherit;font-size:11px;cursor:pointer}.uai-c-v8-inline-action:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.84)}
+
+.uai-c-v8-review-mask{position:fixed;inset:0;z-index:100150;display:grid;place-items:center;padding:20px;background:rgba(7,8,11,.72);backdrop-filter:blur(8px)}
+.uai-c-v8-review-modal{width:min(680px,100%);max-height:82dvh;overflow:auto;border:1px solid rgba(255,255,255,.09);border-radius:18px;background:#202129;color:#fff;box-shadow:0 28px 86px rgba(0,0,0,.38)}
+.uai-c-v8-review-modal header{display:flex;gap:12px;align-items:flex-start;padding:20px;border-bottom:1px solid rgba(255,255,255,.065)}.uai-c-v8-review-modal header>div{flex:1}.uai-c-v8-review-modal header span{font-size:9px;letter-spacing:.12em;color:rgba(255,255,255,.32)}.uai-c-v8-review-modal h3{margin:5px 0 0;font-size:19px}.uai-c-v8-review-modal header p{margin:6px 0 0;color:rgba(255,255,255,.48);font-size:12px;line-height:1.6}.uai-c-v8-review-modal header button{appearance:none;border:0;background:transparent;color:rgba(255,255,255,.45);font-size:20px;cursor:pointer}
+.uai-c-v8-review-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;padding:18px 20px}.uai-c-v8-review-stats div{padding:13px;border:1px solid rgba(255,255,255,.055);border-radius:12px;background:rgba(255,255,255,.025)}.uai-c-v8-review-stats strong,.uai-c-v8-review-stats span{display:block}.uai-c-v8-review-stats strong{font-size:20px}.uai-c-v8-review-stats span{margin-top:4px;color:rgba(255,255,255,.4);font-size:10px}
+.uai-c-v8-review-topics{padding:0 20px 18px}.uai-c-v8-review-topics>span{display:block;margin-bottom:8px;color:rgba(255,255,255,.42);font-size:10px}.uai-c-v8-review-topics>div{display:flex;gap:6px;flex-wrap:wrap}.uai-c-v8-review-topics b{padding:6px 8px;border-radius:8px;background:rgba(255,255,255,.04);color:rgba(255,255,255,.68);font-size:11px;font-weight:500}.uai-c-v8-review-topics p{color:rgba(255,255,255,.4);font-size:11px}
+.uai-c-v8-review-modal footer{display:flex;justify-content:flex-end;gap:8px;padding:14px 20px;border-top:1px solid rgba(255,255,255,.06)}.uai-c-v8-review-modal footer button{appearance:none;min-height:34px;padding:0 11px;border:1px solid rgba(255,255,255,.075);border-radius:9px;background:rgba(255,255,255,.04);color:rgba(255,255,255,.68);font:inherit;font-size:11px;cursor:pointer}
+
+@media(max-width:520px){.uai-c-v8-length-pills{grid-template-columns:1fr}.uai-c-v8-review-stats{grid-template-columns:1fr 1fr}.uai-c-v8-review-mask{padding:12px}}
