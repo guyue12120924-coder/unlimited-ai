@@ -3,6 +3,8 @@ import fs from "node:fs";
 
 const boot = fs.readFileSync("public/boot-diagnostics.js", "utf8");
 const restoreCore = fs.readFileSync("public/companion-records.js", "utf8");
+const settings = fs.readFileSync("public/companion-settings.js", "utf8");
+const sceneBackup = fs.readFileSync("public/companion-scene-backup.js", "utf8");
 
 assert.doesNotMatch(boot, /ensureScript\(`\/companion-v5-guard\.js/);
 assert.match(boot, /companion-records\.js/);
@@ -22,4 +24,21 @@ assert.doesNotMatch(restoreCore, /creative_context/);
 assert.doesNotMatch(restoreCore, /continuity_context/);
 assert.doesNotMatch(restoreCore, /storyMemory/);
 
-console.log("Companion records/restore contract passed: settings allowlist -> rollback expiry -> novel isolation.");
+assert.match(settings, /companion-scene-backup\.js/);
+assert.match(settings, /UnlimitedCompanionSceneBackup/);
+assert.match(settings, /function openBackupImport\(/);
+assert.match(settings, /function restoreBackupRollback\(/);
+
+assert.match(sceneBackup, /uai_companion_scene_assignments_v1/);
+assert.match(sceneBackup, /sceneAssignmentsByCharacter/);
+assert.match(sceneBackup, /function sanitizeAssignment\(/);
+assert.match(sceneBackup, /function sanitizeSceneMap\(/);
+assert.match(sceneBackup, /function applyImportedBackup\(/);
+assert.match(sceneBackup, /sceneAssignments:/);
+assert.match(sceneBackup, /writeJson\(KEYS\.scenes/);
+assert.match(sceneBackup, /UnlimitedCompanionProfileRestore\?\.validateBackup/);
+assert.doesNotMatch(sceneBackup, /cfw_sessions_v2/);
+assert.doesNotMatch(sceneBackup, /creative_context/);
+assert.doesNotMatch(sceneBackup, /continuity_context/);
+
+console.log("Companion records/restore contract passed: core restore + per-character scene backup bridge + novel isolation.");
