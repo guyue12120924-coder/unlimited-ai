@@ -1,6 +1,6 @@
 // Companion V9 interaction shell: removes duplicate chrome and turns the profile card into the role hub.
 (() => {
-  const REVISION = "2026-08-14-v9.0-shell-4";
+  const REVISION = "2026-08-14-v9.0-shell-5";
   const PROFILE_LIMIT = 5000;
   let scheduled = false;
 
@@ -88,6 +88,44 @@
     });
   }
 
+  function consolidateMessageActions(root) {
+    root.querySelectorAll("#uaiCompanionMessages .uai-c-message-row").forEach((row) => {
+      const body = row.firstElementChild;
+      const bubble = row.querySelector(".uai-c-bubble");
+      if (!body || !bubble || bubble.querySelector(".uai-c-typing")) return;
+
+      let toolbar = body.querySelector(":scope > .uai-c-v9-message-toolbar");
+      if (!toolbar) {
+        toolbar = document.createElement("span");
+        toolbar.className = "uai-c-v8-message-actions uai-c-v9-message-toolbar";
+        body.appendChild(toolbar);
+      }
+
+      const sources = [
+        ...body.querySelectorAll(":scope > .uai-c-v3-actions, :scope > .uai-c-v8-message-actions:not(.uai-c-v9-message-toolbar)")
+      ];
+      sources.forEach((source) => {
+        source.querySelectorAll("button").forEach((button) => {
+          const label = button.textContent?.trim();
+          if (label === "记住") {
+            button.remove();
+            return;
+          }
+          if (label === "编辑重发") button.textContent = "编辑";
+          toolbar.appendChild(button);
+        });
+        source.style.display = "none";
+      });
+
+      const order = ["编辑", "复制", "重新生成", "珍藏"];
+      [...toolbar.querySelectorAll("button")]
+        .sort((a, b) => order.indexOf(a.textContent?.trim()) - order.indexOf(b.textContent?.trim()))
+        .forEach((button) => toolbar.appendChild(button));
+
+      if (!toolbar.querySelector("button")) toolbar.remove();
+    });
+  }
+
   function simplifyMobileHeader(root) {
     const title = root.querySelector("#uaiCompanionHeaderName");
     const status = root.querySelector("#uaiCompanionHeaderStatus");
@@ -166,10 +204,10 @@
     }
 
     const clear = modal.querySelector("#uaiMemoryClear");
-    const row = details.querySelector(".uai-c-v8-data-row");
-    if (clear && row && clear.parentElement !== row) {
+    const dataRow = details.querySelector(".uai-c-v8-data-row");
+    if (clear && dataRow && clear.parentElement !== dataRow) {
       clear.textContent = "清空全部记忆";
-      row.appendChild(clear);
+      dataRow.appendChild(clear);
     }
   }
 
@@ -199,6 +237,7 @@
     cleanSidebar(root);
     decorateSessions(root);
     decorateMessages(root);
+    consolidateMessageActions(root);
     simplifyMobileHeader(root);
     cleanOnboarding();
     cleanCharacterManager();
