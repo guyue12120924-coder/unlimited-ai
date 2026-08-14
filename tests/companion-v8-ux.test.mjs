@@ -11,7 +11,7 @@ const restoreCore = fs.readFileSync("public/companion-v5.js", "utf8");
 const secondary = fs.readFileSync("public/companion-v8-secondary.js", "utf8");
 const css = fs.readFileSync("public/companion-profile-editor.css", "utf8");
 
-assert.match(boot, /v8\.2-dual-mode/);
+assert.match(boot, /v8\.3-dual-mode/);
 assert.doesNotMatch(boot, /ensureScript\(`\/companion-v2\.js/);
 assert.doesNotMatch(boot, /ensureScript\(`\/companion-v6\.js/);
 assert.doesNotMatch(boot, /ensureScript\(`\/companion-profile-editor\.js/);
@@ -29,7 +29,7 @@ for (const retired of [
   assert.equal(fs.existsSync(retired), false, `${retired} should stay retired`);
 }
 
-assert.match(controls, /v8\.1-primary-ux/);
+assert.match(controls, /v8\.2-primary-ux/);
 assert.match(controls, /PROFILE_LIMIT = 5000/);
 assert.match(controls, /MAX_CHARACTERS = 6/);
 assert.match(controls, /function openCreate\(/);
@@ -40,6 +40,13 @@ assert.match(controls, /约 500 字/);
 assert.match(controls, /约 1000 字/);
 assert.match(controls, /约 5000 字/);
 assert.match(controls, /uai-c-v8-note/);
+assert.match(controls, /LEGACY_SHELL_CONTROLS/);
+assert.match(controls, /#uaiCompanionCharacterBtn/);
+assert.match(controls, /#uaiCompanionHeaderMemory/);
+assert.match(controls, /#uaiCompanionHeaderSettings/);
+assert.match(controls, /#uaiCompanionEditProfileInline/);
+assert.match(controls, /function removeLegacyShellControls\(/);
+assert.match(controls, /querySelector\(selector\)\?\.remove\(\)/);
 assert.doesNotMatch(controls, /UnlimitedCompanionPolish/);
 assert.doesNotMatch(controls, /data-v7-edit-character/);
 
@@ -79,10 +86,11 @@ assert.match(css, /uai-c-v8-note/);
 assert.match(css, /uai-c-v8-message-actions/);
 assert.match(css, /uai-c-v8-review-modal/);
 assert.match(css, /uai-c-long-reply/);
+assert.doesNotMatch(css, /#uaiCompanionCharacterBtn\{display:none/);
 assert.doesNotMatch(css, /uai-c-v2-stage/);
 assert.doesNotMatch(css, /uaiCompanionV6QuickSwitch/);
 
 assert.doesNotMatch(controls, /COMPANION_ROLE_CARD/);
 assert.doesNotMatch(lengths, /COMPANION_ROLE_CARD/);
 
-console.log("Companion V8.2 cleanup contract passed.");
+console.log("Companion V8.3 cleanup contract passed.");
