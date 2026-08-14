@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "defaultModel": "",
+  "byId": {},
+  "byName": {
+    "李萌": {
+      "model": "/live2d/characters/limeng/limeng.model3.json",
+      "idleMotionGroup": "Idle",
+      "position": {
+        "x": 0.74,
+        "y": 0.99,
+        "height": 0.82
+      },
+      "tapMotionGroups": ["TapBody", "tap_body", "TouchBody"],
+      "expressions": {
+        "happy": ["happy", "smile", "joy"],
+        "shy": ["shy", "blush", "embarrassed"],
+        "sad": ["sad", "down"],
+        "angry": ["angry", "mad"],
+        "caring": ["gentle", "smile", "happy"],
+        "thinking": ["thinking", "serious"]
+      },
+      "motions": {
+        "happy": ["Happy", "happy", "Joy"],
+        "shy": ["Shy", "shy"],
+        "sad": ["Sad", "sad"],
+        "angry": ["Angry", "angry"],
+        "caring": ["Gentle", "Love", "happy"],
+        "thinking": ["Thinking", "thinking"]
+      }
+    }
+  }
+}
