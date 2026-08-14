@@ -1,6 +1,6 @@
 // public/companion-mode.js
 (() => {
-  const REVISION = "2026-08-13-v4.0-companion-1";
+  const REVISION = "2026-08-14-v8.3-companion-core-1";
   const KEYS = {
     profile: "uai_companion_profile_v1",
     sessions: "uai_companion_sessions_v1",
@@ -46,6 +46,9 @@
   let currentAbortController = null;
   let onExit = null;
   let toastTimer = null;
+  let autoFollowStreaming = true;
+  let pendingMessageScrollTop = null;
+  let touchStartY = null;
 
   function safeParse(value, fallback) {
     try {
@@ -284,6 +287,47 @@
     candidates.slice(0, 3).forEach((candidate) => addMemory(candidate, "auto"));
   }
 
+  function isNearMessageBottom(container, threshold = 96) {
+    if (!container) return true;
+    return container.scrollHeight - container.scrollTop - container.clientHeight <= threshold;
+  }
+
+  function bindStreamingScrollIntent(container) {
+    if (!container || container.dataset.streamingScrollBound === "1") return;
+    container.dataset.streamingScrollBound = "1";
+
+    container.addEventListener("wheel", (event) => {
+      if (!currentAbortController) return;
+      if (event.deltaY < 0) autoFollowStreaming = false;
+      else requestAnimationFrame(() => {
+        if (isNearMessageBottom(container)) autoFollowStreaming = true;
+      });
+    }, { passive: true });
+
+    container.addEventListener("pointerdown", () => {
+      if (currentAbortController) autoFollowStreaming = false;
+    }, { passive: true });
+
+    container.addEventListener("touchstart", (event) => {
+      touchStartY = event.touches?.[0]?.clientY ?? null;
+    }, { passive: true });
+
+    container.addEventListener("touchmove", (event) => {
+      if (!currentAbortController || touchStartY == null) return;
+      const nextY = event.touches?.[0]?.clientY;
+      if (typeof nextY !== "number") return;
+      if (nextY > touchStartY) autoFollowStreaming = false;
+      touchStartY = nextY;
+      requestAnimationFrame(() => {
+        if (isNearMessageBottom(container)) autoFollowStreaming = true;
+      });
+    }, { passive: true });
+
+    container.addEventListener("scroll", () => {
+      if (currentAbortController && isNearMessageBottom(container)) autoFollowStreaming = true;
+    }, { passive: true });
+  }
+
   function renderShell() {
     if (!root) return;
     root.innerHTML = `
@@ -296,7 +340,6 @@
           <div class="uai-c-session-list" id="uaiCompanionSessionList"></div>
           <div class="uai-c-side-actions">
             <button class="uai-c-sidebar-action" id="uaiCompanionMemoryBtn" type="button"><span>记忆</span><b id="uaiCompanionMemoryCount">0</b></button>
-            <button class="uai-c-sidebar-action" id="uaiCompanionCharacterBtn" type="button"><span>角色</span><b>编辑</b></button>
             <button class="uai-c-sidebar-action" id="uaiCompanionSettingsBtn" type="button"><span>设置与数据</span><b>›</b></button>
             <button class="uai-c-sidebar-action" id="uaiCompanionExitBtn" type="button"><span>切换模式</span><b>↗</b></button>
           </div>
@@ -311,10 +354,6 @@
                 <strong id="uaiCompanionHeaderName">AI 陪伴</strong>
                 <span><i class="uai-c-online-dot"></i><span id="uaiCompanionHeaderStatus">陪你聊一会儿</span></span>
               </div>
-            </div>
-            <div class="uai-c-header-actions">
-              <button class="uai-c-icon-btn uai-c-settings-shortcut" id="uaiCompanionHeaderMemory" type="button" title="长期记忆" aria-label="长期记忆">♡</button>
-              <button class="uai-c-icon-btn" id="uaiCompanionHeaderSettings" type="button" title="设置" aria-label="设置">⚙</button>
             </div>
           </header>
 
@@ -341,15 +380,13 @@
     const byId = (id) => root?.querySelector(`#${id}`);
     byId("uaiCompanionNewChat")?.addEventListener("click", newChat);
     byId("uaiCompanionMemoryBtn")?.addEventListener("click", showMemoryModal);
-    byId("uaiCompanionHeaderMemory")?.addEventListener("click", showMemoryModal);
-    byId("uaiCompanionCharacterBtn")?.addEventListener("click", showCharacterModal);
     byId("uaiCompanionSettingsBtn")?.addEventListener("click", showSettingsModal);
-    byId("uaiCompanionHeaderSettings")?.addEventListener("click", showSettingsModal);
     byId("uaiCompanionExitBtn")?.addEventListener("click", () => onExit?.());
     byId("uaiCompanionMobileMenu")?.addEventListener("click", () => root.classList.add("sidebar-open"));
     byId("uaiCompanionSidebarOverlay")?.addEventListener("click", () => root.classList.remove("sidebar-open"));
     byId("uaiCompanionSend")?.addEventListener("click", sendMessage);
     byId("uaiCompanionStop")?.addEventListener("click", stopGeneration);
+    bindStreamingScrollIntent(byId("uaiCompanionMessages"));
 
     const input = byId("uaiCompanionInput");
     input?.addEventListener("keydown", (event) => {
@@ -386,9 +423,7 @@
         <div class="uai-c-profile-card">
           ${avatarHtml(profile)}
           <div class="uai-c-profile-copy"><strong>${escapeHtml(profile.name)}</strong><span>${escapeHtml(relationshipLabel(profile))} · 认识 ${stats.daysKnown} 天</span></div>
-          <button class="uai-c-icon-btn" id="uaiCompanionEditProfileInline" type="button" aria-label="编辑角色">⋯</button>
         </div>`;
-      card.querySelector("#uaiCompanionEditProfileInline")?.addEventListener("click", showCharacterModal);
     }
     if (avatarSlot) avatarSlot.innerHTML = avatarHtml(profile);
     if (name) name.textContent = profile.name;
@@ -455,7 +490,7 @@
     const session = ensureCurrentSession(Boolean(profile));
 
     if (!profile) {
-      container.innerHTML = `<div class="uai-c-welcome"><div class="uai-c-avatar">♡</div><h2>先创建你的 AI 伙伴</h2><p>只需要一个名字、关系和几个性格标签。之后的聊天、记忆与角色设置都会单独保存在陪伴模式里。</p></div>`;
+      container.innerHTML = `<div class="uai-c-welcome"><div class="uai-c-avatar">♡</div><h2>先创建你的 AI 伙伴</h2><p>只需要一个名字和关系，再补充完整角色设定。之后的聊天、记忆与角色设置都会单独保存在陪伴模式里。</p></div>`;
       return;
     }
 
@@ -468,7 +503,13 @@
       const role = message.role === "user" ? "user" : "assistant";
       return `<div class="uai-c-message-row ${role}"><div><div class="uai-c-bubble">${escapeHtml(message.content)}</div><div class="uai-c-message-time">${escapeHtml(formatClock(message.createdAt))}</div></div></div>`;
     }).join("");
-    requestAnimationFrame(() => { container.scrollTop = container.scrollHeight; });
+
+    const targetScrollTop = pendingMessageScrollTop;
+    pendingMessageScrollTop = null;
+    requestAnimationFrame(() => {
+      if (targetScrollTop == null) container.scrollTop = container.scrollHeight;
+      else container.scrollTop = Math.max(0, Math.min(targetScrollTop, container.scrollHeight - container.clientHeight));
+    });
   }
 
   function renderAll() {
@@ -518,6 +559,7 @@
     row.className = "uai-c-message-row assistant";
     row.innerHTML = `<div><div class="uai-c-bubble"><span class="uai-c-typing"><span></span><span></span><span></span></span></div><div class="uai-c-message-time">正在输入…</div></div>`;
     container.appendChild(row);
+    autoFollowStreaming = true;
     container.scrollTop = container.scrollHeight;
     return {
       row,
@@ -649,7 +691,7 @@
         if (streamRow?.bubble) streamRow.bubble.textContent = full;
         if (streamRow?.time) streamRow.time.textContent = "正在输入…";
         const container = root?.querySelector("#uaiCompanionMessages");
-        if (container) container.scrollTop = container.scrollHeight;
+        if (container && autoFollowStreaming) container.scrollTop = container.scrollHeight;
       });
 
       if (full.trim()) {
@@ -672,9 +714,12 @@
         console.error("[Unlimited Companion] chat failed", error);
       }
     } finally {
+      const container = root?.querySelector("#uaiCompanionMessages");
+      if (container && !autoFollowStreaming) pendingMessageScrollTop = container.scrollTop;
       currentAbortController = null;
       setGenerating(false);
       renderAll();
+      autoFollowStreaming = true;
       root?.querySelector("#uaiCompanionInput")?.focus();
     }
   }
@@ -724,20 +769,18 @@
         <div class="uai-c-onboard-top">
           <div class="uai-c-avatar">💗</div>
           <h2>创建你的第一个 AI 伙伴</h2>
-          <p>不用填复杂表格。一个名字、一种关系、几个性格标签就可以开始，之后随时能修改。</p>
+          <p>填写名字、关系和完整角色设定，就可以直接开始。</p>
         </div>
         <div class="uai-c-modal-body">
           <div class="uai-c-field"><label for="uaiOnboardName">她 / 他的名字</label><input id="uaiOnboardName" value="小雨" maxlength="40" /></div>
           <div class="uai-c-field"><label for="uaiOnboardRelationship">你们是什么关系</label><select id="uaiOnboardRelationship">${relationshipOptionsHtml("girlfriend")}</select></div>
-          <div class="uai-c-field"><label>性格</label><div class="uai-c-chip-grid">${personalityChipHtml(DEFAULT_PROFILE.personality)}</div><small>建议选 3～5 个，角色会更稳定。</small></div>
-          <div class="uai-c-field"><label for="uaiOnboardDesc">补充描述（可选）</label><textarea id="uaiOnboardDesc" placeholder="例如：平时说话自然一点，有一点傲娇，但不要太夸张。"></textarea></div>
+          <div class="uai-c-field"><label for="uaiOnboardDesc">完整角色设定</label><textarea id="uaiOnboardDesc" maxlength="5000" rows="10" placeholder="年龄：\n身份：\n外貌：\n性格：\n背景经历：\n与用户的关系细节：\n说话方式：\n其他设定："></textarea></div>
           <div class="uai-c-modal-actions">
             <button class="uai-c-text-btn" id="uaiOnboardQuick" type="button">使用默认小雨</button>
             <button class="uai-c-primary" id="uaiOnboardCreate" type="button">创建角色</button>
           </div>
         </div>
       </section>`, ({ mask, close }) => {
-        bindChipSelection(mask);
         const finish = (profile) => {
           const saved = saveProfile(profile);
           const session = createSession(saved);
@@ -751,58 +794,8 @@
         mask.querySelector("#uaiOnboardCreate")?.addEventListener("click", () => {
           const name = mask.querySelector("#uaiOnboardName")?.value.trim() || "小雨";
           const relationship = mask.querySelector("#uaiOnboardRelationship")?.value || "girlfriend";
-          const personality = selectedPersonalities(mask);
           const customDescription = mask.querySelector("#uaiOnboardDesc")?.value.trim() || "";
-          finish({ ...DEFAULT_PROFILE, name, relationship, personality: personality.length ? personality : DEFAULT_PROFILE.personality, customDescription, createdAt: Date.now() });
-        });
-      });
-  }
-
-  function showCharacterModal() {
-    const profile = getProfile();
-    if (!profile) return showOnboarding();
-    openModal(`
-      <section class="uai-c-modal" role="dialog" aria-modal="true" aria-label="角色设置">
-        <div class="uai-c-modal-head"><div><h3>角色设置</h3><p>这些设定会在每次陪伴对话中保持稳定，不会影响小说人物。</p></div><button class="uai-c-icon-btn" data-close-modal type="button">×</button></div>
-        <div class="uai-c-modal-body">
-          <div class="uai-c-field"><label for="uaiCharacterName">名字</label><input id="uaiCharacterName" value="${escapeHtml(profile.name)}" maxlength="40" /></div>
-          <div class="uai-c-field"><label for="uaiCharacterRelationship">关系</label><select id="uaiCharacterRelationship">${relationshipOptionsHtml(profile.relationship)}</select></div>
-          <div class="uai-c-field"><label>性格</label><div class="uai-c-chip-grid">${personalityChipHtml(profile.personality)}</div></div>
-          <div class="uai-c-field"><label for="uaiCharacterNickname">她 / 他怎么称呼你（可选）</label><input id="uaiCharacterNickname" value="${escapeHtml(profile.userNickname || "")}" maxlength="40" placeholder="例如：阿月" /></div>
-          <div class="uai-c-field"><label for="uaiCharacterDesc">补充设定</label><textarea id="uaiCharacterDesc" maxlength="900">${escapeHtml(profile.customDescription || "")}</textarea></div>
-          <div class="uai-c-field"><label for="uaiCharacterAvatar">头像（可选）</label><input id="uaiCharacterAvatar" type="file" accept="image/png,image/jpeg,image/webp" /><small>图片仅保存在当前浏览器。建议小于 700 KB，避免占满 localStorage。</small></div>
-          <div class="uai-c-modal-actions"><button class="uai-c-primary" id="uaiCharacterSave" type="button">保存角色</button></div>
-        </div>
-      </section>`, ({ mask, close }) => {
-        bindChipSelection(mask);
-        let pendingAvatar = profile.avatarData || "";
-        mask.querySelector("#uaiCharacterAvatar")?.addEventListener("change", (event) => {
-          const file = event.target.files?.[0];
-          if (!file) return;
-          if (file.size > 700000) {
-            showToast("头像太大了，请选择 700 KB 以下的图片");
-            event.target.value = "";
-            return;
-          }
-          const reader = new FileReader();
-          reader.onload = () => { pendingAvatar = typeof reader.result === "string" ? reader.result : pendingAvatar; };
-          reader.readAsDataURL(file);
-        });
-        mask.querySelector("#uaiCharacterSave")?.addEventListener("click", () => {
-          const next = {
-            ...profile,
-            name: mask.querySelector("#uaiCharacterName")?.value.trim() || profile.name,
-            relationship: mask.querySelector("#uaiCharacterRelationship")?.value || profile.relationship,
-            personality: selectedPersonalities(mask),
-            userNickname: mask.querySelector("#uaiCharacterNickname")?.value.trim() || "",
-            customDescription: mask.querySelector("#uaiCharacterDesc")?.value.trim() || "",
-            avatarData: pendingAvatar
-          };
-          if (!next.personality.length) next.personality = DEFAULT_PROFILE.personality;
-          saveProfile(next);
-          close();
-          renderAll();
-          showToast("角色设置已保存");
+          finish({ ...DEFAULT_PROFILE, name, relationship, customDescription, createdAt: Date.now() });
         });
       });
   }
@@ -822,7 +815,7 @@
             <button class="uai-c-text-btn danger" id="uaiMemoryClear" type="button">清空全部记忆</button>
             <button class="uai-c-primary" id="uaiMemorySave" type="button">保存修改</button>
           </div>
-          <p style="margin:12px 0 0;color:rgba(255,255,255,.34);font-size:11px;line-height:1.6">自动记忆当前为：${settings.memoryEnabled ? "开启" : "关闭"}。可在“设置与数据”中切换。</p>
+          <p style="margin:12px 0 0;color:rgba(255,255,255,.34);font-size:11px;line-height:1.6">自动记忆当前为：${settings.memoryEnabled ? "开启" : "关闭"}。可在“设置”中切换。</p>
         </div>
       </section>`, ({ mask, close }) => {
         const collectRows = () => Array.from(mask.querySelectorAll("[data-memory-id]")).map((row) => ({
