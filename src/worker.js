@@ -348,7 +348,7 @@ async function inspectAsset(request, env, pathname, markers = []) {
 
 async function handleDiagnostics(request, env) {
   const assets = await Promise.all([
-    inspectAsset(request, env, "/index.html", ["/boot-diagnostics.js?v=20260814-v9.6-1", "AI 小说创作"]),
+    inspectAsset(request, env, "/index.html", ["2026-08-14-v10.0-dual-mode-1", "/boot-diagnostics.js?v=20260814-v10.0-1"]),
     inspectAsset(request, env, "/boot-diagnostics.js", ["2026-08-14-v10.0-dual-mode-1", "companion-v10.css", "companion-v10-shell.js"]),
     inspectAsset(request, env, "/mode-router.js", ["UnlimitedModeRouter", "uaiEnterCompanion"]),
     inspectAsset(request, env, "/mode-router.css", ["uai-mode-lobby", "data-uai-mode"]),
