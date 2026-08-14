@@ -1,5 +1,5 @@
 (() => {
-  const REVISION = "2026-08-14-v8.1-secondary-1";
+  const REVISION = "2026-08-14-v8.1-secondary-2";
   const KEYS = {
     activeCharacter: "uai_companion_active_character_v1",
     memories: "uai_companion_memories_v1",
@@ -39,6 +39,12 @@
 
   function state() {
     return window.UnlimitedCompanion?.getState?.() || null;
+  }
+
+  function currentSession() {
+    const s = state();
+    const sessions = Array.isArray(s?.sessions) ? s.sessions : [];
+    return sessions.find((item) => item?.id === s?.currentSessionId) || sessions[0] || null;
   }
 
   function activeCharacterId() {
@@ -98,19 +104,65 @@
     showToast("已经记住了");
   }
 
+  function momentsMap() {
+    const value = readJson(KEYS.moments, {});
+    return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+  }
+
+  function currentMoments() {
+    const map = momentsMap();
+    const list = map[activeCharacterId()];
+    return Array.isArray(list) ? list : [];
+  }
+
+  function saveMoments(list) {
+    const map = momentsMap();
+    map[activeCharacterId()] = Array.isArray(list) ? list.slice(-120) : [];
+    writeJson(KEYS.moments, map);
+  }
+
+  function addMoment(message, session, messageIndex) {
+    if (!message || !session) return;
+    const list = currentMoments();
+    const text = clean(message.content, 500);
+    if (!text) return;
+    if (list.some((item) => item.sessionId === session.id && item.messageIndex === messageIndex && clean(item.text, 500) === text)) {
+      showToast("这条已经珍藏过了");
+      return;
+    }
+    const note = window.prompt("给这个重要时刻加一句备注（可留空）：", "");
+    if (note === null) return;
+    list.push({
+      id: makeId("moment"),
+      sessionId: session.id,
+      messageIndex,
+      role: message.role === "user" ? "user" : "assistant",
+      text,
+      note: clean(note, 120),
+      createdAt: Number(message.createdAt) || Date.now(),
+      savedAt: Date.now()
+    });
+    saveMoments(list);
+    showToast("已加入重要时刻");
+  }
+
   function ensureMessageActions(root) {
-    root.querySelectorAll("#uaiCompanionMessages .uai-c-message-row").forEach((row) => {
+    const session = currentSession();
+    const rows = Array.from(root.querySelectorAll("#uaiCompanionMessages .uai-c-message-row"));
+    rows.forEach((row, index) => {
       const bubble = row.querySelector(".uai-c-bubble");
       if (!bubble || bubble.querySelector(".uai-c-typing") || row.querySelector(".uai-c-v8-message-actions")) return;
       const text = bubble.textContent?.trim();
       if (!text) return;
       const actions = document.createElement("span");
       actions.className = "uai-c-v8-message-actions";
+
       const copy = document.createElement("button");
       copy.type = "button";
       copy.textContent = "复制";
       copy.addEventListener("click", () => copyText(text));
       actions.appendChild(copy);
+
       if (row.classList.contains("user")) {
         const remember = document.createElement("button");
         remember.type = "button";
@@ -118,7 +170,17 @@
         remember.addEventListener("click", () => rememberText(text));
         actions.appendChild(remember);
       }
-      const host = row.querySelector(".uai-c-v2-message-actions") || bubble.parentElement;
+
+      const message = session?.messages?.[index];
+      if (message) {
+        const moment = document.createElement("button");
+        moment.type = "button";
+        moment.textContent = "珍藏";
+        moment.addEventListener("click", () => addMoment(message, session, index));
+        actions.appendChild(moment);
+      }
+
+      const host = row.querySelector(".uai-c-v3-actions")?.parentElement || bubble.parentElement;
       host?.appendChild(actions);
     });
   }
@@ -168,12 +230,6 @@
   function monthStart() {
     const now = new Date();
     return new Date(now.getFullYear(), now.getMonth(), 1).getTime();
-  }
-
-  function currentMoments() {
-    const map = readJson(KEYS.moments, {});
-    const list = map && typeof map === "object" ? map[activeCharacterId()] : [];
-    return Array.isArray(list) ? list : [];
   }
 
   function monthlyStats() {
