@@ -10,9 +10,11 @@ const multi = fs.readFileSync("public/companion-characters-core.js", "utf8");
 const memoryTools = fs.readFileSync("public/companion-memory.js", "utf8");
 const restoreCore = fs.readFileSync("public/companion-records.js", "utf8");
 const extras = fs.readFileSync("public/companion-extras.js", "utf8");
-const css = fs.readFileSync("public/companion-profile-editor.css", "utf8");
+const css = fs.readFileSync("public/companion-support.css", "utf8");
 
-assert.match(boot, /v9\.4-dual-mode/);
+assert.match(boot, /v9\.5-dual-mode/);
+assert.match(boot, /companion-support\.css/);
+assert.doesNotMatch(boot, /companion-profile-editor\.css/);
 assert.match(boot, /companion-characters-core\.js/);
 assert.match(boot, /companion-character-editor\.js/);
 assert.match(boot, /companion-settings\.js/);
@@ -38,7 +40,8 @@ for (const retired of [
   "public/companion-v5.js",
   "public/companion-v3.css",
   "public/companion-v4.css",
-  "public/companion-v5.css"
+  "public/companion-v5.css",
+  "public/companion-characters-ui.js"
 ]) {
   assert.equal(fs.existsSync(retired), false, `${retired} should stay retired`);
 }
@@ -95,9 +98,9 @@ assert.match(extras, /uaiV9RelationshipRecord/);
 assert.match(extras, /showMonthlyReview/);
 assert.doesNotMatch(extras, /rememberText/);
 
-assert.match(css, /uai-c-v8-note/);
+assert.match(css, /#uaiV9RoleBackground/);
 assert.match(css, /uai-c-v8-message-actions/);
 assert.match(css, /uai-c-v8-review-modal/);
-assert.match(css, /uai-c-long-reply/);
+assert.match(css, /uai-c-v8-data-panel/);
 
-console.log("Companion semantic module contract passed under V9.4 shell.");
+console.log("Companion semantic module contract passed under V9.5 shell.");
