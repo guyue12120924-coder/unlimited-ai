@@ -1,7 +1,7 @@
 // public/companion-v5.js
 // Tool-only relationship record and validated backup restore module.
 (() => {
-  const REVISION = "2026-08-14-v8.1-profile-restore-core-1";
+  const REVISION = "2026-08-14-v8.2-profile-restore-core-1";
   const KEYS = {
     characters: "uai_companion_characters_v1",
     activeCharacter: "uai_companion_active_character_v1",
@@ -18,6 +18,7 @@
   const MAX_MESSAGES_PER_SESSION = 700;
   const MAX_MEMORIES = 100;
   const PROFILE_LIMIT = 5000;
+  const VALID_REPLY_LENGTHS = new Set(["short", "balanced", "detailed"]);
 
   function safeParse(value, fallback) { try { return JSON.parse(value) ?? fallback; } catch { return fallback; } }
   function readJson(key, fallback) { return safeParse(localStorage.getItem(key), fallback); }
@@ -29,6 +30,40 @@
   function makeId(prefix) {
     const token = globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(16).slice(2)}`;
     return `${prefix}-${token}`;
+  }
+
+  function normalizeSettings(raw) {
+    const value = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
+    return {
+      model: clean(value.model, 180),
+      replyLength: VALID_REPLY_LENGTHS.has(value.replyLength) ? value.replyLength : "balanced",
+      memoryEnabled: value.memoryEnabled !== false
+    };
+  }
+
+  function normalizeStoredSettings() {
+    const characters = readJson(KEYS.characters, []);
+    if (Array.isArray(characters) && characters.length) {
+      let changed = false;
+      const next = characters.map((character) => {
+        if (!character || typeof character !== "object") return character;
+        const normalized = normalizeSettings(character.settings);
+        if (JSON.stringify(normalized) === JSON.stringify(character.settings || {})) return character;
+        changed = true;
+        return { ...character, settings: normalized };
+      });
+      if (changed) writeJson(KEYS.characters, next);
+    }
+
+    const current = readJson(KEYS.settings, {});
+    const normalizedCurrent = normalizeSettings(current);
+    if (JSON.stringify(current) !== JSON.stringify(normalizedCurrent)) writeJson(KEYS.settings, normalizedCurrent);
+  }
+
+  function pruneExpiredRollback() {
+    const rollback = readJson(KEYS.rollback, null);
+    if (!rollback?.savedAt) return;
+    if (Date.now() - Number(rollback.savedAt) > 7 * 86400000) localStorage.removeItem(KEYS.rollback);
   }
 
   function activeCharacterId() { return localStorage.getItem(KEYS.activeCharacter) || ""; }
@@ -221,7 +256,7 @@
       profile,
       sessions: sessions.length ? sessions : [{ id: makeId("companion-session"), title: "新的聊天", createdAt: Date.now(), updatedAt: Date.now(), messages: [{ role: "assistant", content: `我是${profile.name}。导入已经完成，我们可以继续聊。`, createdAt: Date.now() }] }],
       memories,
-      settings: raw.settings && typeof raw.settings === "object" && !Array.isArray(raw.settings) ? raw.settings : {},
+      settings: normalizeSettings(raw.settings),
       createdAt: Number(raw.createdAt || profile.createdAt) || Date.now(),
       updatedAt: Number(raw.updatedAt) || Date.now()
     };
@@ -293,7 +328,7 @@
     writeJson(KEYS.profile, character.profile || {});
     writeJson(KEYS.sessions, Array.isArray(character.sessions) ? character.sessions : []);
     writeJson(KEYS.memories, Array.isArray(character.memories) ? character.memories : []);
-    writeJson(KEYS.settings, character.settings || {});
+    writeJson(KEYS.settings, normalizeSettings(character.settings));
     localStorage.setItem(KEYS.activeCharacter, character.id);
   }
 
@@ -417,6 +452,8 @@
 
   function init() {
     document.documentElement.dataset.companionProfileRestoreRevision = REVISION;
+    normalizeStoredSettings();
+    pruneExpiredRollback();
     document.addEventListener("keydown", (event) => {
       if (event.key === "Escape" && document.getElementById("uaiCompanionV5Mask")) closeModal();
     });
@@ -430,7 +467,10 @@
     validateBackup,
     restoreRollback,
     relationshipStage,
-    buildTimeline
+    buildTimeline,
+    normalizeSettings,
+    normalizeStoredSettings,
+    pruneExpiredRollback
   };
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init, { once: true });
