@@ -1,6 +1,6 @@
 // Companion V11.2 — structured role editor + memory book presentation.
 (() => {
-  const REVISION = "2026-08-14-v11.2-stage2-2";
+  const REVISION = "2026-08-14-v11.2-stage2-3";
   let scheduled = false;
 
   function state() {
@@ -80,6 +80,49 @@
         max-width:100%!important;
         box-sizing:border-box!important;
       }
+
+      /* V11.2.2: the simple memory editor must expose management without hiding it in Advanced. */
+      #uaiCompanionModalMask .uai-c-v11-memory-entry{
+        display:flex!important;
+        align-items:center!important;
+        justify-content:space-between!important;
+        gap:16px!important;
+        margin:0 0 14px!important;
+        padding:13px 14px!important;
+        border:1px solid rgba(111,85,197,.10)!important;
+        border-radius:14px!important;
+        background:linear-gradient(135deg,rgba(139,92,246,.07),rgba(236,72,153,.04),rgba(255,255,255,.88))!important;
+      }
+      #uaiCompanionModalMask .uai-c-v11-memory-entry-copy{min-width:0!important}
+      #uaiCompanionModalMask .uai-c-v11-memory-entry-copy strong{
+        display:block!important;color:#4b4059!important;font-size:11px!important;font-weight:760!important;
+      }
+      #uaiCompanionModalMask .uai-c-v11-memory-entry-copy span{
+        display:block!important;margin-top:3px!important;color:#9a90a5!important;font-size:9.5px!important;line-height:1.5!important;
+      }
+      #uaiCompanionModalMask .uai-c-v11-memory-manage-visible{
+        flex:0 0 auto!important;min-height:38px!important;padding:0 13px!important;
+        border:1px solid rgba(124,58,237,.18)!important;border-radius:11px!important;
+        background:linear-gradient(135deg,#8b5cf6,#7c3aed 68%,#c14fc2 140%)!important;
+        box-shadow:0 8px 20px rgba(124,58,237,.16)!important;
+        color:#fff!important;font-size:10px!important;font-weight:730!important;cursor:pointer!important;
+      }
+      #uaiCompanionModalMask .uai-c-v11-memory-manage-visible:hover{
+        transform:translateY(-1px)!important;box-shadow:0 10px 24px rgba(124,58,237,.21)!important;
+      }
+      #uaiCompanionModalMask .uai-c-memory-add{gap:10px!important;align-items:center!important}
+      #uaiCompanionModalMask .uai-c-memory-add input{
+        min-height:44px!important;padding:0 13px!important;
+        border:1px solid rgba(111,85,197,.13)!important;border-radius:12px!important;
+        background:#fbfaff!important;color:#403749!important;
+        box-shadow:inset 0 1px 2px rgba(68,49,107,.025)!important;
+      }
+      #uaiCompanionModalMask .uai-c-memory-add input::placeholder{color:#aaa0b2!important}
+      #uaiCompanionModalMask .uai-c-memory-add input:focus{
+        outline:none!important;border-color:rgba(124,58,237,.30)!important;
+        box-shadow:0 0 0 3px rgba(139,92,246,.075)!important;
+      }
+
       @media (max-width:860px){
         #uaiV9RoleEditorMask{padding:12px!important}
         #uaiV9RoleEditorMask .uai-c-v11-role-editor{
@@ -106,6 +149,10 @@
           overflow:visible!important;
           padding:0 0 8px!important;
         }
+      }
+      @media (max-width:640px){
+        #uaiCompanionModalMask .uai-c-v11-memory-entry{align-items:flex-start!important;flex-direction:column!important}
+        #uaiCompanionModalMask .uai-c-v11-memory-manage-visible{width:100%!important}
       }
     `;
     document.head.appendChild(style);
@@ -224,6 +271,44 @@
     list.insertAdjacentElement("beforebegin", intro);
   }
 
+  function decorateSimpleMemoryModal() {
+    const mask = document.getElementById("uaiCompanionModalMask");
+    if (!mask || mask.hidden || !mask.querySelector("#uaiMemoryList")) return;
+    const modal = mask.querySelector(".uai-c-modal");
+    const body = modal?.querySelector(".uai-c-modal-body");
+    if (!modal || !body) return;
+
+    let entry = body.querySelector(":scope > .uai-c-v11-memory-entry");
+    if (!entry) {
+      entry = document.createElement("div");
+      entry.className = "uai-c-v11-memory-entry";
+      entry.innerHTML = `
+        <div class="uai-c-v11-memory-entry-copy">
+          <strong>需要整理已有记忆？</strong>
+          <span>进入管理模式后可以查看记忆册、置顶、归档、恢复和去重。</span>
+        </div>
+        <button type="button" class="uai-c-v11-memory-manage-visible">管理记忆</button>`;
+      body.insertBefore(entry, body.firstChild);
+      entry.querySelector(".uai-c-v11-memory-manage-visible")?.addEventListener("click", () => {
+        const api = window.UnlimitedCompanionMemorySearch;
+        if (api?.showMemoryOrganizer) {
+          mask.hidden = true;
+          mask.innerHTML = "";
+          api.showMemoryOrganizer();
+          return;
+        }
+        const details = modal.querySelector("#uaiV10MemoryAdvanced");
+        if (details) {
+          details.open = true;
+          details.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      });
+    }
+
+    const advancedLabel = modal.querySelector("#uaiV10MemoryAdvanced summary span");
+    if (advancedLabel) advancedLabel.textContent = "更多操作";
+  }
+
   function memoryKind(card) {
     const label = card.querySelector(".kind")?.textContent?.trim() || "事实";
     const map = {
@@ -282,6 +367,7 @@
     if (document.body.dataset.uaiMode !== "companion") return;
     decorateRoleEditor();
     decorateRoleGallery();
+    decorateSimpleMemoryModal();
     decorateMemoryBook();
   }
 
