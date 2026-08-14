@@ -1,0 +1,403 @@
+/* Companion V11.1 — role presence, new-conversation landing, and character gallery. */
+
+/* ---------- sidebar role presence ---------- */
+#uaiCompanionRoot .uai-c-v11-profile-presence{
+  position:relative!important;
+  overflow:visible!important;
+}
+#uaiCompanionRoot .uai-c-v11-profile-online{
+  position:absolute;
+  left:39px;
+  top:38px;
+  width:9px;
+  height:9px;
+  border:2px solid #fff;
+  border-radius:50%;
+  background:#34d399;
+  box-shadow:0 0 0 3px rgba(52,211,153,.10);
+  pointer-events:none;
+}
+
+/* ---------- new conversation: make the role the visual focus ---------- */
+#uaiCompanionRoot.uai-c-v11-welcome-mode .uai-c-messages{
+  padding-top:20px!important;
+}
+#uaiCompanionRoot.uai-c-v11-welcome-mode .uai-c-v10-welcome-greeting{
+  display:none!important;
+}
+#uaiCompanionRoot.uai-c-v11-welcome-mode .uai-c-v10-starters{
+  width:min(calc(100% - 44px),760px)!important;
+  max-width:760px!important;
+  margin:22px auto 42px!important;
+  padding:24px 26px 25px!important;
+  border:1px solid rgba(116,88,191,.10)!important;
+  border-radius:30px!important;
+  background:
+    radial-gradient(circle at 50% -8%,rgba(236,72,153,.10),transparent 33%),
+    radial-gradient(circle at 84% 20%,rgba(99,102,241,.07),transparent 27%),
+    linear-gradient(180deg,rgba(255,255,255,.82),rgba(251,248,255,.72))!important;
+  box-shadow:0 28px 70px rgba(92,69,150,.085),inset 0 1px 0 rgba(255,255,255,.92)!important;
+  backdrop-filter:blur(18px)!important;
+}
+#uaiCompanionRoot .uai-c-v10-starters>.uai-c-v10-welcome-hero[hidden]{display:none!important}
+#uaiCompanionRoot .uai-c-v11-welcome-scene{
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  text-align:center;
+  padding:7px 12px 18px;
+}
+#uaiCompanionRoot .uai-c-v11-welcome-orbit{
+  position:absolute;
+  top:6px;
+  left:50%;
+  width:160px;
+  height:160px;
+  transform:translateX(-50%);
+  border-radius:50%;
+  background:
+    radial-gradient(circle,rgba(139,92,246,.12) 0%,rgba(236,72,153,.065) 38%,transparent 67%);
+  filter:blur(2px);
+  pointer-events:none;
+}
+#uaiCompanionRoot .uai-c-v11-welcome-avatar{
+  position:relative;
+  z-index:1;
+  width:108px;
+  height:108px;
+  display:grid;
+  place-items:center;
+  overflow:hidden;
+  margin-top:5px;
+  border:5px solid rgba(255,255,255,.92);
+  border-radius:33px;
+  background:linear-gradient(145deg,#f9a8d4,#c084fc 53%,#818cf8);
+  box-shadow:0 20px 44px rgba(124,58,237,.18),0 0 0 1px rgba(116,88,191,.08);
+  font-size:40px;
+}
+#uaiCompanionRoot .uai-c-v11-welcome-avatar img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+#uaiCompanionRoot .uai-c-v11-welcome-presence{
+  position:relative;
+  z-index:2;
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  margin-top:-12px;
+  padding:5px 9px;
+  border:1px solid rgba(52,211,153,.14);
+  border-radius:999px;
+  background:rgba(255,255,255,.94);
+  box-shadow:0 6px 15px rgba(80,65,120,.07);
+  color:#6f8d80;
+  font-size:9px;
+  font-weight:700;
+}
+#uaiCompanionRoot .uai-c-v11-welcome-presence i{
+  width:6px;
+  height:6px;
+  border-radius:50%;
+  background:#34d399;
+  box-shadow:0 0 0 3px rgba(52,211,153,.10);
+}
+#uaiCompanionRoot .uai-c-v11-welcome-kicker{
+  margin-top:15px;
+  color:#aaa0b6;
+  font-size:9px;
+  font-weight:760;
+  letter-spacing:.12em;
+}
+#uaiCompanionRoot .uai-c-v11-welcome-name{
+  margin:7px 0 0;
+  color:#30283f;
+  font-size:28px;
+  line-height:1.15;
+  font-weight:800;
+  letter-spacing:-.03em;
+}
+#uaiCompanionRoot .uai-c-v11-welcome-greeting{
+  margin:9px 0 0;
+  color:#63586f;
+  font-size:13.5px;
+  line-height:1.65;
+}
+#uaiCompanionRoot .uai-c-v11-welcome-relation{
+  margin-top:11px;
+  padding:6px 10px;
+  border-radius:999px;
+  background:linear-gradient(135deg,#f2ebff,#fff0f7);
+  color:#7848c8;
+  font-size:9.5px;
+  font-weight:720;
+}
+#uaiCompanionRoot .uai-c-v11-welcome-summary{
+  max-width:520px;
+  margin:12px 0 0;
+  color:#94899f;
+  font-size:10.5px;
+  line-height:1.7;
+}
+#uaiCompanionRoot .uai-c-v10-starters>span{
+  display:block!important;
+  margin:2px 0 10px!important;
+  color:#8c8198!important;
+  font-size:10px!important;
+  font-weight:700!important;
+  text-align:center!important;
+}
+#uaiCompanionRoot .uai-c-v10-starters>div:last-child{
+  display:grid!important;
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  gap:9px!important;
+}
+#uaiCompanionRoot .uai-c-v10-starters>div:last-child button{
+  min-height:44px!important;
+  padding:0 12px!important;
+  border-radius:14px!important;
+  border:1px solid rgba(116,88,191,.10)!important;
+  background:rgba(255,255,255,.80)!important;
+  box-shadow:0 7px 19px rgba(91,72,143,.035)!important;
+  color:#615571!important;
+  font-size:10.5px!important;
+  font-weight:650!important;
+}
+#uaiCompanionRoot .uai-c-v10-starters>div:last-child button:nth-child(1){background:linear-gradient(135deg,#f5f0ff,#fbf9ff)!important}
+#uaiCompanionRoot .uai-c-v10-starters>div:last-child button:nth-child(2){background:linear-gradient(135deg,#fff0f7,#fff9fc)!important}
+#uaiCompanionRoot .uai-c-v10-starters>div:last-child button:nth-child(3){background:linear-gradient(135deg,#eff4ff,#fafbff)!important}
+#uaiCompanionRoot .uai-c-v10-starters>div:last-child button:hover{
+  transform:translateY(-1px)!important;
+  border-color:rgba(124,58,237,.22)!important;
+  box-shadow:0 10px 25px rgba(108,78,174,.08)!important;
+  color:#6941c8!important;
+}
+
+/* ---------- character manager: from settings list to companion gallery ---------- */
+#uaiCompanionV3Mask .uai-c-v11-role-gallery{
+  width:min(94vw,1040px)!important;
+  max-height:min(90vh,900px)!important;
+  border:1px solid rgba(111,85,197,.12)!important;
+  border-radius:28px!important;
+  overflow:auto!important;
+  background:
+    radial-gradient(circle at 8% 0%,rgba(236,72,153,.08),transparent 26%),
+    radial-gradient(circle at 94% 0%,rgba(99,102,241,.07),transparent 27%),
+    linear-gradient(180deg,#fff 0%,#fbf9ff 100%)!important;
+  box-shadow:0 38px 110px rgba(69,49,113,.21)!important;
+}
+#uaiCompanionV3Mask .uai-c-v11-role-gallery>header{
+  padding:23px 25px 18px!important;
+  border-bottom:1px solid rgba(111,85,197,.08)!important;
+  background:linear-gradient(180deg,rgba(255,255,255,.94),rgba(250,247,255,.72))!important;
+}
+#uaiCompanionV3Mask .uai-c-v11-role-gallery>header h3{
+  margin-top:4px!important;
+  color:#322a42!important;
+  font-size:23px!important;
+  letter-spacing:-.025em!important;
+}
+#uaiCompanionV3Mask .uai-c-v11-role-gallery>header p{
+  color:#91869c!important;
+  font-size:11px!important;
+}
+#uaiCompanionV3Mask .uai-c-v11-role-gallery .uai-c-v3-character-list{
+  display:grid!important;
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  gap:14px!important;
+  padding:20px 22px 22px!important;
+}
+#uaiCompanionV3Mask .uai-c-v11-role-gallery .uai-c-v3-character-card{
+  position:relative!important;
+  min-width:0!important;
+  min-height:278px!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  gap:0!important;
+  padding:23px 16px 14px!important;
+  overflow:hidden!important;
+  border:1px solid rgba(111,85,197,.095)!important;
+  border-radius:22px!important;
+  background:
+    radial-gradient(circle at 50% 0%,rgba(139,92,246,.075),transparent 34%),
+    linear-gradient(180deg,#fff,#faf8ff)!important;
+  box-shadow:0 13px 30px rgba(91,72,143,.055)!important;
+  transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease!important;
+}
+#uaiCompanionV3Mask .uai-c-v11-role-gallery .uai-c-v3-character-card::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:linear-gradient(145deg,rgba(139,92,246,.035),transparent 45%,rgba(236,72,153,.035));
+}
+#uaiCompanionV3Mask .uai-c-v11-role-gallery .uai-c-v3-character-card:nth-child(3n+2){
+  background:radial-gradient(circle at 50% 0%,rgba(236,72,153,.07),transparent 34%),linear-gradient(180deg,#fff,#fff9fc)!important;
+}
+#uaiCompanionV3Mask .uai-c-v11-role-gallery .uai-c-v3-character-card:nth-child(3n+3){
+  background:radial-gradient(circle at 50% 0%,rgba(99,102,241,.065),transparent 34%),linear-gradient(180deg,#fff,#f9fbff)!important;
+}
+#uaiCompanionV3Mask .uai-c-v11-role-gallery .uai-c-v3-character-card:hover{
+  transform:translateY(-3px)!important;
+  border-color:rgba(124,58,237,.20)!important;
+  box-shadow:0 18px 42px rgba(108,78,174,.105)!important;
+}
+#uaiCompanionV3Mask .uai-c-v11-role-gallery .uai-c-v3-character-card.active,
+#uaiCompanionV3Mask .uai-c-v11-role-gallery .uai-c-v3-character-card.uai-c-v11-current-role{
+  border-color:rgba(124,58,237,.29)!important;
+  box-shadow:0 18px 44px rgba(124,58,237,.12),0 0 0 3px rgba(139,92,246,.045)!important;
+}
+#uaiCompanionV3Mask .uai-c-v11-role-badge{
+  position:absolute;
+  top:12px;
+  right:12px;
+  z-index:2;
+  display:inline-flex;
+  align-items:center;
+  min-height:25px;
+  padding:0 9px;
+  border-radius:999px;
+  background:rgba(255,255,255,.86);
+  box-shadow:0 5px 14px rgba(91,72,143,.055);
+  color:#8c7c9c;
+  font-size:8.5px;
+  font-weight:720;
+}
+#uaiCompanionV3Mask .uai-c-v11-current-role>.uai-c-v11-role-badge{
+  background:linear-gradient(135deg,#ede5ff,#fff0f7);
+  color:#7140c9;
+}
+#uaiCompanionV3Mask .uai-c-v11-role-gallery .uai-c-v3-avatar{
+  position:relative;
+  z-index:1;
+  width:92px!important;
+  height:92px!important;
+  margin:7px 0 13px!important;
+  border:4px solid rgba(255,255,255,.90)!important;
+  border-radius:28px!important;
+  background:linear-gradient(145deg,#f9a8d4,#c084fc 53%,#818cf8)!important;
+  box-shadow:0 15px 30px rgba(124,58,237,.14),0 0 0 1px rgba(111,85,197,.07)!important;
+  font-size:31px!important;
+}
+#uaiCompanionV3Mask .uai-c-v11-role-gallery .uai-c-v3-avatar img{
+  width:100%!important;height:100%!important;object-fit:cover!important;border-radius:24px!important;
+}
+#uaiCompanionV3Mask .uai-c-v11-role-gallery .uai-c-v3-character-card>div:not(.uai-c-v3-character-actions){
+  position:relative;
+  z-index:1;
+  width:100%;
+  text-align:center;
+}
+#uaiCompanionV3Mask .uai-c-v11-role-gallery .uai-c-v3-character-card strong{
+  display:block!important;
+  color:#382f48!important;
+  font-size:16px!important;
+  font-weight:780!important;
+  letter-spacing:-.015em!important;
+}
+#uaiCompanionV3Mask .uai-c-v11-role-gallery .uai-c-v3-character-card>div>span{
+  display:block!important;
+  margin-top:4px!important;
+  color:#826f93!important;
+  font-size:10px!important;
+  font-weight:650!important;
+}
+#uaiCompanionV3Mask .uai-c-v11-role-gallery .uai-c-v3-character-card small{
+  display:block!important;
+  margin-top:7px!important;
+  color:#aaa0b4!important;
+  font-size:9px!important;
+}
+#uaiCompanionV3Mask .uai-c-v11-role-summary{
+  position:relative;
+  z-index:1;
+  width:100%;
+  min-height:38px;
+  margin:10px 0 12px;
+  color:#92889d;
+  font-size:9.5px;
+  line-height:1.55;
+  text-align:center;
+}
+#uaiCompanionV3Mask .uai-c-v11-role-gallery .uai-c-v3-character-actions{
+  position:relative;
+  z-index:1;
+  width:100%!important;
+  min-height:38px;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:7px!important;
+  margin-top:auto!important;
+  padding-top:11px!important;
+  border-top:1px solid rgba(111,85,197,.075)!important;
+}
+#uaiCompanionV3Mask .uai-c-v11-role-gallery .uai-c-v3-character-actions button,
+#uaiCompanionV3Mask .uai-c-v11-role-gallery .uai-c-v3-character-actions em{
+  min-height:31px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  padding:0 10px!important;
+  border-radius:10px!important;
+  font-size:9px!important;
+  font-style:normal!important;
+}
+#uaiCompanionV3Mask .uai-c-v11-role-gallery .uai-c-v3-character-actions button{
+  border:1px solid rgba(111,85,197,.10)!important;
+  background:#fff!important;
+  color:#756a82!important;
+}
+#uaiCompanionV3Mask .uai-c-v11-role-gallery .uai-c-v3-character-actions button:hover{
+  border-color:rgba(124,58,237,.20)!important;
+  background:#f5f0ff!important;
+  color:#6840cb!important;
+}
+#uaiCompanionV3Mask .uai-c-v11-role-gallery .uai-c-v3-character-actions em{
+  background:linear-gradient(135deg,#eee7ff,#fff0f7)!important;
+  color:#7041c8!important;
+}
+#uaiCompanionV3Mask .uai-c-v11-role-gallery>footer{
+  padding:15px 22px 19px!important;
+  border-top:1px solid rgba(111,85,197,.08)!important;
+  background:rgba(251,249,255,.75)!important;
+}
+#uaiCompanionV3Mask .uai-c-v11-role-gallery #uaiCompanionAddCharacter{
+  min-height:42px!important;
+  padding:0 16px!important;
+  border:0!important;
+  border-radius:13px!important;
+  background:linear-gradient(135deg,#8b5cf6,#7c3aed 58%,#b94fc4 130%)!important;
+  box-shadow:0 8px 22px rgba(124,58,237,.18)!important;
+  color:#fff!important;
+  font-weight:720!important;
+}
+
+@media (max-width:900px){
+  #uaiCompanionRoot.uai-c-v11-welcome-mode .uai-c-v10-starters{
+    width:min(calc(100% - 24px),680px)!important;
+    padding:21px 18px 22px!important;
+  }
+  #uaiCompanionRoot .uai-c-v11-welcome-avatar{width:96px;height:96px;border-radius:29px!important}
+  #uaiCompanionV3Mask .uai-c-v11-role-gallery .uai-c-v3-character-list{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
+
+@media (max-width:620px){
+  #uaiCompanionRoot.uai-c-v11-welcome-mode .uai-c-v10-starters{
+    margin-top:12px!important;
+    border-radius:23px!important;
+  }
+  #uaiCompanionRoot .uai-c-v11-welcome-name{font-size:24px!important}
+  #uaiCompanionRoot .uai-c-v10-starters>div:last-child{grid-template-columns:1fr!important}
+  #uaiCompanionRoot .uai-c-v10-starters>div:last-child button{min-height:42px!important}
+  #uaiCompanionV3Mask .uai-c-v11-role-gallery{width:calc(100vw - 18px)!important;border-radius:22px!important}
+  #uaiCompanionV3Mask .uai-c-v11-role-gallery .uai-c-v3-character-list{
+    grid-template-columns:1fr!important;
+    padding:14px!important;
+  }
+  #uaiCompanionV3Mask .uai-c-v11-role-gallery .uai-c-v3-character-card{min-height:250px!important}
+}
