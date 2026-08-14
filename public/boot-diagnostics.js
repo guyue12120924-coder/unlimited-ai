@@ -1,8 +1,8 @@
 // public/boot-diagnostics.js
 // Startup guard + dual-mode bootstrap.
 (() => {
-  const REVISION = "2026-08-14-v12.2-dual-mode-1";
-  // Diagnostics compatibility markers: 2026-08-14-v12.1-dual-mode-1 / 2026-08-14-v12.0-dual-mode-1 / 2026-08-14-v11.6-dual-mode-1
+  const REVISION = "2026-08-14-v12.3-dual-mode-1";
+  // Diagnostics compatibility markers: 2026-08-14-v12.2-dual-mode-1 / 2026-08-14-v12.1-dual-mode-1 / 2026-08-14-v12.0-dual-mode-1 / 2026-08-14-v11.6-dual-mode-1
   const errors = [];
 
   document.documentElement.dataset.frontendRevision = REVISION;
@@ -80,6 +80,7 @@
     ensureStyle(`/companion-v12-galaxy.css?v=${REVISION}`, "uaiCompanionV12GalaxyCss");
     ensureStyle(`/companion-v12-stage2.css?v=${REVISION}`, "uaiCompanionV12Stage2Css");
     ensureStyle(`/companion-v12-final.css?v=${REVISION}`, "uaiCompanionV12FinalCss");
+    ensureStyle(`/companion-v12-polish.css?v=${REVISION}`, "uaiCompanionV12PolishCss");
 
     ensureScript(`/companion-characters-core.js?v=${REVISION}`, "uaiCompanionCharactersCoreScript");
     ensureScript(`/companion-character-editor.js?v=${REVISION}`, "uaiCompanionCharacterEditorScript");
@@ -100,6 +101,7 @@
     ensureScript(`/companion-v12-galaxy.js?v=${REVISION}`, "uaiCompanionV12GalaxyScript");
     ensureScript(`/companion-v12-stage2.js?v=${REVISION}`, "uaiCompanionV12Stage2Script");
     ensureScript(`/companion-v12-final.js?v=${REVISION}`, "uaiCompanionV12FinalScript");
+    ensureScript(`/companion-v12-polish.js?v=${REVISION}`, "uaiCompanionV12PolishScript");
 
     if (document.getElementById("uaiModeRouterScript")) return;
     const script = document.createElement("script");
@@ -145,6 +147,7 @@
       window.__UNLIMITED_BOOT__.companionV12GalaxyReady = Boolean(window.UnlimitedCompanionV12Galaxy);
       window.__UNLIMITED_BOOT__.companionV12Stage2Ready = Boolean(window.UnlimitedCompanionV121);
       window.__UNLIMITED_BOOT__.companionV12FinalReady = Boolean(window.UnlimitedCompanionV122);
+      window.__UNLIMITED_BOOT__.companionV12PolishReady = Boolean(window.UnlimitedCompanionV123);
       return;
     }
     const parts = [];
