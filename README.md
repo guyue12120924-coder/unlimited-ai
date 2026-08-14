@@ -1,126 +1,177 @@
 # Unlimited AI — 小说创作 + AI 陪伴
 
-一个部署在 Cloudflare Workers 上的本地优先 AI 工作台。打开网页后先进入模式大厅，可选择 **AI 小说创作** 或 **AI 陪伴**。两个模式共用模型与 Worker 基础设施，但 Prompt、上下文、会话和长期记忆彼此隔离。
+一个部署在 Cloudflare Workers 上的本地优先 AI 工作台。打开网页后先进入模式大厅，可选择 **AI 小说创作** 或 **AI 陪伴**。两个模式共用 Worker 和模型基础设施，但 Prompt、上下文、会话和长期记忆彼此隔离。
 
-## 两种模式
+当前陪伴前端版本：**V9.5**。
+
+> 陪伴模式的详细模块边界与退役文件清单见：`docs/COMPANION_V9_ARCHITECTURE.md`。
+
+---
+
+## 1. 两种模式
 
 ### AI 小说创作
 
-保留原有长篇创作工作台：
+保留长篇创作工作台，主要包括：
 
-- 作品与章节
-- 人物与世界观
+- 作品与章节管理
+- 人物、世界观、场景和资料
 - 大纲与正文
-- AI 续写、润色和改写
+- AI 续写、润色、改写
 - Story Memory
 - 连续性检查
 - 阅读模式
 - 本地备份与恢复
 
-旧浏览器中的小说数据不需要迁移，原有 `cfw_*` 和 Story Memory 等存储键继续使用。
+小说模式继续使用原有 `cfw_*`、Story Memory 和连续性数据结构，旧浏览器数据不需要因为陪伴模式升级而迁移。
 
 ### AI 陪伴
 
-独立陪伴工作区当前支持：
+V9.5 当前支持：
 
 - 第一次进入时创建 AI 伙伴或使用默认“小雨”
-- 最多 6 个 AI 伙伴
-- 每个伙伴独立保存角色资料、聊天、长期记忆和模型设置
-- 角色创建、切换和删除
-- 多角色头像快捷切换，不必每次打开角色管理
-- 角色模板库，可快速创建温柔陪伴、活泼好友、成熟知己和冷静男友等基础角色
-- 角色详情页：关系阶段、认识天数、会话/消息/记忆/重要时刻统计和性格标签
-- 关系时间线：第一次认识、关系阶段里程碑和收藏的重要时刻
-- 重要时刻纪念册：按月份整理当前角色珍藏的聊天片段
-- 月度回顾：本月会话、消息、用户消息、珍藏和最近话题统计
-- 关系里程碑：7/30/100/365 天以及 100/500/1000 条消息等真实节点
-- 当前角色可导出可读 Markdown，包含角色信息、重要时刻和完整聊天记录
-- 关系、性格、用户称呼和自定义角色描述
-- 可选本地头像
+- 最多 6 个角色
+- 每个角色独立保存资料、聊天、长期记忆和模型设置
+- 角色新增、编辑、切换、删除
+- 单个“完整角色设定”大文本框，可直接粘贴人物卡，最多 5000 字
 - 独立多会话聊天
 - SSE 流式回复与停止生成
-- 用户消息“编辑重发”和最后一条 AI 回复“重新生成”
-- 时间感和最近话题驱动的新聊天开场
-- 当前角色聊天全文搜索与消息定位，支持 `Ctrl/Cmd + K`
-- 任意消息可加入当前角色的“重要时刻”
-- 用户可控长期记忆
-- 本地结构化记忆提取：称呼、生日、最近活动、计划、偏好、饮食限制、过敏和明确“记住”请求
-- 记忆整理：类型识别、置顶、精确去重、过期候选、归档和恢复
-- 近况与计划不会被静默删除，超过时间阈值后只进入“待整理”候选
-- Worker 在长期记忆上限前优先选择置顶记忆、称呼、生日、约束和其他稳定事实
-- 认识天数、会话数、累计消息和关系阶段
-- 多角色页总览伙伴数、会话数、消息数和记忆数
-- 单角色数据导出与全部角色备份
-- 全部角色备份包含重要时刻和归档记忆
-- V1/V2 多角色备份导入恢复
-- 导入前校验角色数量、角色 ID、资料、会话、消息、记忆和头像数据
-- 支持“合并导入”和“覆盖恢复”；覆盖前自动保存一次本地回滚快照
-- 当前聊天清空和整体重置
-- 移动端侧栏与输入布局
+- 用户消息编辑重发、最后一条 AI 回复重新生成
+- 约 500 / 1000 / 5000 字三档回复长度
+- 当前角色聊天全文搜索和消息定位
+- 任意消息加入“重要时刻”
+- 长期记忆手动管理、去重、置顶、归档、恢复
+- 关系时间线、重要时刻纪念册、本月回顾
+- 可读 Markdown 导出
+- 全部角色 JSON 备份、导入校验、合并/覆盖恢复和一次回滚快照
+- 生成期间禁止切换角色或执行可能导致异步串写的危险操作
+- 桌面端和移动端响应式布局
 
-陪伴模式只使用 `uai_companion_*` localStorage namespace。核心兼容槽位包括：
+V9.5 的 UI 原则是：**主聊天页只保留高频操作，低频功能进入角色管理、记忆、设置或关系记录。**
 
-- `uai_companion_profile_v1`
-- `uai_companion_sessions_v1`
-- `uai_companion_memories_v1`
-- `uai_companion_settings_v1`
+---
 
-多角色层新增：
+## 2. 陪伴模式当前结构
 
-- `uai_companion_characters_v1`
-- `uai_companion_active_character_v1`
+### 启动与模式路由
 
-辅助数据：
+- `public/boot-diagnostics.js`：双模式启动、资源加载和前端自检
+- `public/mode-router.js`：小说 / 陪伴模式大厅与切换
+- `public/mode-router.css`：模式大厅样式
 
-- `uai_companion_moments_v1`：按角色保存重要时刻
-- `uai_companion_memory_archive_v1`：按角色保存可恢复的归档记忆
-- `uai_companion_import_rollback_v1`：V5 导入前保存的一次本地回滚快照
+### 基础聊天核心
 
-当前角色的数据会装载到原有兼容槽位，成熟的单角色聊天客户端继续只读取这些活动槽位；切换角色时，V3 层先完整保存当前角色，再装载目标角色，因此不同角色不会共享聊天或记忆。重要时刻和归档记忆则直接按角色 ID 分桶保存。
+- `public/companion-mode.js`
+  - 基础陪伴 DOM 壳
+  - 当前角色兼容槽位
+  - 会话列表与消息渲染
+  - 输入、SSE 流式回复、停止生成
+  - 基础长期记忆和设置数据源
+- `public/companion-mode.css`：基础结构和通用组件
 
-它不会读取或写入小说模式的会话、人物、Story Memory 或连续性数据。
+### 多角色与角色编辑
 
-## 当前结构
+- `public/companion-characters-core.js`
+  - 多角色持久化
+  - 当前角色快照保存 / 目标角色装载
+  - 角色聊天、记忆和设置隔离
+- `public/companion-character-editor.js`
+  - 只负责新增角色、编辑角色和首次创建角色
+  - 完整角色设定统一使用单个大文本框
+- `public/companion-characters.css`：角色管理/编辑弹窗基础样式
 
-### 双模式入口与陪伴前端
+### 设置与运行时
 
-- `public/boot-diagnostics.js`：启动保护、双模式资源加载和前端自检
-- `public/mode-router.js`：每次打开时显示模式大厅，并在小说 / 陪伴之间切换
-- `public/mode-router.css`：模式大厅视觉样式
-- `public/companion-mode.js`：稳定的陪伴角色、会话、流式聊天、长期记忆和本地数据管理核心
-- `public/companion-mode.css`：陪伴桌面端与移动端基础布局
-- `public/companion-v2.js` / `.css`：关系阶段、快捷话题、回访提示、消息复制/记住和长聊天导航
-- `public/companion-v3.js` / `.css`：多角色快照、角色切换、新角色创建、动态开场、编辑重发、重新生成和增强记忆提取
-- `public/companion-v3-guard.js`：生成期间的角色切换保护、全部角色备份、多角色重置一致性和孤儿辅助数据清理
-- `public/companion-v4.js` / `.css`：当前角色聊天搜索、重要时刻、长期记忆整理、上下文继续提示和多角色总览增强
-- `public/companion-v5.js` / `.css`：角色详情、关系时间线、重要时刻纪念册、角色模板库和经过校验的备份导入/回滚
-- `public/companion-v6.js` / `.css`：角色头像快捷切换、月度回顾、关系里程碑和当前角色可读 Markdown 导出
+- `public/companion-settings.js`
+  - 回复长度三档
+  - 设置弹窗整理
+  - 数据与备份低频区域
+- `public/companion-runtime.js`
+  - 回复长度请求约束
+  - 生成期间危险操作保护
+  - 全部角色备份与辅助数据清理
 
-### 小说创作前端
+### 搜索、记忆与关系记录
 
-- `public/app.js`：聊天、多会话、阅读模式与基础前端逻辑
-- `public/studio.js`：作品、章节、人物、场景、资料、统计、备份等本地创作工作区
-- `public/data-migration.js`：为旧会话补充永久 message ID，并兼容旧正文片段引用
-- `public/context-bridge.js`：把本地创作资料自动注入 `/api/chat`，并提供“上下文”检查器
-- `public/continuity-bridge.js`：管理已确认的章节摘要和人物当前状态，并自动注入聊天
-- `public/memory-bridge.js`：本地 Story Memory 库、相关性检索和自动注入
-- `public/memory-suggest.js`：AI 提取长期记忆候选，并由用户勾选后保存
+- `public/companion-memory.js`
+  - 聊天搜索
+  - 重要时刻管理
+  - 长期记忆整理、去重、归档与恢复
+- `public/companion-records.js`
+  - 关系记录、时间线、纪念册
+  - 备份导入校验和回滚
+- `public/companion-extras.js`
+  - 消息复制 / 珍藏
+  - 长回复展开/收起
+  - 回到底部
+  - 本月回顾与可读 Markdown 导出
+- `public/companion-memory.css`：搜索与记忆组件
+- `public/companion-records.css`：关系记录与恢复组件
 
-### Worker
+### V9 页面收口
 
-- `src/models.js`：唯一模型注册表、默认模型、请求参数与自动 fallback 顺序
-- `src/prompts.js`：小说创作内置 Prompt
-- `src/context.js`：小说作品、章节、人物、长期记忆与连续性上下文整理
-- `src/memory-extractor.js`：小说 Story Memory 候选提取
-- `src/continuity-review.js`：小说章节摘要和人物状态分析
-- `src/companion.js`：陪伴模式专用角色、关系与长期记忆 Prompt；不导入小说上下文模块，并对长期记忆做稳定性/置顶优先排序
-- `src/worker.js`：Cloudflare Worker、模式路由、模型 fallback、SSE 流式转发和辅助分析接口
+- `public/companion-v9-shell.js`
+  - 角色卡新增/编辑/管理入口
+  - 左侧可见聊天搜索入口
+  - 角色管理弹窗整理
+  - 记忆弹窗高频/低频入口整理
+  - 消息操作去重
+- `public/companion-v9.css`
+  - 当前主聊天页最终视觉层
+  - 桌面端 1120px 对话内容宽度
+  - AI 正文 16.5px
+  - 输入区、角色管理和移动端响应式
+- `public/companion-support.css`
+  - 角色大文本框
+  - 回复长度卡片
+  - 数据折叠区
+  - 消息操作
+  - 长回复
+  - 回到底部
+  - Toast
+  - 本月回顾
 
-## `/api/chat` 模式路由
+旧的 V2/V3/V4/V5/V6 companion 增量脚本、`companion-characters-ui.js` 和 `companion-profile-editor.css` 已退出当前运行时，不应恢复成“旧文件 + 新覆盖层”的开发方式。
 
-仍然使用同一个 `POST /api/chat`，通过 `mode` 区分产品路径。
+---
 
-小说模式：
+## 3. 陪伴 Prompt 边界
+
+陪伴模式应用层最高优先级角色卡位于：
+
+```text
+src/companion.js -> COMPANION_ROLE_CARD
+```
+
+实际陪伴请求的应用消息层级是：
+
+1. `system`：`COMPANION_ROLE_CARD`
+2. `user`：当前角色、关系、长期记忆、最近话题、时间、回复长度等动态参考资料
+3. 用户/助手聊天历史
+
+也就是说，页面里填写的角色设定和长期记忆不会与角色卡处在同一个 `system` 层级。
+
+小说模式提示词继续由：
+
+```text
+src/worker.js -> NOVEL_SYSTEM_PROMPT
+```
+
+维护。陪伴 V9 前端重构不会修改小说系统提示词。
+
+---
+
+## 4. `/api/chat` 模式路由
+
+仍然使用同一个：
+
+```text
+POST /api/chat
+```
+
+通过 `mode` 区分产品路径。
+
+### 小说模式
 
 ```json
 {
@@ -132,9 +183,9 @@
 }
 ```
 
-为了兼容旧前端，缺省 `mode` 仍然按照小说模式处理。
+为了兼容旧前端，缺省 `mode` 仍按小说模式处理。
 
-陪伴模式：
+### 陪伴模式
 
 ```json
 {
@@ -147,113 +198,160 @@
 }
 ```
 
-陪伴路径不会注入 `creative_context`、小说 `memory_context` 或 `continuity_context`。
+陪伴路径不会注入小说的 `creative_context`、`memory_context` 或 `continuity_context`。
 
-## 模型配置
+---
 
-只在 `src/models.js` 中维护模型。每个模型可配置：
+## 5. 陪伴数据隔离
+
+陪伴模式使用独立 `uai_companion_*` localStorage 命名空间。
+
+核心兼容槽位：
+
+```text
+uai_companion_profile_v1
+uai_companion_sessions_v1
+uai_companion_memories_v1
+uai_companion_settings_v1
+```
+
+多角色：
+
+```text
+uai_companion_characters_v1
+uai_companion_active_character_v1
+```
+
+辅助数据：
+
+```text
+uai_companion_moments_v1
+uai_companion_memory_archive_v1
+uai_companion_import_rollback_v1
+```
+
+当前角色会装载到兼容槽位中；切换角色前先保存当前角色快照，再装载目标角色，因此角色之间不共享聊天和长期记忆。
+
+陪伴模式不会读取或写入小说会话、人物、Story Memory 或连续性数据。
+
+---
+
+## 6. 模型配置
+
+模型注册统一位于：
+
+```text
+src/models.js
+```
+
+每个模型可维护：
 
 - `id`
 - `label`
 - `promptProfile`
 - `provider`
 - `requestTimeoutMs`
-- `request` 请求参数
+- `request` 参数
 
-Worker 会通过 `/config.js` 自动把可用模型同步给网页。小说模式和陪伴模式可以分别保存自己的模型选择；多角色模式下每个角色也会保存自己的陪伴设置快照。
+Worker 会通过 `/config.js` 把可用模型同步到前端。小说模式和陪伴模式可以分别保存模型选择；多角色下每个角色也会保存自己的陪伴设置快照。
 
-## 小说创作上下文
+---
 
-小说模式会根据当前作品和章节整理：
+## 7. 小说上下文链路
+
+小说模式会整理并注入：
 
 - 作品简介与总纲
 - 当前章节与上一章摘要
-- 相关人物及人物关系
+- 相关人物和人物关系
 - 世界观与时间线
 - 伏笔与创作备注
 - 已确认 Story Memory
 - 连续性层中的章节摘要和人物当前状态
 
-服务端再次做长度限制并优先保留当前章节、人物、长期记忆与连续性信息。
+主要模块：
 
-## 陪伴长期记忆
+- `src/context.js`
+- `src/memory-extractor.js`
+- `src/continuity-review.js`
+- `public/context-bridge.js`
+- `public/memory-bridge.js`
+- `public/continuity-bridge.js`
 
-陪伴模式拥有独立长期记忆列表，并按角色隔离。基础层会对姓名、偏好、生日等高置信度信息做本地提取；V3 继续扩展称呼、最近活动、计划、饮食限制、过敏和显式记忆请求，并对称呼/生日以及相反偏好做简单替换与冲突处理。
+---
 
-V4 不自动删除用户记忆。称呼、生日、过敏/饮食约束、显式记忆和长期偏好属于更稳定的信息；“最近正在……”和“打算……”属于临时信息，达到阈值后会标为待整理。用户可以置顶重要记忆、精确去重、将临时记忆移入归档，之后也可以恢复。
+## 8. 回归测试
 
-Worker 对收到的活动记忆重新排序，在 24 条 Prompt 上限前优先保留置顶记忆和稳定事实。归档内容不在活动记忆槽中，因此不会继续注入模型。
+GitHub Actions 工作流：
 
-用户仍可以手动增加、编辑、删除和“记住”某条聊天。关闭长期记忆后不会继续自动提取，也不会把已有长期记忆发送给模型，但本地记忆不会被自动删除。
+```text
+.github/workflows/js-syntax-check.yml
+```
 
-## 搜索、重要时刻与角色成长
+当前检查包括：
 
-搜索只遍历当前角色已经加载的会话，可以从结果跳回对应会话和消息，并用短暂高亮帮助定位。`Ctrl/Cmd + K` 可直接打开搜索。
+- 浏览器脚本语法
+- Worker 模块语法
+- 小说 Story Context 质量契约
+- 小说用户主流程契约
+- 陪伴 / 小说模式隔离
+- 陪伴角色编辑器
+- 关系记录与备份恢复
+- 陪伴运行时兼容性
+- V9 UX / 模块结构
 
-“重要时刻”按角色 ID 独立保存。任意用户或 AI 消息都可以珍藏，并可附加一条本地备注；之后可以从重要时刻列表回到原消息。删除角色后，对应的重要时刻和归档记忆会被守卫层清理。
+V9.5 在删除旧角色 UI 大模块和旧 V8 覆盖样式后，完整 CI 已通过。
 
-V5 会把重要时刻按月份整理到当前角色详情页，并和第一次认识、会话里程碑一起组成关系时间线。关系阶段仍由认识天数、会话数和消息量计算，不使用付费数值、好感度氪金或强制任务机制。
+---
 
-V6 在此基础上增加本地月度回顾和长期里程碑。月度数据只来自已经存在的会话、消息、标题和重要时刻；不会伪造“本月发生过”的事件。多角色时可以从侧栏头像条直接切换伙伴，但生成过程中仍然禁止切换，避免异步回复串入其他角色。
+## 9. Cloudflare Workers 部署
 
-## 可读导出
+`wrangler.toml` 当前入口：
 
-V6 为当前角色新增 Markdown 可读导出。它与用于恢复的 JSON 备份用途不同：Markdown 面向阅读和长期留档，会包含角色关系、认识时间、统计、角色设定、重要时刻纪念册和完整聊天记录；JSON 仍用于机器可恢复备份。
+```toml
+name = "unlimited-ai"
+main = "src/worker.js"
+compatibility_date = "2026-03-11"
 
-## 备份导入与恢复
+[assets]
+directory = "./public"
+binding = "ASSETS"
+run_worker_first = true
+```
 
-V5 支持导入由“导出全部角色”生成的 V1/V2 JSON 备份。文件在写入前会经过校验和裁剪：最多 6 个角色，并限制单角色会话、单会话消息、长期记忆和头像数据规模；无效角色、无效消息和异常字段不会直接进入活动数据。
-
-导入有两种方式：
-
-- **合并导入**：保留当前角色，只把备份中的角色加入现有列表，直到 6 个角色上限
-- **覆盖恢复**：用备份替换当前全部陪伴数据
-
-执行导入前会把当前多角色、重要时刻和归档记忆保存到 `uai_companion_import_rollback_v1`。角色管理页在存在回滚快照时会提供“撤销上次导入”。模型仍在生成时不允许导入。
-
-## 数据兼容与隐私
-
-- 小说会话、作品、人物、章节、Story Memory 和连续性仍保存在当前浏览器
-- 陪伴角色、聊天、长期记忆与设置同样保存在当前浏览器
-- 旧版单角色陪伴数据会自动成为第一个角色，不需要手工迁移
-- 两种模式使用不同 storage namespace
-- 不同 AI 伙伴之间的聊天、长期记忆、重要时刻和记忆归档彼此隔离
-- 角色头像仅保存于本地浏览器
-- 小说模式保留原有备份 / 恢复能力
-- 陪伴模式支持当前角色 JSON 导出，以及包含所有角色、重要时刻和记忆归档的完整 JSON 备份与恢复
-- V6 Markdown 导出是可读副本，不会反向导入或改变本地数据
-
-## 验证
-
-`.github/workflows/js-syntax-check.yml` 会在 PR 中检查：
-
-1. 所有浏览器 JavaScript 语法
-2. 所有 Worker 模块语法
-3. Story Context 质量契约
-4. 原小说产品流契约
-5. 陪伴模式 V1/V2/V3/V4/V5/V6 隔离与功能契约
-
-`tests/companion-mode.test.mjs` 会确认陪伴模式不引用小说存储 namespace，确认多角色、搜索/记忆、V5 恢复和 V6 回顾/导出层只使用独立 `uai_companion_*` 数据，并验证 Worker 的 Companion Prompt 与长期记忆优先级。
-
-## Deploy (Cloudflare Workers)
-
-1. 安装并登录 Wrangler
+首次手动部署：
 
 ```bash
 npm i -g wrangler
 wrangler login
-```
-
-2. 设置 NVIDIA API Key
-
-```bash
 wrangler secret put NVIDIA_API_KEY
-```
-
-3. 部署
-
-```bash
 wrangler deploy
 ```
 
-部署后可访问 `/api/diagnostics` 检查 Worker 与双模式静态资源是否是同一版本。
+如果 Cloudflare 已连接 GitHub 自动部署，则向 `main` 推送提交会按 Cloudflare 侧配置触发构建。仓库本身的 GitHub Deployments API 不一定会显示 Cloudflare 的实际生产部署状态，因此 **GitHub CI 通过不等于已经确认生产环境上线**。
+
+当前部署标记见：
+
+```text
+DEPLOY_REVISION.txt
+```
+
+---
+
+## 10. 后续开发规则
+
+继续开发陪伴模式时：
+
+- 高频入口留在主聊天页；低频入口进入角色管理、记忆、设置或关系记录
+- 一个模块只负责一类职责，避免再次出现“全能补丁脚本”
+- 不增加重复头像、重复按钮和重复设置入口
+- 角色数据必须按角色隔离
+- 生成过程中不得切换角色或执行可能导致异步串写的操作
+- 新功能同步补回归测试
+- 不修改陪伴角色卡或小说系统提示词，除非任务明确要求修改 Prompt
+
+更详细的 V9.5 陪伴架构说明：
+
+```text
+docs/COMPANION_V9_ARCHITECTURE.md
+```
