@@ -39,15 +39,18 @@ assert.match(shell, /uaiV10MemoryAdvanced/);
 assert.match(shell, /uai-c-v10-settings/);
 assert.doesNotMatch(shell, /COMPANION_ROLE_CARD/);
 
-// Regression: legacy action sources must remain as hidden anchors so the
-// multi-character observer does not recreate "重新生成" forever.
+// Regression: only legacy action nodes that were actually created by the
+// underlying modules may act as anchors. V10 keeps those nodes hidden instead
+// of deleting them, so the multi-character observer does not recreate
+// "重新生成" forever. V10 must not invent a fake .uai-c-v3-actions marker
+// before the core has had a chance to create the real action buttons.
 assert.match(shell, /function normalizeActionLabel\(/);
 assert.match(shell, /function dedupeToolbar\(/);
 assert.match(shell, /source\.hidden = true/);
 assert.match(shell, /source\.dataset\.v10Consumed = "1"/);
-assert.match(shell, /uai-c-v10-core-action-anchor/);
 assert.match(shell, /seen\.has\(label\)/);
 assert.doesNotMatch(shell, /source\.remove\(\)/);
+assert.doesNotMatch(shell, /uai-c-v10-core-action-anchor/);
 assert.doesNotMatch(shell, /toolbar\.className = "uai-c-v8-message-actions uai-c-v10-message-toolbar"/);
 
 assert.match(css, /--v10-bg:#282a34/);
