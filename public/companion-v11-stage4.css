@@ -1,0 +1,219 @@
+/* Companion V11.6 — final UI QA, reliable relationship layout, and visibly themed chat backgrounds. */
+
+/* ---------- explicit theme surfaces ---------- */
+#uaiCompanionRoot{
+  --v116-a:#8b5cf6;--v116-b:#ec4899;
+  --v116-main:#faf7ff;--v116-main2:#f7f8ff;--v116-side:#fbf8ff;--v116-head:#fefcff;
+  --v116-composer:#fbf9ff;--v116-drawer:#fbf8ff;--v116-glow1:rgba(139,92,246,.16);--v116-glow2:rgba(236,72,153,.10);
+}
+#uaiCompanionRoot .uai-c-main{
+  background:
+    radial-gradient(circle at 82% -8%,var(--v116-glow1),transparent 33%),
+    radial-gradient(circle at 18% 1%,var(--v116-glow2),transparent 29%),
+    linear-gradient(180deg,var(--v116-main),var(--v116-main2))!important;
+  transition:background .24s ease!important;
+}
+#uaiCompanionRoot .uai-c-sidebar{
+  background:
+    radial-gradient(circle at 12% -2%,var(--v116-glow2),transparent 28%),
+    linear-gradient(180deg,#fff,var(--v116-side))!important;
+  transition:background .24s ease!important;
+}
+#uaiCompanionRoot .uai-c-header{
+  background:linear-gradient(180deg,rgba(255,255,255,.97),color-mix(in srgb,var(--v116-head) 90%,transparent))!important;
+}
+#uaiCompanionRoot .uai-c-composer-wrap{
+  background:linear-gradient(to top,color-mix(in srgb,var(--v116-composer) 98%,#fff) 68%,color-mix(in srgb,var(--v116-composer) 86%,transparent) 88%,transparent)!important;
+}
+#uaiCompanionRoot .uai-c-composer{
+  background:linear-gradient(145deg,#fff,var(--v116-composer))!important;
+  border-color:color-mix(in srgb,var(--v116-a) 17%,transparent)!important;
+}
+#uaiCompanionRoot .uai-c-v11-drawer{
+  background:
+    radial-gradient(circle at 50% -3%,var(--v116-glow2),transparent 30%),
+    radial-gradient(circle at 96% 20%,var(--v116-glow1),transparent 28%),
+    linear-gradient(180deg,#fff,var(--v116-drawer))!important;
+}
+#uaiCompanionRoot .uai-c-message-row.user .uai-c-bubble,
+#uaiCompanionRoot .uai-c-send{
+  background:linear-gradient(135deg,var(--v116-a),color-mix(in srgb,var(--v116-a) 76%,#5623c8),var(--v116-b) 145%)!important;
+}
+#uaiCompanionRoot .uai-c-session.active{box-shadow:inset 2px 0 0 var(--v116-a)!important}
+#uaiCompanionRoot .uai-c-new-chat,
+#uaiCompanionRoot .uai-c-session.active{
+  border-color:color-mix(in srgb,var(--v116-a) 15%,transparent)!important;
+}
+#uaiCompanionRoot .uai-c-profile-card .uai-c-avatar,
+#uaiCompanionRoot #uaiCompanionHeaderAvatar .uai-c-avatar,
+#uaiCompanionRoot .uai-c-v11-drawer-avatar,
+#uaiCompanionRoot .uai-c-v11-welcome-avatar{
+  background:linear-gradient(145deg,color-mix(in srgb,var(--v116-b) 62%,#fff),color-mix(in srgb,var(--v116-a) 70%,#fff) 54%,var(--v116-a))!important;
+}
+
+/* ---------- relationship page bug fix ---------- */
+#uaiCompanionV5Mask .uai-c-v116-relationship-fixed{
+  width:min(94vw,1020px)!important;
+  max-height:min(90vh,880px)!important;
+  overflow-y:auto!important;overflow-x:hidden!important;
+}
+#uaiCompanionV5Mask .uai-c-v116-relationship-fixed .uai-c-v5-profile-hero{
+  display:grid!important;
+  grid-template-columns:auto minmax(0,1fr) auto!important;
+  align-items:center!important;
+  gap:18px!important;
+}
+#uaiCompanionV5Mask .uai-c-v116-rel-actions{
+  display:flex!important;align-items:center!important;justify-content:flex-end!important;gap:8px!important;
+  width:auto!important;min-width:0!important;align-self:start!important;
+}
+#uaiCompanionV5Mask .uai-c-v116-rel-actions>button{
+  position:static!important;inset:auto!important;float:none!important;
+  width:auto!important;height:36px!important;min-width:36px!important;max-width:none!important;
+  margin:0!important;padding:0 12px!important;
+  border:1px solid rgba(111,85,197,.11)!important;border-radius:11px!important;
+  background:#f7f3ff!important;color:#6943c4!important;
+  display:inline-flex!important;align-items:center!important;justify-content:center!important;
+  writing-mode:horizontal-tb!important;white-space:nowrap!important;
+  font-size:10.5px!important;font-weight:700!important;line-height:1!important;
+}
+#uaiCompanionV5Mask .uai-c-v116-rel-actions>[data-v5-close]{
+  width:36px!important;padding:0!important;font-size:18px!important;color:#8e819e!important;background:#faf8ff!important;
+}
+#uaiCompanionV5Mask .uai-c-v116-rel-actions>button:hover{background:#efe8ff!important;color:#6035c7!important}
+
+#uaiCompanionV5Mask .uai-c-v116-relationship-fixed .uai-c-v5-profile-grid{
+  min-width:0!important;align-items:start!important;
+}
+#uaiCompanionV5Mask .uai-c-v116-relationship-fixed .uai-c-v5-profile-grid>section{
+  min-width:0!important;overflow:hidden!important;
+}
+#uaiCompanionV5Mask .uai-c-v116-relationship-fixed .uai-c-v5-timeline{
+  min-width:0!important;padding:12px 18px 20px!important;
+}
+#uaiCompanionV5Mask .uai-c-v116-relationship-fixed .uai-c-v5-timeline article{
+  position:relative!important;display:block!important;grid-template-columns:none!important;
+  width:100%!important;min-width:0!important;margin:0 0 16px!important;padding:1px 0 3px 27px!important;
+  box-sizing:border-box!important;
+}
+#uaiCompanionV5Mask .uai-c-v116-relationship-fixed .uai-c-v5-timeline article>div{
+  display:block!important;width:100%!important;min-width:0!important;max-width:none!important;
+}
+#uaiCompanionV5Mask .uai-c-v116-relationship-fixed .uai-c-v5-timeline article>i{
+  position:absolute!important;left:2px!important;top:8px!important;width:10px!important;height:10px!important;
+}
+#uaiCompanionV5Mask .uai-c-v116-relationship-fixed .uai-c-v5-timeline article:not(:last-child)::before{
+  left:6px!important;top:22px!important;bottom:-12px!important;
+}
+#uaiCompanionV5Mask .uai-c-v116-relationship-fixed .uai-c-v5-timeline time,
+#uaiCompanionV5Mask .uai-c-v116-relationship-fixed .uai-c-v5-timeline strong,
+#uaiCompanionV5Mask .uai-c-v116-relationship-fixed .uai-c-v5-timeline p{
+  display:block!important;width:auto!important;max-width:100%!important;
+  writing-mode:horizontal-tb!important;text-orientation:mixed!important;
+  white-space:normal!important;word-break:break-word!important;overflow-wrap:anywhere!important;
+}
+#uaiCompanionV5Mask .uai-c-v116-relationship-fixed .uai-c-v5-timeline strong{margin-top:4px!important;font-size:12px!important;line-height:1.45!important}
+#uaiCompanionV5Mask .uai-c-v116-relationship-fixed .uai-c-v5-timeline p{margin:5px 0 0!important;font-size:10.5px!important;line-height:1.65!important}
+#uaiCompanionV5Mask .uai-c-v116-relationship-fixed .uai-c-v5-section-title{
+  min-height:62px!important;padding:14px 16px!important;box-sizing:border-box!important;
+}
+#uaiCompanionV5Mask .uai-c-v116-relationship-fixed .uai-c-v5-album{min-width:0!important}
+#uaiCompanionV5Mask .uai-c-v116-relationship-fixed .uai-c-v5-album-group article p{overflow-wrap:anywhere!important;word-break:break-word!important}
+
+/* ---------- final dialog hardening ---------- */
+#uaiCompanionV4Mask .uai-c-v116-dialog-fixed,
+#uaiCompanionV5Mask .uai-c-v116-dialog-fixed,
+#uaiV8ReviewMask .uai-c-v116-dialog-fixed,
+#uaiV9RoleEditorMask .uai-c-v116-dialog-fixed,
+#uaiCompanionV3Mask .uai-c-v116-dialog-fixed{
+  overflow-x:hidden!important;
+  box-sizing:border-box!important;
+}
+#uaiCompanionV4Mask input,
+#uaiCompanionV4Mask textarea,
+#uaiCompanionV5Mask input,
+#uaiCompanionV5Mask textarea,
+#uaiV8ReviewMask input,
+#uaiV8ReviewMask textarea,
+#uaiV9RoleEditorMask input,
+#uaiV9RoleEditorMask textarea,
+#uaiV9RoleEditorMask select,
+#uaiCompanionModalMask input,
+#uaiCompanionModalMask textarea,
+#uaiCompanionModalMask select{
+  accent-color:var(--v116-a)!important;
+}
+#uaiCompanionV4Mask input:focus,
+#uaiCompanionV4Mask textarea:focus,
+#uaiCompanionV5Mask input:focus,
+#uaiCompanionV5Mask textarea:focus,
+#uaiV9RoleEditorMask input:focus,
+#uaiV9RoleEditorMask textarea:focus,
+#uaiV9RoleEditorMask select:focus,
+#uaiCompanionModalMask input:focus,
+#uaiCompanionModalMask textarea:focus,
+#uaiCompanionModalMask select:focus{
+  outline:none!important;border-color:color-mix(in srgb,var(--v116-a) 34%,transparent)!important;
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--v116-a) 9%,transparent)!important;
+}
+
+/* ---------- click targets / hover / finishing ---------- */
+#uaiCompanionRoot button,
+#uaiCompanionV4Mask button,
+#uaiCompanionV5Mask button,
+#uaiV8ReviewMask button,
+#uaiV9RoleEditorMask button,
+#uaiCompanionV3Mask button{
+  -webkit-tap-highlight-color:transparent;
+}
+#uaiCompanionRoot .uai-c-v11-space-trigger,
+#uaiCompanionRoot .uai-c-v11-immersive-toggle,
+#uaiCompanionRoot .uai-c-v11-drawer-close{
+  min-height:38px!important;
+}
+#uaiCompanionRoot .uai-c-v11-theme-choice{min-height:60px!important}
+#uaiCompanionRoot .uai-c-v11-theme-choice.active{
+  border-color:color-mix(in srgb,var(--theme-a) 42%,transparent)!important;
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--theme-a) 8%,transparent),0 7px 18px color-mix(in srgb,var(--theme-a) 8%,transparent)!important;
+}
+#uaiCompanionRoot .uai-c-message-row.assistant:hover>div{
+  background:color-mix(in srgb,var(--v116-main) 60%,rgba(255,255,255,.52))!important;
+}
+#uaiCompanionRoot .uai-c-v8-scroll-bottom{
+  color:var(--v116-a)!important;border-color:color-mix(in srgb,var(--v116-a) 17%,transparent)!important;
+}
+
+/* ---------- responsive QA ---------- */
+@media (max-width:900px){
+  #uaiCompanionRoot .uai-c-v11-drawer{width:min(420px,96vw)!important}
+  #uaiCompanionV5Mask .uai-c-v116-relationship-fixed{width:min(96vw,820px)!important}
+  #uaiCompanionV5Mask .uai-c-v116-relationship-fixed .uai-c-v5-profile-hero{grid-template-columns:auto minmax(0,1fr)!important}
+  #uaiCompanionV5Mask .uai-c-v116-rel-actions{grid-column:1/-1!important;justify-content:flex-start!important}
+  #uaiCompanionV5Mask .uai-c-v116-relationship-fixed .uai-c-v5-profile-grid{grid-template-columns:1fr!important}
+}
+@media (max-width:640px){
+  #uaiCompanionRoot .uai-c-header{padding-left:12px!important;padding-right:12px!important}
+  #uaiCompanionRoot .uai-c-header-left{padding-right:56px!important}
+  #uaiCompanionRoot .uai-c-v11-header-actions{right:10px!important;gap:5px!important}
+  #uaiCompanionRoot .uai-c-v11-space-trigger{width:38px!important;padding:0!important;justify-content:center!important}
+  #uaiCompanionRoot .uai-c-v11-space-trigger>span{display:none!important}
+  #uaiCompanionRoot .uai-c-v11-space-trigger>i{background:transparent!important}
+  #uaiCompanionRoot .uai-c-message-row{width:calc(100% - 24px)!important}
+  #uaiCompanionRoot .uai-c-composer{width:calc(100% - 20px)!important;border-radius:18px!important}
+  #uaiCompanionV5Mask{padding:0!important;align-items:end!important}
+  #uaiCompanionV5Mask .uai-c-v116-relationship-fixed{width:100%!important;max-height:94dvh!important;border-radius:24px 24px 0 0!important}
+  #uaiCompanionV5Mask .uai-c-v116-relationship-fixed .uai-c-v5-profile-hero{padding:16px!important;gap:12px!important}
+  #uaiCompanionV5Mask .uai-c-v116-rel-actions{width:100%!important}
+  #uaiCompanionV5Mask .uai-c-v116-rel-actions>#uaiV8MonthlyReview{flex:1 1 auto!important}
+  #uaiCompanionV5Mask .uai-c-v116-relationship-fixed .uai-c-v5-profile-stats{padding-left:12px!important;padding-right:12px!important}
+  #uaiCompanionV5Mask .uai-c-v11-rel-overview{margin-left:12px!important;margin-right:12px!important}
+  #uaiCompanionV5Mask .uai-c-v116-relationship-fixed .uai-c-v5-profile-grid{padding:14px 12px 18px!important}
+  #uaiCompanionV4Mask .uai-c-v4-modal,
+  #uaiV8ReviewMask .uai-c-v8-review-modal{max-height:94dvh!important}
+}
+
+@media (prefers-reduced-motion:reduce){
+  #uaiCompanionRoot *,#uaiCompanionV4Mask *,#uaiCompanionV5Mask *,#uaiV8ReviewMask *,#uaiV9RoleEditorMask *,#uaiCompanionV3Mask *{
+    scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important;animation-iteration-count:1!important;
+  }
+}
