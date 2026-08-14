@@ -4,6 +4,10 @@ import fs from "node:fs";
 const boot = fs.readFileSync("public/boot-diagnostics.js", "utf8");
 const controls = fs.readFileSync("public/companion-create-controls.js", "utf8");
 const lengths = fs.readFileSync("public/companion-reply-length.js", "utf8");
+const multi = fs.readFileSync("public/companion-v3.js", "utf8");
+const guard = fs.readFileSync("public/companion-v3-guard.js", "utf8");
+const memoryTools = fs.readFileSync("public/companion-v4.js", "utf8");
+const restoreCore = fs.readFileSync("public/companion-v5.js", "utf8");
 const secondary = fs.readFileSync("public/companion-v8-secondary.js", "utf8");
 const css = fs.readFileSync("public/companion-profile-editor.css", "utf8");
 
@@ -27,10 +31,30 @@ assert.match(lengths, /chars: 500/);
 assert.match(lengths, /chars: 1000/);
 assert.match(lengths, /chars: 5000/);
 
+assert.doesNotMatch(multi, /function ensureCharacterBar/);
+assert.doesNotMatch(multi, /function showCreateCharacter/);
+assert.match(multi, /v8\.1-multichar-core/);
+
+assert.doesNotMatch(guard, /new MutationObserver/);
+assert.match(guard, /#uaiCompanionRoleAdd/);
+assert.match(guard, /#uaiCompanionRoleEdit/);
+assert.match(guard, /data-v8-edit-character/);
+
+assert.doesNotMatch(memoryTools, /new MutationObserver/);
+assert.match(memoryTools, /clean\(message\?\.content, 12000\)/);
+assert.match(memoryTools, /v8\.1-memory-tools/);
+
+assert.doesNotMatch(restoreCore, /new MutationObserver/);
+assert.doesNotMatch(restoreCore, /function showTemplates/);
+assert.match(restoreCore, /PROFILE_LIMIT = 5000/);
+assert.match(restoreCore, /customDescription: clean\(raw\.customDescription \|\| raw\.description, PROFILE_LIMIT\)/);
+
 assert.match(secondary, /ensureMessageActions/);
 assert.match(secondary, /ensureScrollBottom/);
 assert.match(secondary, /showMonthlyReview/);
-assert.match(secondary, /data-v8-edit-character/);
+assert.match(secondary, /dataset\.v8EditCharacter/);
+assert.match(secondary, /moment\.textContent = "珍藏"/);
+
 assert.match(css, /uai-c-v8-message-actions/);
 assert.match(css, /uai-c-v8-review-modal/);
 assert.match(css, /uai-c-long-reply/);
@@ -38,4 +62,4 @@ assert.match(css, /uai-c-long-reply/);
 assert.doesNotMatch(controls, /COMPANION_ROLE_CARD/);
 assert.doesNotMatch(lengths, /COMPANION_ROLE_CARD/);
 
-console.log("Companion V8 runtime contract passed.");
+console.log("Companion V8 cleanup contract passed.");
