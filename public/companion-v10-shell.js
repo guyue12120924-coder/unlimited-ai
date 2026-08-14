@@ -1,6 +1,6 @@
 // Companion V10 interaction shell: calm role menu, readable conversation surface, and compact low-frequency tools.
 (() => {
-  const REVISION = "2026-08-14-v10.0-shell-1";
+  const REVISION = "2026-08-14-v10.1-shell-1";
   const PROFILE_LIMIT = 5000;
   let scheduled = false;
 
@@ -186,6 +186,27 @@
     });
   }
 
+  function normalizeActionLabel(button) {
+    const label = button?.textContent?.trim() || "";
+    if (label === "编辑重发") {
+      button.textContent = "编辑";
+      return "编辑";
+    }
+    return label;
+  }
+
+  function dedupeToolbar(toolbar) {
+    const seen = new Set();
+    [...toolbar.querySelectorAll("button")].forEach((button) => {
+      const label = normalizeActionLabel(button);
+      if (!label || label === "记住" || seen.has(label)) {
+        button.remove();
+        return;
+      }
+      seen.add(label);
+    });
+  }
+
   function consolidateMessageActions(root) {
     root.querySelectorAll("#uaiCompanionMessages .uai-c-message-row").forEach((row) => {
       const body = row.firstElementChild;
@@ -195,35 +216,51 @@
       let toolbar = body.querySelector(":scope > .uai-c-v10-message-toolbar");
       if (!toolbar) {
         toolbar = document.createElement("span");
-        toolbar.className = "uai-c-v8-message-actions uai-c-v10-message-toolbar";
+        toolbar.className = "uai-c-v10-message-toolbar";
         body.appendChild(toolbar);
       }
 
       const sources = [
-        ...body.querySelectorAll(":scope > .uai-c-v3-actions, :scope > .uai-c-v8-message-actions:not(.uai-c-v10-message-toolbar), :scope > .uai-c-v9-message-toolbar")
-      ];
+        ...body.querySelectorAll(":scope > .uai-c-v3-actions, :scope > .uai-c-v8-message-actions, :scope > .uai-c-v9-message-toolbar")
+      ].filter((source) => source !== toolbar);
+
       sources.forEach((source) => {
         source.querySelectorAll("button").forEach((button) => {
-          const label = button.textContent?.trim();
+          const label = normalizeActionLabel(button);
           if (label === "记住") {
             button.remove();
             return;
           }
-          if (label === "编辑重发") button.textContent = "编辑";
           toolbar.appendChild(button);
         });
-        if (source !== toolbar) source.remove();
+        // Keep the legacy source node as an empty, hidden anchor. The multi-character
+        // core checks for .uai-c-v3-actions before creating retry buttons. Removing
+        // this node causes an observer loop: create -> move -> remove -> create again.
+        source.hidden = true;
+        source.dataset.v10Consumed = "1";
       });
 
+      // Ensure the core can always see a stable action anchor even when V10 loads first.
+      if (!row.querySelector(".uai-c-v3-actions")) {
+        const marker = document.createElement("span");
+        marker.className = "uai-c-v3-actions uai-c-v10-core-action-anchor";
+        marker.hidden = true;
+        marker.dataset.v10Consumed = "1";
+        toolbar.appendChild(marker);
+      }
+
+      dedupeToolbar(toolbar);
       const order = ["编辑", "复制", "重新生成", "珍藏"];
-      [...toolbar.querySelectorAll("button")]
+      [...toolbar.querySelectorAll(":scope > button")]
         .sort((a, b) => {
           const ai = order.indexOf(a.textContent?.trim());
           const bi = order.indexOf(b.textContent?.trim());
           return (ai < 0 ? 99 : ai) - (bi < 0 ? 99 : bi);
         })
         .forEach((button) => toolbar.appendChild(button));
-      if (!toolbar.querySelector("button")) toolbar.remove();
+
+      if (!toolbar.querySelector(":scope > button")) toolbar.classList.add("empty");
+      else toolbar.classList.remove("empty");
     });
   }
 
