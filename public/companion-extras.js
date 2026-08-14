@@ -1,8 +1,8 @@
+// Companion extras: message utilities, important moments, scroll helper and relationship review.
 (() => {
-  const REVISION = "2026-08-14-v8.1-secondary-2";
+  const REVISION = "2026-08-14-v9.1-extras-1";
   const KEYS = {
     activeCharacter: "uai_companion_active_character_v1",
-    memories: "uai_companion_memories_v1",
     moments: "uai_companion_moments_v1"
   };
   let scheduled = false;
@@ -10,19 +10,9 @@
   function safeParse(value, fallback) {
     try { return JSON.parse(value) ?? fallback; } catch { return fallback; }
   }
-
-  function readJson(key, fallback) {
-    return safeParse(localStorage.getItem(key), fallback);
-  }
-
-  function writeJson(key, value) {
-    localStorage.setItem(key, JSON.stringify(value));
-  }
-
-  function clean(value, max = 240) {
-    return String(value || "").replace(/\s+/g, " ").trim().slice(0, max);
-  }
-
+  function readJson(key, fallback) { return safeParse(localStorage.getItem(key), fallback); }
+  function writeJson(key, value) { localStorage.setItem(key, JSON.stringify(value)); }
+  function clean(value, max = 240) { return String(value || "").replace(/\s+/g, " ").trim().slice(0, max); }
   function escapeHtml(value) {
     return String(value ?? "")
       .replaceAll("&", "&amp;")
@@ -31,25 +21,17 @@
       .replaceAll('"', "&quot;")
       .replaceAll("'", "&#039;");
   }
-
   function makeId(prefix) {
     const token = globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(16).slice(2)}`;
     return `${prefix}-${token}`;
   }
-
-  function state() {
-    return window.UnlimitedCompanion?.getState?.() || null;
-  }
-
+  function state() { return window.UnlimitedCompanion?.getState?.() || null; }
   function currentSession() {
     const s = state();
     const sessions = Array.isArray(s?.sessions) ? s.sessions : [];
     return sessions.find((item) => item?.id === s?.currentSessionId) || sessions[0] || null;
   }
-
-  function activeCharacterId() {
-    return localStorage.getItem(KEYS.activeCharacter) || "legacy";
-  }
+  function activeCharacterId() { return localStorage.getItem(KEYS.activeCharacter) || "legacy"; }
 
   function showToast(message) {
     const root = document.getElementById("uaiCompanionRoot");
@@ -84,43 +66,19 @@
     }
   }
 
-  function rememberText(text) {
-    const raw = clean(text, 180);
-    if (!raw) return;
-    const edited = window.prompt("把这条内容记成什么？", `用户希望记住：${raw}`);
-    if (!edited?.trim()) return;
-    const memoryText = clean(edited, 180);
-    const memories = readJson(KEYS.memories, []);
-    const list = Array.isArray(memories) ? memories : [];
-    if (list.some((item) => clean(item?.text, 180).toLowerCase() === memoryText.toLowerCase())) {
-      showToast("这条已经记住了");
-      return;
-    }
-    list.push({ id: makeId("memory"), text: memoryText, source: "pinned-v8", createdAt: Date.now() });
-    writeJson(KEYS.memories, list.slice(-100));
-    window.UnlimitedCompanionMulti?.persist?.();
-    const count = document.getElementById("uaiCompanionMemoryCount");
-    if (count) count.textContent = String(Math.min(100, list.length));
-    showToast("已经记住了");
-  }
-
   function momentsMap() {
     const value = readJson(KEYS.moments, {});
     return value && typeof value === "object" && !Array.isArray(value) ? value : {};
   }
-
   function currentMoments() {
-    const map = momentsMap();
-    const list = map[activeCharacterId()];
+    const list = momentsMap()[activeCharacterId()];
     return Array.isArray(list) ? list : [];
   }
-
   function saveMoments(list) {
     const map = momentsMap();
     map[activeCharacterId()] = Array.isArray(list) ? list.slice(-120) : [];
     writeJson(KEYS.moments, map);
   }
-
   function addMoment(message, session, messageIndex) {
     if (!message || !session) return;
     const list = currentMoments();
@@ -151,7 +109,7 @@
     const rows = Array.from(root.querySelectorAll("#uaiCompanionMessages .uai-c-message-row"));
     rows.forEach((row, index) => {
       const bubble = row.querySelector(".uai-c-bubble");
-      if (!bubble || bubble.querySelector(".uai-c-typing") || row.querySelector(".uai-c-v8-message-actions")) return;
+      if (!bubble || bubble.querySelector(".uai-c-typing") || row.querySelector(":scope .uai-c-v8-message-actions")) return;
       const text = bubble.textContent?.trim();
       if (!text) return;
       const actions = document.createElement("span");
@@ -162,14 +120,6 @@
       copy.textContent = "复制";
       copy.addEventListener("click", () => copyText(text));
       actions.appendChild(copy);
-
-      if (row.classList.contains("user")) {
-        const remember = document.createElement("button");
-        remember.type = "button";
-        remember.textContent = "记住";
-        remember.addEventListener("click", () => rememberText(text));
-        actions.appendChild(remember);
-      }
 
       const message = session?.messages?.[index];
       if (message) {
@@ -205,33 +155,10 @@
     }
   }
 
-  function enhanceMemoryModal() {
-    const mask = document.getElementById("uaiCompanionModalMask");
-    if (!mask || mask.hidden || !mask.querySelector("#uaiMemoryList")) return;
-    const actions = mask.querySelector("#uaiMemorySave")?.closest(".uai-c-modal-actions");
-    if (!actions || actions.querySelector("#uaiV8AdvancedMemory")) return;
-    const button = document.createElement("button");
-    button.type = "button";
-    button.id = "uaiV8AdvancedMemory";
-    button.className = "uai-c-text-btn";
-    button.textContent = "高级整理";
-    button.addEventListener("click", () => {
-      mask.hidden = true;
-      mask.innerHTML = "";
-      window.UnlimitedCompanionMemorySearch?.showMemoryOrganizer?.();
-    });
-    actions.insertBefore(button, actions.firstChild);
-    const title = mask.querySelector(".uai-c-modal-head h3");
-    const desc = mask.querySelector(".uai-c-modal-head p");
-    if (title) title.textContent = "长期记忆";
-    if (desc) desc.textContent = "只保留真正希望角色长期记住的信息。";
-  }
-
   function monthStart() {
     const now = new Date();
     return new Date(now.getFullYear(), now.getMonth(), 1).getTime();
   }
-
   function monthlyStats() {
     const s = state();
     const start = monthStart();
@@ -265,10 +192,8 @@
     });
     return lines.join("\n");
   }
-
   function exportReadable() {
-    const text = readableMarkdown();
-    const blob = new Blob([text], { type: "text/markdown;charset=utf-8" });
+    const blob = new Blob([readableMarkdown()], { type: "text/markdown;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
     anchor.href = url;
@@ -279,10 +204,7 @@
     setTimeout(() => URL.revokeObjectURL(url), 0);
   }
 
-  function closeReview() {
-    document.getElementById("uaiV8ReviewMask")?.remove();
-  }
-
+  function closeReview() { document.getElementById("uaiV8ReviewMask")?.remove(); }
   function showMonthlyReview() {
     closeReview();
     const s = state();
@@ -310,28 +232,25 @@
     const modal = mask?.querySelector(".uai-c-v5-modal.profile");
     if (!modal) return;
     const header = modal.querySelector("header");
-    if (!header) return;
+    if (!header || header.querySelector("#uaiV8MonthlyReview")) return;
     const close = header.querySelector("[data-v5-close]");
-    if (!header.querySelector("#uaiV8MonthlyReview")) {
-      const button = document.createElement("button");
-      button.type = "button";
-      button.id = "uaiV8MonthlyReview";
-      button.className = "uai-c-v8-inline-action";
-      button.textContent = "本月回顾";
-      button.addEventListener("click", () => {
-        mask.remove();
-        showMonthlyReview();
-      });
-      if (close) header.insertBefore(button, close);
-      else header.appendChild(button);
-    }
+    const button = document.createElement("button");
+    button.type = "button";
+    button.id = "uaiV8MonthlyReview";
+    button.className = "uai-c-v8-inline-action";
+    button.textContent = "本月回顾";
+    button.addEventListener("click", () => {
+      mask.remove();
+      showMonthlyReview();
+    });
+    if (close) header.insertBefore(button, close);
+    else header.appendChild(button);
   }
 
   function enhanceCharacterManager() {
     const manager = document.getElementById("uaiCompanionV3Mask");
     if (!manager) return;
     manager.querySelectorAll(".uai-c-v3-character-card[data-character-id]").forEach((card) => {
-      card.querySelector("[data-v7-edit-character]")?.remove();
       const actions = card.querySelector(".uai-c-v3-character-actions");
       if (!actions || actions.querySelector("[data-v8-edit-character]")) return;
       const edit = document.createElement("button");
@@ -355,19 +274,16 @@
     if (!root) return;
     ensureMessageActions(root);
     ensureScrollBottom(root);
-    enhanceMemoryModal();
     enhanceRelationshipRecord();
     enhanceCharacterManager();
   }
-
   function schedule() {
     if (scheduled) return;
     scheduled = true;
     requestAnimationFrame(enhance);
   }
-
   function init() {
-    document.documentElement.dataset.companionV8SecondaryRevision = REVISION;
+    document.documentElement.dataset.companionExtrasRevision = REVISION;
     document.addEventListener("keydown", (event) => {
       if (event.key === "Escape" && document.getElementById("uaiV8ReviewMask")) closeReview();
     });
@@ -380,12 +296,8 @@
     schedule();
   }
 
-  window.UnlimitedCompanionV8Secondary = {
-    revision: REVISION,
-    refresh: schedule,
-    showMonthlyReview,
-    exportReadable
-  };
+  window.UnlimitedCompanionExtras = { revision: REVISION, refresh: schedule, showMonthlyReview, exportReadable };
+  window.UnlimitedCompanionV8Secondary = window.UnlimitedCompanionExtras;
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init, { once: true });
   else init();

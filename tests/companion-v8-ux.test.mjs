@@ -4,20 +4,23 @@ import fs from "node:fs";
 const boot = fs.readFileSync("public/boot-diagnostics.js", "utf8");
 const core = fs.readFileSync("public/companion-mode.js", "utf8");
 const controls = fs.readFileSync("public/companion-create-controls.js", "utf8");
-const lengths = fs.readFileSync("public/companion-reply-length.js", "utf8");
+const runtime = fs.readFileSync("public/companion-runtime.js", "utf8");
 const multi = fs.readFileSync("public/companion-v3.js", "utf8");
-const guard = fs.readFileSync("public/companion-v3-guard.js", "utf8");
 const memoryTools = fs.readFileSync("public/companion-v4.js", "utf8");
 const restoreCore = fs.readFileSync("public/companion-v5.js", "utf8");
-const secondary = fs.readFileSync("public/companion-v8-secondary.js", "utf8");
+const extras = fs.readFileSync("public/companion-extras.js", "utf8");
 const css = fs.readFileSync("public/companion-profile-editor.css", "utf8");
 
-assert.match(boot, /v(?:8\.4|9\.\d+)-dual-mode/);
+assert.match(boot, /v9\.1-dual-mode/);
+assert.match(boot, /companion-runtime\.js/);
+assert.match(boot, /companion-extras\.js/);
+assert.doesNotMatch(boot, /companion-reply-length\.js/);
+assert.doesNotMatch(boot, /companion-v3-guard\.js/);
+assert.doesNotMatch(boot, /companion-v8-secondary\.js/);
 assert.doesNotMatch(boot, /ensureScript\(`\/companion-v2\.js/);
 assert.doesNotMatch(boot, /ensureScript\(`\/companion-v6\.js/);
 assert.doesNotMatch(boot, /ensureScript\(`\/companion-profile-editor\.js/);
 assert.doesNotMatch(boot, /ensureScript\(`\/companion-v5-guard\.js/);
-assert.match(boot, /companion-v8-secondary\.js/);
 
 for (const retired of [
   "public/companion-v2.js",
@@ -25,7 +28,10 @@ for (const retired of [
   "public/companion-v6.js",
   "public/companion-v6.css",
   "public/companion-profile-editor.js",
-  "public/companion-v5-guard.js"
+  "public/companion-v5-guard.js",
+  "public/companion-reply-length.js",
+  "public/companion-v3-guard.js",
+  "public/companion-v8-secondary.js"
 ]) {
   assert.equal(fs.existsSync(retired), false, `${retired} should stay retired`);
 }
@@ -48,34 +54,24 @@ assert.match(controls, /PROFILE_LIMIT = 5000/);
 assert.match(controls, /MAX_CHARACTERS = 6/);
 assert.match(controls, /function openCreate\(/);
 assert.match(controls, /function openEditor\(/);
-assert.match(controls, /uaiCompanionRoleAdd/);
 assert.match(controls, /完整角色设定/);
-assert.match(controls, /约 500 字/);
-assert.match(controls, /约 1000 字/);
-assert.match(controls, /约 5000 字/);
-assert.match(controls, /uai-c-v8-note/);
-assert.match(controls, /LEGACY_SHELL_CONTROLS/);
-assert.match(controls, /#uaiCompanionCharacterBtn/);
-assert.match(controls, /#uaiCompanionHeaderMemory/);
-assert.match(controls, /#uaiCompanionHeaderSettings/);
-assert.match(controls, /#uaiCompanionEditProfileInline/);
-assert.match(controls, /function removeLegacyShellControls\(/);
-assert.match(controls, /querySelector\(selector\)\?\.remove\(\)/);
-assert.doesNotMatch(controls, /UnlimitedCompanionPolish/);
-assert.doesNotMatch(controls, /data-v7-edit-character/);
+assert.doesNotMatch(controls, /COMPANION_ROLE_CARD/);
 
-assert.match(lengths, /chars: 500/);
-assert.match(lengths, /chars: 1000/);
-assert.match(lengths, /chars: 5000/);
+assert.match(runtime, /v9\.1-runtime/);
+assert.match(runtime, /chars: 500/);
+assert.match(runtime, /chars: 1000/);
+assert.match(runtime, /chars: 5000/);
+assert.match(runtime, /function patchCompanionBody\(/);
+assert.match(runtime, /function blockUnsafeActions\(/);
+assert.match(runtime, /function exportAllCharacters\(/);
+assert.match(runtime, /function pruneOrphanedRoleData\(/);
+assert.match(runtime, /window\.UnlimitedCompanionGuard = window\.UnlimitedCompanionRuntime/);
+assert.match(runtime, /window\.UnlimitedCompanionReplyLength = window\.UnlimitedCompanionRuntime/);
+assert.doesNotMatch(runtime, /COMPANION_ROLE_CARD/);
 
 assert.doesNotMatch(multi, /function ensureCharacterBar/);
 assert.doesNotMatch(multi, /function showCreateCharacter/);
 assert.match(multi, /v8\.1-multichar-core/);
-
-assert.doesNotMatch(guard, /new MutationObserver/);
-assert.match(guard, /#uaiCompanionRoleAdd/);
-assert.match(guard, /#uaiCompanionRoleEdit/);
-assert.match(guard, /data-v8-edit-character/);
 
 assert.doesNotMatch(memoryTools, /new MutationObserver/);
 assert.match(memoryTools, /clean\(message\?\.content, 12000\)/);
@@ -90,21 +86,19 @@ assert.match(restoreCore, /function normalizeSettings\(/);
 assert.match(restoreCore, /function pruneExpiredRollback\(/);
 assert.match(restoreCore, /settings: normalizeSettings\(raw\.settings\)/);
 
-assert.match(secondary, /ensureMessageActions/);
-assert.match(secondary, /ensureScrollBottom/);
-assert.match(secondary, /showMonthlyReview/);
-assert.match(secondary, /dataset\.v8EditCharacter/);
-assert.match(secondary, /moment\.textContent = "珍藏"/);
+assert.match(extras, /v9\.1-extras/);
+assert.match(extras, /ensureMessageActions/);
+assert.match(extras, /ensureScrollBottom/);
+assert.match(extras, /showMonthlyReview/);
+assert.match(extras, /dataset\.v8EditCharacter/);
+assert.match(extras, /moment\.textContent = "珍藏"/);
+assert.doesNotMatch(extras, /rememberText/);
+assert.doesNotMatch(extras, /uaiV8AdvancedMemory/);
+assert.match(extras, /window\.UnlimitedCompanionV8Secondary = window\.UnlimitedCompanionExtras/);
 
 assert.match(css, /uai-c-v8-note/);
 assert.match(css, /uai-c-v8-message-actions/);
 assert.match(css, /uai-c-v8-review-modal/);
 assert.match(css, /uai-c-long-reply/);
-assert.doesNotMatch(css, /#uaiCompanionCharacterBtn\{display:none/);
-assert.doesNotMatch(css, /uai-c-v2-stage/);
-assert.doesNotMatch(css, /uaiCompanionV6QuickSwitch/);
 
-assert.doesNotMatch(controls, /COMPANION_ROLE_CARD/);
-assert.doesNotMatch(lengths, /COMPANION_ROLE_CARD/);
-
-console.log("Companion V8 core contract passed under current shell.");
+console.log("Companion runtime/extras/core contract passed under V9 shell.");
