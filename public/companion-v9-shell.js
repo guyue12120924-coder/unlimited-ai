@@ -1,6 +1,6 @@
 // Companion V9 interaction shell: removes duplicate chrome and turns the profile card into the role hub.
 (() => {
-  const REVISION = "2026-08-14-v9.0-shell-2";
+  const REVISION = "2026-08-14-v9.0-shell-3";
   const PROFILE_LIMIT = 5000;
   let scheduled = false;
 
@@ -131,6 +131,63 @@
     if (add) add.textContent = "＋ 新增角色";
   }
 
+  function cleanMemoryModal() {
+    const mask = document.getElementById("uaiCompanionModalMask");
+    if (!mask || mask.hidden || !mask.querySelector("#uaiMemoryList")) return;
+    const modal = mask.querySelector(".uai-c-modal");
+    if (!modal) return;
+
+    const title = modal.querySelector(".uai-c-modal-head h3");
+    const desc = modal.querySelector(".uai-c-modal-head p");
+    if (title) title.textContent = "长期记忆";
+    if (desc) desc.textContent = "只保留真正希望当前角色长期记住的信息。";
+
+    modal.querySelectorAll("p").forEach((paragraph) => {
+      if (paragraph.textContent?.includes("自动记忆当前为")) paragraph.remove();
+    });
+
+    const actions = modal.querySelector("#uaiMemorySave")?.closest(".uai-c-modal-actions");
+    if (!actions) return;
+    actions.querySelector("#uaiV8AdvancedMemory")?.classList.add("uai-c-v9-legacy-advanced");
+
+    let details = modal.querySelector("#uaiV9MemoryAdvanced");
+    if (!details) {
+      details = document.createElement("details");
+      details.id = "uaiV9MemoryAdvanced";
+      details.className = "uai-c-v9-memory-advanced";
+      details.innerHTML = `<summary><span>高级整理</span><b>›</b></summary><div class="uai-c-v9-memory-advanced-body"><button type="button" id="uaiV9MemoryOrganizer">整理、归档与去重</button></div>`;
+      actions.insertAdjacentElement("beforebegin", details);
+      details.querySelector("#uaiV9MemoryOrganizer")?.addEventListener("click", () => {
+        mask.hidden = true;
+        mask.innerHTML = "";
+        window.UnlimitedCompanionMemorySearch?.showMemoryOrganizer?.();
+      });
+    }
+
+    const clear = modal.querySelector("#uaiMemoryClear");
+    const body = details.querySelector(".uai-c-v9-memory-advanced-body");
+    if (clear && body && clear.parentElement !== body) {
+      clear.textContent = "清空全部记忆";
+      body.appendChild(clear);
+    }
+  }
+
+  function cleanSettingsModal() {
+    const mask = document.getElementById("uaiCompanionModalMask");
+    if (!mask || mask.hidden) return;
+    const modal = mask.querySelector(".uai-c-modal");
+    if (!modal?.querySelector("#uaiCompanionModel") || !modal.querySelector("#uaiCompanionReplyLength")) return;
+    modal.classList.add("uai-c-v9-settings");
+    const title = modal.querySelector(".uai-c-modal-head h3");
+    const desc = modal.querySelector(".uai-c-modal-head p");
+    if (title) title.textContent = "设置";
+    if (desc) desc.textContent = "模型、回复长度和长期记忆。备份与危险操作放在下方。";
+    const modelLabel = modal.querySelector('label[for="uaiCompanionModel"]');
+    const lengthLabel = modal.querySelector('label[for="uaiCompanionReplyLength"]');
+    if (modelLabel) modelLabel.textContent = "模型";
+    if (lengthLabel) lengthLabel.textContent = "回复长度";
+  }
+
   function enhance() {
     scheduled = false;
     if (document.body.dataset.uaiMode !== "companion") return;
@@ -144,6 +201,8 @@
     simplifyMobileHeader(root);
     cleanOnboarding();
     cleanCharacterManager();
+    cleanMemoryModal();
+    cleanSettingsModal();
   }
 
   function schedule() {
