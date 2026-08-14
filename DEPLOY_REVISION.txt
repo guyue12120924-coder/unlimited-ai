@@ -1,7 +1,8 @@
 Unlimited AI deployment trigger
 Date: 2026-08-14
-Frontend revision: 2026-08-14-v9.5-dual-mode-1
-Reason: deploy the V9.5 companion UI/module cleanup from latest main.
+Frontend revision: 2026-08-14-v9.6-dual-mode-1
+Worker revision: 2026-08-14-v9.6-worker-1
+Reason: force a fresh Cloudflare deployment after aligning the frontend entrypoint, mode router, Worker diagnostics, and V9.6 runtime.
 Companion prompt source: src/companion.js -> COMPANION_ROLE_CARD
 Novel prompt source: src/worker.js -> NOVEL_SYSTEM_PROMPT
 Current architecture: docs/COMPANION_V9_ARCHITECTURE.md
