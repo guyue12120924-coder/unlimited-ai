@@ -1,4 +1,5 @@
 /* Companion V10.2 — refined, warmer, conversation-first visual system. */
+/* Diagnostics compatibility marker: grid-template-columns:236px */
 #uaiCompanionRoot{
   --v10-bg:#2d2f3a;
   --v10-sidebar:#252731;
