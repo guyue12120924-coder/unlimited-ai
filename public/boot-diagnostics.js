@@ -2,7 +2,7 @@
 // Startup guard + dual-mode bootstrap. The existing novel workspace still boots
 // normally behind the mode lobby so old data and feature adapters remain intact.
 (() => {
-  const REVISION = "2026-08-14-v9.3-dual-mode-1";
+  const REVISION = "2026-08-14-v9.4-dual-mode-1";
   const errors = [];
 
   document.documentElement.dataset.frontendRevision = REVISION;
@@ -68,9 +68,10 @@
     ensureStyle(`/companion-v9.css?v=${REVISION}`, "uaiCompanionV9Css");
 
     ensureScript(`/companion-characters-core.js?v=${REVISION}`, "uaiCompanionCharactersCoreScript");
+    ensureScript(`/companion-character-editor.js?v=${REVISION}`, "uaiCompanionCharacterEditorScript");
     ensureScript(`/companion-memory.js?v=${REVISION}`, "uaiCompanionMemoryScript");
     ensureScript(`/companion-records.js?v=${REVISION}`, "uaiCompanionRecordsScript");
-    ensureScript(`/companion-characters-ui.js?v=${REVISION}`, "uaiCompanionCharactersUiScript");
+    ensureScript(`/companion-settings.js?v=${REVISION}`, "uaiCompanionSettingsScript");
     ensureScript(`/companion-runtime.js?v=${REVISION}`, "uaiCompanionRuntimeScript");
     ensureScript(`/companion-extras.js?v=${REVISION}`, "uaiCompanionExtrasScript");
     ensureScript(`/companion-v9-shell.js?v=${REVISION}`, "uaiCompanionV9ShellScript");
@@ -105,6 +106,7 @@
       window.__UNLIMITED_BOOT__.companionMemorySearchReady = Boolean(window.UnlimitedCompanionMemorySearch);
       window.__UNLIMITED_BOOT__.companionProfileRestoreReady = Boolean(window.UnlimitedCompanionProfileRestore);
       window.__UNLIMITED_BOOT__.companionCharacterControlsReady = Boolean(window.UnlimitedCompanionCharacterControls);
+      window.__UNLIMITED_BOOT__.companionSettingsReady = Boolean(window.UnlimitedCompanionSettings);
       window.__UNLIMITED_BOOT__.companionExtrasReady = Boolean(window.UnlimitedCompanionExtras);
       window.__UNLIMITED_BOOT__.companionV9ShellReady = Boolean(window.UnlimitedCompanionV9Shell);
       return;
