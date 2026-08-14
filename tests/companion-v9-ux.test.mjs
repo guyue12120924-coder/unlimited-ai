@@ -14,6 +14,10 @@ assert.match(boot, /companion-characters-core\.js/);
 assert.match(boot, /companion-characters-ui\.js/);
 assert.match(boot, /companion-memory\.js/);
 assert.match(boot, /companion-records\.js/);
+assert.doesNotMatch(boot, /ensureScript\(`\/companion-v3\.js/);
+assert.doesNotMatch(boot, /ensureScript\(`\/companion-v4\.js/);
+assert.doesNotMatch(boot, /ensureScript\(`\/companion-v5\.js/);
+assert.doesNotMatch(boot, /ensureScript\(`\/companion-create-controls\.js/);
 assert.match(boot, /companionV9ShellReady/);
 assert.match(boot, /companionRuntimeReady/);
 
@@ -36,15 +40,15 @@ assert.match(shell, /label === "记住"/);
 assert.match(shell, /button\.textContent = "编辑"/);
 assert.doesNotMatch(shell, /COMPANION_ROLE_CARD/);
 
-assert.match(css, /grid-template-columns:252px minmax\(0,1fr\)/);
+assert.match(css, /grid-template-columns:264px minmax\(0,1fr\)/);
 assert.match(css, /grid-template-rows:minmax\(0,1fr\) auto/);
 assert.match(css, /\.uai-c-header\{display:none!important\}/);
-assert.match(css, /width:min\(100%,1040px\)/);
-assert.match(css, /font-size:16px!important/);
+assert.match(css, /width:min\(100%,1120px\)/);
+assert.match(css, /font-size:16\.5px!important/);
 assert.match(css, /\.uai-c-v9-message-author/);
 assert.match(css, /uai-c-v9-role-manager/);
 assert.match(css, /grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
-assert.match(css, /@media \(max-width:860px\)/);
-assert.match(css, /@media \(max-width:460px\)/);
+assert.match(css, /@media \(max-width:900px\)/);
+assert.match(css, /@media \(max-width:520px\)/);
 
 console.log("Companion V9.2 UX/runtime contract passed.");
