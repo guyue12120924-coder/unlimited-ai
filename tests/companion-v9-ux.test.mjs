@@ -5,7 +5,7 @@ const boot = fs.readFileSync("public/boot-diagnostics.js", "utf8");
 const shell = fs.readFileSync("public/companion-v9-shell.js", "utf8");
 const css = fs.readFileSync("public/companion-v9.css", "utf8");
 
-assert.match(boot, /v9\.2-dual-mode/);
+assert.match(boot, /v9\.3-dual-mode/);
 assert.match(boot, /companion-v9\.css/);
 assert.match(boot, /companion-v9-shell\.js/);
 assert.match(boot, /companion-runtime\.js/);
@@ -54,4 +54,4 @@ assert.match(css, /grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
 assert.match(css, /@media \(max-width:900px\)/);
 assert.match(css, /@media \(max-width:520px\)/);
 
-console.log("Companion V9.2 UX/runtime contract passed.");
+console.log("Companion V9.3 UX/runtime contract passed.");
