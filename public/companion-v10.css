@@ -1,21 +1,21 @@
-/* Companion V10.1 — warmer, brighter, conversation-first visual system. */
+/* Companion V10.2 — refined, warmer, conversation-first visual system. */
 #uaiCompanionRoot{
-  --v10-bg:#282a34;
-  --v10-sidebar:#20222b;
-  --v10-header:rgba(39,41,51,.96);
-  --v10-surface:#31333e;
-  --v10-surface-2:#393b47;
-  --v10-surface-3:#41434f;
-  --v10-line:rgba(255,255,255,.095);
-  --v10-line-strong:rgba(255,255,255,.15);
-  --v10-text:#fbf8fc;
-  --v10-muted:rgba(249,244,250,.68);
-  --v10-soft:rgba(249,244,250,.43);
-  --v10-accent:#d582aa;
-  --v10-accent-strong:#e091b7;
-  --v10-accent-soft:rgba(213,130,170,.18);
-  --v10-accent-faint:rgba(213,130,170,.10);
-  --v10-danger:#ee929e;
+  --v10-bg:#2d2f3a;
+  --v10-sidebar:#252731;
+  --v10-header:rgba(45,47,58,.96);
+  --v10-surface:#373945;
+  --v10-surface-2:#40424f;
+  --v10-surface-3:#494b58;
+  --v10-line:rgba(255,255,255,.10);
+  --v10-line-strong:rgba(255,255,255,.17);
+  --v10-text:#fcf9fc;
+  --v10-muted:rgba(250,246,251,.70);
+  --v10-soft:rgba(250,246,251,.46);
+  --v10-accent:#dc8ab1;
+  --v10-accent-strong:#ed9bc2;
+  --v10-accent-soft:rgba(220,138,177,.20);
+  --v10-accent-faint:rgba(220,138,177,.11);
+  --v10-danger:#ef96a2;
   width:100%!important;
   max-width:100%!important;
   overflow:hidden!important;
@@ -25,7 +25,7 @@
 #uaiCompanionRoot *,#uaiCompanionRoot *::before,#uaiCompanionRoot *::after{box-sizing:border-box!important}
 
 #uaiCompanionRoot .uai-c-shell{
-  grid-template-columns:236px minmax(0,1fr)!important;
+  grid-template-columns:248px minmax(0,1fr)!important;
   width:100%!important;
   max-width:100%!important;
   min-width:0!important;
@@ -35,11 +35,13 @@
 
 #uaiCompanionRoot .uai-c-sidebar{
   min-width:0!important;
-  padding:16px 12px 14px!important;
+  padding:15px 12px 14px!important;
   gap:10px!important;
-  border-right:1px solid var(--v10-line)!important;
-  background:linear-gradient(180deg,#24262f 0%,#20212a 100%)!important;
-  box-shadow:none!important;
+  border-right:1px solid rgba(255,255,255,.08)!important;
+  background:
+    radial-gradient(circle at 20% 0%,rgba(220,138,177,.06),transparent 28%),
+    linear-gradient(180deg,#292b36 0%,#252731 46%,#242630 100%)!important;
+  box-shadow:8px 0 28px rgba(16,17,23,.06)!important;
   backdrop-filter:none!important;
 }
 
@@ -48,54 +50,57 @@
   min-width:0!important;
   max-width:100%!important;
   overflow:hidden!important;
-  grid-template-rows:60px minmax(0,1fr) auto!important;
+  grid-template-rows:62px minmax(0,1fr) auto!important;
   background:
-    radial-gradient(circle at 54% -10%,rgba(213,130,170,.11),transparent 35%),
-    linear-gradient(180deg,#292b35 0%,var(--v10-bg) 38%,#272933 100%)!important;
+    radial-gradient(ellipse at 52% -8%,rgba(220,138,177,.13),transparent 34%),
+    radial-gradient(ellipse at 88% 92%,rgba(125,139,190,.065),transparent 34%),
+    linear-gradient(180deg,#31333f 0%,#2f313c 36%,#2d2f3a 100%)!important;
 }
 
 /* role hub */
 #uaiCompanionRoot .uai-c-profile-card{
   position:relative!important;
   display:grid!important;
-  grid-template-columns:46px minmax(0,1fr) auto!important;
+  grid-template-columns:48px minmax(0,1fr) auto!important;
   align-items:center!important;
   gap:10px!important;
-  min-height:64px!important;
-  padding:8px 7px!important;
-  border:1px solid rgba(255,255,255,.045)!important;
-  border-radius:14px!important;
-  background:rgba(255,255,255,.025)!important;
+  min-height:68px!important;
+  padding:9px 8px!important;
+  border:1px solid rgba(255,255,255,.075)!important;
+  border-radius:16px!important;
+  background:linear-gradient(145deg,rgba(255,255,255,.055),rgba(255,255,255,.025))!important;
+  box-shadow:0 10px 28px rgba(14,15,20,.08),inset 0 1px 0 rgba(255,255,255,.025)!important;
   cursor:pointer!important;
-  transition:background .15s ease,border-color .15s ease!important;
+  transition:background .15s ease,border-color .15s ease,transform .15s ease!important;
 }
 #uaiCompanionRoot .uai-c-profile-card:hover{
-  border-color:var(--v10-line-strong)!important;
-  background:rgba(255,255,255,.055)!important;
+  border-color:rgba(255,255,255,.15)!important;
+  background:linear-gradient(145deg,rgba(255,255,255,.075),rgba(255,255,255,.038))!important;
+  transform:translateY(-1px)!important;
 }
 #uaiCompanionRoot .uai-c-profile-card .uai-c-avatar{
-  width:46px!important;
-  height:46px!important;
-  border-radius:15px!important;
+  width:48px!important;
+  height:48px!important;
+  border-radius:16px!important;
   font-size:20px!important;
-  background:linear-gradient(145deg,rgba(211,126,171,.78),rgba(128,105,170,.68))!important;
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,.14),0 6px 18px rgba(83,50,74,.18)!important;
+  background:linear-gradient(145deg,rgba(225,139,184,.86),rgba(137,112,180,.76))!important;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.18),0 7px 20px rgba(83,50,74,.20)!important;
 }
 #uaiCompanionRoot .uai-c-profile-copy{min-width:0!important}
 #uaiCompanionRoot .uai-c-profile-copy strong{
   display:block!important;
-  max-width:118px!important;
+  max-width:124px!important;
   overflow:hidden!important;
   text-overflow:ellipsis!important;
   white-space:nowrap!important;
-  font-size:15px!important;
+  font-size:15.5px!important;
   line-height:1.25!important;
   font-weight:720!important;
   color:var(--v10-text)!important;
 }
 #uaiCompanionRoot .uai-c-profile-copy span{
   display:block!important;
-  max-width:126px!important;
+  max-width:132px!important;
   margin-top:4px!important;
   overflow:hidden!important;
   text-overflow:ellipsis!important;
@@ -106,115 +111,119 @@
 #uaiCompanionRoot .uai-c-v9-profile-actions{display:none!important}
 .uai-c-v10-role-actions{position:relative;z-index:10;display:flex;align-items:center}
 .uai-c-v10-role-more{
-  appearance:none;width:30px;height:30px;display:grid;place-items:center;
-  border:0;border-radius:9px;background:transparent;color:rgba(255,255,255,.58);
+  appearance:none;width:31px;height:31px;display:grid;place-items:center;
+  border:0;border-radius:10px;background:transparent;color:rgba(255,255,255,.62);
   font:700 12px/1 system-ui,sans-serif;letter-spacing:1px;cursor:pointer
 }
-.uai-c-v10-role-more:hover,.uai-c-v10-role-more[aria-expanded="true"]{background:rgba(255,255,255,.09);color:#fff}
+.uai-c-v10-role-more:hover,.uai-c-v10-role-more[aria-expanded="true"]{background:rgba(255,255,255,.10);color:#fff}
 .uai-c-v10-role-menu{
-  position:absolute;top:36px;right:0;width:136px;padding:6px;
-  border:1px solid var(--v10-line-strong);border-radius:11px;background:#383a46;
-  box-shadow:0 16px 45px rgba(15,15,20,.30)
+  position:absolute;top:38px;right:0;width:140px;padding:6px;
+  border:1px solid var(--v10-line-strong);border-radius:12px;background:#41434f;
+  box-shadow:0 18px 48px rgba(12,13,18,.28)
 }
 .uai-c-v10-role-menu[hidden]{display:none!important}
 .uai-c-v10-role-menu button{
-  appearance:none;width:100%;min-height:34px;padding:0 10px;border:0;border-radius:7px;
-  background:transparent;color:rgba(255,255,255,.84);font:500 12px/1 system-ui,sans-serif;
+  appearance:none;width:100%;min-height:35px;padding:0 10px;border:0;border-radius:8px;
+  background:transparent;color:rgba(255,255,255,.86);font:500 12px/1 system-ui,sans-serif;
   text-align:left;cursor:pointer
 }
-.uai-c-v10-role-menu button:hover{background:rgba(255,255,255,.09);color:#fff}
+.uai-c-v10-role-menu button:hover{background:rgba(255,255,255,.10);color:#fff}
 
 /* sidebar actions and sessions */
 #uaiCompanionRoot .uai-c-new-chat{
-  min-height:42px!important;
-  padding:0 12px!important;
-  border:1px solid var(--v10-line)!important;
-  border-radius:11px!important;
-  background:rgba(255,255,255,.065)!important;
+  min-height:44px!important;
+  padding:0 13px!important;
+  border:1px solid rgba(220,138,177,.17)!important;
+  border-radius:12px!important;
+  background:linear-gradient(135deg,rgba(220,138,177,.12),rgba(255,255,255,.045))!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.025)!important;
   color:#fff!important;
   font-size:13px!important;
-  font-weight:650!important;
+  font-weight:660!important;
 }
-#uaiCompanionRoot .uai-c-new-chat:hover{background:rgba(255,255,255,.10)!important}
+#uaiCompanionRoot .uai-c-new-chat:hover{border-color:rgba(220,138,177,.27)!important;background:linear-gradient(135deg,rgba(220,138,177,.17),rgba(255,255,255,.065))!important}
 #uaiCompanionRoot .uai-c-v10-search{
   display:grid!important;
   grid-template-columns:22px 1fr auto!important;
   align-items:center!important;
-  min-height:38px!important;
+  min-height:39px!important;
   padding:0 10px!important;
   border:0!important;
-  border-radius:9px!important;
+  border-radius:10px!important;
   background:transparent!important;
   color:var(--v10-muted)!important;
   cursor:pointer!important;
 }
-#uaiCompanionRoot .uai-c-v10-search:hover{background:rgba(255,255,255,.055)!important;color:#fff!important}
+#uaiCompanionRoot .uai-c-v10-search:hover{background:rgba(255,255,255,.06)!important;color:#fff!important}
 #uaiCompanionRoot .uai-c-v10-search>span{font-size:15px!important;color:var(--v10-soft)!important}
-#uaiCompanionRoot .uai-c-v10-search>strong{font-size:12.5px!important;font-weight:520!important;text-align:left!important}
-#uaiCompanionRoot .uai-c-v10-search>kbd{border:0!important;background:transparent!important;color:rgba(255,255,255,.34)!important;font:500 9.5px/1 system-ui,sans-serif!important}
+#uaiCompanionRoot .uai-c-v10-search>strong{font-size:12.5px!important;font-weight:540!important;text-align:left!important}
+#uaiCompanionRoot .uai-c-v10-search>kbd{border:0!important;background:transparent!important;color:rgba(255,255,255,.36)!important;font:500 9.5px/1 system-ui,sans-serif!important}
 #uaiCompanionRoot .uai-c-side-label{
-  padding:5px 8px 1px!important;
-  color:rgba(255,255,255,.40)!important;
+  padding:6px 8px 2px!important;
+  color:rgba(255,255,255,.43)!important;
   font-size:10.5px!important;
-  letter-spacing:0!important;
+  letter-spacing:.01em!important;
   text-transform:none!important;
 }
-#uaiCompanionRoot .uai-c-session-list{min-width:0!important;gap:2px!important;padding-right:1px!important}
+#uaiCompanionRoot .uai-c-session-list{min-width:0!important;gap:3px!important;padding-right:1px!important}
 #uaiCompanionRoot .uai-c-session{
   min-width:0!important;
-  min-height:46px!important;
-  padding:7px 9px!important;
-  border-radius:9px!important;
-  color:rgba(255,255,255,.72)!important;
-  transition:background .12s ease,color .12s ease!important;
+  min-height:48px!important;
+  padding:8px 9px!important;
+  border:1px solid transparent!important;
+  border-radius:10px!important;
+  color:rgba(255,255,255,.74)!important;
+  transition:background .12s ease,color .12s ease,border-color .12s ease!important;
 }
-#uaiCompanionRoot .uai-c-session:hover{background:rgba(255,255,255,.065)!important;color:#fff!important}
+#uaiCompanionRoot .uai-c-session:hover{border-color:rgba(255,255,255,.055)!important;background:rgba(255,255,255,.055)!important;color:#fff!important}
 #uaiCompanionRoot .uai-c-session.active{
-  background:linear-gradient(90deg,rgba(213,130,170,.22),rgba(213,130,170,.11))!important;
-  box-shadow:inset 2px 0 0 rgba(230,145,183,.92)!important;
+  border-color:rgba(220,138,177,.11)!important;
+  background:linear-gradient(90deg,rgba(220,138,177,.24),rgba(220,138,177,.10))!important;
+  box-shadow:inset 2px 0 0 rgba(237,155,194,.92),0 6px 18px rgba(32,19,29,.06)!important;
   color:#fff!important;
 }
 #uaiCompanionRoot .uai-c-session-copy{min-width:0!important}
-#uaiCompanionRoot .uai-c-session-title{font-size:13px!important;line-height:1.32!important}
-#uaiCompanionRoot .uai-c-session-time{margin-top:3px!important;font-size:10px!important;color:rgba(255,255,255,.40)!important}
+#uaiCompanionRoot .uai-c-session-title{font-size:13px!important;line-height:1.35!important;font-weight:540!important}
+#uaiCompanionRoot .uai-c-session-time{margin-top:3px!important;font-size:10px!important;color:rgba(255,255,255,.42)!important}
 #uaiCompanionRoot .uai-c-session-delete{font-size:14px!important;opacity:0!important}
 #uaiCompanionRoot .uai-c-session:hover .uai-c-session-delete{opacity:.72!important}
 #uaiCompanionRoot .uai-c-side-actions{
   display:flex!important;
   flex-direction:column!important;
-  gap:1px!important;
-  padding-top:9px!important;
-  border-top:1px solid var(--v10-line)!important;
+  gap:2px!important;
+  padding-top:10px!important;
+  border-top:1px solid rgba(255,255,255,.075)!important;
 }
 #uaiCompanionRoot .uai-c-sidebar-action{
-  min-height:38px!important;
+  min-height:39px!important;
   padding:0 9px!important;
   border:0!important;
-  border-radius:8px!important;
+  border-radius:9px!important;
   background:transparent!important;
-  color:rgba(255,255,255,.67)!important;
+  color:rgba(255,255,255,.70)!important;
   font-size:12px!important;
 }
-#uaiCompanionRoot .uai-c-sidebar-action:hover{background:rgba(255,255,255,.06)!important;color:#fff!important}
-#uaiCompanionRoot #uaiCompanionExitBtn{margin-top:2px!important;color:rgba(255,255,255,.48)!important}
+#uaiCompanionRoot .uai-c-sidebar-action:hover{background:rgba(255,255,255,.065)!important;color:#fff!important}
+#uaiCompanionRoot #uaiCompanionExitBtn{margin-top:2px!important;color:rgba(255,255,255,.50)!important}
 
 /* calm conversation header */
 #uaiCompanionRoot .uai-c-header{
   display:flex!important;
   align-items:center!important;
   min-width:0!important;
-  min-height:60px!important;
+  min-height:62px!important;
   padding:0 clamp(24px,4vw,56px)!important;
-  border-bottom:1px solid var(--v10-line)!important;
-  background:var(--v10-header)!important;
-  backdrop-filter:blur(14px)!important;
+  border-bottom:1px solid rgba(255,255,255,.075)!important;
+  background:linear-gradient(180deg,rgba(48,50,62,.97),rgba(45,47,58,.94))!important;
+  box-shadow:0 8px 28px rgba(13,14,18,.05)!important;
+  backdrop-filter:blur(16px)!important;
 }
-#uaiCompanionRoot .uai-c-header-left{width:min(100%,960px)!important;min-width:0!important;margin:0 auto!important;gap:10px!important}
+#uaiCompanionRoot .uai-c-header-left{width:min(100%,900px)!important;min-width:0!important;margin:0 auto!important;gap:10px!important}
 #uaiCompanionRoot #uaiCompanionHeaderAvatar{display:none!important}
 #uaiCompanionRoot .uai-c-title{gap:3px!important}
-#uaiCompanionRoot .uai-c-title strong{font-size:14.5px!important;font-weight:700!important;color:rgba(255,255,255,.94)!important}
-#uaiCompanionRoot .uai-c-title>span{font-size:10.5px!important;color:rgba(255,255,255,.48)!important}
-#uaiCompanionRoot .uai-c-online-dot{width:6px!important;height:6px!important;background:#83d6aa!important;box-shadow:0 0 0 3px rgba(131,214,170,.09)!important}
+#uaiCompanionRoot .uai-c-title strong{font-size:14.5px!important;font-weight:710!important;color:rgba(255,255,255,.95)!important}
+#uaiCompanionRoot .uai-c-title>span{font-size:10.5px!important;color:rgba(255,255,255,.50)!important}
+#uaiCompanionRoot .uai-c-online-dot{width:6px!important;height:6px!important;background:#86d8ae!important;box-shadow:0 0 0 3px rgba(134,216,174,.10)!important}
 #uaiCompanionRoot .uai-c-mobile-menu{display:none!important}
 
 /* conversation */
@@ -223,87 +232,90 @@
   max-width:100%!important;
   min-height:0!important;
   overflow-x:hidden!important;
-  padding:30px clamp(28px,4vw,58px) 72px!important;
-  background:linear-gradient(180deg,rgba(255,255,255,.012),transparent 28%)!important;
-  scroll-padding-bottom:150px!important;
+  padding:34px clamp(26px,4vw,56px) 84px!important;
+  background:
+    radial-gradient(ellipse at 50% 12%,rgba(255,255,255,.026),transparent 38%),
+    linear-gradient(90deg,transparent 0%,rgba(255,255,255,.006) 28%,rgba(255,255,255,.012) 50%,rgba(255,255,255,.006) 72%,transparent 100%)!important;
+  scroll-padding-bottom:158px!important;
 }
 #uaiCompanionRoot .uai-c-message-row{
-  width:min(100%,960px)!important;
+  width:min(100%,900px)!important;
   max-width:100%!important;
   min-width:0!important;
-  margin:26px auto!important;
+  margin:30px auto!important;
 }
+#uaiCompanionRoot .uai-c-message-row:first-child{margin-top:18px!important}
 #uaiCompanionRoot .uai-c-message-row>div{max-width:100%!important;min-width:0!important}
 #uaiCompanionRoot .uai-c-message-row.assistant{justify-content:flex-start!important}
 #uaiCompanionRoot .uai-c-message-row.user{justify-content:flex-end!important}
-#uaiCompanionRoot .uai-c-message-row.assistant>div{width:min(100%,820px)!important}
+#uaiCompanionRoot .uai-c-message-row.assistant>div{width:min(100%,780px)!important}
 #uaiCompanionRoot .uai-c-v10-author{
   display:flex!important;
   align-items:center!important;
-  gap:9px!important;
-  margin:0 0 9px!important;
+  gap:10px!important;
+  margin:0 0 10px!important;
 }
 #uaiCompanionRoot .uai-c-v10-message-avatar{
-  width:30px!important;height:30px!important;display:grid!important;place-items:center!important;
-  flex:0 0 auto!important;overflow:hidden!important;border-radius:10px!important;
-  background:linear-gradient(145deg,rgba(213,130,170,.72),rgba(128,105,170,.62))!important;
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)!important;font-size:13px!important
+  width:32px!important;height:32px!important;display:grid!important;place-items:center!important;
+  flex:0 0 auto!important;overflow:hidden!important;border-radius:11px!important;
+  background:linear-gradient(145deg,rgba(225,139,184,.80),rgba(137,112,180,.70))!important;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.14),0 5px 14px rgba(35,21,31,.10)!important;font-size:14px!important
 }
 #uaiCompanionRoot .uai-c-v10-message-avatar img{width:100%!important;height:100%!important;display:block!important;object-fit:cover!important}
-#uaiCompanionRoot .uai-c-v10-author-copy strong{font-size:12.5px!important;font-weight:680!important;color:rgba(255,255,255,.72)!important}
+#uaiCompanionRoot .uai-c-v10-author-copy strong{font-size:12.5px!important;font-weight:690!important;color:rgba(255,255,255,.76)!important}
 #uaiCompanionRoot .uai-c-v9-message-author{display:none!important}
 #uaiCompanionRoot .uai-c-bubble{max-width:100%!important;word-break:break-word!important;overflow-wrap:anywhere!important}
 #uaiCompanionRoot .uai-c-message-row.assistant .uai-c-bubble{
   max-width:100%!important;
-  padding:0 0 0 39px!important;
+  padding:0 0 0 42px!important;
   border:0!important;
   border-radius:0!important;
   background:transparent!important;
   box-shadow:none!important;
-  color:rgba(255,252,255,.96)!important;
+  color:rgba(255,252,255,.97)!important;
   font-size:16.5px!important;
-  line-height:1.82!important;
+  line-height:1.86!important;
   letter-spacing:.002em!important;
 }
 #uaiCompanionRoot .uai-c-message-row.user .uai-c-bubble{
-  max-width:min(76%,620px)!important;
-  padding:10px 14px!important;
-  border:1px solid rgba(255,255,255,.08)!important;
-  border-radius:15px 15px 5px 15px!important;
-  background:linear-gradient(145deg,#4b424f,#403b47)!important;
-  box-shadow:0 5px 18px rgba(20,20,25,.10)!important;
+  max-width:min(74%,600px)!important;
+  padding:11px 15px!important;
+  border:1px solid rgba(255,255,255,.10)!important;
+  border-radius:16px 16px 5px 16px!important;
+  background:linear-gradient(145deg,#544954,#47424f)!important;
+  box-shadow:0 7px 22px rgba(20,20,25,.11),inset 0 1px 0 rgba(255,255,255,.025)!important;
   color:#fff!important;
   font-size:15px!important;
-  line-height:1.68!important;
+  line-height:1.70!important;
 }
 #uaiCompanionRoot .uai-c-message-time{
   margin-top:8px!important;
   font-size:10.5px!important;
-  color:rgba(255,255,255,.40)!important;
+  color:rgba(255,255,255,.43)!important;
 }
-#uaiCompanionRoot .uai-c-message-row.assistant .uai-c-message-time{margin-left:39px!important}
+#uaiCompanionRoot .uai-c-message-row.assistant .uai-c-message-time{margin-left:42px!important}
 #uaiCompanionRoot .uai-c-v10-message-toolbar{
   display:flex!important;
   flex-wrap:wrap!important;
   align-items:center!important;
   gap:3px!important;
-  max-width:calc(100% - 39px)!important;
-  margin:3px 0 0 33px!important;
+  max-width:calc(100% - 42px)!important;
+  margin:3px 0 0 36px!important;
   overflow:hidden!important;
 }
 #uaiCompanionRoot .uai-c-v10-message-toolbar.empty{display:none!important}
 #uaiCompanionRoot .uai-c-v10-message-toolbar button{
   flex:0 0 auto!important;
-  min-height:25px!important;
+  min-height:26px!important;
   padding:2px 7px!important;
   border:0!important;
-  border-radius:6px!important;
+  border-radius:7px!important;
   background:transparent!important;
-  color:rgba(255,255,255,.44)!important;
+  color:rgba(255,255,255,.46)!important;
   font-size:10.5px!important;
   white-space:nowrap!important;
 }
-#uaiCompanionRoot .uai-c-v10-message-toolbar button:hover{background:rgba(255,255,255,.06)!important;color:rgba(255,255,255,.88)!important}
+#uaiCompanionRoot .uai-c-v10-message-toolbar button:hover{background:rgba(255,255,255,.07)!important;color:rgba(255,255,255,.90)!important}
 #uaiCompanionRoot .uai-c-v3-actions[data-v10-consumed],
 #uaiCompanionRoot .uai-c-v8-message-actions[data-v10-consumed],
 #uaiCompanionRoot .uai-c-v9-message-toolbar[data-v10-consumed],
@@ -315,141 +327,152 @@
 }
 #uaiCompanionRoot .uai-c-message-row.assistant.uai-c-long-reply.expanded .uai-c-bubble{max-height:none!important;-webkit-mask-image:none!important;mask-image:none!important}
 #uaiCompanionRoot .uai-c-long-toggle{
-  min-height:32px!important;margin:12px 0 0 39px!important;padding:0 11px!important;
-  border:1px solid var(--v10-line)!important;border-radius:8px!important;
-  background:rgba(255,255,255,.045)!important;color:var(--v10-muted)!important;font-size:11px!important
+  min-height:33px!important;margin:13px 0 0 42px!important;padding:0 12px!important;
+  border:1px solid var(--v10-line)!important;border-radius:9px!important;
+  background:rgba(255,255,255,.05)!important;color:var(--v10-muted)!important;font-size:11px!important
 }
-#uaiCompanionRoot .uai-c-long-toggle:hover{background:rgba(255,255,255,.075)!important;color:#fff!important}
+#uaiCompanionRoot .uai-c-long-toggle:hover{background:rgba(255,255,255,.08)!important;color:#fff!important}
 
 /* first-chat soft starters */
 #uaiCompanionRoot .uai-c-v10-starters{
-  width:min(100%,960px)!important;
+  width:min(100%,780px)!important;
   max-width:100%!important;
-  margin:12px auto 0!important;
-  padding-left:39px!important;
-  color:rgba(255,255,255,.44)!important;
+  margin:18px auto 4px!important;
+  padding:14px 14px 14px 42px!important;
+  border:1px solid rgba(255,255,255,.075)!important;
+  border-radius:16px!important;
+  background:linear-gradient(145deg,rgba(255,255,255,.035),rgba(220,138,177,.035))!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.018)!important;
+  color:rgba(255,255,255,.48)!important;
   font-size:10.5px!important;
 }
-#uaiCompanionRoot .uai-c-v10-starters>div{display:flex!important;flex-wrap:wrap!important;gap:7px!important;margin-top:9px!important}
+#uaiCompanionRoot .uai-c-v10-starters>span{display:block!important;margin-bottom:9px!important;font-weight:560!important;color:rgba(255,255,255,.50)!important}
+#uaiCompanionRoot .uai-c-v10-starters>div{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:8px!important;margin-top:0!important}
 #uaiCompanionRoot .uai-c-v10-starters button{
-  min-height:34px!important;padding:0 12px!important;border:1px solid var(--v10-line)!important;
-  border-radius:999px!important;background:rgba(255,255,255,.045)!important;color:rgba(255,255,255,.70)!important;
-  font:500 11.5px/1 system-ui,sans-serif!important;cursor:pointer!important
+  min-height:38px!important;padding:0 12px!important;border:1px solid rgba(255,255,255,.085)!important;
+  border-radius:11px!important;background:rgba(255,255,255,.045)!important;color:rgba(255,255,255,.76)!important;
+  font:520 11.5px/1 system-ui,sans-serif!important;cursor:pointer!important;transition:transform .12s ease,border-color .12s ease,background .12s ease!important
 }
-#uaiCompanionRoot .uai-c-v10-starters button:hover{border-color:rgba(224,145,183,.35)!important;background:var(--v10-accent-faint)!important;color:#fff!important}
+#uaiCompanionRoot .uai-c-v10-starters button:hover{transform:translateY(-1px)!important;border-color:rgba(237,155,194,.38)!important;background:var(--v10-accent-faint)!important;color:#fff!important}
 
-#uaiCompanionRoot .uai-c-welcome{max-width:560px!important;margin:14vh auto 0!important;text-align:center!important}
-#uaiCompanionRoot .uai-c-welcome .uai-c-avatar{width:64px!important;height:64px!important;margin:0 auto 16px!important;border-radius:20px!important}
-#uaiCompanionRoot .uai-c-welcome h2{font-size:25px!important}
+#uaiCompanionRoot .uai-c-welcome{max-width:560px!important;margin:13vh auto 0!important;text-align:center!important}
+#uaiCompanionRoot .uai-c-welcome .uai-c-avatar{width:66px!important;height:66px!important;margin:0 auto 17px!important;border-radius:21px!important}
+#uaiCompanionRoot .uai-c-welcome h2{font-size:25px!important;letter-spacing:-.01em!important}
 #uaiCompanionRoot .uai-c-welcome p{font-size:14px!important;line-height:1.78!important;color:var(--v10-muted)!important}
 
 /* composer */
 #uaiCompanionRoot .uai-c-composer-wrap{
   max-width:100%!important;
   min-width:0!important;
-  padding:12px clamp(28px,4vw,58px) 20px!important;
-  background:linear-gradient(to top,var(--v10-bg) 82%,rgba(40,42,52,.96),transparent)!important;
+  padding:14px clamp(26px,4vw,56px) 24px!important;
+  background:linear-gradient(to top,var(--v10-bg) 76%,rgba(45,47,58,.97) 88%,transparent)!important;
 }
 #uaiCompanionRoot .uai-c-composer{
-  width:min(100%,960px)!important;
+  width:min(100%,900px)!important;
   max-width:100%!important;
   min-width:0!important;
-  min-height:82px!important;
+  min-height:78px!important;
   margin:0 auto!important;
-  padding:10px 10px 10px 16px!important;
+  padding:10px 10px 10px 17px!important;
   align-items:flex-end!important;
   gap:10px!important;
-  border:1px solid rgba(255,255,255,.13)!important;
-  border-radius:18px!important;
-  background:#363844!important;
-  box-shadow:0 16px 45px rgba(18,18,24,.14)!important;
+  border:1px solid rgba(255,255,255,.14)!important;
+  border-radius:20px!important;
+  background:linear-gradient(145deg,rgba(66,68,82,.98),rgba(58,60,72,.98))!important;
+  box-shadow:0 20px 60px rgba(15,16,21,.19),inset 0 1px 0 rgba(255,255,255,.035)!important;
+  backdrop-filter:blur(18px)!important;
+  transform:translateY(-2px)!important;
+  transition:border-color .15s ease,box-shadow .15s ease,transform .15s ease!important;
 }
 #uaiCompanionRoot .uai-c-composer:focus-within{
-  border-color:rgba(224,145,183,.58)!important;
-  box-shadow:0 0 0 3px rgba(224,145,183,.09),0 16px 45px rgba(18,18,24,.14)!important;
+  border-color:rgba(237,155,194,.62)!important;
+  box-shadow:0 0 0 3px rgba(237,155,194,.10),0 20px 64px rgba(15,16,21,.22),inset 0 1px 0 rgba(255,255,255,.045)!important;
+  transform:translateY(-3px)!important;
 }
 #uaiCompanionRoot .uai-c-input{
   min-width:0!important;
-  min-height:50px!important;
+  min-height:46px!important;
   max-height:180px!important;
   padding:7px 0!important;
   color:#fff!important;
   font-size:15px!important;
-  line-height:1.6!important;
+  line-height:1.62!important;
   resize:none!important;
 }
-#uaiCompanionRoot .uai-c-input::placeholder{color:rgba(255,255,255,.43)!important}
+#uaiCompanionRoot .uai-c-input::placeholder{color:rgba(255,255,255,.48)!important}
 #uaiCompanionRoot .uai-c-send,#uaiCompanionRoot .uai-c-stop{
   flex:0 0 auto!important;
-  min-width:44px!important;
-  width:44px!important;
-  height:44px!important;
+  min-width:46px!important;
+  width:46px!important;
+  height:46px!important;
   padding:0!important;
   border-radius:50%!important;
   font-size:18px!important;
   font-weight:760!important;
+  transition:transform .12s ease,filter .12s ease!important;
 }
-#uaiCompanionRoot .uai-c-send{background:linear-gradient(145deg,var(--v10-accent-strong),#c86f9c)!important;color:#fff!important;box-shadow:0 6px 18px rgba(166,79,124,.18)!important}
-#uaiCompanionRoot .uai-c-send:hover{filter:brightness(1.07)!important}
-#uaiCompanionRoot .uai-c-stop{background:rgba(255,255,255,.11)!important;color:#fff!important}
+#uaiCompanionRoot .uai-c-send{background:linear-gradient(145deg,var(--v10-accent-strong),#ce739f)!important;color:#fff!important;box-shadow:0 7px 22px rgba(166,79,124,.22)!important}
+#uaiCompanionRoot .uai-c-send:hover{filter:brightness(1.08)!important;transform:translateY(-1px)!important}
+#uaiCompanionRoot .uai-c-stop{background:rgba(255,255,255,.12)!important;color:#fff!important}
 #uaiCompanionRoot .uai-c-composer-hint{display:none!important}
-#uaiCompanionRoot .uai-c-v8-scroll-bottom{right:clamp(28px,4vw,64px)!important;bottom:118px!important}
+#uaiCompanionRoot .uai-c-v8-scroll-bottom{right:clamp(26px,4vw,60px)!important;bottom:124px!important}
 
 /* dialogs */
 #uaiCompanionRoot .uai-c-modal,.uai-c-v3-modal,.uai-c-v4-modal,.uai-c-v5-modal,.uai-c-v8-review-modal{
   border:1px solid var(--v10-line)!important;
-  border-radius:18px!important;
+  border-radius:19px!important;
   background:var(--v10-surface)!important;
-  box-shadow:0 28px 80px rgba(15,15,20,.30)!important;
+  box-shadow:0 30px 86px rgba(13,14,19,.30)!important;
 }
 #uaiCompanionRoot .uai-c-modal-head,.uai-c-v3-modal>header,.uai-c-v4-modal>header,.uai-c-v5-modal>header{border-bottom-color:var(--v10-line)!important}
 #uaiCompanionRoot .uai-c-modal-head h3,.uai-c-v3-modal h3,.uai-c-v4-modal h3,.uai-c-v5-modal h3{font-size:18px!important}
 #uaiCompanionRoot .uai-c-modal-head p,.uai-c-v3-modal header p,.uai-c-v4-modal header p,.uai-c-v5-modal header p{font-size:12px!important;color:var(--v10-muted)!important}
 #uaiCompanionRoot .uai-c-field>label,.uai-c-v3-form label{font-size:12.5px!important}
 #uaiCompanionRoot .uai-c-field input,#uaiCompanionRoot .uai-c-field select,#uaiCompanionRoot .uai-c-field textarea,.uai-c-v3-form input,.uai-c-v3-form select,.uai-c-v3-form textarea{
-  border-color:rgba(255,255,255,.12)!important;border-radius:11px!important;background:var(--v10-surface-2)!important;color:#fff!important;font-size:14px!important
+  border-color:rgba(255,255,255,.13)!important;border-radius:11px!important;background:var(--v10-surface-2)!important;color:#fff!important;font-size:14px!important
 }
 #uaiOnboardDesc,#uaiV9RoleBackground,#uaiV9NewRoleBackground{min-height:300px!important;line-height:1.72!important;resize:vertical!important}
 .uai-c-v10-role-manager{width:min(900px,calc(100vw - 42px))!important}
-.uai-c-v10-role-manager .uai-c-v3-character-list{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:11px!important;padding:18px!important}
-.uai-c-v10-role-manager .uai-c-v3-character-card{grid-template-columns:52px minmax(0,1fr)!important;align-items:center!important;gap:12px!important;min-height:128px!important;padding:14px!important;border:1px solid var(--v10-line)!important;border-radius:14px!important;background:#383a46!important}
-.uai-c-v10-role-manager .uai-c-v3-character-card:hover{border-color:var(--v10-line-strong)!important;background:#3f414d!important}
-.uai-c-v10-role-manager .uai-c-v3-character-card.active{border-color:rgba(224,145,183,.50)!important;background:var(--v10-accent-faint)!important}
+.uai-c-v10-role-manager .uai-c-v3-character-list{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important;padding:18px!important}
+.uai-c-v10-role-manager .uai-c-v3-character-card{grid-template-columns:52px minmax(0,1fr)!important;align-items:center!important;gap:12px!important;min-height:128px!important;padding:14px!important;border:1px solid var(--v10-line)!important;border-radius:15px!important;background:#40424f!important}
+.uai-c-v10-role-manager .uai-c-v3-character-card:hover{border-color:var(--v10-line-strong)!important;background:#474955!important}
+.uai-c-v10-role-manager .uai-c-v3-character-card.active{border-color:rgba(237,155,194,.50)!important;background:linear-gradient(145deg,var(--v10-accent-faint),rgba(255,255,255,.025))!important}
 .uai-c-v10-role-manager .uai-c-v3-avatar{width:52px!important;height:52px!important;border-radius:16px!important}
-.uai-c-v10-role-manager .uai-c-v3-character-actions{grid-column:1/-1!important;justify-content:flex-end!important;padding-top:9px!important;border-top:1px solid rgba(255,255,255,.07)!important}
+.uai-c-v10-role-manager .uai-c-v3-character-actions{grid-column:1/-1!important;justify-content:flex-end!important;padding-top:9px!important;border-top:1px solid rgba(255,255,255,.08)!important}
 #uaiCompanionRoot .uai-c-v10-settings{width:min(630px,calc(100vw - 36px))!important}
 #uaiCompanionRoot .uai-c-v8-length-pills{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:8px!important}
-#uaiCompanionRoot .uai-c-v8-length-pills button{min-height:60px!important;padding:9px!important;border:1px solid var(--v10-line)!important;border-radius:10px!important;background:rgba(255,255,255,.05)!important}
-#uaiCompanionRoot .uai-c-v8-length-pills button.selected{border-color:rgba(224,145,183,.46)!important;background:var(--v10-accent-soft)!important}
-#uaiCompanionRoot .uai-c-memory-item{border-color:var(--v10-line)!important;background:rgba(255,255,255,.045)!important}
+#uaiCompanionRoot .uai-c-v8-length-pills button{min-height:60px!important;padding:9px!important;border:1px solid var(--v10-line)!important;border-radius:11px!important;background:rgba(255,255,255,.055)!important}
+#uaiCompanionRoot .uai-c-v8-length-pills button.selected{border-color:rgba(237,155,194,.48)!important;background:var(--v10-accent-soft)!important}
+#uaiCompanionRoot .uai-c-memory-item{border-color:var(--v10-line)!important;background:rgba(255,255,255,.05)!important}
 
 @media (max-width:900px){
   #uaiCompanionRoot .uai-c-shell{grid-template-columns:1fr!important}
-  #uaiCompanionRoot .uai-c-sidebar{width:min(82vw,286px)!important;padding:14px 12px!important}
+  #uaiCompanionRoot .uai-c-sidebar{width:min(84vw,294px)!important;padding:14px 12px!important}
   #uaiCompanionRoot .uai-c-main{grid-template-rows:56px minmax(0,1fr) auto!important}
   #uaiCompanionRoot .uai-c-header{min-height:56px!important;padding:0 15px!important}
   #uaiCompanionRoot .uai-c-header-left{width:100%!important}
   #uaiCompanionRoot .uai-c-mobile-menu{display:grid!important}
-  #uaiCompanionRoot .uai-c-messages{padding:24px 18px 62px!important}
+  #uaiCompanionRoot .uai-c-messages{padding:24px 18px 68px!important}
   #uaiCompanionRoot .uai-c-message-row{width:100%!important;margin:22px auto!important}
   #uaiCompanionRoot .uai-c-message-row.assistant>div{width:100%!important}
   #uaiCompanionRoot .uai-c-message-row.user .uai-c-bubble{max-width:86%!important}
-  #uaiCompanionRoot .uai-c-composer-wrap{padding:10px 12px 14px!important}
-  #uaiCompanionRoot .uai-c-composer{width:100%!important}
+  #uaiCompanionRoot .uai-c-composer-wrap{padding:10px 12px 16px!important}
+  #uaiCompanionRoot .uai-c-composer{width:100%!important;transform:none!important}
+  #uaiCompanionRoot .uai-c-composer:focus-within{transform:none!important}
   #uaiCompanionRoot .uai-c-v10-starters{width:100%!important}
 }
 
 @media (max-width:520px){
   #uaiCompanionRoot .uai-c-header{padding:0 11px!important}
   #uaiCompanionRoot .uai-c-title strong{font-size:13.5px!important}
-  #uaiCompanionRoot .uai-c-messages{padding:18px 12px 54px!important}
-  #uaiCompanionRoot .uai-c-message-row.assistant .uai-c-bubble{padding-left:35px!important;font-size:15.5px!important;line-height:1.78!important}
-  #uaiCompanionRoot .uai-c-message-row.assistant .uai-c-message-time{margin-left:35px!important}
-  #uaiCompanionRoot .uai-c-v10-message-toolbar{margin-left:29px!important;max-width:calc(100% - 35px)!important}
-  #uaiCompanionRoot .uai-c-v10-starters{padding-left:35px!important}
-  #uaiCompanionRoot .uai-c-v10-starters>div{gap:6px!important}
+  #uaiCompanionRoot .uai-c-messages{padding:18px 12px 58px!important}
+  #uaiCompanionRoot .uai-c-message-row.assistant .uai-c-bubble{padding-left:37px!important;font-size:15.5px!important;line-height:1.80!important}
+  #uaiCompanionRoot .uai-c-message-row.assistant .uai-c-message-time{margin-left:37px!important}
+  #uaiCompanionRoot .uai-c-v10-message-toolbar{margin-left:31px!important;max-width:calc(100% - 37px)!important}
+  #uaiCompanionRoot .uai-c-v10-starters{padding:13px!important}
+  #uaiCompanionRoot .uai-c-v10-starters>div{grid-template-columns:1fr!important;gap:7px!important}
   #uaiCompanionRoot .uai-c-v10-starters button{padding:0 10px!important;font-size:11px!important}
-  #uaiCompanionRoot .uai-c-composer{min-height:76px!important;border-radius:16px!important;padding-left:13px!important}
+  #uaiCompanionRoot .uai-c-composer{min-height:76px!important;border-radius:17px!important;padding-left:13px!important}
   #uaiCompanionRoot .uai-c-input{font-size:14.5px!important}
   .uai-c-v10-role-manager .uai-c-v3-character-list{grid-template-columns:1fr!important}
   #uaiCompanionRoot .uai-c-v8-length-pills{grid-template-columns:1fr!important}
