@@ -49,16 +49,22 @@ assert.match(runtime, /ticker\?\.start/);
 assert.match(runtime, /window\.UnlimitedCompanionLive2D/);
 
 assert.match(css, /\.uai-c-live2d-layer/);
-assert.match(css, /z-index:4/);
-assert.match(css, /uai-c-live2d-active/);
+assert.match(css, /z-index:6!important/);
+assert.match(css, /uaiLive2DAura/);
+assert.match(css, /grid-template-columns:minmax\(0,58%\)/);
+assert.match(css, /padding-right:35%!important/);
 assert.match(css, /\.uai-c-v122-portrait-wrap/);
+assert.match(css, /display:none!important/);
 assert.match(css, /\.uai-c-live2d-credit/);
 assert.match(css, /\.uai-c-live2d-status-note/);
 
-assert.equal(config.version, 4);
+assert.equal(config.version, 5);
 assert.match(config.defaultModel?.model || "", /^https:\/\/cdn\.jsdelivr\.net\/gh\/Live2D\/CubismWebSamples@/);
 assert.match(config.defaultModel?.model || "", /\/Samples\/Resources\/Mao\/Mao\.model3\.json$/);
 assert.equal(config.defaultModel?.sample?.name, "Mao");
+assert.equal(config.defaultModel?.position?.x, 0.80);
+assert.equal(config.defaultModel?.position?.y, 1.08);
+assert.equal(config.defaultModel?.position?.height, 0.98);
 assert.equal(config.byName?.["李萌"]?.model, "/live2d/characters/limeng/limeng.model3.json");
 assert.equal(config.byName?.["李萌"]?.idleMotionGroup, "Idle");
 assert.ok(Array.isArray(config.byName?.["李萌"]?.tapMotionGroups));
@@ -68,6 +74,8 @@ assert.match(fallback.model, /^https:\/\/cdn\.jsdelivr\.net\/gh\/Live2D\/CubismW
 assert.match(fallback.model, /\/Samples\/Resources\/Mao\/Mao\.model3\.json$/);
 assert.equal(fallback.sample?.name, "Mao");
 assert.equal(fallback.sample?.owner, "Live2D Inc.");
+assert.equal(fallback.position?.x, 0.80);
+assert.equal(fallback.position?.height, 0.98);
 
 assert.match(readme, /public\/live2d\/characters\/limeng/);
 assert.match(readme, /live2dcubismcore\.min\.js/);
@@ -75,7 +83,6 @@ assert.match(readme, /official Live2D `Mao` sample/i);
 assert.match(readme, /official hosted Cubism Core/i);
 assert.match(readme, /setModelForCharacter/);
 
-// Cubism Core stays outside this public repository; hosted Core or an optional local copy is used at runtime.
 assert.equal(fs.existsSync("public/live2d/vendor/live2dcubismcore.min.js"), false);
 
-console.log("Companion Live2D contract passed: local model -> jsDelivr Mao fallback -> local/official hosted Core -> interactions/API.");
+console.log("Companion Live2D contract passed: hosted runtime + jsDelivr Mao + polished right-side stage + interaction API.");
