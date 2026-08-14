@@ -2,8 +2,8 @@
 // Startup guard + dual-mode bootstrap. The existing novel workspace still boots
 // normally behind the mode lobby so old data and feature adapters remain intact.
 (() => {
-  const REVISION = "2026-08-14-v10.4-dual-mode-1";
-  // Diagnostics compatibility markers: 2026-08-14-v10.3-dual-mode-1 / 2026-08-14-v10.2-dual-mode-1 / 2026-08-14-v10.1-dual-mode-1 / 2026-08-14-v10.0-dual-mode-1
+  const REVISION = "2026-08-14-v10.5-dual-mode-1";
+  // Diagnostics compatibility markers: 2026-08-14-v10.4-dual-mode-1 / 2026-08-14-v10.3-dual-mode-1 / 2026-08-14-v10.2-dual-mode-1 / 2026-08-14-v10.1-dual-mode-1 / 2026-08-14-v10.0-dual-mode-1
   const errors = [];
 
   document.documentElement.dataset.frontendRevision = REVISION;
@@ -68,6 +68,7 @@
     ensureStyle(`/companion-support.css?v=${REVISION}`, "uaiCompanionSupportCss");
     ensureStyle(`/companion-v10.css?v=${REVISION}`, "uaiCompanionV10Css");
     ensureStyle(`/companion-v10-vibrant.css?v=${REVISION}`, "uaiCompanionV10VibrantCss");
+    ensureStyle(`/companion-v10-stage2.css?v=${REVISION}`, "uaiCompanionV10Stage2Css");
 
     ensureScript(`/companion-characters-core.js?v=${REVISION}`, "uaiCompanionCharactersCoreScript");
     ensureScript(`/companion-character-editor.js?v=${REVISION}`, "uaiCompanionCharacterEditorScript");
@@ -77,6 +78,7 @@
     ensureScript(`/companion-runtime.js?v=${REVISION}`, "uaiCompanionRuntimeScript");
     ensureScript(`/companion-extras.js?v=${REVISION}`, "uaiCompanionExtrasScript");
     ensureScript(`/companion-v10-shell.js?v=${REVISION}`, "uaiCompanionV10ShellScript");
+    ensureScript(`/companion-v10-stage2.js?v=${REVISION}`, "uaiCompanionV10Stage2Script");
 
     if (document.getElementById("uaiModeRouterScript")) return;
     const script = document.createElement("script");
@@ -111,6 +113,7 @@
       window.__UNLIMITED_BOOT__.companionSettingsReady = Boolean(window.UnlimitedCompanionSettings);
       window.__UNLIMITED_BOOT__.companionExtrasReady = Boolean(window.UnlimitedCompanionExtras);
       window.__UNLIMITED_BOOT__.companionV10ShellReady = Boolean(window.UnlimitedCompanionV10Shell);
+      window.__UNLIMITED_BOOT__.companionV10Stage2Ready = Boolean(window.UnlimitedCompanionV10Stage2);
       return;
     }
     const parts = [];
