@@ -2,7 +2,7 @@
 // Startup guard + dual-mode bootstrap. The existing novel workspace still boots
 // normally behind the mode lobby so old data and feature adapters remain intact.
 (() => {
-  const REVISION = "2026-08-14-v9.4-dual-mode-1";
+  const REVISION = "2026-08-14-v9.5-dual-mode-1";
   const errors = [];
 
   document.documentElement.dataset.frontendRevision = REVISION;
@@ -64,7 +64,7 @@
     ensureStyle(`/companion-characters.css?v=${REVISION}`, "uaiCompanionCharactersCss");
     ensureStyle(`/companion-memory.css?v=${REVISION}`, "uaiCompanionMemoryCss");
     ensureStyle(`/companion-records.css?v=${REVISION}`, "uaiCompanionRecordsCss");
-    ensureStyle(`/companion-profile-editor.css?v=${REVISION}`, "uaiCompanionProfileEditorCss");
+    ensureStyle(`/companion-support.css?v=${REVISION}`, "uaiCompanionSupportCss");
     ensureStyle(`/companion-v9.css?v=${REVISION}`, "uaiCompanionV9Css");
 
     ensureScript(`/companion-characters-core.js?v=${REVISION}`, "uaiCompanionCharactersCoreScript");
