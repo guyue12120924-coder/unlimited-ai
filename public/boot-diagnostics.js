@@ -2,8 +2,8 @@
 // Startup guard + dual-mode bootstrap. The existing novel workspace still boots
 // normally behind the mode lobby so old data and feature adapters remain intact.
 (() => {
-  const REVISION = "2026-08-14-v10.2-dual-mode-1";
-  // Diagnostics compatibility markers: 2026-08-14-v10.1-dual-mode-1 / 2026-08-14-v10.0-dual-mode-1
+  const REVISION = "2026-08-14-v10.3-dual-mode-1";
+  // Diagnostics compatibility markers: 2026-08-14-v10.2-dual-mode-1 / 2026-08-14-v10.1-dual-mode-1 / 2026-08-14-v10.0-dual-mode-1
   const errors = [];
 
   document.documentElement.dataset.frontendRevision = REVISION;
@@ -14,7 +14,7 @@
   gateStyle.id = "uaiModeGateCriticalCss";
   gateStyle.textContent = `
     html.uai-mode-gate-pending #app { visibility: hidden !important; pointer-events: none !important; }
-    html.uai-mode-gate-pending body { background: #0d0f14 !important; }
+    html.uai-mode-gate-pending body { background: #f7f5ff !important; }
   `;
   document.head.appendChild(gateStyle);
 
@@ -67,6 +67,7 @@
     ensureStyle(`/companion-records.css?v=${REVISION}`, "uaiCompanionRecordsCss");
     ensureStyle(`/companion-support.css?v=${REVISION}`, "uaiCompanionSupportCss");
     ensureStyle(`/companion-v10.css?v=${REVISION}`, "uaiCompanionV10Css");
+    ensureStyle(`/companion-v10-vibrant.css?v=${REVISION}`, "uaiCompanionV10VibrantCss");
 
     ensureScript(`/companion-characters-core.js?v=${REVISION}`, "uaiCompanionCharactersCoreScript");
     ensureScript(`/companion-character-editor.js?v=${REVISION}`, "uaiCompanionCharacterEditorScript");
