@@ -1,6 +1,6 @@
 // Companion V9 interaction shell: one role hub, one chat surface and compact secondary tools.
 (() => {
-  const REVISION = "2026-08-14-v9.3-shell-1";
+  const REVISION = "2026-08-14-v9.3-shell-2";
   const PROFILE_LIMIT = 5000;
   let scheduled = false;
 
@@ -63,8 +63,9 @@
     const button = document.createElement("button");
     button.id = "uaiV9SearchChat";
     button.type = "button";
-    button.className = "uai-c-v9-search-chat";
-    button.innerHTML = `<span>⌕&nbsp;&nbsp;搜索聊天</span><kbd>Ctrl K</kbd>`;
+    button.className = "uai-c-sidebar-action uai-c-v9-search-chat";
+    button.title = "搜索聊天（Ctrl/Cmd + K）";
+    button.innerHTML = `<span>⌕&nbsp;&nbsp;搜索聊天</span><b>Ctrl K</b>`;
     button.addEventListener("click", () => window.UnlimitedCompanionMemorySearch?.showSearch?.());
     newChat.insertAdjacentElement("afterend", button);
   }
