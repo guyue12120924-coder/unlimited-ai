@@ -1,6 +1,7 @@
-// Companion extras: message utilities, important moments, scroll helper and relationship review.
+// Companion extras: message utilities, long replies, important moments, scroll helper and relationship review.
 (() => {
-  const REVISION = "2026-08-14-v9.1-extras-1";
+  const REVISION = "2026-08-14-v9.3-extras-2";
+  const LONG_REPLY_THRESHOLD = 1800;
   const KEYS = {
     activeCharacter: "uai_companion_active_character_v1",
     moments: "uai_companion_moments_v1"
@@ -135,6 +136,30 @@
     });
   }
 
+  function ensureLongReplies(root) {
+    root.querySelectorAll("#uaiCompanionMessages .uai-c-message-row.assistant").forEach((row) => {
+      const bubble = row.querySelector(".uai-c-bubble");
+      if (!bubble || bubble.querySelector(".uai-c-typing")) return;
+      const text = bubble.textContent || "";
+      if (text.length <= LONG_REPLY_THRESHOLD) {
+        row.classList.remove("uai-c-long-reply", "expanded");
+        row.querySelector(".uai-c-long-toggle")?.remove();
+        return;
+      }
+      row.classList.add("uai-c-long-reply");
+      if (row.querySelector(".uai-c-long-toggle")) return;
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "uai-c-long-toggle";
+      button.textContent = "展开全文";
+      button.addEventListener("click", () => {
+        const expanded = row.classList.toggle("expanded");
+        button.textContent = expanded ? "收起" : "展开全文";
+      });
+      bubble.insertAdjacentElement("afterend", button);
+    });
+  }
+
   function ensureScrollBottom(root) {
     const container = root.querySelector("#uaiCompanionMessages");
     const main = root.querySelector(".uai-c-main");
@@ -265,6 +290,22 @@
       if (del) actions.insertBefore(edit, del);
       else actions.appendChild(edit);
     });
+
+    const modal = manager.querySelector(".uai-c-v3-modal:not(.compact)");
+    const footer = modal?.querySelector(":scope > footer");
+    const add = footer?.querySelector("#uaiCompanionAddCharacter");
+    if (footer && !footer.querySelector("#uaiV9RelationshipRecord") && window.UnlimitedCompanionProfileRestore?.showCharacterProfile) {
+      const relationship = document.createElement("button");
+      relationship.type = "button";
+      relationship.id = "uaiV9RelationshipRecord";
+      relationship.className = "secondary";
+      relationship.textContent = "关系记录";
+      relationship.addEventListener("click", () => {
+        manager.remove();
+        window.UnlimitedCompanionProfileRestore?.showCharacterProfile?.();
+      });
+      footer.insertBefore(relationship, add || null);
+    }
   }
 
   function enhance() {
@@ -273,6 +314,7 @@
     const root = document.getElementById("uaiCompanionRoot");
     if (!root) return;
     ensureMessageActions(root);
+    ensureLongReplies(root);
     ensureScrollBottom(root);
     enhanceRelationshipRecord();
     enhanceCharacterManager();
