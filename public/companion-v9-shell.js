@@ -1,6 +1,6 @@
-// Companion V9 interaction shell: removes duplicate chrome and turns the profile card into the role hub.
+// Companion V9 interaction shell: one role hub, one conversation surface, low-frequency tools kept out of the main chat.
 (() => {
-  const REVISION = "2026-08-14-v9.0-shell-5";
+  const REVISION = "2026-08-14-v9.2-shell-1";
   const PROFILE_LIMIT = 5000;
   let scheduled = false;
 
@@ -56,6 +56,18 @@
         roleApi()?.openCreate?.();
       });
     }
+  }
+
+  function ensureChatSearch(root) {
+    const newChat = root.querySelector("#uaiCompanionNewChat");
+    if (!newChat || root.querySelector("#uaiV9ChatSearch")) return;
+    const button = document.createElement("button");
+    button.id = "uaiV9ChatSearch";
+    button.type = "button";
+    button.className = "uai-c-v9-chat-search";
+    button.innerHTML = `<span>⌕ 搜索聊天</span><b>Ctrl K</b>`;
+    button.addEventListener("click", () => window.UnlimitedCompanionMemorySearch?.showSearch?.());
+    newChat.insertAdjacentElement("afterend", button);
   }
 
   function cleanSidebar(root) {
@@ -119,7 +131,11 @@
 
       const order = ["编辑", "复制", "重新生成", "珍藏"];
       [...toolbar.querySelectorAll("button")]
-        .sort((a, b) => order.indexOf(a.textContent?.trim()) - order.indexOf(b.textContent?.trim()))
+        .sort((a, b) => {
+          const ai = order.indexOf(a.textContent?.trim());
+          const bi = order.indexOf(b.textContent?.trim());
+          return (ai < 0 ? 99 : ai) - (bi < 0 ? 99 : bi);
+        })
         .forEach((button) => toolbar.appendChild(button));
 
       if (!toolbar.querySelector("button")) toolbar.remove();
@@ -152,6 +168,7 @@
     if (desc) {
       desc.maxLength = PROFILE_LIMIT;
       desc.rows = 10;
+      desc.placeholder = "年龄：\n身份：\n外貌：\n性格：\n背景经历：\n与用户的关系细节：\n说话方式：\n其他设定：";
     }
     if (create) create.textContent = "开始聊天";
   }
@@ -165,7 +182,7 @@
     const desc = modal.querySelector("header p");
     const add = modal.querySelector("#uaiCompanionAddCharacter");
     if (title) title.textContent = "我的角色";
-    if (desc) desc.textContent = "点击角色切换；每个角色的聊天、记忆和设置互相独立。";
+    if (desc) desc.textContent = "点击角色切换；每个角色的设定、聊天、长期记忆和模型设置互相独立。";
     if (add) add.textContent = "＋ 新增角色";
   }
 
@@ -234,6 +251,7 @@
     if (!root || root.hidden) return;
     root.dataset.v9Shell = REVISION;
     decorateProfileCard(root);
+    ensureChatSearch(root);
     cleanSidebar(root);
     decorateSessions(root);
     decorateMessages(root);
