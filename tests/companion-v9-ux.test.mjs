@@ -20,6 +20,13 @@ assert.match(shell, /#uaiOnboardQuick/);
 assert.match(shell, /创建你的第一个角色/);
 assert.match(shell, /开始聊天/);
 assert.match(shell, /uai-c-v9-role-manager/);
+assert.match(shell, /function cleanMemoryModal\(/);
+assert.match(shell, /uaiV9MemoryAdvanced/);
+assert.match(shell, /整理、归档与去重/);
+assert.match(shell, /function cleanSettingsModal\(/);
+assert.match(shell, /function consolidateMessageActions\(/);
+assert.match(shell, /label === "记住"/);
+assert.match(shell, /button\.textContent = "编辑"/);
 assert.doesNotMatch(shell, /COMPANION_ROLE_CARD/);
 
 assert.match(css, /grid-template-columns:252px minmax\(0,1fr\)/);
