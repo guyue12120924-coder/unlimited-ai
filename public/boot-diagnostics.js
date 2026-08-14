@@ -2,7 +2,7 @@
 // Startup guard + dual-mode bootstrap. The existing novel workspace still boots
 // normally behind the mode lobby so old data and feature adapters remain intact.
 (() => {
-  const REVISION = "2026-08-14-v8.2-dual-mode-1";
+  const REVISION = "2026-08-14-v8.2-dual-mode-2";
   const errors = [];
 
   document.documentElement.dataset.frontendRevision = REVISION;
@@ -70,7 +70,6 @@
     ensureScript(`/companion-v3-guard.js?v=${REVISION}`, "uaiCompanionV3GuardScript");
     ensureScript(`/companion-v4.js?v=${REVISION}`, "uaiCompanionV4Script");
     ensureScript(`/companion-v5.js?v=${REVISION}`, "uaiCompanionV5Script");
-    ensureScript(`/companion-v5-guard.js?v=${REVISION}`, "uaiCompanionV5GuardScript");
     ensureScript(`/companion-create-controls.js?v=${REVISION}`, "uaiCompanionCreateControlsScript");
     ensureScript(`/companion-reply-length.js?v=${REVISION}`, "uaiCompanionReplyLengthScript");
     ensureScript(`/companion-v8-secondary.js?v=${REVISION}`, "uaiCompanionV8SecondaryScript");
@@ -104,7 +103,6 @@
       window.__UNLIMITED_BOOT__.companionGuardReady = Boolean(window.UnlimitedCompanionGuard);
       window.__UNLIMITED_BOOT__.companionMemorySearchReady = Boolean(window.UnlimitedCompanionMemorySearch);
       window.__UNLIMITED_BOOT__.companionProfileRestoreReady = Boolean(window.UnlimitedCompanionProfileRestore);
-      window.__UNLIMITED_BOOT__.companionRestoreGuardReady = Boolean(window.UnlimitedCompanionRestoreGuard);
       window.__UNLIMITED_BOOT__.companionCharacterControlsReady = Boolean(window.UnlimitedCompanionCharacterControls);
       window.__UNLIMITED_BOOT__.companionReplyLengthReady = Boolean(window.UnlimitedCompanionReplyLength);
       window.__UNLIMITED_BOOT__.companionV8SecondaryReady = Boolean(window.UnlimitedCompanionV8Secondary);
