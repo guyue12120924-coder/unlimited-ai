@@ -1,6 +1,6 @@
 // public/mode-router.js
 (() => {
-  const REVISION = "2026-08-13-v4.0-mode-router-1";
+  const REVISION = "2026-08-14-v9.6-mode-router-1";
   let root = null;
   let currentMode = "lobby";
   let companionReadyPromise = null;
