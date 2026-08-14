@@ -1,0 +1,223 @@
+/* Companion V12.5 phase 2 — visible five-layer animated companion background. Desktop-first. */
+
+#uaiCompanionRoot{
+  --v125-purple:#a566ff;
+  --v125-pink:#ff64c8;
+  --v125-blue:#6d8cff;
+  --v125-parallax-x:0px;
+  --v125-parallax-y:0px;
+}
+
+/* Layer 1: deep-space base. Keep it visibly richer than the old near-black flat fill. */
+#uaiCompanionRoot .uai-c-main{
+  position:relative!important;
+  isolation:isolate!important;
+  overflow:hidden!important;
+  background:
+    radial-gradient(ellipse at 18% 4%,rgba(185,88,255,.27),transparent 36%),
+    radial-gradient(ellipse at 82% 15%,rgba(92,112,255,.25),transparent 35%),
+    radial-gradient(ellipse at 54% 72%,rgba(255,72,188,.15),transparent 40%),
+    linear-gradient(145deg,#09081f 0%,#171044 35%,#12103a 62%,#08091e 100%)!important;
+}
+
+/* The older V12.0 canvas sits at a negative z-index and is largely hidden by later backgrounds.
+   Disable it so only the new visible scene renderer consumes animation time. */
+#uaiCompanionRoot .uai-c-v12-galaxy-layer{display:none!important}
+
+#uaiCompanionRoot .uai-c-v125-scene{
+  position:absolute!important;
+  inset:0!important;
+  z-index:0!important;
+  pointer-events:none!important;
+  overflow:hidden!important;
+  contain:paint!important;
+}
+
+/* Make sure all real chat UI remains above the ambience. */
+#uaiCompanionRoot .uai-c-header{
+  position:relative!important;
+  z-index:8!important;
+}
+#uaiCompanionRoot .uai-c-messages{
+  position:relative!important;
+  z-index:3!important;
+  background:transparent!important;
+}
+#uaiCompanionRoot .uai-c-composer-wrap{
+  position:relative!important;
+  z-index:9!important;
+}
+
+/* Layer 2: three drifting nebula clouds. */
+#uaiCompanionRoot .uai-c-v125-nebula{
+  position:absolute;
+  inset:-10%;
+  z-index:1;
+  transform:translate3d(calc(var(--v125-parallax-x) * .28),calc(var(--v125-parallax-y) * .28),0);
+  transition:transform .36s cubic-bezier(.2,.75,.2,1);
+  mix-blend-mode:screen;
+}
+#uaiCompanionRoot .uai-c-v125-nebula i{
+  position:absolute;
+  display:block;
+  border-radius:50%;
+  filter:blur(34px);
+  opacity:.88;
+  will-change:transform,opacity;
+}
+#uaiCompanionRoot .uai-c-v125-nebula .n1{
+  width:48vw;height:42vw;min-width:520px;min-height:460px;
+  left:-8%;top:-22%;
+  background:radial-gradient(circle at 50% 50%,rgba(177,82,255,.38) 0%,rgba(123,62,255,.17) 37%,rgba(96,69,255,.06) 58%,transparent 72%);
+  animation:v125NebulaA 18s ease-in-out infinite alternate;
+}
+#uaiCompanionRoot .uai-c-v125-nebula .n2{
+  width:50vw;height:46vw;min-width:560px;min-height:500px;
+  right:-15%;top:8%;
+  background:radial-gradient(circle at 45% 52%,rgba(92,126,255,.31) 0%,rgba(94,78,255,.15) 40%,rgba(255,80,203,.07) 59%,transparent 74%);
+  animation:v125NebulaB 22s ease-in-out -7s infinite alternate;
+}
+#uaiCompanionRoot .uai-c-v125-nebula .n3{
+  width:42vw;height:38vw;min-width:470px;min-height:430px;
+  left:29%;bottom:-25%;
+  background:radial-gradient(circle at 48% 45%,rgba(255,83,194,.27) 0%,rgba(188,75,255,.12) 40%,rgba(88,96,255,.05) 62%,transparent 76%);
+  animation:v125NebulaC 20s ease-in-out -11s infinite alternate;
+}
+@keyframes v125NebulaA{
+  0%{transform:translate3d(-3%,-2%,0) scale(.94);opacity:.72}
+  52%{transform:translate3d(5%,4%,0) scale(1.05);opacity:.94}
+  100%{transform:translate3d(9%,1%,0) scale(1.11);opacity:.78}
+}
+@keyframes v125NebulaB{
+  0%{transform:translate3d(5%,-4%,0) scale(.98);opacity:.72}
+  48%{transform:translate3d(-6%,4%,0) scale(1.08);opacity:.93}
+  100%{transform:translate3d(-10%,8%,0) scale(1.02);opacity:.8}
+}
+@keyframes v125NebulaC{
+  0%{transform:translate3d(-4%,4%,0) scale(.96);opacity:.68}
+  55%{transform:translate3d(4%,-5%,0) scale(1.09);opacity:.9}
+  100%{transform:translate3d(9%,-2%,0) scale(1.04);opacity:.76}
+}
+
+/* Layer 3: slow moving galactic light bands. */
+#uaiCompanionRoot .uai-c-v125-bands{
+  position:absolute;
+  inset:-18%;
+  z-index:2;
+  transform:translate3d(calc(var(--v125-parallax-x) * .55),calc(var(--v125-parallax-y) * .55),0);
+  transition:transform .32s cubic-bezier(.2,.75,.2,1);
+  mix-blend-mode:screen;
+}
+#uaiCompanionRoot .uai-c-v125-band{
+  position:absolute;
+  left:-12%;
+  width:130%;
+  height:130px;
+  border-radius:50%;
+  filter:blur(2px);
+  transform-origin:center;
+  overflow:visible;
+  will-change:transform;
+}
+#uaiCompanionRoot .uai-c-v125-band::before,
+#uaiCompanionRoot .uai-c-v125-band::after{
+  content:"";
+  position:absolute;
+  left:0;right:0;
+  border-radius:50%;
+}
+#uaiCompanionRoot .uai-c-v125-band::before{
+  top:25%;height:56%;
+  background:linear-gradient(90deg,transparent 4%,rgba(115,117,255,.05) 17%,rgba(170,110,255,.20) 34%,rgba(255,118,215,.34) 50%,rgba(126,145,255,.19) 67%,rgba(151,100,255,.06) 83%,transparent 96%);
+  box-shadow:0 0 28px rgba(179,105,255,.17),0 0 65px rgba(104,122,255,.10);
+}
+#uaiCompanionRoot .uai-c-v125-band::after{
+  top:49%;height:1px;
+  background:linear-gradient(90deg,transparent 8%,rgba(221,190,255,.05),rgba(255,186,231,.54),rgba(197,192,255,.24),transparent 92%);
+  box-shadow:0 0 8px rgba(255,158,224,.23);
+}
+#uaiCompanionRoot .uai-c-v125-band.b1{
+  top:27%;
+  transform:rotate(-16deg) translateX(-2%);
+  animation:v125BandA 17s ease-in-out infinite alternate;
+}
+#uaiCompanionRoot .uai-c-v125-band.b2{
+  top:63%;
+  opacity:.58;
+  transform:rotate(12deg) scaleX(1.08);
+  animation:v125BandB 21s ease-in-out -8s infinite alternate;
+}
+@keyframes v125BandA{
+  0%{translate:-5% -8px;scale:.98 1}
+  100%{translate:7% 13px;scale:1.04 1.08}
+}
+@keyframes v125BandB{
+  0%{translate:6% 10px;scale:1.02 .95}
+  100%{translate:-6% -14px;scale:.97 1.07}
+}
+
+/* Layer 4: Canvas stars/meteors. */
+#uaiCompanionRoot .uai-c-v125-stars{
+  position:absolute;
+  inset:0;
+  z-index:3;
+  width:100%;
+  height:100%;
+  opacity:1;
+  transform:translate3d(calc(var(--v125-parallax-x) * .82),calc(var(--v125-parallax-y) * .82),0);
+  transition:transform .25s cubic-bezier(.2,.75,.2,1);
+}
+
+/* Layer 5: foreground cross-glints. */
+#uaiCompanionRoot .uai-c-v125-glints{
+  position:absolute;
+  inset:0;
+  z-index:4;
+  transform:translate3d(var(--v125-parallax-x),var(--v125-parallax-y),0);
+  transition:transform .22s cubic-bezier(.2,.75,.2,1);
+}
+#uaiCompanionRoot .uai-c-v125-glint{
+  position:absolute;
+  left:var(--x);
+  top:var(--y);
+  width:var(--s);
+  height:var(--s);
+  opacity:0;
+  filter:drop-shadow(0 0 7px rgba(224,190,255,.78));
+  animation:v125Glint var(--d) ease-in-out var(--delay) infinite;
+}
+#uaiCompanionRoot .uai-c-v125-glint::before,
+#uaiCompanionRoot .uai-c-v125-glint::after{
+  content:"";
+  position:absolute;
+  left:50%;top:50%;
+  transform:translate(-50%,-50%);
+  border-radius:999px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.94),transparent);
+}
+#uaiCompanionRoot .uai-c-v125-glint::before{width:100%;height:1px}
+#uaiCompanionRoot .uai-c-v125-glint::after{width:1px;height:100%;background:linear-gradient(180deg,transparent,rgba(255,255,255,.96),transparent)}
+@keyframes v125Glint{
+  0%,70%,100%{opacity:0;transform:scale(.35) rotate(0deg)}
+  78%{opacity:.34}
+  84%{opacity:1;transform:scale(1.15) rotate(8deg)}
+  91%{opacity:.18;transform:scale(.72) rotate(15deg)}
+}
+
+/* A subtle top vignette keeps text readable without freezing the scene. */
+#uaiCompanionRoot .uai-c-v125-scene::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:5;
+  pointer-events:none;
+  background:
+    linear-gradient(180deg,rgba(6,6,24,.18) 0%,transparent 20%,transparent 74%,rgba(5,5,20,.20) 100%),
+    radial-gradient(ellipse at center,transparent 44%,rgba(4,4,19,.22) 100%);
+}
+
+@media (prefers-reduced-motion:reduce){
+  #uaiCompanionRoot .uai-c-v125-nebula i,
+  #uaiCompanionRoot .uai-c-v125-band,
+  #uaiCompanionRoot .uai-c-v125-glint{animation-duration:42s!important}
+}
