@@ -1,0 +1,94 @@
+/* Companion Live2D Stage — desktop-first virtual character layer. */
+#uaiCompanionRoot .uai-c-live2d-layer{
+  position:absolute;
+  inset:62px 0 0;
+  z-index:4;
+  overflow:hidden;
+  pointer-events:none;
+  opacity:0;
+  transition:opacity .55s ease,filter .55s ease;
+  filter:saturate(.96) brightness(.96);
+}
+
+#uaiCompanionRoot.uai-c-live2d-active .uai-c-live2d-layer{
+  opacity:1;
+  filter:saturate(1.05) brightness(1.02);
+}
+
+#uaiCompanionRoot .uai-c-live2d-stage{
+  position:absolute;
+  inset:0;
+  overflow:hidden;
+  pointer-events:none;
+}
+
+#uaiCompanionRoot .uai-c-live2d-canvas{
+  position:absolute;
+  inset:0;
+  width:100%!important;
+  height:100%!important;
+  display:block;
+  pointer-events:none;
+  opacity:1;
+  filter:drop-shadow(0 18px 35px rgba(29,13,80,.20));
+}
+
+#uaiCompanionRoot .uai-c-live2d-floor{
+  position:absolute;
+  left:48%;
+  bottom:2%;
+  width:42%;
+  height:12%;
+  transform:translateX(-10%);
+  border-radius:50%;
+  pointer-events:none;
+  opacity:.52;
+  background:radial-gradient(ellipse,rgba(var(--v127-accent-rgb,186,116,255),.28) 0%,rgba(var(--v127-accent-rgb,186,116,255),.10) 38%,transparent 72%);
+  filter:blur(12px);
+  animation:uaiLive2DFloorBreath 5.8s ease-in-out infinite;
+}
+
+#uaiCompanionRoot .uai-c-live2d-wash{
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:
+    linear-gradient(90deg,rgba(7,7,28,.14) 0%,rgba(7,7,28,.03) 40%,transparent 58%),
+    radial-gradient(circle at 74% 46%,rgba(var(--v127-accent-rgb,186,116,255),.10),transparent 30%);
+}
+
+#uaiCompanionRoot.uai-c-live2d-active .uai-c-v122-portrait-wrap{
+  opacity:0!important;
+  transform:translateY(8px) scale(.88)!important;
+  pointer-events:none!important;
+}
+
+#uaiCompanionRoot.uai-c-live2d-active .uai-c-v122-scene{
+  background:
+    radial-gradient(circle at 24% 50%,rgba(255,100,205,.07),transparent 30%),
+    linear-gradient(180deg,rgba(22,12,67,.12),rgba(10,8,40,.03))!important;
+}
+
+#uaiCompanionRoot.uai-c-live2d-active .uai-c-v122-scene-copy{
+  position:relative;
+  z-index:2;
+  max-width:min(560px,64%);
+  margin-right:auto;
+}
+
+#uaiCompanionRoot.uai-c-live2d-active .uai-c-messages{
+  background:linear-gradient(90deg,rgba(9,8,34,.10),rgba(9,8,34,.035) 58%,rgba(9,8,34,.015))!important;
+}
+
+#uaiCompanionRoot[data-v129-live2d-status="loading"] .uai-c-live2d-layer{
+  opacity:.28;
+}
+
+@keyframes uaiLive2DFloorBreath{
+  0%,100%{transform:translateX(-10%) scaleX(.94);opacity:.34}
+  50%{transform:translateX(-10%) scaleX(1.06);opacity:.62}
+}
+
+@media (prefers-reduced-motion:reduce){
+  #uaiCompanionRoot .uai-c-live2d-floor{animation-duration:12s}
+}
