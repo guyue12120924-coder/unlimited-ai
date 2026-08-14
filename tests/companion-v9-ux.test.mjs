@@ -21,12 +21,15 @@ assert.doesNotMatch(boot, /ensureScript\(`\/companion-create-controls\.js/);
 assert.match(boot, /companionV9ShellReady/);
 assert.match(boot, /companionRuntimeReady/);
 
-assert.match(shell, /v9\.0-shell/);
+assert.match(shell, /v9\.2-shell/);
 assert.match(shell, /PROFILE_LIMIT = 5000/);
 assert.match(shell, /uai-c-v9-profile-actions/);
 assert.match(shell, /openManager/);
 assert.match(shell, /openEditor/);
 assert.match(shell, /openCreate/);
+assert.match(shell, /function ensureChatSearch\(/);
+assert.match(shell, /uaiV9ChatSearch/);
+assert.match(shell, /showSearch/);
 assert.match(shell, /#uaiOnboardQuick/);
 assert.match(shell, /创建你的第一个角色/);
 assert.match(shell, /开始聊天/);
