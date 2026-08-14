@@ -1,0 +1,152 @@
+/* Companion V12.4 phase 1 — composer readability, focus clarity and text contrast. Desktop visual pass. */
+
+#uaiCompanionRoot{
+  --v124-input-text:#fffaff;
+  --v124-input-placeholder:rgba(224,205,255,.48);
+  --v124-caret:#ff72d3;
+  --v124-focus:#b36cff;
+  --v124-focus-pink:#ff5fc8;
+}
+
+/* The real textarea text must stay bright even while generation temporarily disables the field. */
+#uaiCompanionRoot #uaiCompanionInput,
+#uaiCompanionRoot .uai-c-input{
+  color:var(--v124-input-text)!important;
+  -webkit-text-fill-color:var(--v124-input-text)!important;
+  caret-color:var(--v124-caret)!important;
+  opacity:1!important;
+  font-size:15.5px!important;
+  font-weight:560!important;
+  line-height:1.6!important;
+  letter-spacing:.01em!important;
+  text-shadow:0 0 16px rgba(201,156,255,.11)!important;
+  background:transparent!important;
+}
+#uaiCompanionRoot #uaiCompanionInput::placeholder,
+#uaiCompanionRoot .uai-c-input::placeholder{
+  color:var(--v124-input-placeholder)!important;
+  -webkit-text-fill-color:var(--v124-input-placeholder)!important;
+  opacity:1!important;
+  font-weight:500!important;
+  text-shadow:none!important;
+}
+#uaiCompanionRoot #uaiCompanionInput:disabled,
+#uaiCompanionRoot .uai-c-input:disabled{
+  color:var(--v124-input-text)!important;
+  -webkit-text-fill-color:var(--v124-input-text)!important;
+  opacity:1!important;
+  cursor:text!important;
+}
+
+/* Make the composer look active instead of washed out. */
+#uaiCompanionRoot .uai-c-composer{
+  position:relative!important;
+  overflow:hidden!important;
+  border-color:rgba(223,184,255,.54)!important;
+  background:
+    radial-gradient(circle at 82% 48%,rgba(255,78,196,.15),transparent 27%),
+    radial-gradient(circle at 18% 0%,rgba(145,87,255,.15),transparent 33%),
+    linear-gradient(145deg,rgba(62,41,139,.88),rgba(35,27,94,.90))!important;
+  box-shadow:
+    0 20px 60px rgba(25,7,72,.44),
+    0 0 0 1px rgba(165,100,255,.13),
+    0 0 34px rgba(160,86,255,.21),
+    inset 0 1px 0 rgba(255,255,255,.13),
+    inset 0 -20px 55px rgba(42,20,104,.18)!important;
+  transition:border-color .18s ease,box-shadow .18s ease,background .18s ease!important;
+}
+#uaiCompanionRoot .uai-c-composer::before{
+  content:""!important;
+  position:absolute!important;
+  inset:0!important;
+  pointer-events:none!important;
+  border-radius:inherit!important;
+  background:linear-gradient(105deg,transparent 0 28%,rgba(255,255,255,.08) 43%,transparent 58% 100%)!important;
+  transform:translateX(-115%)!important;
+  opacity:.65!important;
+}
+#uaiCompanionRoot .uai-c-composer:focus-within,
+#uaiCompanionRoot .uai-c-composer.uai-c-v124-focused{
+  border-color:rgba(241,202,255,.83)!important;
+  background:
+    radial-gradient(circle at 84% 50%,rgba(255,76,198,.22),transparent 28%),
+    radial-gradient(circle at 18% 0%,rgba(161,96,255,.23),transparent 34%),
+    linear-gradient(145deg,rgba(70,43,158,.94),rgba(39,28,102,.94))!important;
+  box-shadow:
+    0 22px 66px rgba(32,8,91,.52),
+    0 0 0 3px rgba(177,103,255,.10),
+    0 0 42px rgba(174,94,255,.30),
+    0 0 26px rgba(255,81,195,.12),
+    inset 0 1px 0 rgba(255,255,255,.18)!important;
+}
+#uaiCompanionRoot .uai-c-composer.uai-c-v124-has-value{
+  border-color:rgba(232,190,255,.68)!important;
+}
+#uaiCompanionRoot .uai-c-composer.uai-c-v124-has-value::before{
+  animation:v124ComposerShine 3.8s ease-in-out infinite!important;
+}
+@keyframes v124ComposerShine{
+  0%,72%,100%{transform:translateX(-115%);opacity:0}
+  80%{opacity:.48}
+  92%{transform:translateX(115%);opacity:0}
+}
+
+/* Keep both action states easy to distinguish. */
+#uaiCompanionRoot .uai-c-send,
+#uaiCompanionRoot .uai-c-stop{
+  color:#fff!important;
+  -webkit-text-fill-color:#fff!important;
+  opacity:1!important;
+  font-weight:800!important;
+  text-shadow:0 1px 8px rgba(45,13,86,.35)!important;
+}
+#uaiCompanionRoot .uai-c-send{
+  border:1px solid rgba(255,219,252,.50)!important;
+  background:linear-gradient(145deg,#c174ff 0%,#8c4cff 48%,#ff57bd 130%)!important;
+  box-shadow:0 0 0 5px rgba(156,87,255,.12),0 0 26px rgba(176,86,255,.50),0 0 38px rgba(255,74,190,.20),inset 0 1px 0 rgba(255,255,255,.35)!important;
+}
+#uaiCompanionRoot .uai-c-send:hover{
+  filter:saturate(1.16) brightness(1.10)!important;
+  box-shadow:0 0 0 6px rgba(161,91,255,.15),0 0 34px rgba(183,93,255,.62),0 0 44px rgba(255,72,191,.26),inset 0 1px 0 rgba(255,255,255,.42)!important;
+}
+#uaiCompanionRoot .uai-c-stop{
+  border:1px solid rgba(226,198,255,.42)!important;
+  background:linear-gradient(145deg,rgba(113,79,187,.92),rgba(77,57,143,.96))!important;
+  box-shadow:0 0 0 4px rgba(158,103,255,.08),0 0 20px rgba(137,78,232,.24),inset 0 1px 0 rgba(255,255,255,.18)!important;
+}
+#uaiCompanionRoot #uaiCompanionComposerWrap.generating .uai-c-composer{
+  border-color:rgba(203,162,255,.56)!important;
+  box-shadow:0 18px 54px rgba(23,7,64,.44),0 0 30px rgba(131,84,232,.19),inset 0 1px 0 rgba(255,255,255,.12)!important;
+}
+
+/* Raise contrast for currently too-faint utility text without turning the whole UI white. */
+#uaiCompanionRoot .uai-c-message-time,
+#uaiCompanionRoot .uai-c-session-time,
+#uaiCompanionRoot .uai-c-composer-hint{
+  color:rgba(224,210,255,.56)!important;
+}
+#uaiCompanionRoot .uai-c-v10-message-actions,
+#uaiCompanionRoot .uai-c-v10-message-actions button{
+  color:rgba(230,216,255,.62)!important;
+}
+#uaiCompanionRoot .uai-c-v10-message-actions button:hover{
+  color:#fff!important;
+}
+#uaiCompanionRoot .uai-c-side-label{
+  color:rgba(217,199,248,.54)!important;
+}
+#uaiCompanionRoot .uai-c-session-title,
+#uaiCompanionRoot .uai-c-sidebar-action,
+#uaiCompanionRoot .uai-c-v121-rail-nav button{
+  text-shadow:0 0 12px rgba(168,115,255,.06)!important;
+}
+
+/* Selection and autofill should not create dark unreadable blocks. */
+#uaiCompanionRoot #uaiCompanionInput::selection{background:rgba(190,106,255,.42)!important;color:#fff!important}
+#uaiCompanionRoot #uaiCompanionInput:-webkit-autofill,
+#uaiCompanionRoot #uaiCompanionInput:-webkit-autofill:hover,
+#uaiCompanionRoot #uaiCompanionInput:-webkit-autofill:focus{
+  -webkit-text-fill-color:#fffaff!important;
+  -webkit-box-shadow:0 0 0 1000px transparent inset!important;
+  transition:background-color 9999s ease-out 0s!important;
+}
