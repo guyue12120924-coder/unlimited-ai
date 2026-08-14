@@ -1,6 +1,7 @@
 // Companion V9 interaction shell: removes duplicate chrome and turns the profile card into the role hub.
 (() => {
-  const REVISION = "2026-08-14-v9.0-shell-1";
+  const REVISION = "2026-08-14-v9.0-shell-2";
+  const PROFILE_LIMIT = 5000;
   let scheduled = false;
 
   function activeProfile() {
@@ -95,6 +96,41 @@
     if (status) status.textContent = "AI 陪伴";
   }
 
+  function cleanOnboarding() {
+    const mask = document.getElementById("uaiCompanionModalMask");
+    if (!mask || mask.hidden) return;
+    const onboarding = mask.querySelector(".uai-c-onboarding");
+    if (!onboarding) return;
+
+    onboarding.querySelector("#uaiOnboardQuick")?.remove();
+    onboarding.querySelector(".uai-c-chip-grid")?.closest(".uai-c-field")?.remove();
+
+    const title = onboarding.querySelector(".uai-c-onboard-top h2");
+    const intro = onboarding.querySelector(".uai-c-onboard-top p");
+    const desc = onboarding.querySelector("#uaiOnboardDesc");
+    const create = onboarding.querySelector("#uaiOnboardCreate");
+    if (title) title.textContent = "创建你的第一个角色";
+    if (intro) intro.textContent = "填写名字、关系和完整角色设定，然后直接开始聊天。";
+    if (desc) {
+      desc.maxLength = PROFILE_LIMIT;
+      desc.rows = 10;
+    }
+    if (create) create.textContent = "开始聊天";
+  }
+
+  function cleanCharacterManager() {
+    const mask = document.getElementById("uaiCompanionV3Mask");
+    const modal = mask?.querySelector(".uai-c-v3-modal:not(.compact)");
+    if (!modal) return;
+    modal.classList.add("uai-c-v9-role-manager");
+    const title = modal.querySelector("header h3");
+    const desc = modal.querySelector("header p");
+    const add = modal.querySelector("#uaiCompanionAddCharacter");
+    if (title) title.textContent = "我的角色";
+    if (desc) desc.textContent = "点击角色切换；每个角色的聊天、记忆和设置互相独立。";
+    if (add) add.textContent = "＋ 新增角色";
+  }
+
   function enhance() {
     scheduled = false;
     if (document.body.dataset.uaiMode !== "companion") return;
@@ -106,6 +142,8 @@
     decorateSessions(root);
     decorateMessages(root);
     simplifyMobileHeader(root);
+    cleanOnboarding();
+    cleanCharacterManager();
   }
 
   function schedule() {
