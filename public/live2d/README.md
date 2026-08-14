@@ -2,9 +2,21 @@
 
 The companion chat supports Cubism 3/4 `.model3.json` models through the browser Live2D stage.
 
-## Recommended folder for the current 李萌 character
+## Current behavior
 
-Place the exported model exactly like this (the names inside the folder may vary as long as `limeng.model3.json` references them correctly):
+The runtime first looks for the current 李萌 model at:
+
+```text
+/live2d/characters/limeng/limeng.model3.json
+```
+
+If that local model does not exist, the browser falls back to the official Live2D `Mao` sample model hosted from the Live2D `CubismWebSamples` GitHub repository. The fallback is pinned to a specific upstream commit so later upstream changes do not silently change the test model.
+
+The Mao model is **development/test data only** in this project. When it is active, the UI displays an official-sample credit. Once a real 李萌 model exists at the local path above, it automatically takes priority and the Mao fallback/credit disappear.
+
+## Recommended folder for the real 李萌 model
+
+Place the exported model like this. File names inside the folder may vary as long as `limeng.model3.json` references them correctly.
 
 ```text
 public/live2d/characters/limeng/
@@ -21,25 +33,29 @@ public/live2d/characters/limeng/
     ...exp3.json
 ```
 
-`public/live2d/characters.json` already maps the role name `李萌` to:
+## Cubism Core — required once
 
-```text
-/live2d/characters/limeng/limeng.model3.json
-```
+This public repository intentionally does **not** commit `live2dcubismcore.min.js`.
 
-If the file is absent, the normal portrait UI remains active and the Live2D runtime is not loaded.
-
-## Cubism Core
-
-This repository intentionally does **not** commit `live2dcubismcore.min.js`.
-
-For a self-hosted/private setup, download Cubism SDK for Web from Live2D after accepting its license and copy the included Web core file to:
+Download **Cubism SDK for Web** from Live2D's official website after reviewing/accepting its license. Copy the Web Core file from that official SDK package to:
 
 ```text
 public/live2d/vendor/live2dcubismcore.min.js
 ```
 
-The runtime prefers this local file. If it is not present, it can fall back to Live2D's official hosted Cubism Core URL.
+The companion runtime only loads Cubism Core from that local path. It does not pull Cubism Core from third-party GitHub projects or mirrors.
+
+Without this file, the chat remains fully usable and shows the existing portrait UI. A small status note will say that Live2D is connected but Cubism Core is still missing.
+
+## Official sample notice
+
+The Mao fallback is a Live2D original sample used for SDK integration testing. This project keeps the sample data on Live2D's official GitHub host rather than copying the model files into this repository.
+
+When the sample is rendered, the UI provides the short notice:
+
+> This content uses sample data owned and copyrighted by Live2D Inc.
+
+Before redistributing or publishing a derivative that uses Live2D sample data, review the current Live2D Free Material License Agreement and the Live2D Cubism Sample Data Terms of Use.
 
 ## Per-character override
 
@@ -77,4 +93,4 @@ UnlimitedCompanionLive2D.playMotion("Happy");
 UnlimitedCompanionLive2D.setMouthOpen(0.6);
 ```
 
-These calls are best-effort because motion and expression group names depend on the model itself. Configure model-specific mappings in `characters.json`.
+These calls are best-effort because motion and expression group names depend on the model. Configure model-specific mappings in `characters.json`.
