@@ -15,6 +15,7 @@ assert.match(boot, /v8\.2-dual-mode/);
 assert.doesNotMatch(boot, /ensureScript\(`\/companion-v2\.js/);
 assert.doesNotMatch(boot, /ensureScript\(`\/companion-v6\.js/);
 assert.doesNotMatch(boot, /ensureScript\(`\/companion-profile-editor\.js/);
+assert.doesNotMatch(boot, /ensureScript\(`\/companion-v5-guard\.js/);
 assert.match(boot, /companion-v8-secondary\.js/);
 
 for (const retired of [
@@ -22,7 +23,8 @@ for (const retired of [
   "public/companion-v2.css",
   "public/companion-v6.js",
   "public/companion-v6.css",
-  "public/companion-profile-editor.js"
+  "public/companion-profile-editor.js",
+  "public/companion-v5-guard.js"
 ]) {
   assert.equal(fs.existsSync(retired), false, `${retired} should stay retired`);
 }
@@ -60,8 +62,12 @@ assert.match(memoryTools, /v8\.1-memory-tools/);
 
 assert.doesNotMatch(restoreCore, /new MutationObserver/);
 assert.doesNotMatch(restoreCore, /function showTemplates/);
+assert.match(restoreCore, /v8\.2-profile-restore-core/);
 assert.match(restoreCore, /PROFILE_LIMIT = 5000/);
 assert.match(restoreCore, /customDescription: clean\(raw\.customDescription \|\| raw\.description, PROFILE_LIMIT\)/);
+assert.match(restoreCore, /function normalizeSettings\(/);
+assert.match(restoreCore, /function pruneExpiredRollback\(/);
+assert.match(restoreCore, /settings: normalizeSettings\(raw\.settings\)/);
 
 assert.match(secondary, /ensureMessageActions/);
 assert.match(secondary, /ensureScrollBottom/);
