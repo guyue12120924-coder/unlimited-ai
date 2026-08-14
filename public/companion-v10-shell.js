@@ -1,6 +1,6 @@
 // Companion V10 interaction shell: calm role menu, readable conversation surface, and compact low-frequency tools.
 (() => {
-  const REVISION = "2026-08-14-v10.1-shell-1";
+  const REVISION = "2026-08-14-v10.1-shell-2";
   const PROFILE_LIMIT = 5000;
   let scheduled = false;
 
@@ -233,21 +233,13 @@
           }
           toolbar.appendChild(button);
         });
-        // Keep the legacy source node as an empty, hidden anchor. The multi-character
-        // core checks for .uai-c-v3-actions before creating retry buttons. Removing
-        // this node causes an observer loop: create -> move -> remove -> create again.
+        // Keep the real legacy source node as an empty hidden anchor. The
+        // multi-character core checks for .uai-c-v3-actions before creating
+        // retry buttons. Removing a real source causes create -> move -> remove
+        // -> create observer loops; keeping it prevents duplicates.
         source.hidden = true;
         source.dataset.v10Consumed = "1";
       });
-
-      // Ensure the core can always see a stable action anchor even when V10 loads first.
-      if (!row.querySelector(".uai-c-v3-actions")) {
-        const marker = document.createElement("span");
-        marker.className = "uai-c-v3-actions uai-c-v10-core-action-anchor";
-        marker.hidden = true;
-        marker.dataset.v10Consumed = "1";
-        toolbar.appendChild(marker);
-      }
 
       dedupeToolbar(toolbar);
       const order = ["编辑", "复制", "重新生成", "珍藏"];
