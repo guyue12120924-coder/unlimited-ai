@@ -16,6 +16,7 @@ assert.match(editor, /uaiOnboardDesc/);
 assert.match(editor, /uaiCompanionAddCharacter/);
 assert.match(editor, /personality: PROFILE_MARKER/);
 assert.match(editor, /speakingStyle: PROFILE_MARKER/);
-assert.match(css, /uai-c-v8-role-editor/);
+assert.match(css, /#uaiV8Background/);
+assert.match(css, /#uaiV8NewBackground/);
 
 console.log("Companion V8 role editor contract passed.");
