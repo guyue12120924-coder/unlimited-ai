@@ -1,7 +1,7 @@
 {
   "product": "Unlimited AI",
-  "frontendRevision": "2026-08-14-v10.1-dual-mode-1",
+  "frontendRevision": "2026-08-14-v10.2-dual-mode-1",
   "workerRevisionExpected": "2026-08-14-v10.0-worker-1",
   "diagnosticsPath": "/api/diagnostics",
-  "status": "v10.1-static-assets-current"
+  "status": "v10.2-static-assets-current"
 }
