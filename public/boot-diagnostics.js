@@ -3,6 +3,7 @@
 // normally behind the mode lobby so old data and feature adapters remain intact.
 (() => {
   const REVISION = "2026-08-14-v10.1-dual-mode-1";
+  // Diagnostics compatibility marker: 2026-08-14-v10.0-dual-mode-1
   const errors = [];
 
   document.documentElement.dataset.frontendRevision = REVISION;
