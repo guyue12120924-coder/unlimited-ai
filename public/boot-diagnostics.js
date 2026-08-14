@@ -1,8 +1,8 @@
 // public/boot-diagnostics.js
 // Startup guard + dual-mode bootstrap.
 (() => {
-  const REVISION = "2026-08-14-v12.10-live2d-sample-1";
-  // Diagnostics compatibility markers: 2026-08-14-v12.9-live2d-1 / 2026-08-14-v12.4-dual-mode-1 / 2026-08-14-v12.3-dual-mode-1 / 2026-08-14-v12.2-dual-mode-1 / 2026-08-14-v12.1-dual-mode-1 / 2026-08-14-v12.0-dual-mode-1 / 2026-08-14-v11.6-dual-mode-1
+  const REVISION = "2026-08-14-v12.11-live2d-hosted-core-1";
+  // Diagnostics compatibility markers: 2026-08-14-v12.10-live2d-sample-1 / 2026-08-14-v12.9-live2d-1 / 2026-08-14-v12.4-dual-mode-1 / 2026-08-14-v12.3-dual-mode-1 / 2026-08-14-v12.2-dual-mode-1 / 2026-08-14-v12.1-dual-mode-1 / 2026-08-14-v12.0-dual-mode-1 / 2026-08-14-v11.6-dual-mode-1
   const errors = [];
 
   document.documentElement.dataset.frontendRevision = REVISION;
