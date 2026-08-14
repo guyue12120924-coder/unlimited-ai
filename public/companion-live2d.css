@@ -10,8 +10,13 @@
   filter:saturate(.96) brightness(.96);
 }
 
-#uaiCompanionRoot.uai-c-live2d-active .uai-c-live2d-layer{
+#uaiCompanionRoot.uai-c-live2d-active .uai-c-live2d-layer,
+#uaiCompanionRoot[data-v129-live2d-status="runtime-error"] .uai-c-live2d-layer,
+#uaiCompanionRoot[data-v129-live2d-status="model-missing"] .uai-c-live2d-layer{
   opacity:1;
+}
+
+#uaiCompanionRoot.uai-c-live2d-active .uai-c-live2d-layer{
   filter:saturate(1.05) brightness(1.02);
 }
 
@@ -57,6 +62,38 @@
     radial-gradient(circle at 74% 46%,rgba(var(--v127-accent-rgb,186,116,255),.10),transparent 30%);
 }
 
+#uaiCompanionRoot .uai-c-live2d-credit{
+  position:absolute;
+  right:18px;
+  bottom:18px;
+  z-index:3;
+  max-width:360px;
+  padding:6px 10px;
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:999px;
+  background:rgba(10,8,34,.46);
+  color:rgba(239,230,255,.62);
+  box-shadow:0 8px 24px rgba(0,0,0,.14);
+  backdrop-filter:blur(12px);
+  font:500 11px/1.35 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  letter-spacing:.02em;
+}
+
+#uaiCompanionRoot .uai-c-live2d-status-note{
+  position:absolute;
+  right:24px;
+  top:22px;
+  z-index:4;
+  padding:8px 12px;
+  border:1px solid rgba(255,190,235,.18);
+  border-radius:12px;
+  background:rgba(28,14,60,.64);
+  color:rgba(255,239,250,.82);
+  box-shadow:0 10px 28px rgba(0,0,0,.18),0 0 24px rgba(191,107,255,.08);
+  backdrop-filter:blur(14px);
+  font:600 12px/1.4 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+
 #uaiCompanionRoot.uai-c-live2d-active .uai-c-v122-portrait-wrap{
   opacity:0!important;
   transform:translateY(8px) scale(.88)!important;
@@ -82,6 +119,13 @@
 
 #uaiCompanionRoot[data-v129-live2d-status="loading"] .uai-c-live2d-layer{
   opacity:.28;
+}
+
+#uaiCompanionRoot[data-v129-live2d-status="runtime-error"] .uai-c-live2d-canvas,
+#uaiCompanionRoot[data-v129-live2d-status="runtime-error"] .uai-c-live2d-floor,
+#uaiCompanionRoot[data-v129-live2d-status="model-missing"] .uai-c-live2d-canvas,
+#uaiCompanionRoot[data-v129-live2d-status="model-missing"] .uai-c-live2d-floor{
+  opacity:0;
 }
 
 @keyframes uaiLive2DFloorBreath{
