@@ -1,6 +1,6 @@
-// Companion V12.7/12.8 phase 4 — lightweight scene theme renderer + phase 5 scene-state loader.
+// Companion V12.7/12.12 phase 4 — lightweight scene theme renderer + scene state + Live2D interaction loader.
 (() => {
-  const REVISION = "2026-08-14-v12.8-phase4-loader-1";
+  const REVISION = "2026-08-15-v12.12-phase4-live2d-interaction-1";
   const THEMES = ["galaxy", "sakura", "moonlight", "neon"];
   const LABELS = {
     galaxy: "星河梦境",
@@ -33,6 +33,9 @@
   function loadPhase5SceneState() {
     ensureStyle(`/companion-v12-phase5-scene-state.css?v=${encodeURIComponent(REVISION)}`, "uaiCompanionV12Phase5SceneStateCss");
     ensureScript(`/companion-v12-phase5-scene-state.js?v=${encodeURIComponent(REVISION)}`, "uaiCompanionV12Phase5SceneStateScript");
+    // V12.12: behavior layer stays isolated from the stable chat/runtime core.
+    ensureStyle(`/companion-live2d-interaction.css?v=${encodeURIComponent(REVISION)}`, "uaiCompanionLive2dInteractionCss");
+    ensureScript(`/companion-live2d-interaction.js?v=${encodeURIComponent(REVISION)}`, "uaiCompanionLive2dInteractionScript");
   }
 
   function getRoot() {
