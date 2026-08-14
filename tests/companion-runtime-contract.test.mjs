@@ -12,7 +12,7 @@ const restoreCore = fs.readFileSync("public/companion-records.js", "utf8");
 const extras = fs.readFileSync("public/companion-extras.js", "utf8");
 const css = fs.readFileSync("public/companion-support.css", "utf8");
 
-assert.match(boot, /v9\.5-dual-mode/);
+assert.match(boot, /v9\.6-dual-mode/);
 assert.match(boot, /companion-support\.css/);
 assert.doesNotMatch(boot, /companion-profile-editor\.css/);
 assert.match(boot, /companion-characters-core\.js/);
@@ -67,7 +67,7 @@ assert.match(settings, /约 1000 字/);
 assert.match(settings, /约 5000 字/);
 assert.match(settings, /uaiV9DataPanel/);
 
-assert.match(runtime, /v9\.1-runtime/);
+assert.match(runtime, /v9\.6-runtime/);
 assert.match(runtime, /chars: 500/);
 assert.match(runtime, /chars: 1000/);
 assert.match(runtime, /chars: 5000/);
@@ -75,6 +75,8 @@ assert.match(runtime, /function patchCompanionBody\(/);
 assert.match(runtime, /function blockUnsafeActions\(/);
 assert.match(runtime, /function exportAllCharacters\(/);
 assert.doesNotMatch(runtime, /COMPANION_ROLE_CARD/);
+assert.doesNotMatch(runtime, /当前角色完整设定/);
+assert.doesNotMatch(runtime, /payload\?\.character\?\.customDescription/);
 
 assert.doesNotMatch(multi, /function ensureCharacterBar/);
 assert.doesNotMatch(multi, /function showCreateCharacter/);
@@ -104,4 +106,4 @@ assert.match(css, /uai-c-v8-message-actions/);
 assert.match(css, /uai-c-v8-review-modal/);
 assert.match(css, /uai-c-v8-data-panel/);
 
-console.log("Companion semantic module contract passed under V9.5 shell.");
+console.log("Companion semantic module contract passed under V9.6 shell.");
