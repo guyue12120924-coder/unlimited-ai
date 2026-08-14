@@ -10,6 +10,35 @@
   filter:saturate(.96) brightness(.96);
 }
 
+/*
+ * Final stacking contract.
+ * Phase-1 injects scene/messages at z-index:5 !important after this stylesheet.
+ * Use higher specificity here so the Live2D canvas sits above visual backgrounds,
+ * while actual copy/messages/buttons remain above the character.
+ */
+html body #uaiCompanionRoot .uai-c-live2d-layer{
+  z-index:6!important;
+}
+html body #uaiCompanionRoot .uai-c-v122-scene,
+html body #uaiCompanionRoot .uai-c-messages{
+  z-index:auto!important;
+}
+html body #uaiCompanionRoot .uai-c-v122-scene-copy,
+html body #uaiCompanionRoot .uai-c-message-row{
+  position:relative!important;
+  z-index:8!important;
+}
+html body #uaiCompanionRoot:not(.uai-c-live2d-active) .uai-c-v122-portrait-wrap{
+  position:relative!important;
+  z-index:8!important;
+}
+html body #uaiCompanionRoot .uai-c-header{
+  z-index:10!important;
+}
+html body #uaiCompanionRoot .uai-c-composer-wrap{
+  z-index:12!important;
+}
+
 #uaiCompanionRoot.uai-c-live2d-active .uai-c-live2d-layer,
 #uaiCompanionRoot[data-v129-live2d-status="loading"] .uai-c-live2d-layer,
 #uaiCompanionRoot[data-v129-live2d-status="runtime-error"] .uai-c-live2d-layer,
@@ -68,13 +97,13 @@
   position:absolute;
   right:18px;
   bottom:18px;
-  z-index:3;
+  z-index:30;
   max-width:360px;
   padding:6px 10px;
   border:1px solid rgba(255,255,255,.10);
   border-radius:999px;
-  background:rgba(10,8,34,.46);
-  color:rgba(239,230,255,.62);
+  background:rgba(10,8,34,.62);
+  color:rgba(239,230,255,.72);
   box-shadow:0 8px 24px rgba(0,0,0,.14);
   backdrop-filter:blur(12px);
   font:500 11px/1.35 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
@@ -85,12 +114,12 @@
   position:absolute;
   right:24px;
   top:22px;
-  z-index:20;
+  z-index:40;
   padding:8px 12px;
   border:1px solid rgba(255,190,235,.22);
   border-radius:12px;
-  background:rgba(28,14,60,.86);
-  color:rgba(255,239,250,.94);
+  background:rgba(28,14,60,.90);
+  color:rgba(255,239,250,.96);
   box-shadow:0 10px 28px rgba(0,0,0,.24),0 0 24px rgba(191,107,255,.12);
   backdrop-filter:blur(14px);
   font:600 12px/1.4 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
@@ -123,7 +152,7 @@
 
 #uaiCompanionRoot.uai-c-live2d-active .uai-c-v122-scene-copy{
   position:relative;
-  z-index:2;
+  z-index:8!important;
   max-width:min(560px,64%);
   margin-right:auto;
 }
