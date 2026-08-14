@@ -1,15 +1,16 @@
-// Companion V12.9 — Live2D virtual character stage for the companion chat.
+// Companion V12.10 — Live2D virtual character stage with official sample fallback.
 (() => {
-  const REVISION = "2026-08-14-v12.9-live2d-stage-1";
+  const REVISION = "2026-08-14-v12.10-live2d-sample-1";
   const ACTIVE_KEY = "uai_companion_active_character_v1";
   const MODEL_ASSIGNMENTS_KEY = "uai_companion_live2d_assignments_v1";
   const CONFIG_URL = "/live2d/characters.json";
   const PIXI_URL = "https://cdn.jsdelivr.net/npm/pixi.js@6.5.10/dist/browser/pixi.min.js";
   const LIVE2D_PLUGIN_URL = "https://cdn.jsdelivr.net/npm/pixi-live2d-display@0.4.0/dist/cubism4.min.js";
   const LOCAL_CORE_URL = "/live2d/vendor/live2dcubismcore.min.js";
-  const OFFICIAL_CORE_URL = "https://cubism.live2d.com/sdk-web/cubismcore/live2dcubismcore.min.js";
 
   let scheduled = false;
+  let enhanceToken = 0;
+  let loadToken = 0;
   let configPromise = null;
   let runtimePromise = null;
   let app = null;
@@ -19,7 +20,6 @@
   let currentSpec = null;
   let currentCharacterId = "";
   let currentSignature = "";
-  let loadToken = 0;
   let boundMain = null;
   let resizeObserver = null;
   let status = { state: "idle", characterId: "", modelUrl: "", message: "" };
@@ -45,11 +45,32 @@
     const list = window.UnlimitedCompanionMulti?.getCharacters?.();
     const character = Array.isArray(list) ? list.find((item) => item?.id === id) || list[0] : null;
     const state = window.UnlimitedCompanion?.getState?.() || {};
-    const profile = character?.profile || state.profile || {};
     return {
       id: character?.id || id || "legacy",
-      profile
+      profile: character?.profile || state.profile || {}
     };
+  }
+
+  function updateStatusNote(state, message = "") {
+    const note = layer?.querySelector?.("[data-live2d-status-note]");
+    if (!note) return;
+    if (state === "runtime-error") {
+      note.hidden = false;
+      note.textContent = /Cubism Core/i.test(message)
+        ? "Live2D 已接入 · 还缺 Cubism Core"
+        : "Live2D 运行环境加载失败";
+      note.title = message;
+      return;
+    }
+    if (state === "model-missing") {
+      note.hidden = false;
+      note.textContent = "Live2D 测试模型暂时不可用";
+      note.title = message;
+      return;
+    }
+    note.hidden = true;
+    note.textContent = "";
+    note.title = "";
   }
 
   function setStatus(root, state, message = "", modelUrl = "") {
@@ -60,11 +81,12 @@
       root.dataset.v129Live2dCharacter = characterId;
     }
     document.documentElement.dataset.companionLive2dStatus = state;
+    updateStatusNote(state, message);
   }
 
   function normalizeSpec(raw) {
     if (!raw) return null;
-    if (typeof raw === "string") return { model: raw };
+    if (typeof raw === "string") return { model: raw, position: {}, expressions: {}, motions: {}, tapMotionGroups: [], fallback: null, sample: null };
     if (typeof raw !== "object" || Array.isArray(raw)) return null;
     const model = String(raw.model || raw.url || "").trim();
     if (!model) return null;
@@ -74,7 +96,9 @@
       position: raw.position && typeof raw.position === "object" ? raw.position : {},
       expressions: raw.expressions && typeof raw.expressions === "object" ? raw.expressions : {},
       motions: raw.motions && typeof raw.motions === "object" ? raw.motions : {},
-      tapMotionGroups: Array.isArray(raw.tapMotionGroups) ? raw.tapMotionGroups : []
+      tapMotionGroups: Array.isArray(raw.tapMotionGroups) ? raw.tapMotionGroups : [],
+      fallback: raw.fallback ? normalizeSpec(raw.fallback) : null,
+      sample: raw.sample && typeof raw.sample === "object" ? raw.sample : null
     };
   }
 
@@ -100,7 +124,6 @@
     const assignments = localAssignments();
     const direct = normalizeSpec(assignments[character.id]);
     if (direct) return direct;
-
     const config = await readConfig();
     const byId = config?.byId && typeof config.byId === "object" ? config.byId : {};
     const byName = config?.byName && typeof config.byName === "object" ? config.byName : {};
@@ -110,18 +133,8 @@
       || null;
   }
 
-  async function resourceExists(url) {
-    if (!url) return false;
-    try {
-      const response = await fetch(url, { method: "HEAD", cache: "no-store" });
-      const type = String(response.headers.get("content-type") || "");
-      return response.ok && !type.includes("text/html");
-    } catch {
-      return false;
-    }
-  }
-
   async function probeModel(url) {
+    if (!url) return false;
     try {
       const response = await fetch(url, { cache: "no-store" });
       if (!response.ok) return false;
@@ -129,6 +142,24 @@
       if (type.includes("text/html")) return false;
       const json = await response.json();
       return Boolean(json && typeof json === "object" && (json.FileReferences || json.fileReferences));
+    } catch {
+      return false;
+    }
+  }
+
+  async function selectAvailableSpec(spec) {
+    if (!spec?.model) return null;
+    if (await probeModel(spec.model)) return spec;
+    if (spec.fallback?.model && await probeModel(spec.fallback.model)) return spec.fallback;
+    return null;
+  }
+
+  async function resourceExists(url) {
+    if (!url) return false;
+    try {
+      const response = await fetch(url, { method: "HEAD", cache: "no-store" });
+      const type = String(response.headers.get("content-type") || "");
+      return response.ok && !type.includes("text/html");
     } catch {
       return false;
     }
@@ -162,17 +193,14 @@
     if (window.PIXI?.live2d?.Live2DModel && window.Live2DCubismCore) return;
     if (runtimePromise) return runtimePromise;
     runtimePromise = (async () => {
-      await loadScript(PIXI_URL, "uaiCompanionPixiV6", () => window.PIXI?.Application);
-
       if (!window.Live2DCubismCore) {
         const hasLocalCore = await resourceExists(LOCAL_CORE_URL);
-        if (hasLocalCore) {
-          await loadScript(LOCAL_CORE_URL, "uaiCompanionCubismCore", () => window.Live2DCubismCore);
-        } else {
-          await loadScript(OFFICIAL_CORE_URL, "uaiCompanionCubismCore", () => window.Live2DCubismCore);
+        if (!hasLocalCore) {
+          throw new Error("缺少 Cubism Core。请从 Live2D 官方 Cubism SDK for Web 下载包中取得 live2dcubismcore.min.js，并放到 /live2d/vendor/live2dcubismcore.min.js。");
         }
+        await loadScript(LOCAL_CORE_URL, "uaiCompanionCubismCore", () => window.Live2DCubismCore);
       }
-
+      await loadScript(PIXI_URL, "uaiCompanionPixiV6", () => window.PIXI?.Application);
       await loadScript(LIVE2D_PLUGIN_URL, "uaiCompanionPixiLive2D", () => window.PIXI?.live2d?.Live2DModel);
     })().catch((error) => {
       runtimePromise = null;
@@ -194,6 +222,8 @@
           <canvas class="uai-c-live2d-canvas"></canvas>
           <div class="uai-c-live2d-floor"></div>
           <div class="uai-c-live2d-wash"></div>
+          <div class="uai-c-live2d-credit" data-live2d-credit hidden></div>
+          <div class="uai-c-live2d-status-note" data-live2d-status-note hidden></div>
         </div>`;
       main.prepend(host);
     }
@@ -202,6 +232,21 @@
     bindMainInteraction(main);
     observeResize(main);
     return host;
+  }
+
+  function updateCredit(spec) {
+    const credit = layer?.querySelector?.("[data-live2d-credit]");
+    if (!credit) return;
+    const sample = spec?.sample;
+    if (!sample?.name) {
+      credit.hidden = true;
+      credit.textContent = "";
+      credit.title = "";
+      return;
+    }
+    credit.hidden = false;
+    credit.textContent = `官方测试模型 ${sample.name} · ${sample.owner || "Live2D Inc."}`;
+    credit.title = String(sample.notice || "This content uses sample data owned and copyrighted by Live2D Inc.");
   }
 
   function observeResize(main) {
@@ -222,13 +267,11 @@
       if (!currentModel || !liveRoot()) return;
       try { currentModel.focus(event.clientX, event.clientY); } catch {}
     }, { passive: true });
-
     main.addEventListener("pointerleave", () => {
       if (!currentModel) return;
       const rect = main.getBoundingClientRect();
       try { currentModel.focus(rect.left + rect.width * .72, rect.top + rect.height * .46); } catch {}
     }, { passive: true });
-
     main.addEventListener("pointerdown", (event) => {
       if (!currentModel || !liveRoot()) return;
       if (event.target?.closest?.("button,input,textarea,select,a,.uai-c-message-row,.uai-c-composer")) return;
@@ -265,8 +308,7 @@
     if (!currentModel || !layer) return;
     const rect = layer.getBoundingClientRect();
     if (!rect.width || !rect.height) return;
-    const spec = currentSpec || {};
-    const position = spec.position || {};
+    const position = currentSpec?.position || {};
     const base = currentModel.__uaiBaseSize || { width: currentModel.width || 1, height: currentModel.height || 1 };
     const targetHeight = rect.height * clamp(position.height, .46, 1.08, .82);
     const scale = targetHeight / Math.max(1, base.height);
@@ -285,7 +327,7 @@
     try { app?.ticker?.start?.(); } catch {}
   }
 
-  function destroyCurrentModel(root, nextState = "idle") {
+  function destroyCurrentModel(root, nextState = "idle", message = "") {
     loadToken += 1;
     if (currentModel) {
       try { app?.stage?.removeChild?.(currentModel); } catch {}
@@ -295,8 +337,9 @@
     currentSpec = null;
     currentCharacterId = "";
     stopTicker();
+    updateCredit(null);
     root?.classList.remove("uai-c-live2d-active");
-    if (nextState) setStatus(root, nextState);
+    if (nextState) setStatus(root, nextState, message);
   }
 
   function asList(value, fallback = []) {
@@ -307,9 +350,7 @@
 
   async function firstSuccessful(items, runner) {
     for (const item of items) {
-      try {
-        if (await runner(item)) return true;
-      } catch {}
+      try { if (await runner(item)) return true; } catch {}
     }
     return false;
   }
@@ -340,8 +381,7 @@
 
   async function playTapReaction(hitAreas = []) {
     if (!currentModel) return false;
-    const configured = currentSpec?.tapMotionGroups;
-    const groups = asList(configured, ["TapBody", "tap_body", "TouchBody"]);
+    const groups = asList(currentSpec?.tapMotionGroups, ["TapBody", "tap_body", "TouchBody"]);
     const bodyHit = !hitAreas.length || hitAreas.some((name) => /body|head|face/i.test(String(name)));
     if (!bodyHit) return false;
     return firstSuccessful(groups, (group) => currentModel.motion(group));
@@ -362,10 +402,8 @@
     const root = liveRoot();
     if (root) root.dataset.v129Live2dEmotion = key;
     if (!currentModel) return false;
-    const expressionNames = asList(currentSpec?.expressions?.[key], defaultExpressionNames(key));
-    const motionGroups = asList(currentSpec?.motions?.[key], defaultMotionGroups(key));
-    const expressionChanged = await firstSuccessful(expressionNames, (name) => currentModel.expression(name));
-    const motionChanged = await firstSuccessful(motionGroups, (group) => currentModel.motion(group));
+    const expressionChanged = await firstSuccessful(asList(currentSpec?.expressions?.[key], defaultExpressionNames(key)), (name) => currentModel.expression(name));
+    const motionChanged = await firstSuccessful(asList(currentSpec?.motions?.[key], defaultMotionGroups(key)), (group) => currentModel.motion(group));
     return expressionChanged || motionChanged;
   }
 
@@ -376,10 +414,7 @@
     const setter = core?.setParameterValueById;
     if (typeof setter !== "function") return false;
     for (const id of ["ParamMouthOpenY", "PARAM_MOUTH_OPEN_Y"]) {
-      try {
-        setter.call(core, id, amount);
-        return true;
-      } catch {}
+      try { setter.call(core, id, amount); return true; } catch {}
     }
     return false;
   }
@@ -388,26 +423,15 @@
     const token = ++loadToken;
     setStatus(root, "loading", "正在加载 Live2D", spec.model);
     root.classList.remove("uai-c-live2d-active");
-
-    const exists = await probeModel(spec.model);
-    if (token !== loadToken) return;
-    if (!exists) {
-      destroyCurrentModel(root, "model-missing");
-      status.modelUrl = spec.model;
-      return;
-    }
-
     try {
       await ensureRuntime();
       if (token !== loadToken) return;
       ensureApp();
       if (!app) throw new Error("PixiJS 初始化失败");
-
       if (currentModel) {
         try { app.stage.removeChild(currentModel); } catch {}
         try { currentModel.destroy?.({ children: true }); } catch { try { currentModel.destroy?.(); } catch {} }
       }
-
       const Live2DModel = window.PIXI?.live2d?.Live2DModel;
       if (!Live2DModel) throw new Error("Live2DModel 不可用");
       const model = await Live2DModel.from(spec.model, {
@@ -419,7 +443,6 @@
         try { model.destroy?.({ children: true }); } catch {}
         return;
       }
-
       currentModel = model;
       currentSpec = spec;
       currentCharacterId = character.id;
@@ -431,20 +454,22 @@
       app.stage.addChild(model);
       resizeRenderer();
       fitModel();
+      updateCredit(spec);
       root.classList.add("uai-c-live2d-active");
       setStatus(root, "ready", "", spec.model);
       startTicker();
     } catch (error) {
       if (token !== loadToken) return;
-      destroyCurrentModel(root, "runtime-error");
+      const message = error?.message || String(error);
+      destroyCurrentModel(root, "runtime-error", message);
       status.modelUrl = spec.model;
-      status.message = error?.message || String(error);
       console.warn("[Unlimited AI] Live2D load failed:", error);
     }
   }
 
   async function enhance() {
     scheduled = false;
+    const run = ++enhanceToken;
     const root = liveRoot();
     if (!root) {
       stopTicker();
@@ -452,25 +477,30 @@
     }
     root.dataset.v129Live2d = REVISION;
     ensureLayer(root);
-
     const character = activeCharacter();
-    const spec = await resolveSpec(character);
-    const signature = `${character.id}|${spec?.model || "none"}`;
-    if (signature === currentSignature) {
-      if (currentModel) {
-        root.classList.add("uai-c-live2d-active");
-        fitModel();
-        startTicker();
-      }
-      return;
-    }
-
-    currentSignature = signature;
-    if (!spec?.model) {
+    const configured = await resolveSpec(character);
+    if (run !== enhanceToken) return;
+    if (!configured?.model) {
+      currentSignature = `${character.id}|none`;
       destroyCurrentModel(root, "unconfigured");
-      currentSignature = signature;
       return;
     }
+    const spec = await selectAvailableSpec(configured);
+    if (run !== enhanceToken) return;
+    if (!spec?.model) {
+      currentSignature = `${character.id}|missing`;
+      destroyCurrentModel(root, "model-missing", "正式模型和官方测试模型都无法访问");
+      return;
+    }
+    const signature = `${character.id}|${spec.model}|${spec.sample?.name || "custom"}`;
+    if (signature === currentSignature && currentModel) {
+      root.classList.add("uai-c-live2d-active");
+      fitModel();
+      updateCredit(spec);
+      startTicker();
+      return;
+    }
+    currentSignature = signature;
     await loadModel(root, character, spec, signature);
   }
 
@@ -524,7 +554,6 @@
     document.addEventListener("visibilitychange", () => {
       if (document.hidden) stopTicker(); else schedule();
     });
-
     window.UnlimitedCompanionLive2D = {
       revision: REVISION,
       refresh,
