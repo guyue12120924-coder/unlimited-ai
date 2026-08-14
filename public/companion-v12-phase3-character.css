@@ -1,0 +1,203 @@
+/* Companion V12.6 phase 3 — living central character stage. */
+
+#uaiCompanionRoot{
+  --v126-pink:#ff69c9;
+  --v126-purple:#a56cff;
+  --v126-blue:#7f8cff;
+}
+
+/* Keep the approved composition; only make the focal character feel alive. */
+#uaiCompanionRoot .uai-c-v122-portrait-wrap{
+  --v126-shift-x:0px;
+  --v126-shift-y:0px;
+  transform:translate3d(var(--v126-shift-x),var(--v126-shift-y),0)!important;
+  transition:transform .42s cubic-bezier(.2,.75,.2,1)!important;
+  isolation:isolate;
+}
+
+/* Slow breathing halo behind all three rings. */
+#uaiCompanionRoot .uai-c-v122-portrait-wrap::before{
+  content:"";
+  position:absolute;
+  inset:25px;
+  z-index:-2;
+  border-radius:50%;
+  pointer-events:none;
+  background:radial-gradient(circle,rgba(255,113,205,.21) 0%,rgba(166,104,255,.18) 33%,rgba(112,131,255,.08) 58%,transparent 75%);
+  filter:blur(12px);
+  animation:v126HaloBreath 5.4s ease-in-out infinite;
+}
+#uaiCompanionRoot .uai-c-v122-portrait-wrap::after{
+  content:"";
+  position:absolute;
+  inset:-9px;
+  z-index:-3;
+  border-radius:50%;
+  pointer-events:none;
+  background:conic-gradient(from 0deg,transparent 0 13%,rgba(255,132,214,.22) 20%,transparent 30% 49%,rgba(140,121,255,.19) 58%,transparent 68% 86%,rgba(255,117,204,.16) 93%,transparent 100%);
+  filter:blur(7px);
+  animation:v126OuterAurora 19s linear infinite;
+}
+@keyframes v126HaloBreath{
+  0%,100%{transform:scale(.92);opacity:.55;filter:blur(14px)}
+  50%{transform:scale(1.10);opacity:1;filter:blur(18px)}
+}
+@keyframes v126OuterAurora{to{transform:rotate(360deg)}}
+
+/* Real uploaded avatar remains the content; only the frame breathes. */
+#uaiCompanionRoot .uai-c-v122-portrait{
+  animation:v126PortraitBreath 5.8s ease-in-out infinite!important;
+  transform-origin:50% 56%!important;
+  will-change:transform,box-shadow,filter;
+}
+#uaiCompanionRoot .uai-c-v122-portrait img{
+  transform:scale(1.012);
+  transition:transform .5s ease,filter .5s ease;
+}
+#uaiCompanionRoot .uai-c-v122-portrait-wrap:hover .uai-c-v122-portrait img{
+  transform:scale(1.035);
+  filter:saturate(1.05) brightness(1.03);
+}
+@keyframes v126PortraitBreath{
+  0%,100%{
+    transform:translate3d(0,2px,0) scale(.992);
+    box-shadow:0 0 0 6px rgba(153,83,255,.10),0 0 29px rgba(165,80,255,.34),0 0 61px rgba(255,83,192,.18),0 22px 46px rgba(4,2,29,.28)
+  }
+  50%{
+    transform:translate3d(0,-4px,0) scale(1.018);
+    box-shadow:0 0 0 8px rgba(166,96,255,.14),0 0 43px rgba(181,91,255,.52),0 0 84px rgba(255,92,196,.30),0 27px 52px rgba(4,2,29,.34)
+  }
+}
+
+/* Three orbital rings: intentionally different speeds and visual weights. */
+#uaiCompanionRoot .uai-c-v122-orbit.orbit-1{
+  animation:v126OrbitFast 12s linear infinite!important;
+  filter:drop-shadow(0 0 7px rgba(255,105,203,.35));
+}
+#uaiCompanionRoot .uai-c-v122-orbit.orbit-2{
+  animation:v126OrbitReverse 18s linear infinite!important;
+  filter:drop-shadow(0 0 8px rgba(126,143,255,.28));
+}
+#uaiCompanionRoot .uai-c-v122-orbit.orbit-3{
+  animation:v126OrbitSlow 27s linear infinite!important;
+  filter:drop-shadow(0 0 9px rgba(182,122,255,.22));
+}
+#uaiCompanionRoot .uai-c-v122-orbit::after{
+  content:"";
+  position:absolute;
+  inset:7px;
+  border-radius:50%;
+  pointer-events:none;
+  opacity:.56;
+  background:conic-gradient(from 45deg,transparent 0 18%,rgba(255,173,227,.34) 24%,transparent 31% 57%,rgba(146,159,255,.27) 63%,transparent 70% 100%);
+  -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 2px),#000 calc(100% - 1px));
+  mask:radial-gradient(farthest-side,transparent calc(100% - 2px),#000 calc(100% - 1px));
+}
+#uaiCompanionRoot .uai-c-v122-orbit.orbit-2::after{inset:4px;opacity:.42;transform:rotate(120deg)}
+#uaiCompanionRoot .uai-c-v122-orbit.orbit-3::after{inset:-4px;opacity:.31;transform:rotate(220deg)}
+@keyframes v126OrbitFast{to{transform:rotate(360deg)}}
+@keyframes v126OrbitReverse{to{transform:rotate(-360deg)}}
+@keyframes v126OrbitSlow{to{transform:rotate(360deg)}}
+
+/* Existing orbit stars now breathe independently while travelling with their rings. */
+#uaiCompanionRoot .uai-c-v122-orbit i{
+  animation:v126OrbitStar 2.7s ease-in-out infinite!important;
+}
+#uaiCompanionRoot .uai-c-v122-orbit i:nth-child(2){animation-delay:-.9s!important}
+#uaiCompanionRoot .uai-c-v122-orbit i:nth-child(3){animation-delay:-1.8s!important}
+#uaiCompanionRoot .uai-c-v122-orbit i:nth-child(4){animation-delay:-2.25s!important}
+@keyframes v126OrbitStar{
+  0%,100%{opacity:.42;scale:.72;box-shadow:0 0 5px rgba(255,255,255,.45),0 0 11px rgba(196,144,255,.35)}
+  48%{opacity:1;scale:1.28;box-shadow:0 0 8px #fff,0 0 21px rgba(255,121,210,.72)}
+}
+
+/* Random JS hearts are transient; they do not block interaction. */
+#uaiCompanionRoot .uai-c-v126-heart-field{
+  position:absolute;
+  inset:-8px;
+  z-index:10;
+  pointer-events:none;
+  overflow:visible;
+}
+#uaiCompanionRoot .uai-c-v126-heart{
+  position:absolute;
+  left:var(--left);
+  bottom:22%;
+  color:var(--heart-color,#ff8fd3);
+  font-size:var(--size,14px);
+  line-height:1;
+  opacity:0;
+  text-shadow:0 0 7px rgba(255,255,255,.78),0 0 18px currentColor;
+  filter:drop-shadow(0 0 5px rgba(255,101,198,.35));
+  will-change:transform,opacity;
+  animation:v126HeartRise var(--duration,5.6s) cubic-bezier(.18,.68,.28,1) forwards;
+}
+@keyframes v126HeartRise{
+  0%{opacity:0;transform:translate3d(0,8px,0) scale(.55) rotate(var(--rotation,0deg))}
+  14%{opacity:.9}
+  52%{opacity:.82;transform:translate3d(calc(var(--drift-x,0px) * .45),-58px,0) scale(1.05) rotate(calc(var(--rotation,0deg) + 8deg))}
+  100%{opacity:0;transform:translate3d(var(--drift-x,0px),-132px,0) scale(.78) rotate(calc(var(--rotation,0deg) + 18deg))}
+}
+
+/* Relationship/name copy glows gently instead of flashing. */
+#uaiCompanionRoot .uai-c-v122-name strong{
+  animation:v126NameGlow 4.8s ease-in-out infinite!important;
+}
+#uaiCompanionRoot .uai-c-v122-meta{
+  text-shadow:0 0 12px rgba(188,142,255,.12)!important;
+  animation:v126MetaGlow 5.4s ease-in-out infinite!important;
+}
+#uaiCompanionRoot .uai-c-v122-online-dot{
+  animation:v126OnlinePulse 2.4s ease-in-out infinite!important;
+}
+@keyframes v126NameGlow{
+  0%,100%{text-shadow:0 0 16px rgba(214,164,255,.20),0 0 34px rgba(158,96,255,.12)}
+  50%{text-shadow:0 0 22px rgba(231,185,255,.38),0 0 48px rgba(255,98,202,.20)}
+}
+@keyframes v126MetaGlow{0%,100%{opacity:.82}50%{opacity:1}}
+@keyframes v126OnlinePulse{0%,100%{scale:.88;box-shadow:0 0 8px rgba(69,228,165,.60)}50%{scale:1.18;box-shadow:0 0 16px rgba(69,228,165,.98)}}
+
+/* Quick topics: low-frequency travelling highlight + stronger hover feedback. */
+#uaiCompanionRoot .uai-c-v122-prompts button{
+  position:relative!important;
+  overflow:hidden!important;
+  isolation:isolate!important;
+}
+#uaiCompanionRoot .uai-c-v122-prompts button::before{
+  content:"";
+  position:absolute;
+  inset:-1px;
+  z-index:-2;
+  border-radius:inherit;
+  background:linear-gradient(110deg,transparent 0 31%,rgba(255,255,255,.16) 43%,rgba(255,144,217,.16) 49%,transparent 61% 100%);
+  transform:translateX(-125%);
+  animation:v126PromptShine 5.8s ease-in-out infinite;
+}
+#uaiCompanionRoot .uai-c-v122-prompts button:nth-child(2)::before{animation-delay:-1.9s}
+#uaiCompanionRoot .uai-c-v122-prompts button:nth-child(3)::before{animation-delay:-3.8s}
+#uaiCompanionRoot .uai-c-v122-prompts button:hover{
+  transform:translateY(-3px) scale(1.018)!important;
+  border-color:rgba(247,220,255,.58)!important;
+  box-shadow:0 13px 32px rgba(94,38,194,.27),0 0 28px rgba(255,82,191,.15),inset 0 1px 0 rgba(255,255,255,.16)!important;
+}
+#uaiCompanionRoot .uai-c-v122-prompts button:active{transform:translateY(-1px) scale(.985)!important}
+@keyframes v126PromptShine{
+  0%,64%,100%{transform:translateX(-125%);opacity:0}
+  71%{opacity:.68}
+  84%{transform:translateX(125%);opacity:.18}
+  85%{opacity:0}
+}
+
+@media (max-width:920px){
+  #uaiCompanionRoot .uai-c-v122-portrait-wrap::after{inset:4px}
+  #uaiCompanionRoot .uai-c-v126-heart-field{inset:0}
+}
+
+@media (prefers-reduced-motion:reduce){
+  #uaiCompanionRoot .uai-c-v122-portrait,
+  #uaiCompanionRoot .uai-c-v122-name strong,
+  #uaiCompanionRoot .uai-c-v122-meta,
+  #uaiCompanionRoot .uai-c-v122-online-dot,
+  #uaiCompanionRoot .uai-c-v122-prompts button::before{animation-duration:16s!important}
+  #uaiCompanionRoot .uai-c-v126-heart{animation-duration:9s!important}
+}
