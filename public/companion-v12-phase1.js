@@ -1,6 +1,6 @@
-// Companion V12.4/12.5 — composer polish + guaranteed visible animated chat backdrop.
+// Companion V12.4/12.6 — composer polish + guaranteed visible animated chat backdrop + phase 3 loader.
 (() => {
-  const REVISION = "2026-08-14-v12.5-live-background-2";
+  const REVISION = "2026-08-14-v12.6-live-character-1";
   let boundInput = null;
   let scheduled = false;
 
@@ -22,10 +22,13 @@
     document.body.appendChild(script);
   }
 
-  function loadPhase2Background() {
+  function loadPhaseEnhancements() {
     // Keep the richer Canvas renderer, but do not rely on it for visible motion.
     ensureStyle(`/companion-v12-phase2-background.css?v=${encodeURIComponent(REVISION)}`, "uaiCompanionV12Phase2BackgroundCss");
     ensureScript(`/companion-v12-phase2-background.js?v=${encodeURIComponent(REVISION)}`, "uaiCompanionV12Phase2BackgroundScript");
+    // Phase 3 lives on top of the approved V12.2 hero and does not change the layout.
+    ensureStyle(`/companion-v12-phase3-character.css?v=${encodeURIComponent(REVISION)}`, "uaiCompanionV12Phase3CharacterCss");
+    ensureScript(`/companion-v12-phase3-character.js?v=${encodeURIComponent(REVISION)}`, "uaiCompanionV12Phase3CharacterScript");
   }
 
   function installGuaranteedMotionCss() {
@@ -48,7 +51,6 @@
         opacity:1!important;
       }
 
-      /* Keep all real UI above the backdrop, while leaving the glass areas transparent enough to see it move. */
       #uaiCompanionRoot .uai-c-header{position:relative!important;z-index:10!important}
       #uaiCompanionRoot .uai-c-v122-scene{position:relative!important;z-index:5!important;background:
         radial-gradient(circle at 22% 51%,rgba(255,100,205,.10),transparent 28%),
@@ -57,7 +59,6 @@
       #uaiCompanionRoot .uai-c-messages{position:relative!important;z-index:5!important;background:linear-gradient(180deg,rgba(12,8,45,.02),rgba(7,7,27,.08))!important}
       #uaiCompanionRoot .uai-c-composer-wrap{position:relative!important;z-index:12!important}
 
-      /* Deep moving nebula: large enough that the movement is visible even on a 2K/4K desktop. */
       #uaiCompanionRoot .uai-c-v125-live-nebula{
         position:absolute;inset:-24%;z-index:1;opacity:.95;mix-blend-mode:screen;
         background:
@@ -75,7 +76,6 @@
         100%{transform:translate3d(8%,-1%,0) scale(1.04) rotate(2deg);filter:blur(17px) saturate(1.20)}
       }
 
-      /* CSS star field is the safety net: it visibly drifts even if Canvas fails to initialize. */
       #uaiCompanionRoot .uai-c-v125-live-stars{
         position:absolute;inset:-18%;z-index:3;opacity:.92;mix-blend-mode:screen;
         background-image:
@@ -94,7 +94,6 @@
         100%{transform:translate3d(42px,24px,0);background-position:330px 190px,-248px 205px,286px -164px,-190px 312px}
       }
 
-      /* A brighter galactic ribbon crosses the whole chat page and shifts slowly left/right. */
       #uaiCompanionRoot .uai-c-v125-live-band{
         position:absolute;left:-28%;top:34%;width:158%;height:178px;z-index:2;border-radius:50%;
         transform:rotate(-13deg);transform-origin:center;opacity:.86;mix-blend-mode:screen;
@@ -115,7 +114,6 @@
         100%{transform:translate3d(8%,18px,0) rotate(-10deg) scaleX(1.05);opacity:.73}
       }
 
-      /* Foreground breathing glints. */
       #uaiCompanionRoot .uai-c-v125-live-glints{position:absolute;inset:0;z-index:4;pointer-events:none}
       #uaiCompanionRoot .uai-c-v125-live-glints i{
         position:absolute;width:18px;height:18px;opacity:.12;filter:drop-shadow(0 0 8px rgba(235,202,255,.85));
@@ -204,7 +202,7 @@
   function init() {
     document.documentElement.dataset.companionV124Phase1Revision = REVISION;
     installGuaranteedMotionCss();
-    loadPhase2Background();
+    loadPhaseEnhancements();
     new MutationObserver(schedule).observe(document.body, {
       subtree: true,
       childList: true,
