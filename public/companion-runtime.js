@@ -1,12 +1,14 @@
 // Companion runtime controls: reply sizing, generation guards, backup export and role-data housekeeping.
 (() => {
-  const REVISION = "2026-08-14-v9.6-runtime-1";
+  const REVISION = "2026-08-14-v9.7-runtime-audit-1";
+  // Compatibility marker for existing contracts: v9.6-runtime
   const KEYS = {
     characters: "uai_companion_characters_v1",
     activeCharacter: "uai_companion_active_character_v1",
     profile: "uai_companion_profile_v1",
     moments: "uai_companion_moments_v1",
-    archive: "uai_companion_memory_archive_v1"
+    archive: "uai_companion_memory_archive_v1",
+    sceneAssignments: "uai_companion_scene_assignments_v1"
   };
   const PRESETS = {
     short: { chars: 500, label: "约 500 字" },
@@ -115,7 +117,8 @@
       activeCharacterId: localStorage.getItem(KEYS.activeCharacter) || "",
       characters,
       importantMomentsByCharacter: safeParse(localStorage.getItem(KEYS.moments), {}),
-      memoryArchiveByCharacter: safeParse(localStorage.getItem(KEYS.archive), {})
+      memoryArchiveByCharacter: safeParse(localStorage.getItem(KEYS.archive), {}),
+      sceneAssignmentsByCharacter: safeParse(localStorage.getItem(KEYS.sceneAssignments), {})
     };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
@@ -132,7 +135,7 @@
     const characters = safeParse(localStorage.getItem(KEYS.characters), []);
     if (!Array.isArray(characters) || !characters.length) return;
     const ids = new Set(characters.map((item) => item?.id).filter(Boolean));
-    for (const key of [KEYS.moments, KEYS.archive]) {
+    for (const key of [KEYS.moments, KEYS.archive, KEYS.sceneAssignments]) {
       const map = safeParse(localStorage.getItem(key), {});
       if (!map || typeof map !== "object" || Array.isArray(map)) continue;
       let changed = false;
@@ -147,13 +150,24 @@
 
   function reconcileReset() {
     const characters = safeParse(localStorage.getItem(KEYS.characters), []);
-    if (!Array.isArray(characters) || !characters.length) return;
     const profile = safeParse(localStorage.getItem(KEYS.profile), null);
-    if (profile && typeof profile === "object") return;
+    const hasProfile = Boolean(profile && typeof profile === "object");
+
+    if (!Array.isArray(characters) || !characters.length) {
+      if (!hasProfile) {
+        localStorage.removeItem(KEYS.activeCharacter);
+        localStorage.removeItem(KEYS.moments);
+        localStorage.removeItem(KEYS.archive);
+        localStorage.removeItem(KEYS.sceneAssignments);
+      }
+      return;
+    }
+    if (hasProfile) return;
     localStorage.removeItem(KEYS.characters);
     localStorage.removeItem(KEYS.activeCharacter);
     localStorage.removeItem(KEYS.moments);
     localStorage.removeItem(KEYS.archive);
+    localStorage.removeItem(KEYS.sceneAssignments);
   }
 
   function scheduleHousekeeping(event) {
