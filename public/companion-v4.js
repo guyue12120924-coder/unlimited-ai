@@ -1,7 +1,7 @@
 // public/companion-v4.js
 // Tool-only memory organization, chat search and important-moment module.
 (() => {
-  const REVISION = "2026-08-14-v8.1-memory-tools-1";
+  const REVISION = "2026-08-14-v8.1-memory-tools-2";
   const KEYS = {
     activeCharacter: "uai_companion_active_character_v1",
     memories: "uai_companion_memories_v1",
@@ -276,7 +276,7 @@
     for (const session of sessions) {
       const messages = Array.isArray(session?.messages) ? session.messages : [];
       messages.forEach((message, index) => {
-        const text = clean(message?.content, 800);
+        const text = clean(message?.content, 12000);
         const pos = text.toLowerCase().indexOf(q);
         if (pos < 0) return;
         const start = Math.max(0, pos - 28);
