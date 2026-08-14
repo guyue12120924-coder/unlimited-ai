@@ -69,6 +69,12 @@ jobs:
           set -euo pipefail
           node tests/companion-runtime-contract.test.mjs
 
+      - name: Check companion Live2D stage contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          node tests/companion-live2d.test.mjs
+
       - name: Check companion V10 UX contract
         shell: bash
         run: |
