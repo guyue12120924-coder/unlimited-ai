@@ -1,6 +1,6 @@
-// Companion V9 interaction shell: removes duplicate chrome and turns the profile card into the role hub.
+// Companion V9 interaction shell: one role hub, one chat surface and compact secondary tools.
 (() => {
-  const REVISION = "2026-08-14-v9.0-shell-5";
+  const REVISION = "2026-08-14-v9.3-shell-1";
   const PROFILE_LIMIT = 5000;
   let scheduled = false;
 
@@ -18,7 +18,6 @@
   }
 
   function decorateProfileCard(root) {
-    root.querySelector("#uaiCompanionRoleToolbar")?.remove();
     const card = root.querySelector("#uaiCompanionProfileCard .uai-c-profile-card");
     const profile = activeProfile();
     if (!card || !profile) return;
@@ -58,6 +57,18 @@
     }
   }
 
+  function ensureSidebarSearch(root) {
+    const newChat = root.querySelector("#uaiCompanionNewChat");
+    if (!newChat || root.querySelector("#uaiV9SearchChat")) return;
+    const button = document.createElement("button");
+    button.id = "uaiV9SearchChat";
+    button.type = "button";
+    button.className = "uai-c-v9-search-chat";
+    button.innerHTML = `<span>⌕&nbsp;&nbsp;搜索聊天</span><kbd>Ctrl K</kbd>`;
+    button.addEventListener("click", () => window.UnlimitedCompanionMemorySearch?.showSearch?.());
+    newChat.insertAdjacentElement("afterend", button);
+  }
+
   function cleanSidebar(root) {
     const label = root.querySelector(".uai-c-sidebar > .uai-c-side-label");
     if (label) label.textContent = "聊天记录";
@@ -67,6 +78,7 @@
     if (settings) settings.textContent = "设置";
     const exit = root.querySelector("#uaiCompanionExitBtn span");
     if (exit) exit.textContent = "返回模式大厅";
+    ensureSidebarSearch(root);
   }
 
   function decorateSessions(root) {
