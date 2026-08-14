@@ -1,6 +1,6 @@
 // Companion runtime controls: reply sizing, generation guards, backup export and role-data housekeeping.
 (() => {
-  const REVISION = "2026-08-14-v9.1-runtime-1";
+  const REVISION = "2026-08-14-v9.6-runtime-1";
   const KEYS = {
     characters: "uai_companion_characters_v1",
     activeCharacter: "uai_companion_active_character_v1",
@@ -58,14 +58,7 @@
     payload.companion_preferences = { ...(payload.companion_preferences || {}), replyLength: "detailed" };
 
     const messages = Array.isArray(payload.messages) ? payload.messages.map((item) => ({ ...item })) : [];
-    const hints = [
-      `【回复长度】本轮以约 ${preset.chars} 个中文字符为目标，可自然上下浮动约 20%。保持内容完整、自然、有互动感，不要重复或灌水。`
-    ];
-    const profileText = typeof payload?.character?.customDescription === "string"
-      ? payload.character.customDescription.trim().slice(0, 5000)
-      : "";
-    if (profileText) hints.push(`【当前角色完整设定】\n${profileText}`);
-    const hint = hints.join("\n\n");
+    const hint = `【回复长度】本轮以约 ${preset.chars} 个中文字符为目标，可自然上下浮动约 20%。保持内容完整、自然、有互动感，不要重复或灌水。`;
 
     let attached = false;
     for (let i = messages.length - 1; i >= 0; i -= 1) {
