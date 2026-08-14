@@ -11,14 +11,18 @@ const readme = read("public/live2d/README.md");
 assert.match(boot, /companion-live2d\.css/);
 assert.match(boot, /companion-live2d\.js/);
 assert.match(boot, /companionLive2dReady/);
-assert.match(boot, /v12\.(?:9|10)-live2d/);
+assert.match(boot, /v12\.(?:10|11)-live2d/);
 
-assert.match(runtime, /v12\.10-live2d-sample/);
+assert.match(runtime, /v12\.11-live2d-hosted-core/);
 assert.match(runtime, /uai_companion_live2d_assignments_v1/);
 assert.match(runtime, /pixi\.js@6\.5\.10/);
 assert.match(runtime, /pixi-live2d-display@0\.4\.0/);
 assert.match(runtime, /\/live2d\/vendor\/live2dcubismcore\.min\.js/);
-assert.doesNotMatch(runtime, /cubism\.live2d\.com\/sdk-web\/cubismcore/);
+assert.match(runtime, /https:\/\/cubism\.live2d\.com\/sdk-web\/cubismcore\/live2dcubismcore\.min\.js/);
+assert.match(runtime, /async function ensureCubismCore\(/);
+assert.match(runtime, /hasLocalCore/);
+assert.match(runtime, /uaiCompanionCubismCoreLocal/);
+assert.match(runtime, /uaiCompanionCubismCoreOfficial/);
 assert.match(runtime, /async function probeModel\(/);
 assert.match(runtime, /async function selectAvailableSpec\(/);
 assert.match(runtime, /spec\.fallback\?\.model/);
@@ -30,7 +34,6 @@ assert.ok(
   "enhance must select an available model before it enters the heavy loadModel/runtime path"
 );
 assert.match(runtime, /async function loadModel[\s\S]*await ensureRuntime\(\)/);
-assert.match(runtime, /缺少 Cubism Core/);
 assert.match(runtime, /data-live2d-credit/);
 assert.match(runtime, /官方测试模型/);
 assert.match(runtime, /autoInteract: false/);
@@ -66,10 +69,10 @@ assert.equal(fallback.sample?.owner, "Live2D Inc.");
 assert.match(readme, /public\/live2d\/characters\/limeng/);
 assert.match(readme, /live2dcubismcore\.min\.js/);
 assert.match(readme, /official Live2D `Mao` sample/i);
+assert.match(readme, /official hosted Cubism Core/i);
 assert.match(readme, /setModelForCharacter/);
-assert.doesNotMatch(readme, /fall back to Live2D's official hosted Cubism Core URL/i);
 
-// Cubism Core is proprietary and must not be committed into this public repo.
+// Cubism Core stays outside this public repository; hosted Core or an optional local copy is used at runtime.
 assert.equal(fs.existsSync("public/live2d/vendor/live2dcubismcore.min.js"), false);
 
-console.log("Companion Live2D contract passed: local model -> official sample fallback -> local official Core -> interactions/API.");
+console.log("Companion Live2D contract passed: local model -> official Mao fallback -> local/official hosted Core -> interactions/API.");
