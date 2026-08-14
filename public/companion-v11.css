@@ -1,0 +1,288 @@
+/* Companion V11.0 — immersive chat shell + on-demand companion space drawer. */
+
+/* V11 removes the permanent third column. The old sidecar stays in DOM for compatibility only. */
+#uaiCompanionRoot .uai-c-v10-sidecar{display:none!important}
+
+@media (min-width:901px){
+  #uaiCompanionRoot .uai-c-shell{
+    grid-template-columns:252px minmax(0,1fr)!important;
+  }
+}
+
+/* ---------- calmer, lighter navigation ---------- */
+#uaiCompanionRoot .uai-c-sidebar{
+  width:auto!important;
+  padding:16px 12px 12px!important;
+  background:
+    radial-gradient(circle at 10% 0%,rgba(236,72,153,.075),transparent 24%),
+    radial-gradient(circle at 98% 18%,rgba(99,102,241,.065),transparent 27%),
+    linear-gradient(180deg,rgba(255,255,255,.97),rgba(249,247,255,.97))!important;
+}
+#uaiCompanionRoot .uai-c-profile-card{
+  min-height:64px!important;
+  padding:9px 10px!important;
+  border-radius:17px!important;
+  border-color:rgba(118,89,190,.11)!important;
+  background:linear-gradient(135deg,rgba(255,255,255,.88),rgba(248,244,255,.78))!important;
+  box-shadow:0 8px 24px rgba(95,72,149,.055)!important;
+}
+#uaiCompanionRoot .uai-c-profile-card .uai-c-avatar{
+  width:40px!important;height:40px!important;border-radius:13px!important;font-size:17px!important;
+}
+#uaiCompanionRoot .uai-c-profile-copy strong{font-size:13px!important}
+#uaiCompanionRoot .uai-c-profile-copy span{font-size:9.5px!important;margin-top:3px!important}
+#uaiCompanionRoot .uai-c-new-chat{
+  min-height:42px!important;margin-top:12px!important;border-radius:13px!important;
+  background:linear-gradient(135deg,rgba(139,92,246,.14),rgba(236,72,153,.075),rgba(255,255,255,.86))!important;
+}
+#uaiCompanionRoot .uai-c-v10-search{min-height:39px!important;border-radius:11px!important}
+#uaiCompanionRoot .uai-c-session{min-height:42px!important;border-radius:11px!important}
+#uaiCompanionRoot .uai-c-session.active{
+  background:linear-gradient(90deg,rgba(139,92,246,.13),rgba(236,72,153,.055),rgba(255,255,255,.32))!important;
+  box-shadow:inset 2px 0 0 #8b5cf6!important;
+}
+
+/* ---------- main canvas ---------- */
+#uaiCompanionRoot .uai-c-main{
+  background:
+    radial-gradient(circle at 76% -5%,rgba(129,140,248,.09),transparent 29%),
+    radial-gradient(circle at 24% 0%,rgba(244,114,182,.065),transparent 25%),
+    linear-gradient(180deg,#fcfbff 0%,#faf9ff 48%,#fafbff 100%)!important;
+}
+#uaiCompanionRoot .uai-c-main::before{
+  content:"";position:absolute;inset:0;pointer-events:none;opacity:.26;
+  background-image:radial-gradient(rgba(120,94,177,.09) .65px,transparent .65px);
+  background-size:22px 22px;
+  mask-image:linear-gradient(to bottom,rgba(0,0,0,.55),transparent 58%);
+}
+
+/* ---------- header: role first, tools second ---------- */
+#uaiCompanionRoot .uai-c-header{
+  min-height:74px!important;padding:0 24px!important;
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  position:relative!important;
+  border-bottom-color:rgba(111,85,197,.075)!important;
+  background:linear-gradient(180deg,rgba(255,255,255,.93),rgba(252,250,255,.78))!important;
+  box-shadow:0 8px 26px rgba(86,67,145,.04)!important;
+}
+#uaiCompanionRoot .uai-c-header-left{
+  width:min(100%,940px)!important;max-width:940px!important;margin:0 auto!important;
+  padding-right:154px!important;
+}
+#uaiCompanionRoot #uaiCompanionHeaderAvatar{
+  display:block!important;flex:0 0 auto!important;
+}
+#uaiCompanionRoot #uaiCompanionHeaderAvatar .uai-c-avatar{
+  width:40px!important;height:40px!important;border-radius:13px!important;font-size:17px!important;
+  background:linear-gradient(145deg,#f9a8d4,#c084fc 52%,#818cf8)!important;
+  box-shadow:0 7px 19px rgba(139,92,246,.17)!important;
+}
+#uaiCompanionRoot .uai-c-title strong{font-size:14px!important;letter-spacing:-.01em!important}
+#uaiCompanionRoot .uai-c-title>span{font-size:10px!important;margin-top:3px!important}
+#uaiCompanionRoot .uai-c-v11-header-actions{
+  position:absolute;right:24px;top:50%;transform:translateY(-50%);
+  display:flex;align-items:center;gap:8px;z-index:4;
+}
+#uaiCompanionRoot .uai-c-v11-space-trigger{
+  min-height:37px;padding:0 13px;border:1px solid rgba(116,88,191,.13);border-radius:999px;
+  display:inline-flex;align-items:center;gap:7px;
+  background:linear-gradient(135deg,rgba(255,255,255,.94),rgba(247,242,255,.90));
+  box-shadow:0 7px 20px rgba(92,69,150,.065);color:#6851a1;cursor:pointer;
+  font:650 11px/1 system-ui,sans-serif;transition:transform .14s ease,border-color .14s ease,box-shadow .14s ease;
+}
+#uaiCompanionRoot .uai-c-v11-space-trigger:hover{
+  transform:translateY(-1px);border-color:rgba(124,58,237,.23);
+  box-shadow:0 10px 25px rgba(108,78,174,.10);color:#633ac6;
+}
+#uaiCompanionRoot .uai-c-v11-space-trigger>i{
+  width:23px;height:23px;display:grid;place-items:center;border-radius:8px;
+  background:linear-gradient(135deg,#f2ebff,#fff0f7);color:#a554c8;font:700 13px/1 system-ui,sans-serif;
+}
+
+/* ---------- immersive conversation ---------- */
+#uaiCompanionRoot .uai-c-messages{
+  padding-top:28px!important;padding-bottom:152px!important;
+  background:transparent!important;
+  scrollbar-gutter:stable;
+}
+#uaiCompanionRoot .uai-c-message-row{
+  width:min(calc(100% - 42px),900px)!important;max-width:900px!important;
+  margin-left:auto!important;margin-right:auto!important;
+}
+#uaiCompanionRoot .uai-c-message-row>div{max-width:100%!important}
+#uaiCompanionRoot .uai-c-message-row.assistant{margin-bottom:18px!important}
+#uaiCompanionRoot .uai-c-message-row.user{margin-top:7px!important;margin-bottom:18px!important}
+#uaiCompanionRoot .uai-c-v10-author{
+  margin:0 0 5px 2px!important;min-height:28px!important;gap:8px!important;
+}
+#uaiCompanionRoot .uai-c-v10-message-avatar{
+  width:28px!important;height:28px!important;border-radius:9px!important;font-size:12px!important;
+  box-shadow:0 5px 13px rgba(139,92,246,.12)!important;
+}
+#uaiCompanionRoot .uai-c-v10-author-copy strong{font-size:11px!important;color:#796c8c!important;font-weight:680!important}
+
+/* AI text is no longer a large white ChatGPT card. */
+#uaiCompanionRoot .uai-c-message-row.assistant .uai-c-bubble{
+  width:auto!important;max-width:760px!important;
+  padding:4px 8px 4px 38px!important;
+  border:0!important;border-radius:0!important;background:transparent!important;
+  box-shadow:none!important;color:#393344!important;
+  font-size:15.5px!important;line-height:1.82!important;letter-spacing:.005em!important;
+  white-space:pre-wrap!important;
+}
+#uaiCompanionRoot .uai-c-message-row.assistant>div::after{display:none!important}
+#uaiCompanionRoot .uai-c-message-row.assistant .uai-c-message-time{
+  margin:4px 0 0 40px!important;color:#aca3b7!important;font-size:9px!important;
+}
+#uaiCompanionRoot .uai-c-message-row.assistant>div{
+  padding:5px 8px 6px!important;border-radius:16px!important;
+  transition:background .15s ease!important;
+}
+#uaiCompanionRoot .uai-c-message-row.assistant:hover>div{background:rgba(255,255,255,.48)!important}
+
+/* Consecutive AI messages read like one conversation, not repeated cards. */
+#uaiCompanionRoot .uai-c-message-row.uai-c-v11-continuation .uai-c-v10-author{display:none!important}
+#uaiCompanionRoot .uai-c-message-row.uai-c-v11-continuation .uai-c-bubble{padding-top:0!important}
+
+#uaiCompanionRoot .uai-c-message-row.user .uai-c-bubble{
+  width:fit-content!important;min-width:0!important;max-width:min(72vw,620px)!important;
+  padding:10px 14px!important;border-radius:17px 17px 5px 17px!important;
+  background:linear-gradient(135deg,#8b5cf6 0%,#7c3aed 54%,#b94fc4 118%)!important;
+  box-shadow:0 10px 24px rgba(124,58,237,.16),inset 0 1px 0 rgba(255,255,255,.20)!important;
+  font-size:14px!important;line-height:1.62!important;
+}
+#uaiCompanionRoot .uai-c-message-row.user>div{display:flex!important;flex-direction:column!important;align-items:flex-end!important}
+#uaiCompanionRoot .uai-c-message-row.user .uai-c-message-time{margin-top:4px!important;font-size:9px!important;color:#aaa0b7!important}
+
+#uaiCompanionRoot .uai-c-v10-message-toolbar{
+  margin-top:4px!important;opacity:.08!important;transition:opacity .14s ease!important;
+}
+#uaiCompanionRoot .uai-c-message-row:hover .uai-c-v10-message-toolbar,
+#uaiCompanionRoot .uai-c-message-row:focus-within .uai-c-v10-message-toolbar{opacity:1!important}
+#uaiCompanionRoot .uai-c-v10-message-toolbar button{font-size:9.5px!important;border-radius:8px!important}
+
+/* ---------- composer: broad but visually quiet ---------- */
+#uaiCompanionRoot .uai-c-composer-wrap{
+  padding-bottom:16px!important;
+  background:linear-gradient(to top,rgba(250,250,255,.99) 68%,rgba(250,250,255,.86) 88%,transparent)!important;
+}
+#uaiCompanionRoot .uai-c-composer{
+  width:min(calc(100% - 44px),860px)!important;max-width:860px!important;
+  min-height:66px!important;padding:9px 10px 9px 17px!important;border-radius:22px!important;
+  border-color:rgba(116,88,191,.13)!important;
+  background:linear-gradient(145deg,rgba(255,255,255,.97),rgba(250,247,255,.95))!important;
+  box-shadow:0 18px 48px rgba(93,70,151,.11),inset 0 1px 0 #fff!important;
+}
+#uaiCompanionRoot .uai-c-input{font-size:13.5px!important;line-height:1.55!important;padding-top:6px!important}
+#uaiCompanionRoot .uai-c-send{
+  width:39px!important;height:39px!important;border-radius:13px!important;
+  background:linear-gradient(145deg,#9668f5,#7c3aed 62%,#b94fc4 140%)!important;
+  box-shadow:0 7px 18px rgba(124,58,237,.20)!important;
+}
+#uaiCompanionRoot .uai-c-stop{width:39px!important;height:39px!important;border-radius:13px!important}
+#uaiCompanionRoot .uai-c-composer-hint{font-size:8.5px!important;color:#afa6b8!important}
+
+/* ---------- companion space drawer ---------- */
+#uaiCompanionRoot .uai-c-v11-drawer-overlay{
+  position:fixed;inset:0;z-index:1190;
+  background:rgba(61,46,92,.16);backdrop-filter:blur(5px);
+  opacity:0;visibility:hidden;pointer-events:none;
+  transition:opacity .22s ease,visibility .22s ease;
+}
+#uaiCompanionRoot .uai-c-v11-drawer{
+  position:fixed;z-index:1200;top:0;right:0;bottom:0;
+  width:min(390px,94vw);padding:16px 16px 20px;
+  overflow:auto;overscroll-behavior:contain;
+  border-left:1px solid rgba(111,85,197,.11);
+  background:
+    radial-gradient(circle at 52% -2%,rgba(236,72,153,.11),transparent 29%),
+    radial-gradient(circle at 95% 21%,rgba(99,102,241,.08),transparent 26%),
+    linear-gradient(180deg,#fff 0%,#faf8ff 64%,#f8f8ff 100%);
+  box-shadow:-30px 0 80px rgba(69,49,113,.18);
+  transform:translateX(104%);visibility:hidden;
+  transition:transform .25s cubic-bezier(.2,.75,.2,1),visibility .25s ease;
+}
+#uaiCompanionRoot.uai-c-v11-drawer-open .uai-c-v11-drawer-overlay{
+  opacity:1;visibility:visible;pointer-events:auto;
+}
+#uaiCompanionRoot.uai-c-v11-drawer-open .uai-c-v11-drawer{transform:translateX(0);visibility:visible}
+#uaiCompanionRoot .uai-c-v11-drawer-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+#uaiCompanionRoot .uai-c-v11-drawer-kicker{font-size:9px;font-weight:760;letter-spacing:.11em;color:#a197ad}
+#uaiCompanionRoot .uai-c-v11-drawer-close{
+  width:34px;height:34px;border:0;border-radius:11px;background:rgba(139,92,246,.055);color:#8d819f;cursor:pointer;font-size:20px;
+}
+#uaiCompanionRoot .uai-c-v11-drawer-close:hover{background:rgba(139,92,246,.11);color:#653fc4}
+#uaiCompanionRoot .uai-c-v11-drawer-hero{
+  padding:20px 17px 17px;border:1px solid rgba(121,91,196,.11);border-radius:23px;
+  background:linear-gradient(145deg,rgba(255,255,255,.92),rgba(248,242,255,.86));
+  box-shadow:0 14px 36px rgba(91,72,143,.075);text-align:center;
+}
+#uaiCompanionRoot .uai-c-v11-drawer-avatar{
+  width:88px;height:88px;margin:0 auto 12px;display:grid;place-items:center;overflow:hidden;
+  border-radius:27px;background:linear-gradient(145deg,#f9a8d4,#c084fc 53%,#818cf8);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.75),0 15px 30px rgba(124,58,237,.18);font-size:34px;
+}
+#uaiCompanionRoot .uai-c-v11-drawer-avatar img{width:100%;height:100%;object-fit:cover;display:block}
+#uaiCompanionRoot .uai-c-v11-drawer-name{font-size:20px;font-weight:780;color:#30283e;letter-spacing:-.02em}
+#uaiCompanionRoot .uai-c-v11-drawer-relation{margin-top:5px;font-size:10.5px;color:#8b8199}
+#uaiCompanionRoot .uai-c-v11-drawer-relation::before{content:"";display:inline-block;width:6px;height:6px;margin-right:6px;border-radius:50%;background:#34d399;box-shadow:0 0 0 3px rgba(52,211,153,.10);vertical-align:1px}
+#uaiCompanionRoot .uai-c-v11-drawer-summary{margin:11px auto 0;max-width:270px;color:#8f859c;font-size:10.5px;line-height:1.6}
+#uaiCompanionRoot .uai-c-v11-drawer-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:11px 0}
+#uaiCompanionRoot .uai-c-v11-drawer-stats>div{padding:12px 5px 10px;border:1px solid rgba(111,85,197,.09);border-radius:14px;background:rgba(255,255,255,.78);text-align:center}
+#uaiCompanionRoot .uai-c-v11-drawer-stats strong{display:block;font-size:17px;color:#6541bf}
+#uaiCompanionRoot .uai-c-v11-drawer-stats span{display:block;margin-top:4px;font-size:9px;color:#9c93a8}
+#uaiCompanionRoot .uai-c-v11-relationship-card{padding:13px 14px;border:1px solid rgba(111,85,197,.10);border-radius:16px;background:linear-gradient(145deg,#fff,#fbf7ff)}
+#uaiCompanionRoot .uai-c-v11-relationship-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+#uaiCompanionRoot .uai-c-v11-relationship-head span{font-size:9.5px;font-weight:720;color:#9d93aa}
+#uaiCompanionRoot .uai-c-v11-relationship-head strong{font-size:11px;color:#6740c8}
+#uaiCompanionRoot .uai-c-v11-progress{height:7px;margin-top:9px;border-radius:999px;overflow:hidden;background:#ece7f5}
+#uaiCompanionRoot .uai-c-v11-progress i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#8b5cf6,#c084fc 55%,#ec4899);transition:width .25s ease}
+#uaiCompanionRoot .uai-c-v11-relationship-card p{margin:8px 0 0;color:#9a91a5;font-size:9.5px;line-height:1.55}
+#uaiCompanionRoot .uai-c-v11-drawer-section{margin-top:13px;padding:12px;border:1px solid rgba(111,85,197,.09);border-radius:17px;background:rgba(255,255,255,.76)}
+#uaiCompanionRoot .uai-c-v11-drawer-label{display:block;margin:0 3px 8px;font-size:9px;font-weight:760;letter-spacing:.08em;color:#a49aac}
+#uaiCompanionRoot .uai-c-v11-drawer-action{
+  width:100%;min-height:43px;padding:0 9px;border:0;border-radius:11px;display:grid;grid-template-columns:29px 1fr auto;align-items:center;gap:7px;
+  background:transparent;color:#5d536b;cursor:pointer;text-align:left;
+}
+#uaiCompanionRoot .uai-c-v11-drawer-action:hover{background:linear-gradient(90deg,rgba(139,92,246,.075),rgba(236,72,153,.035));color:#633fc0}
+#uaiCompanionRoot .uai-c-v11-drawer-action>i{width:28px;height:28px;display:grid;place-items:center;border-radius:9px;background:#f1ecff;color:#7347d4;font:650 12px/1 system-ui,sans-serif}
+#uaiCompanionRoot .uai-c-v11-drawer-action:nth-of-type(2)>i,
+#uaiCompanionRoot .uai-c-v11-drawer-action:nth-of-type(5)>i{background:#fff0f7;color:#d55590}
+#uaiCompanionRoot .uai-c-v11-drawer-action:nth-of-type(3)>i,
+#uaiCompanionRoot .uai-c-v11-drawer-action:nth-of-type(6)>i{background:#edf3ff;color:#5577d0}
+#uaiCompanionRoot .uai-c-v11-drawer-action>b{font-size:11.5px;font-weight:680}
+#uaiCompanionRoot .uai-c-v11-drawer-action>span{color:#b4aabd;font-size:17px}
+#uaiCompanionRoot .uai-c-v11-drawer-foot{margin-top:13px;padding:10px 11px;border-radius:12px;background:rgba(139,92,246,.045);color:#a096aa;font-size:9px;line-height:1.55}
+
+/* ---------- responsive ---------- */
+@media (max-width:1100px){
+  #uaiCompanionRoot .uai-c-header-left{padding-right:130px!important}
+  #uaiCompanionRoot .uai-c-message-row{width:min(calc(100% - 30px),820px)!important}
+  #uaiCompanionRoot .uai-c-composer{width:min(calc(100% - 30px),810px)!important}
+}
+@media (max-width:900px){
+  #uaiCompanionRoot .uai-c-header{padding:0 14px!important;justify-content:flex-start!important}
+  #uaiCompanionRoot .uai-c-header-left{width:100%!important;padding-right:54px!important}
+  #uaiCompanionRoot .uai-c-v11-header-actions{right:12px}
+  #uaiCompanionRoot .uai-c-v11-space-trigger{width:38px;height:38px;padding:0;justify-content:center;border-radius:12px}
+  #uaiCompanionRoot .uai-c-v11-space-trigger>span{display:none}
+  #uaiCompanionRoot .uai-c-v11-space-trigger>i{background:transparent;width:auto;height:auto}
+  #uaiCompanionRoot .uai-c-message-row{width:calc(100% - 24px)!important}
+  #uaiCompanionRoot .uai-c-message-row.assistant .uai-c-bubble{padding-left:34px!important;font-size:14.5px!important}
+  #uaiCompanionRoot .uai-c-message-row.assistant .uai-c-message-time{margin-left:36px!important}
+  #uaiCompanionRoot .uai-c-composer{width:calc(100% - 20px)!important}
+}
+@media (max-width:560px){
+  #uaiCompanionRoot .uai-c-header{min-height:66px!important}
+  #uaiCompanionRoot .uai-c-messages{padding-top:20px!important;padding-bottom:138px!important}
+  #uaiCompanionRoot .uai-c-message-row.user .uai-c-bubble{max-width:82vw!important;font-size:13.5px!important}
+  #uaiCompanionRoot .uai-c-message-row.assistant .uai-c-bubble{line-height:1.72!important}
+  #uaiCompanionRoot .uai-c-v11-drawer{width:min(100%,380px);padding:12px 12px 18px}
+  #uaiCompanionRoot .uai-c-v11-drawer-hero{padding:17px 14px 15px}
+}
+
+@media (prefers-reduced-motion:reduce){
+  #uaiCompanionRoot .uai-c-v11-drawer,
+  #uaiCompanionRoot .uai-c-v11-drawer-overlay,
+  #uaiCompanionRoot .uai-c-v11-space-trigger{transition:none!important}
+}
