@@ -24,7 +24,12 @@ assert.match(runtime, /async function selectAvailableSpec\(/);
 assert.match(runtime, /spec\.fallback\?\.model/);
 assert.match(runtime, /await selectAvailableSpec\(configured\)/);
 assert.match(runtime, /await ensureRuntime\(\)/);
-assert.ok(runtime.indexOf("await selectAvailableSpec(configured)") < runtime.indexOf("await ensureRuntime()"), "model availability must be resolved before heavy Live2D dependencies are loaded");
+assert.match(runtime, /await loadModel\(root, character, spec, signature\)/);
+assert.ok(
+  runtime.indexOf("const spec = await selectAvailableSpec(configured)") < runtime.indexOf("await loadModel(root, character, spec, signature)"),
+  "enhance must select an available model before it enters the heavy loadModel/runtime path"
+);
+assert.match(runtime, /async function loadModel[\s\S]*await ensureRuntime\(\)/);
 assert.match(runtime, /缺少 Cubism Core/);
 assert.match(runtime, /data-live2d-credit/);
 assert.match(runtime, /官方测试模型/);
