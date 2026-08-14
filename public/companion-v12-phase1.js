@@ -1,6 +1,6 @@
-// Companion V12.4/12.6 — composer polish + guaranteed visible animated chat backdrop + phase 3 loader.
+// Companion V12.4/12.7 — composer polish + animated backdrop + living character + scene themes.
 (() => {
-  const REVISION = "2026-08-14-v12.6-live-character-1";
+  const REVISION = "2026-08-14-v12.7-scene-themes-1";
   let boundInput = null;
   let scheduled = false;
 
@@ -23,12 +23,15 @@
   }
 
   function loadPhaseEnhancements() {
-    // Keep the richer Canvas renderer, but do not rely on it for visible motion.
+    // Phase 2: visible multi-layer galaxy motion.
     ensureStyle(`/companion-v12-phase2-background.css?v=${encodeURIComponent(REVISION)}`, "uaiCompanionV12Phase2BackgroundCss");
     ensureScript(`/companion-v12-phase2-background.js?v=${encodeURIComponent(REVISION)}`, "uaiCompanionV12Phase2BackgroundScript");
-    // Phase 3 lives on top of the approved V12.2 hero and does not change the layout.
+    // Phase 3: living central character.
     ensureStyle(`/companion-v12-phase3-character.css?v=${encodeURIComponent(REVISION)}`, "uaiCompanionV12Phase3CharacterCss");
     ensureScript(`/companion-v12-phase3-character.js?v=${encodeURIComponent(REVISION)}`, "uaiCompanionV12Phase3CharacterScript");
+    // Phase 4: four lightweight anime scene themes. Persistence/random selection belongs to phase 5.
+    ensureStyle(`/companion-v12-phase4-themes.css?v=${encodeURIComponent(REVISION)}`, "uaiCompanionV12Phase4ThemesCss");
+    ensureScript(`/companion-v12-phase4-themes.js?v=${encodeURIComponent(REVISION)}`, "uaiCompanionV12Phase4ThemesScript");
   }
 
   function installGuaranteedMotionCss() {
