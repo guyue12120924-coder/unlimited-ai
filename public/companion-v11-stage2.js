@@ -1,10 +1,114 @@
 // Companion V11.2 — structured role editor + memory book presentation.
 (() => {
-  const REVISION = "2026-08-14-v11.2-stage2-1";
+  const REVISION = "2026-08-14-v11.2-stage2-2";
   let scheduled = false;
 
   function state() {
     return window.UnlimitedCompanion?.getState?.() || {};
+  }
+
+  function ensureLayoutFix() {
+    if (document.getElementById("uaiCompanionV11Stage2LayoutFix")) return;
+    const style = document.createElement("style");
+    style.id = "uaiCompanionV11Stage2LayoutFix";
+    style.textContent = `
+      /* V11.2.1 role-editor layout hotfix: keep preview and form in separate columns. */
+      #uaiV9RoleEditorMask .uai-c-v11-role-editor{
+        width:min(96vw,1080px)!important;
+        max-width:1080px!important;
+        max-height:min(91vh,900px)!important;
+        display:flex!important;
+        flex-direction:column!important;
+        overflow:hidden!important;
+      }
+      #uaiV9RoleEditorMask .uai-c-v11-role-editor>header,
+      #uaiV9RoleEditorMask .uai-c-v11-role-editor>footer{
+        flex:0 0 auto!important;
+      }
+      #uaiV9RoleEditorMask .uai-c-v11-role-editor .uai-c-v10-role-editor-layout{
+        flex:1 1 auto!important;
+        min-height:0!important;
+        width:100%!important;
+        display:grid!important;
+        grid-template-columns:minmax(240px,270px) minmax(0,1fr)!important;
+        align-items:stretch!important;
+        gap:20px!important;
+        padding:18px 20px 20px!important;
+        overflow:hidden!important;
+        box-sizing:border-box!important;
+      }
+      #uaiV9RoleEditorMask .uai-c-v11-role-editor .uai-c-v10-role-preview{
+        position:relative!important;
+        top:auto!important;
+        left:auto!important;
+        right:auto!important;
+        width:auto!important;
+        min-width:0!important;
+        max-width:none!important;
+        height:100%!important;
+        min-height:0!important;
+        align-self:stretch!important;
+        overflow:auto!important;
+        box-sizing:border-box!important;
+      }
+      #uaiV9RoleEditorMask .uai-c-v11-role-editor .uai-c-v3-form{
+        width:100%!important;
+        min-width:0!important;
+        max-width:none!important;
+        height:100%!important;
+        max-height:none!important;
+        margin:0!important;
+        padding:0 6px 14px 0!important;
+        overflow-y:auto!important;
+        overflow-x:hidden!important;
+        box-sizing:border-box!important;
+      }
+      #uaiV9RoleEditorMask .uai-c-v11-role-editor .uai-c-v11-editor-nav,
+      #uaiV9RoleEditorMask .uai-c-v11-role-editor .uai-c-v11-editor-section{
+        width:100%!important;
+        min-width:0!important;
+        box-sizing:border-box!important;
+      }
+      #uaiV9RoleEditorMask .uai-c-v11-role-editor .uai-c-v11-editor-fields{
+        min-width:0!important;
+      }
+      #uaiV9RoleEditorMask .uai-c-v11-role-editor .uai-c-v11-editor-section label,
+      #uaiV9RoleEditorMask .uai-c-v11-role-editor .uai-c-v11-editor-section input,
+      #uaiV9RoleEditorMask .uai-c-v11-role-editor .uai-c-v11-editor-section select,
+      #uaiV9RoleEditorMask .uai-c-v11-role-editor .uai-c-v11-editor-section textarea{
+        min-width:0!important;
+        max-width:100%!important;
+        box-sizing:border-box!important;
+      }
+      @media (max-width:860px){
+        #uaiV9RoleEditorMask{padding:12px!important}
+        #uaiV9RoleEditorMask .uai-c-v11-role-editor{
+          width:calc(100vw - 24px)!important;
+          max-width:none!important;
+          max-height:calc(100vh - 24px)!important;
+          overflow:auto!important;
+        }
+        #uaiV9RoleEditorMask .uai-c-v11-role-editor .uai-c-v10-role-editor-layout{
+          display:block!important;
+          overflow:visible!important;
+          padding:12px!important;
+        }
+        #uaiV9RoleEditorMask .uai-c-v11-role-editor .uai-c-v10-role-preview{
+          position:relative!important;
+          height:auto!important;
+          min-height:0!important;
+          margin-bottom:12px!important;
+          overflow:visible!important;
+        }
+        #uaiV9RoleEditorMask .uai-c-v11-role-editor .uai-c-v3-form{
+          height:auto!important;
+          max-height:none!important;
+          overflow:visible!important;
+          padding:0 0 8px!important;
+        }
+      }
+    `;
+    document.head.appendChild(style);
   }
 
   function relationLabel(value) {
@@ -174,6 +278,7 @@
 
   function enhance() {
     scheduled = false;
+    ensureLayoutFix();
     if (document.body.dataset.uaiMode !== "companion") return;
     decorateRoleEditor();
     decorateRoleGallery();
@@ -187,6 +292,7 @@
   }
 
   function init() {
+    ensureLayoutFix();
     document.documentElement.dataset.companionV11Stage2Revision = REVISION;
     new MutationObserver(schedule).observe(document.body, {
       subtree: true,
