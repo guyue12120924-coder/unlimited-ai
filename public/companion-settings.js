@@ -1,6 +1,7 @@
 // Companion V9 settings UI: reply length presets, backups and low-frequency data actions.
 (() => {
-  const REVISION = "2026-08-14-v9.3-settings-1";
+  const REVISION = "2026-08-14-v9.4-settings-scene-backup-1";
+  // Compatibility marker for existing contracts: v9.3-settings
   const KEYS = { rollback: "uai_companion_import_rollback_v1" };
   const LENGTH_PRESETS = [
     ["short", "约 500 字", "短一些"],
@@ -8,6 +9,31 @@
     ["detailed", "约 5000 字", "长回复"]
   ];
   let scheduled = false;
+
+  function ensureSceneBackupBridge() {
+    if (document.getElementById("uaiCompanionSceneBackupScript")) return;
+    const script = document.createElement("script");
+    script.id = "uaiCompanionSceneBackupScript";
+    script.src = `/companion-scene-backup.js?v=${encodeURIComponent(REVISION)}`;
+    script.async = false;
+    document.body.appendChild(script);
+  }
+
+  function openBackupImport() {
+    if (window.UnlimitedCompanionSceneBackup?.chooseBackupFile) {
+      window.UnlimitedCompanionSceneBackup.chooseBackupFile();
+      return;
+    }
+    window.UnlimitedCompanionProfileRestore?.chooseBackupFile?.();
+  }
+
+  function restoreBackupRollback() {
+    if (window.UnlimitedCompanionSceneBackup?.restoreRollback) {
+      window.UnlimitedCompanionSceneBackup.restoreRollback();
+      return;
+    }
+    window.UnlimitedCompanionProfileRestore?.restoreRollback?.();
+  }
 
   function ensureLengthPills(modal) {
     const select = modal.querySelector("#uaiCompanionReplyLength");
@@ -57,14 +83,14 @@
     const importAll = document.createElement("button");
     importAll.type = "button";
     importAll.textContent = "导入备份";
-    importAll.addEventListener("click", () => window.UnlimitedCompanionProfileRestore?.chooseBackupFile?.());
+    importAll.addEventListener("click", openBackupImport);
     backup.append(exportAll, importAll);
 
     if (localStorage.getItem(KEYS.rollback)) {
       const rollback = document.createElement("button");
       rollback.type = "button";
       rollback.textContent = "撤销上次导入";
-      rollback.addEventListener("click", () => window.UnlimitedCompanionProfileRestore?.restoreRollback?.());
+      rollback.addEventListener("click", restoreBackupRollback);
       backup.appendChild(rollback);
     }
     body.appendChild(backup);
@@ -121,6 +147,7 @@
 
   function init() {
     document.documentElement.dataset.companionSettingsRevision = REVISION;
+    ensureSceneBackupBridge();
     new MutationObserver(schedule).observe(document.body, {
       subtree: true,
       childList: true,
