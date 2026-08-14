@@ -1,6 +1,6 @@
 // Companion V12.8 phase 5 — per-character scene assignment, persistence and settings controls.
 (() => {
-  const REVISION = "2026-08-14-v12.8-phase5-1";
+  const REVISION = "2026-08-14-v12.8-phase5-audit-2";
   const STORAGE_KEY = "uai_companion_scene_assignments_v1";
   const ACTIVE_KEY = "uai_companion_active_character_v1";
   const THEMES = ["galaxy", "sakura", "moonlight", "neon"];
@@ -37,6 +37,26 @@
 
   function activeCharacterId() {
     return window.UnlimitedCompanionMulti?.activeCharacterId || localStorage.getItem(ACTIVE_KEY) || "";
+  }
+
+  function companionIsVisible() {
+    if (document.body.dataset.uaiMode !== "companion") return false;
+    const root = document.getElementById("uaiCompanionRoot");
+    return Boolean(root && !root.hidden && root.isConnected);
+  }
+
+  function pruneUnknownAssignments() {
+    const characters = window.UnlimitedCompanionMulti?.getCharacters?.();
+    if (!Array.isArray(characters) || !characters.length) return;
+    const validIds = new Set(characters.map((item) => item?.id).filter(Boolean));
+    const map = readMap();
+    let changed = false;
+    for (const id of Object.keys(map)) {
+      if (validIds.has(id)) continue;
+      delete map[id];
+      changed = true;
+    }
+    if (changed) writeMap(map);
   }
 
   function randomSeed() {
@@ -211,17 +231,32 @@
     return true;
   }
 
+  function scheduleRetry(characterId, delay = 120) {
+    clearTimeout(retryTimer);
+    retryTimer = 0;
+    if (!companionIsVisible()) return;
+    retryTimer = window.setTimeout(() => {
+      retryTimer = 0;
+      if (companionIsVisible()) applyAssignment(characterId, true);
+    }, delay);
+  }
+
   function applyAssignment(characterId = activeCharacterId(), force = false) {
-    if (!characterId) return;
+    if (!characterId || !companionIsVisible()) {
+      clearTimeout(retryTimer);
+      retryTimer = 0;
+      return;
+    }
     const assignment = ensureAssignment(characterId);
     const root = document.getElementById("uaiCompanionRoot");
     const themes = window.UnlimitedCompanionV127Themes;
     if (!assignment || !root || root.hidden || !themes?.setTheme) {
-      clearTimeout(retryTimer);
-      retryTimer = window.setTimeout(() => applyAssignment(characterId, true), 120);
+      scheduleRetry(characterId, 120);
       return;
     }
 
+    clearTimeout(retryTimer);
+    retryTimer = 0;
     const signature = `${characterId}:${assignment.theme}:${assignment.seed}`;
     const sceneExists = Boolean(root.querySelector(".uai-c-v127-theme-layer"));
     if (!force && signature === lastAppliedSignature && sceneExists && root.dataset.v128CharacterScene === characterId) {
@@ -233,8 +268,9 @@
     root.dataset.v128CharacterScene = characterId;
     root.dataset.v128SceneMode = assignment.mode || "initial";
     requestAnimationFrame(() => {
+      if (!companionIsVisible()) return;
       if (!applyVariation(root, assignment)) {
-        window.setTimeout(() => applyAssignment(characterId, true), 80);
+        scheduleRetry(characterId, 80);
         return;
       }
       lastAppliedSignature = signature;
@@ -319,14 +355,18 @@
 
   function enhance() {
     scheduled = false;
-    if (document.body.dataset.uaiMode !== "companion") return;
-    const root = document.getElementById("uaiCompanionRoot");
-    if (!root || root.hidden) return;
-    const characterId = activeCharacterId();
-    if (!characterId) {
-      window.setTimeout(schedule, 80);
+    if (!companionIsVisible()) {
+      clearTimeout(retryTimer);
+      retryTimer = 0;
       return;
     }
+    const root = document.getElementById("uaiCompanionRoot");
+    const characterId = activeCharacterId();
+    if (!characterId) {
+      scheduleRetry("", 80);
+      return;
+    }
+    pruneUnknownAssignments();
     root.dataset.v128Phase5 = REVISION;
     applyAssignment(characterId);
     const modal = root.querySelector("#uaiCompanionModalMask:not([hidden]) .uai-c-modal");
