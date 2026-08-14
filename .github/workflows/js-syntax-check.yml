@@ -62,3 +62,9 @@ jobs:
         run: |
           set -euo pipefail
           node tests/companion-v5-guard.test.mjs
+
+      - name: Check companion V8 runtime contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          node tests/companion-v8-ux.test.mjs
