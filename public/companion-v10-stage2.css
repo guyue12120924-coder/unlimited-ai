@@ -1,0 +1,203 @@
+/* Companion V10.5 — starter interaction polish + desktop role sidecar. */
+
+#uaiCompanionRoot .uai-c-v10-starters{
+  position:relative!important;
+  z-index:8!important;
+  pointer-events:auto!important;
+}
+#uaiCompanionRoot .uai-c-v10-starters>div,
+#uaiCompanionRoot .uai-c-v10-starters button{
+  position:relative!important;
+  z-index:9!important;
+  pointer-events:auto!important;
+}
+#uaiCompanionRoot .uai-c-v10-starters button{
+  cursor:pointer!important;
+  user-select:none!important;
+  -webkit-tap-highlight-color:transparent!important;
+  transition:transform .14s ease,box-shadow .14s ease,border-color .14s ease,filter .14s ease!important;
+}
+#uaiCompanionRoot .uai-c-v10-starters button:active,
+#uaiCompanionRoot .uai-c-v10-starters button.uai-c-v10-starter-picked{
+  transform:translateY(1px) scale(.985)!important;
+  filter:saturate(1.12)!important;
+  box-shadow:0 4px 12px rgba(108,78,174,.10)!important;
+}
+#uaiCompanionRoot .uai-c-v10-starters button:focus-visible{
+  outline:3px solid rgba(139,92,246,.16)!important;
+  outline-offset:2px!important;
+}
+
+@media (min-width:1280px){
+  #uaiCompanionRoot .uai-c-shell{
+    grid-template-columns:264px minmax(0,1fr) 286px!important;
+  }
+
+  #uaiCompanionRoot .uai-c-v10-sidecar{
+    min-width:0;
+    padding:18px 16px;
+    border-left:1px solid rgba(111,85,197,.10);
+    background:
+      radial-gradient(circle at 50% 0%,rgba(139,92,246,.09),transparent 26%),
+      radial-gradient(circle at 88% 24%,rgba(236,72,153,.07),transparent 24%),
+      linear-gradient(180deg,rgba(255,255,255,.91),rgba(249,247,255,.96));
+    box-shadow:-12px 0 36px rgba(85,64,139,.045);
+    overflow:auto;
+  }
+  #uaiCompanionRoot .uai-c-v10-sidecar-inner{
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+    min-height:100%;
+  }
+  #uaiCompanionRoot .uai-c-v10-sidecar-hero{
+    padding:22px 16px 18px;
+    border:1px solid rgba(126,92,220,.13);
+    border-radius:22px;
+    background:
+      radial-gradient(circle at 50% -10%,rgba(236,72,153,.12),transparent 35%),
+      linear-gradient(145deg,#fff,#f8f3ff);
+    box-shadow:0 16px 38px rgba(91,72,143,.09),inset 0 1px 0 #fff;
+    text-align:center;
+  }
+  #uaiCompanionRoot .uai-c-v10-sidecar-avatar{
+    width:78px;
+    height:78px;
+    display:grid;
+    place-items:center;
+    margin:0 auto 12px;
+    overflow:hidden;
+    border-radius:24px;
+    background:linear-gradient(145deg,#f9a8d4,#c084fc 55%,#818cf8);
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.76),0 14px 28px rgba(124,58,237,.18);
+    font-size:30px;
+  }
+  #uaiCompanionRoot .uai-c-v10-sidecar-avatar img{
+    width:100%;height:100%;object-fit:cover;display:block;
+  }
+  #uaiCompanionRoot .uai-c-v10-sidecar-name{
+    font-size:18px;
+    font-weight:760;
+    color:#302840;
+    letter-spacing:-.01em;
+  }
+  #uaiCompanionRoot .uai-c-v10-sidecar-relation{
+    margin-top:5px;
+    font-size:11.5px;
+    color:#8b809c;
+  }
+  #uaiCompanionRoot .uai-c-v10-sidecar-relation::before{
+    content:"";
+    display:inline-block;
+    width:6px;height:6px;
+    margin-right:6px;
+    border-radius:50%;
+    background:#34d399;
+    box-shadow:0 0 0 3px rgba(52,211,153,.10);
+    vertical-align:1px;
+  }
+  #uaiCompanionRoot .uai-c-v10-sidecar-stats{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:8px;
+  }
+  #uaiCompanionRoot .uai-c-v10-sidecar-stats>div{
+    min-width:0;
+    padding:12px 5px 11px;
+    border:1px solid rgba(126,92,220,.10);
+    border-radius:14px;
+    background:rgba(255,255,255,.76);
+    text-align:center;
+    box-shadow:0 7px 18px rgba(91,72,143,.045);
+  }
+  #uaiCompanionRoot .uai-c-v10-sidecar-stats strong{
+    display:block;
+    font-size:17px;
+    line-height:1.1;
+    color:#6040bd;
+  }
+  #uaiCompanionRoot .uai-c-v10-sidecar-stats span{
+    display:block;
+    margin-top:5px;
+    font-size:9.5px;
+    color:#9990a8;
+    white-space:nowrap;
+  }
+  #uaiCompanionRoot .uai-c-v10-sidecar-section{
+    padding:14px;
+    border:1px solid rgba(126,92,220,.10);
+    border-radius:18px;
+    background:rgba(255,255,255,.76);
+    box-shadow:0 10px 26px rgba(91,72,143,.045);
+  }
+  #uaiCompanionRoot .uai-c-v10-sidecar-label{
+    display:block;
+    margin:0 2px 8px;
+    font-size:10px;
+    font-weight:700;
+    letter-spacing:.06em;
+    color:#a096ad;
+  }
+  #uaiCompanionRoot .uai-c-v10-sidecar-section button{
+    width:100%;
+    min-height:42px;
+    display:grid;
+    grid-template-columns:30px 1fr auto;
+    align-items:center;
+    gap:6px;
+    padding:0 8px;
+    border:0;
+    border-radius:11px;
+    background:transparent;
+    color:#5d536c;
+    cursor:pointer;
+  }
+  #uaiCompanionRoot .uai-c-v10-sidecar-section button:hover{
+    background:linear-gradient(90deg,rgba(139,92,246,.08),rgba(236,72,153,.045));
+    color:#6840cd;
+  }
+  #uaiCompanionRoot .uai-c-v10-sidecar-section button>span{
+    width:28px;height:28px;display:grid;place-items:center;
+    border-radius:9px;
+    background:#f3efff;
+    color:#7448d5;
+    font-size:13px;
+  }
+  #uaiCompanionRoot .uai-c-v10-sidecar-section button:nth-of-type(2)>span{
+    background:#fff0f7;color:#d65391;
+  }
+  #uaiCompanionRoot .uai-c-v10-sidecar-section button:nth-of-type(3)>span{
+    background:#eef4ff;color:#5678d4;
+  }
+  #uaiCompanionRoot .uai-c-v10-sidecar-section button>b{
+    font:620 12.5px/1 system-ui,sans-serif;
+    text-align:left;
+  }
+  #uaiCompanionRoot .uai-c-v10-sidecar-section button>i{
+    color:#b5acbf;
+    font:500 17px/1 system-ui,sans-serif;
+  }
+  #uaiCompanionRoot .uai-c-v10-sidecar-note{
+    margin-top:auto;
+    padding:11px 12px;
+    border-radius:13px;
+    background:linear-gradient(135deg,rgba(139,92,246,.055),rgba(236,72,153,.035));
+    color:#9a91a8;
+    font-size:9.5px;
+    line-height:1.6;
+  }
+
+  /* With the sidecar present, keep the conversation comfortably narrow. */
+  #uaiCompanionRoot .uai-c-header-left,
+  #uaiCompanionRoot .uai-c-message-row,
+  #uaiCompanionRoot .uai-c-composer{
+    width:min(100%,820px)!important;
+  }
+  #uaiCompanionRoot .uai-c-v10-starters{
+    width:min(100%,720px)!important;
+  }
+}
+
+@media (max-width:1279px){
+  #uaiCompanionRoot .uai-c-v10-sidecar{display:none!important}
+}
