@@ -30,6 +30,7 @@ for (const retired of [
   "public/companion-v6.js",
   "public/companion-v6.css",
   "public/companion-profile-editor.js",
+  "public/companion-profile-editor.css",
   "public/companion-v5-guard.js",
   "public/companion-reply-length.js",
   "public/companion-v3-guard.js",
