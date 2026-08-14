@@ -11,8 +11,10 @@
 }
 
 #uaiCompanionRoot.uai-c-live2d-active .uai-c-live2d-layer,
+#uaiCompanionRoot[data-v129-live2d-status="loading"] .uai-c-live2d-layer,
 #uaiCompanionRoot[data-v129-live2d-status="runtime-error"] .uai-c-live2d-layer,
-#uaiCompanionRoot[data-v129-live2d-status="model-missing"] .uai-c-live2d-layer{
+#uaiCompanionRoot[data-v129-live2d-status="model-missing"] .uai-c-live2d-layer,
+#uaiCompanionRoot[data-v129-live2d-status="unconfigured"] .uai-c-live2d-layer{
   opacity:1;
 }
 
@@ -83,15 +85,28 @@
   position:absolute;
   right:24px;
   top:22px;
-  z-index:4;
+  z-index:20;
   padding:8px 12px;
-  border:1px solid rgba(255,190,235,.18);
+  border:1px solid rgba(255,190,235,.22);
   border-radius:12px;
-  background:rgba(28,14,60,.64);
-  color:rgba(255,239,250,.82);
-  box-shadow:0 10px 28px rgba(0,0,0,.18),0 0 24px rgba(191,107,255,.08);
+  background:rgba(28,14,60,.86);
+  color:rgba(255,239,250,.94);
+  box-shadow:0 10px 28px rgba(0,0,0,.24),0 0 24px rgba(191,107,255,.12);
   backdrop-filter:blur(14px);
   font:600 12px/1.4 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+
+#uaiCompanionRoot[data-v129-live2d-status="loading"] .uai-c-live2d-status-note,
+#uaiCompanionRoot[data-v129-live2d-status="runtime-error"] .uai-c-live2d-status-note,
+#uaiCompanionRoot[data-v129-live2d-status="model-missing"] .uai-c-live2d-status-note,
+#uaiCompanionRoot[data-v129-live2d-status="unconfigured"] .uai-c-live2d-status-note{
+  display:block!important;
+}
+#uaiCompanionRoot[data-v129-live2d-status="loading"] .uai-c-live2d-status-note::before{
+  content:"Live2D 正在加载…";
+}
+#uaiCompanionRoot[data-v129-live2d-status="unconfigured"] .uai-c-live2d-status-note::before{
+  content:"Live2D 暂无角色模型配置";
 }
 
 #uaiCompanionRoot.uai-c-live2d-active .uai-c-v122-portrait-wrap{
@@ -118,13 +133,15 @@
 }
 
 #uaiCompanionRoot[data-v129-live2d-status="loading"] .uai-c-live2d-layer{
-  opacity:.28;
+  filter:saturate(.96) brightness(.98);
 }
 
 #uaiCompanionRoot[data-v129-live2d-status="runtime-error"] .uai-c-live2d-canvas,
 #uaiCompanionRoot[data-v129-live2d-status="runtime-error"] .uai-c-live2d-floor,
 #uaiCompanionRoot[data-v129-live2d-status="model-missing"] .uai-c-live2d-canvas,
-#uaiCompanionRoot[data-v129-live2d-status="model-missing"] .uai-c-live2d-floor{
+#uaiCompanionRoot[data-v129-live2d-status="model-missing"] .uai-c-live2d-floor,
+#uaiCompanionRoot[data-v129-live2d-status="unconfigured"] .uai-c-live2d-canvas,
+#uaiCompanionRoot[data-v129-live2d-status="unconfigured"] .uai-c-live2d-floor{
   opacity:0;
 }
 
