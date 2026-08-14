@@ -1,6 +1,20 @@
 {
-  "version": 2,
-  "defaultModel": "",
+  "version": 3,
+  "defaultModel": {
+    "model": "https://raw.githubusercontent.com/Live2D/CubismWebSamples/b1de66b0b1f1cb881d95fb6158622aeb6a2827bd/Samples/Resources/Mao/Mao.model3.json",
+    "idleMotionGroup": "Idle",
+    "position": {
+      "x": 0.74,
+      "y": 1.0,
+      "height": 0.86
+    },
+    "tapMotionGroups": ["TapBody"],
+    "sample": {
+      "name": "Mao",
+      "owner": "Live2D Inc.",
+      "notice": "This content uses sample data owned and copyrighted by Live2D Inc."
+    }
+  },
   "byId": {},
   "byName": {
     "李萌": {
