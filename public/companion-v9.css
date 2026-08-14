@@ -152,6 +152,13 @@
 #uaiCompanionRoot .uai-c-message-row.assistant{justify-content:flex-start}
 #uaiCompanionRoot .uai-c-message-row.user{justify-content:flex-end}
 #uaiCompanionRoot .uai-c-message-row.assistant>div{width:min(100%,920px)}
+#uaiCompanionRoot .uai-c-v9-message-author{
+  margin:0 0 7px;
+  color:rgba(255,255,255,.55);
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:.01em;
+}
 
 #uaiCompanionRoot .uai-c-bubble{
   line-height:1.82!important;
@@ -272,6 +279,41 @@
   background:#292a33!important;
   font-size:14px!important;
 }
+.uai-c-v9-role-manager{width:min(880px,calc(100vw - 40px))!important}
+.uai-c-v9-role-manager .uai-c-v3-character-list{
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px!important;
+  padding:18px!important;
+}
+.uai-c-v9-role-manager .uai-c-v3-character-card{
+  grid-template-columns:52px minmax(0,1fr)!important;
+  align-items:center!important;
+  gap:12px!important;
+  min-height:128px;
+  padding:14px!important;
+  border-radius:14px!important;
+  background:#262730!important;
+}
+.uai-c-v9-role-manager .uai-c-v3-character-card.active{
+  border-color:rgba(217,101,150,.35)!important;
+  background:rgba(217,101,150,.08)!important;
+}
+.uai-c-v9-role-manager .uai-c-v3-avatar{width:52px!important;height:52px!important;border-radius:16px!important}
+.uai-c-v9-role-manager .uai-c-v3-character-card strong{font-size:15px!important}
+.uai-c-v9-role-manager .uai-c-v3-character-card span{font-size:11.5px!important}
+.uai-c-v9-role-manager .uai-c-v3-character-card small{margin-top:3px;font-size:10.5px!important}
+.uai-c-v9-role-manager .uai-c-v3-character-actions{
+  grid-column:1/-1;
+  justify-content:flex-end!important;
+  padding-top:10px;
+  border-top:1px solid rgba(255,255,255,.05);
+}
+.uai-c-v9-role-manager .uai-c-v3-character-actions button,.uai-c-v9-role-manager .uai-c-v3-character-actions em{
+  min-height:32px;
+  padding:0 10px!important;
+  border-radius:9px!important;
+  font-size:11px!important;
+}
 
 @media (max-width:1200px){
   #uaiCompanionRoot .uai-c-shell{grid-template-columns:236px minmax(0,1fr)!important}
@@ -301,6 +343,8 @@
   #uaiCompanionRoot .uai-c-composer-wrap{padding:10px 10px 12px!important}
   #uaiCompanionRoot .uai-c-composer{min-height:54px;border-radius:14px!important}
   #uaiCompanionRoot .uai-c-composer-hint{display:none!important}
+  .uai-c-v9-role-manager{width:100%!important}
+  .uai-c-v9-role-manager .uai-c-v3-character-list{grid-template-columns:1fr!important}
 }
 
 @media (max-width:460px){
