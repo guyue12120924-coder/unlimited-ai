@@ -51,19 +51,19 @@ jobs:
           cp src/companion.js /tmp/companion-under-test.mjs
           COMPANION_MODULE="file:///tmp/companion-under-test.mjs" node tests/companion-mode.test.mjs
 
-      - name: Check companion V8 role editor contract
+      - name: Check companion character UI contract
         shell: bash
         run: |
           set -euo pipefail
           node tests/companion-profile-editor.test.mjs
 
-      - name: Check companion restore core contract
+      - name: Check companion records and restore contract
         shell: bash
         run: |
           set -euo pipefail
           node tests/companion-v5-guard.test.mjs
 
-      - name: Check companion V8 runtime contract
+      - name: Check companion runtime compatibility contract
         shell: bash
         run: |
           set -euo pipefail
