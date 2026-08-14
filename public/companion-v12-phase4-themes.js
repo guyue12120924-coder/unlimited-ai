@@ -1,6 +1,6 @@
-// Companion V12.7 phase 4 — lightweight scene theme renderer.
+// Companion V12.7/12.8 phase 4 — lightweight scene theme renderer + phase 5 scene-state loader.
 (() => {
-  const REVISION = "2026-08-14-v12.7-phase4-1";
+  const REVISION = "2026-08-14-v12.8-phase4-loader-1";
   const THEMES = ["galaxy", "sakura", "moonlight", "neon"];
   const LABELS = {
     galaxy: "星河梦境",
@@ -11,6 +11,29 @@
   let currentTheme = "galaxy";
   let scheduled = false;
   let particleHost = null;
+
+  function ensureStyle(href, id) {
+    if (document.getElementById(id)) return;
+    const link = document.createElement("link");
+    link.id = id;
+    link.rel = "stylesheet";
+    link.href = href;
+    document.head.appendChild(link);
+  }
+
+  function ensureScript(src, id) {
+    if (document.getElementById(id)) return;
+    const script = document.createElement("script");
+    script.id = id;
+    script.src = src;
+    script.async = false;
+    document.body.appendChild(script);
+  }
+
+  function loadPhase5SceneState() {
+    ensureStyle(`/companion-v12-phase5-scene-state.css?v=${encodeURIComponent(REVISION)}`, "uaiCompanionV12Phase5SceneStateCss");
+    ensureScript(`/companion-v12-phase5-scene-state.js?v=${encodeURIComponent(REVISION)}`, "uaiCompanionV12Phase5SceneStateScript");
+  }
 
   function getRoot() {
     if (document.body.dataset.uaiMode !== "companion") return null;
@@ -134,12 +157,6 @@
 
   function init() {
     document.documentElement.dataset.companionV127Phase4Revision = REVISION;
-    new MutationObserver(schedule).observe(document.body, {
-      subtree: true,
-      childList: true,
-      attributes: true,
-      attributeFilter: ["hidden", "data-uai-mode", "class"]
-    });
     window.UnlimitedCompanionV127Themes = {
       revision: REVISION,
       themes: THEMES.map((id) => ({ id, label: LABELS[id] })),
@@ -148,6 +165,13 @@
       cycleTheme,
       refresh: schedule
     };
+    loadPhase5SceneState();
+    new MutationObserver(schedule).observe(document.body, {
+      subtree: true,
+      childList: true,
+      attributes: true,
+      attributeFilter: ["hidden", "data-uai-mode", "class"]
+    });
     schedule();
   }
 
