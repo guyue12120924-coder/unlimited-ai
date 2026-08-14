@@ -33,19 +33,24 @@ public/live2d/characters/limeng/
     ...exp3.json
 ```
 
-## Cubism Core — required once
+## Cubism Core — zero manual setup
 
 This public repository intentionally does **not** commit `live2dcubismcore.min.js`.
 
-Download **Cubism SDK for Web** from Live2D's official website after reviewing/accepting its license. Copy the Web Core file from that official SDK package to:
+At runtime the companion page uses the following priority:
+
+1. If `/live2d/vendor/live2dcubismcore.min.js` exists, use that local copy.
+2. Otherwise load Live2D's official hosted Cubism Core for Web from `cubism.live2d.com`.
+
+That means the default Cloudflare/GitHub deployment does not require the user to download the SDK or upload a Core file manually.
+
+The official hosted Core URL currently used by the runtime is:
 
 ```text
-public/live2d/vendor/live2dcubismcore.min.js
+https://cubism.live2d.com/sdk-web/cubismcore/live2dcubismcore.min.js
 ```
 
-The companion runtime only loads Cubism Core from that local path. It does not pull Cubism Core from third-party GitHub projects or mirrors.
-
-Without this file, the chat remains fully usable and shows the existing portrait UI. A small status note will say that Live2D is connected but Cubism Core is still missing.
+A private/self-hosted deployment may still place an official SDK copy at the local path above if desired; it will automatically take priority.
 
 ## Official sample notice
 
