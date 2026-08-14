@@ -1,0 +1,319 @@
+/* Companion V12.3 — brighter galaxy, higher saturation, clearer hierarchy, visible settings. */
+
+#uaiCompanionRoot{
+  --v123-violet:#a866ff;
+  --v123-purple:#7b46ff;
+  --v123-pink:#ff5fc3;
+  --v123-blue:#5f7dff;
+  --v123-cyan:#52d9ff;
+  --v123-deep:#070615;
+  --v123-deep2:#0e0928;
+  --v123-glass:rgba(77,52,158,.30);
+  --v123-glass-strong:rgba(76,52,168,.48);
+  --v123-line:rgba(224,194,255,.27);
+  --v123-text:#fffaff;
+  --v123-muted:rgba(239,225,255,.68);
+}
+
+/* ---------- vivid overall composition ---------- */
+#uaiCompanionRoot .uai-c-shell{
+  background:linear-gradient(135deg,#070615 0%,#0e0929 37%,#120b38 66%,#080719 100%)!important;
+}
+
+#uaiCompanionRoot .uai-c-main{
+  background:
+    radial-gradient(circle at 47% 10%,rgba(198,92,255,.56),transparent 25%),
+    radial-gradient(circle at 67% 23%,rgba(102,82,255,.42),transparent 28%),
+    radial-gradient(circle at 82% 55%,rgba(71,112,255,.34),transparent 30%),
+    radial-gradient(circle at 21% 61%,rgba(255,82,193,.27),transparent 26%),
+    radial-gradient(circle at 57% 92%,rgba(132,70,255,.36),transparent 31%),
+    linear-gradient(145deg,#140b3a 0%,#2f176d 34%,#201255 65%,#0a0822 100%)!important;
+}
+#uaiCompanionRoot .uai-c-main::before{
+  opacity:1!important;
+  background:
+    radial-gradient(ellipse at 50% 20%,rgba(255,193,255,.24),transparent 24%),
+    radial-gradient(ellipse at 30% 45%,rgba(255,99,202,.13),transparent 22%),
+    radial-gradient(ellipse at 72% 55%,rgba(104,132,255,.20),transparent 31%),
+    conic-gradient(from 220deg at 50% 48%,transparent 0 19%,rgba(111,81,255,.12) 23%,rgba(255,102,205,.18) 29%,rgba(116,145,255,.12) 35%,transparent 42% 100%)!important;
+  filter:blur(15px)!important;
+}
+
+#uaiCompanionRoot .uai-c-v12-nebula{opacity:1!important;filter:saturate(1.28) brightness(1.14)}
+#uaiCompanionRoot .uai-c-v12-particles,
+#uaiCompanionRoot .uai-c-v121-sparkle-layer{filter:saturate(1.25) brightness(1.18)}
+
+/* ---------- left rail becomes cleaner and more premium ---------- */
+#uaiCompanionRoot .uai-c-sidebar{
+  display:flex!important;
+  flex-direction:column!important;
+  min-height:0!important;
+  gap:10px!important;
+  background:
+    radial-gradient(circle at 14% 4%,rgba(177,80,255,.24),transparent 23%),
+    radial-gradient(circle at 90% 32%,rgba(72,96,255,.15),transparent 23%),
+    linear-gradient(180deg,rgba(9,7,28,.99),rgba(11,8,35,.99) 65%,rgba(7,6,23,.995))!important;
+}
+#uaiCompanionRoot .uai-c-v121-brand{flex:0 0 auto!important}
+#uaiCompanionRoot #uaiCompanionProfileCard,
+#uaiCompanionRoot .uai-c-new-chat,
+#uaiCompanionRoot .uai-c-v121-rail-nav,
+#uaiCompanionRoot .uai-c-v10-search,
+#uaiCompanionRoot>.uai-c-shell>.uai-c-sidebar>.uai-c-side-label{flex:0 0 auto!important}
+#uaiCompanionRoot .uai-c-session-list{
+  flex:1 1 auto!important;
+  min-height:0!important;
+  overflow:auto!important;
+  padding-right:4px!important;
+  scrollbar-width:thin!important;
+  scrollbar-color:rgba(166,103,255,.25) transparent!important;
+}
+#uaiCompanionRoot .uai-c-session-list::-webkit-scrollbar{width:4px!important}
+#uaiCompanionRoot .uai-c-session-list::-webkit-scrollbar-thumb{background:linear-gradient(#9c64ff,#ff64c4)!important;border-radius:99px!important}
+
+#uaiCompanionRoot .uai-c-profile-card{
+  border-color:rgba(229,191,255,.30)!important;
+  background:
+    radial-gradient(circle at 0% 0%,rgba(255,95,195,.18),transparent 45%),
+    linear-gradient(135deg,rgba(132,76,220,.42),rgba(81,58,171,.28),rgba(28,23,78,.72))!important;
+  box-shadow:0 12px 34px rgba(4,2,26,.34),0 0 26px rgba(162,82,255,.13),inset 0 1px 0 rgba(255,255,255,.11)!important;
+}
+#uaiCompanionRoot .uai-c-profile-card .uai-c-avatar{
+  background:linear-gradient(145deg,#ff7bc9,#b76dff 50%,#7f6cff)!important;
+  box-shadow:0 0 0 4px rgba(187,105,255,.11),0 0 24px rgba(255,87,190,.29)!important;
+}
+#uaiCompanionRoot .uai-c-new-chat{
+  border-color:rgba(218,173,255,.38)!important;
+  background:linear-gradient(135deg,rgba(112,68,237,.74),rgba(156,71,221,.48),rgba(48,35,121,.82))!important;
+  box-shadow:0 10px 28px rgba(87,38,193,.22),inset 0 1px 0 rgba(255,255,255,.11)!important;
+}
+#uaiCompanionRoot .uai-c-v121-rail-nav button.active{
+  color:#fff!important;
+  border-color:rgba(215,180,255,.34)!important;
+  background:linear-gradient(100deg,rgba(116,70,244,.65),rgba(90,59,186,.36))!important;
+  box-shadow:0 0 22px rgba(122,73,255,.16)!important;
+}
+#uaiCompanionRoot .uai-c-session.active{
+  border-color:rgba(228,188,255,.32)!important;
+  background:linear-gradient(100deg,rgba(126,72,238,.52),rgba(118,72,194,.30),rgba(255,82,193,.08))!important;
+  box-shadow:inset 3px 0 0 #ff64c5,0 10px 25px rgba(42,17,101,.23)!important;
+}
+
+/* permanent bottom action dock; settings can no longer disappear */
+#uaiCompanionRoot .uai-c-v123-side-dock{
+  flex:0 0 auto!important;
+  display:grid!important;
+  grid-template-columns:1fr 1fr!important;
+  gap:7px!important;
+  padding:10px 0 0!important;
+  margin-top:auto!important;
+  border-top:1px solid rgba(206,176,255,.13)!important;
+  background:linear-gradient(180deg,rgba(8,7,25,0),rgba(8,7,25,.96) 24%)!important;
+}
+#uaiCompanionRoot .uai-c-v123-side-dock .uai-c-sidebar-action{
+  min-height:39px!important;
+  padding:0 10px!important;
+  border:1px solid rgba(205,176,255,.14)!important;
+  border-radius:11px!important;
+  background:rgba(65,49,135,.20)!important;
+  color:#e9ddff!important;
+  justify-content:space-between!important;
+}
+#uaiCompanionRoot .uai-c-v123-side-dock #uaiCompanionMemoryBtn{grid-column:1/-1!important}
+#uaiCompanionRoot .uai-c-v123-side-dock #uaiCompanionSettingsBtn{
+  background:linear-gradient(135deg,rgba(116,69,239,.48),rgba(255,83,190,.14))!important;
+  border-color:rgba(214,174,255,.27)!important;
+  color:#fff!important;
+}
+#uaiCompanionRoot .uai-c-v123-side-dock #uaiCompanionExitBtn{color:rgba(225,211,255,.62)!important}
+#uaiCompanionRoot .uai-c-v123-side-dock .uai-c-sidebar-action:hover{
+  border-color:rgba(232,203,255,.37)!important;
+  background:rgba(107,69,208,.34)!important;
+}
+
+/* ---------- header: brighter, closer to approved mock ---------- */
+#uaiCompanionRoot .uai-c-header{
+  border-bottom-color:rgba(215,183,255,.19)!important;
+  background:
+    radial-gradient(circle at 42% 100%,rgba(119,73,255,.15),transparent 36%),
+    linear-gradient(180deg,rgba(12,8,38,.95),rgba(14,9,48,.82))!important;
+  box-shadow:0 10px 35px rgba(3,2,21,.25),0 1px 0 rgba(198,154,255,.07)!important;
+}
+#uaiCompanionRoot .uai-c-v11-header-actions{gap:8px!important}
+#uaiCompanionRoot .uai-c-v123-settings-trigger{
+  min-height:38px;padding:0 14px;border:1px solid rgba(223,187,255,.30);border-radius:999px;
+  display:inline-flex;align-items:center;gap:7px;background:linear-gradient(135deg,rgba(93,57,189,.48),rgba(255,87,194,.12));
+  color:#f8ecff;box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 0 22px rgba(152,74,255,.10);cursor:pointer;
+  font:650 11px/1 system-ui,sans-serif;
+}
+#uaiCompanionRoot .uai-c-v123-settings-trigger i{font-style:normal;color:#ff9edb;text-shadow:0 0 12px rgba(255,93,193,.55)}
+#uaiCompanionRoot .uai-c-v123-settings-trigger:hover{background:linear-gradient(135deg,rgba(121,70,237,.62),rgba(255,87,194,.20));border-color:rgba(241,209,255,.46)}
+
+/* ---------- hero scene: vivid violet/pink focal point ---------- */
+#uaiCompanionRoot .uai-c-v122-scene{
+  background:
+    radial-gradient(circle at 22% 51%,rgba(255,100,205,.18),transparent 28%),
+    radial-gradient(circle at 52% 38%,rgba(183,105,255,.27),transparent 31%),
+    linear-gradient(180deg,rgba(40,22,96,.52),rgba(27,16,76,.18))!important;
+  box-shadow:inset 0 -1px 0 rgba(238,211,255,.09),0 18px 55px rgba(38,11,102,.12)!important;
+}
+#uaiCompanionRoot .uai-c-v122-portrait-wrap{
+  filter:saturate(1.24) brightness(1.10)!important;
+}
+#uaiCompanionRoot .uai-c-v122-portrait{
+  box-shadow:0 0 0 6px rgba(153,83,255,.11),0 0 36px rgba(165,80,255,.42),0 0 75px rgba(255,83,192,.22)!important;
+}
+#uaiCompanionRoot .uai-c-v122-scene-copy strong{
+  color:#fff!important;
+  text-shadow:0 0 22px rgba(180,105,255,.34)!important;
+}
+#uaiCompanionRoot .uai-c-v122-scene-copy h2{
+  color:#fff8ff!important;text-shadow:0 0 24px rgba(217,164,255,.18)!important;
+}
+#uaiCompanionRoot .uai-c-v122-scene-copy p{color:rgba(241,222,255,.68)!important}
+#uaiCompanionRoot .uai-c-v122-prompts button{
+  border-color:rgba(225,191,255,.29)!important;
+  background:linear-gradient(135deg,rgba(111,69,220,.48),rgba(255,84,193,.12),rgba(50,48,133,.38))!important;
+  color:#fff!important;
+  box-shadow:0 8px 24px rgba(47,17,118,.18),inset 0 1px 0 rgba(255,255,255,.08)!important;
+}
+#uaiCompanionRoot .uai-c-v122-prompts button:hover{
+  transform:translateY(-2px)!important;
+  border-color:rgba(245,214,255,.48)!important;
+  background:linear-gradient(135deg,rgba(139,79,255,.63),rgba(255,88,195,.21),rgba(71,68,163,.46))!important;
+  box-shadow:0 12px 30px rgba(94,38,194,.24),0 0 24px rgba(255,82,191,.09)!important;
+}
+
+/* ---------- conversation glass becomes clearer, less muddy ---------- */
+#uaiCompanionRoot .uai-c-messages{
+  background:
+    linear-gradient(180deg,rgba(17,12,55,.04),rgba(8,7,27,.12)),
+    radial-gradient(circle at 50% 10%,rgba(190,123,255,.07),transparent 33%)!important;
+}
+#uaiCompanionRoot .uai-c-message-row.assistant>div{
+  background:transparent!important;
+}
+#uaiCompanionRoot .uai-c-message-row.assistant .uai-c-bubble{
+  color:#fff!important;
+  border:1px solid rgba(224,195,255,.22)!important;
+  border-radius:18px!important;
+  background:
+    radial-gradient(circle at 10% 0%,rgba(255,104,205,.08),transparent 32%),
+    linear-gradient(135deg,rgba(118,82,211,.34),rgba(74,60,159,.24),rgba(27,26,77,.30))!important;
+  backdrop-filter:blur(18px) saturate(1.2)!important;
+  box-shadow:0 14px 34px rgba(11,5,44,.22),inset 0 1px 0 rgba(255,255,255,.07)!important;
+}
+#uaiCompanionRoot .uai-c-message-row.user .uai-c-bubble{
+  background:linear-gradient(135deg,#9d62ff 0%,#7c46ff 50%,#e14db9 125%)!important;
+  border:1px solid rgba(255,198,244,.28)!important;
+  box-shadow:0 11px 28px rgba(101,47,221,.27),0 0 24px rgba(255,76,190,.12),inset 0 1px 0 rgba(255,255,255,.22)!important;
+}
+#uaiCompanionRoot .uai-c-v10-message-avatar{
+  box-shadow:0 0 0 3px rgba(155,91,255,.12),0 0 22px rgba(255,94,196,.22)!important;
+}
+
+/* ---------- composer: stronger neon focal point ---------- */
+#uaiCompanionRoot .uai-c-composer-wrap{
+  background:linear-gradient(to top,rgba(8,7,25,.97) 25%,rgba(8,7,25,.74) 58%,transparent)!important;
+}
+#uaiCompanionRoot .uai-c-composer{
+  border:1px solid rgba(221,181,255,.38)!important;
+  background:
+    radial-gradient(circle at 84% 50%,rgba(255,89,196,.09),transparent 26%),
+    linear-gradient(145deg,rgba(57,40,126,.74),rgba(35,28,92,.72))!important;
+  backdrop-filter:blur(26px) saturate(1.3)!important;
+  box-shadow:0 18px 55px rgba(26,7,72,.38),0 0 0 1px rgba(151,87,255,.08),0 0 28px rgba(157,85,255,.16),inset 0 1px 0 rgba(255,255,255,.10)!important;
+}
+#uaiCompanionRoot .uai-c-composer:focus-within{
+  border-color:rgba(241,209,255,.60)!important;
+  box-shadow:0 20px 60px rgba(31,7,83,.42),0 0 0 3px rgba(153,83,255,.10),0 0 34px rgba(255,80,193,.13)!important;
+}
+#uaiCompanionRoot .uai-c-input{color:#fff!important}
+#uaiCompanionRoot .uai-c-input::placeholder{color:rgba(235,219,255,.50)!important}
+#uaiCompanionRoot .uai-c-send{
+  background:linear-gradient(145deg,#b06aff,#7d46ff 55%,#e44fc0)!important;
+  box-shadow:0 0 0 6px rgba(141,78,255,.10),0 0 28px rgba(175,83,255,.40),0 0 42px rgba(255,75,190,.18),inset 0 1px 0 rgba(255,255,255,.28)!important;
+}
+
+/* ---------- right companion space: more colorful, less flat ---------- */
+#uaiCompanionRoot .uai-c-v12-sidepanel{
+  background:
+    radial-gradient(circle at 50% 0%,rgba(170,82,255,.24),transparent 23%),
+    radial-gradient(circle at 100% 36%,rgba(68,103,255,.14),transparent 25%),
+    linear-gradient(180deg,rgba(15,10,44,.98),rgba(12,9,36,.99))!important;
+}
+#uaiCompanionRoot .uai-c-v12-side-hero{
+  border-color:rgba(222,188,255,.24)!important;
+  background:
+    radial-gradient(circle at 50% 0%,rgba(255,98,201,.12),transparent 35%),
+    linear-gradient(145deg,rgba(99,61,194,.40),rgba(47,39,117,.35))!important;
+  box-shadow:0 14px 34px rgba(4,2,26,.27),0 0 28px rgba(142,75,255,.10)!important;
+}
+#uaiCompanionRoot .uai-c-v12-side-avatar{
+  filter:saturate(1.24) brightness(1.10)!important;
+}
+#uaiCompanionRoot .uai-c-v12-side-progress,
+#uaiCompanionRoot .uai-c-v12-side-stats>div,
+#uaiCompanionRoot .uai-c-v12-side-actions{
+  border-color:rgba(212,180,255,.17)!important;
+  background:linear-gradient(145deg,rgba(58,43,130,.35),rgba(30,27,82,.32))!important;
+}
+#uaiCompanionRoot .uai-c-v12-side-track i{
+  background:linear-gradient(90deg,#ff64c4,#a765ff,#6d87ff)!important;
+  box-shadow:0 0 18px rgba(181,87,255,.38)!important;
+}
+#uaiCompanionRoot .uai-c-v12-side-actions button,
+#uaiCompanionRoot .uai-c-v123-side-settings{
+  border-color:rgba(207,175,255,.14)!important;
+  background:linear-gradient(135deg,rgba(85,59,172,.34),rgba(39,34,100,.32))!important;
+}
+#uaiCompanionRoot .uai-c-v12-side-actions button:hover,
+#uaiCompanionRoot .uai-c-v123-side-settings:hover{
+  border-color:rgba(230,199,255,.34)!important;
+  background:linear-gradient(135deg,rgba(112,70,219,.47),rgba(255,83,190,.11))!important;
+}
+
+/* ---------- settings modal and common dialogs: vivid dark glass ---------- */
+#uaiCompanionModalMask,
+#uaiCompanionV4Mask,
+#uaiCompanionV5Mask,
+#uaiV8ReviewMask,
+#uaiV9RoleEditorMask,
+#uaiCompanionV3Mask{
+  background:rgba(3,2,16,.58)!important;
+  backdrop-filter:blur(15px)!important;
+}
+#uaiCompanionModalMask .uai-c-modal,
+#uaiCompanionV4Mask .uai-c-v4-modal,
+#uaiCompanionV5Mask .uai-c-v5-modal,
+#uaiV8ReviewMask .uai-c-v8-review-modal,
+#uaiV9RoleEditorMask .uai-c-v9-role-editor{
+  border-color:rgba(227,195,255,.27)!important;
+  background:
+    radial-gradient(circle at 80% 0%,rgba(255,88,194,.12),transparent 29%),
+    radial-gradient(circle at 20% 0%,rgba(145,78,255,.18),transparent 30%),
+    linear-gradient(180deg,#171043,#0d0a29)!important;
+  color:#fff!important;
+  box-shadow:0 38px 100px rgba(0,0,0,.42),0 0 50px rgba(119,65,230,.15)!important;
+}
+#uaiCompanionModalMask .uai-c-modal h3,
+#uaiCompanionModalMask .uai-c-modal label,
+#uaiCompanionV4Mask h3,#uaiCompanionV5Mask h3,#uaiV8ReviewMask h3,#uaiV9RoleEditorMask h3{color:#fff!important}
+#uaiCompanionModalMask .uai-c-modal p,
+#uaiCompanionModalMask .uai-c-modal small{color:rgba(232,219,255,.62)!important}
+#uaiCompanionModalMask input,#uaiCompanionModalMask select,#uaiCompanionModalMask textarea,
+#uaiV9RoleEditorMask input,#uaiV9RoleEditorMask select,#uaiV9RoleEditorMask textarea{
+  color:#fff!important;
+  border-color:rgba(211,178,255,.19)!important;
+  background:rgba(54,40,119,.40)!important;
+}
+#uaiCompanionModalMask .uai-c-primary,
+#uaiV9RoleEditorMask .uai-c-primary{
+  border-color:transparent!important;
+  background:linear-gradient(135deg,#a866ff,#7a45ff 58%,#df4fba)!important;
+  color:#fff!important;
+  box-shadow:0 10px 28px rgba(106,50,219,.26)!important;
+}
+
+/* visually hide old faint composer hint so bottom feels closer to the target mock */
+#uaiCompanionRoot .uai-c-composer-hint{opacity:.42!important;color:rgba(233,216,255,.46)!important}
