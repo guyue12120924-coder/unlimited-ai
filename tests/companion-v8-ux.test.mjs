@@ -8,18 +8,19 @@ const runtime = fs.readFileSync("public/companion-runtime.js", "utf8");
 const multi = fs.readFileSync("public/companion-v3.js", "utf8");
 const memoryTools = fs.readFileSync("public/companion-v4.js", "utf8");
 const restoreCore = fs.readFileSync("public/companion-v5.js", "utf8");
-const secondary = fs.readFileSync("public/companion-v8-secondary.js", "utf8");
+const extras = fs.readFileSync("public/companion-extras.js", "utf8");
 const css = fs.readFileSync("public/companion-profile-editor.css", "utf8");
 
 assert.match(boot, /v9\.1-dual-mode/);
 assert.match(boot, /companion-runtime\.js/);
+assert.match(boot, /companion-extras\.js/);
 assert.doesNotMatch(boot, /companion-reply-length\.js/);
 assert.doesNotMatch(boot, /companion-v3-guard\.js/);
+assert.doesNotMatch(boot, /companion-v8-secondary\.js/);
 assert.doesNotMatch(boot, /ensureScript\(`\/companion-v2\.js/);
 assert.doesNotMatch(boot, /ensureScript\(`\/companion-v6\.js/);
 assert.doesNotMatch(boot, /ensureScript\(`\/companion-profile-editor\.js/);
 assert.doesNotMatch(boot, /ensureScript\(`\/companion-v5-guard\.js/);
-assert.match(boot, /companion-v8-secondary\.js/);
 
 for (const retired of [
   "public/companion-v2.js",
@@ -29,7 +30,8 @@ for (const retired of [
   "public/companion-profile-editor.js",
   "public/companion-v5-guard.js",
   "public/companion-reply-length.js",
-  "public/companion-v3-guard.js"
+  "public/companion-v3-guard.js",
+  "public/companion-v8-secondary.js"
 ]) {
   assert.equal(fs.existsSync(retired), false, `${retired} should stay retired`);
 }
@@ -84,15 +86,19 @@ assert.match(restoreCore, /function normalizeSettings\(/);
 assert.match(restoreCore, /function pruneExpiredRollback\(/);
 assert.match(restoreCore, /settings: normalizeSettings\(raw\.settings\)/);
 
-assert.match(secondary, /ensureMessageActions/);
-assert.match(secondary, /ensureScrollBottom/);
-assert.match(secondary, /showMonthlyReview/);
-assert.match(secondary, /dataset\.v8EditCharacter/);
-assert.match(secondary, /moment\.textContent = "珍藏"/);
+assert.match(extras, /v9\.1-extras/);
+assert.match(extras, /ensureMessageActions/);
+assert.match(extras, /ensureScrollBottom/);
+assert.match(extras, /showMonthlyReview/);
+assert.match(extras, /dataset\.v8EditCharacter/);
+assert.match(extras, /moment\.textContent = "珍藏"/);
+assert.doesNotMatch(extras, /rememberText/);
+assert.doesNotMatch(extras, /uaiV8AdvancedMemory/);
+assert.match(extras, /window\.UnlimitedCompanionV8Secondary = window\.UnlimitedCompanionExtras/);
 
 assert.match(css, /uai-c-v8-note/);
 assert.match(css, /uai-c-v8-message-actions/);
 assert.match(css, /uai-c-v8-review-modal/);
 assert.match(css, /uai-c-long-reply/);
 
-console.log("Companion runtime/core contract passed under V9 shell.");
+console.log("Companion runtime/extras/core contract passed under V9 shell.");
