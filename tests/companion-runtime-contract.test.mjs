@@ -12,7 +12,7 @@ const restoreCore = fs.readFileSync("public/companion-records.js", "utf8");
 const extras = fs.readFileSync("public/companion-extras.js", "utf8");
 const css = fs.readFileSync("public/companion-support.css", "utf8");
 
-assert.match(boot, /v10\.1-dual-mode/);
+assert.match(boot, /v10\.2-dual-mode/);
 assert.match(boot, /companion-support\.css/);
 assert.match(boot, /companion-v10\.css/);
 assert.match(boot, /companion-v10-shell\.js/);
@@ -110,4 +110,4 @@ assert.match(css, /uai-c-v8-message-actions/);
 assert.match(css, /uai-c-v8-review-modal/);
 assert.match(css, /uai-c-v8-data-panel/);
 
-console.log("Companion semantic module contract passed under V10.1 shell.");
+console.log("Companion semantic module contract passed under V10.2 shell.");
