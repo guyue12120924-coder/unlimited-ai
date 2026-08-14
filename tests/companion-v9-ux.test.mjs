@@ -9,7 +9,7 @@ const extras = fs.readFileSync("public/companion-extras.js", "utf8");
 const css = fs.readFileSync("public/companion-v9.css", "utf8");
 const support = fs.readFileSync("public/companion-support.css", "utf8");
 
-assert.match(boot, /v9\.5-dual-mode/);
+assert.match(boot, /v9\.6-dual-mode/);
 assert.match(boot, /companion-v9\.css/);
 assert.match(boot, /companion-support\.css/);
 assert.doesNotMatch(boot, /companion-profile-editor\.css/);
@@ -82,4 +82,4 @@ assert.match(support, /#uaiV9RoleBackground/);
 assert.match(support, /uai-c-v8-scroll-bottom/);
 assert.match(support, /uai-c-v8-review-mask/);
 
-console.log("Companion V9.5 focused module and CSS contract passed.");
+console.log("Companion V9.6 focused module and CSS contract passed.");
