@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import vm from "node:vm";
 
 const boot = fs.readFileSync("public/boot-diagnostics.js", "utf8");
 const restoreCore = fs.readFileSync("public/companion-records.js", "utf8");
@@ -42,4 +43,115 @@ assert.doesNotMatch(sceneBackup, /cfw_sessions_v2/);
 assert.doesNotMatch(sceneBackup, /creative_context/);
 assert.doesNotMatch(sceneBackup, /continuity_context/);
 
-console.log("Companion records/restore contract passed: core restore + per-character scene backup bridge + novel isolation.");
+// Execute the browser bridge in a small fake browser environment so the
+// contract covers real localStorage writes, scene rollback and ID remapping.
+const store = new Map();
+const localStorage = {
+  getItem(key) { return store.has(key) ? store.get(key) : null; },
+  setItem(key, value) { store.set(key, String(value)); },
+  removeItem(key) { store.delete(key); }
+};
+const write = (key, value) => localStorage.setItem(key, JSON.stringify(value));
+const read = (key, fallback) => {
+  try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; }
+};
+let uuidCounter = 0;
+const document = {
+  readyState: "complete",
+  documentElement: { dataset: {} },
+  addEventListener() {},
+  getElementById() { return null; },
+  querySelector() { return null; },
+  body: { appendChild() {} }
+};
+const validatedCore = {
+  characters: [{
+    id: "char-a",
+    profile: { name: "A", relationship: "friend" },
+    sessions: [],
+    memories: [],
+    settings: { model: "model-a", replyLength: "balanced", memoryEnabled: true }
+  }],
+  moments: { "char-a": [] },
+  archive: { "char-a": [] },
+  activeCharacterId: "char-a",
+  version: 2
+};
+const window = {
+  UnlimitedCompanionProfileRestore: {
+    validateBackup() { return JSON.parse(JSON.stringify(validatedCore)); },
+    restoreRollback() {}
+  },
+  UnlimitedCompanionMulti: { persist() {} }
+};
+const context = {
+  window,
+  document,
+  localStorage,
+  crypto: { randomUUID: () => `uuid-${++uuidCounter}` },
+  console,
+  JSON,
+  Date,
+  Math,
+  Number,
+  Object,
+  Array,
+  String,
+  Boolean,
+  Set,
+  Map,
+  alert() {},
+  confirm() { return true; },
+  location: { reload() {} },
+  FileReader: class {},
+  setTimeout,
+  clearTimeout
+};
+vm.runInNewContext(sceneBackup, context, { filename: "companion-scene-backup.js" });
+const sceneApi = window.UnlimitedCompanionSceneBackup;
+assert.ok(sceneApi, "scene backup bridge should initialize");
+
+write("uai_companion_characters_v1", [{ id: "old", profile: { name: "Old" }, sessions: [], memories: [], settings: {} }]);
+localStorage.setItem("uai_companion_active_character_v1", "old");
+write("uai_companion_profile_v1", { name: "Old" });
+write("uai_companion_moments_v1", { old: [] });
+write("uai_companion_memory_archive_v1", { old: [] });
+write("uai_companion_scene_assignments_v1", {
+  old: { theme: "neon", seed: 9, mode: "manual", assignedAt: 1 }
+});
+
+const incoming = sceneApi.validateRawBackup({
+  format: "unlimited-ai-companion-multichar-backup",
+  version: 2,
+  characters: validatedCore.characters,
+  activeCharacterId: "char-a",
+  sceneAssignmentsByCharacter: {
+    "char-a": {
+      theme: "sakura",
+      seed: 123,
+      mode: "manual",
+      assignedAt: 2,
+      variant: { density: 1.1, bandOffset: 10, particleStyle: 1, welcomeIndex: 2, decorationIndex: 0, washX: 4, washY: -3 }
+    }
+  }
+});
+assert.equal(incoming.scenes["char-a"].theme, "sakura");
+sceneApi.applyImportedBackup(incoming, "replace");
+assert.equal(localStorage.getItem("uai_companion_active_character_v1"), "char-a");
+assert.equal(read("uai_companion_scene_assignments_v1", {})["char-a"].theme, "sakura");
+assert.equal(read("uai_companion_import_rollback_v1", {}).sceneAssignments.old.theme, "neon");
+
+const mergePayload = {
+  ...JSON.parse(JSON.stringify(incoming)),
+  scenes: {
+    "char-a": { theme: "moonlight", seed: 456, mode: "manual", assignedAt: 3 }
+  }
+};
+sceneApi.applyImportedBackup(mergePayload, "merge");
+const mergedCharacters = read("uai_companion_characters_v1", []);
+assert.equal(mergedCharacters.length, 2);
+const importedCharacter = mergedCharacters.find((item) => item.id !== "char-a");
+assert.ok(importedCharacter, "ID collision should create a new character id");
+assert.equal(read("uai_companion_scene_assignments_v1", {})[importedCharacter.id].theme, "moonlight");
+
+console.log("Companion records/restore contract passed: core restore + executable per-character scene backup flows + novel isolation.");
