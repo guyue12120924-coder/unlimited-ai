@@ -8,7 +8,7 @@ const editor = fs.readFileSync("public/companion-character-editor.js", "utf8");
 const settings = fs.readFileSync("public/companion-settings.js", "utf8");
 const extras = fs.readFileSync("public/companion-extras.js", "utf8");
 
-assert.match(boot, /v10\.2-dual-mode/);
+assert.match(boot, /v12\.4-dual-mode/);
 assert.match(boot, /companion-v10\.css/);
 assert.match(boot, /companion-v10-shell\.js/);
 assert.match(boot, /companionV10ShellReady/);
@@ -53,9 +53,8 @@ assert.doesNotMatch(shell, /source\.remove\(\)/);
 assert.doesNotMatch(shell, /uai-c-v10-core-action-anchor/);
 assert.doesNotMatch(shell, /toolbar\.className = "uai-c-v8-message-actions uai-c-v10-message-toolbar"/);
 
-// V10.2 visual refinement: warmer hierarchy, tighter reading column, a real
-// starter panel and a floating composer. These are deliberately checked here
-// so later patches cannot silently fall back to the flat V10.1 layout.
+// V10.2 visual refinement remains a protected lower-layer contract even though
+// the product boot shell has advanced to V12.x.
 assert.match(css, /Companion V10\.2/);
 assert.match(css, /--v10-bg:#2d2f3a/);
 assert.match(css, /grid-template-columns:248px minmax\(0,1fr\)/);
@@ -87,4 +86,4 @@ assert.match(settings, /约 5000 字/);
 assert.match(extras, /ensureLongReplies/);
 assert.match(extras, /showMonthlyReview/);
 
-console.log("Companion V10.2 visual refinement and stability contract passed.");
+console.log("Companion V10.2 visual refinement remains stable under the V12.4 boot shell.");
