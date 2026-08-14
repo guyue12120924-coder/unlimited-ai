@@ -2,8 +2,8 @@
 // Startup guard + dual-mode bootstrap. The existing novel workspace still boots
 // normally behind the mode lobby so old data and feature adapters remain intact.
 (() => {
-  const REVISION = "2026-08-14-v10.9-dual-mode-1";
-  // Diagnostics compatibility markers: 2026-08-14-v10.8-dual-mode-1 / 2026-08-14-v10.7-dual-mode-1 / 2026-08-14-v10.6-dual-mode-1 / 2026-08-14-v10.5-dual-mode-1 / 2026-08-14-v10.4-dual-mode-1 / 2026-08-14-v10.3-dual-mode-1 / 2026-08-14-v10.2-dual-mode-1 / 2026-08-14-v10.1-dual-mode-1 / 2026-08-14-v10.0-dual-mode-1
+  const REVISION = "2026-08-14-v11.0-dual-mode-1";
+  // Diagnostics compatibility markers: 2026-08-14-v10.9-dual-mode-1 / 2026-08-14-v10.8-dual-mode-1 / 2026-08-14-v10.7-dual-mode-1 / 2026-08-14-v10.6-dual-mode-1 / 2026-08-14-v10.5-dual-mode-1 / 2026-08-14-v10.4-dual-mode-1 / 2026-08-14-v10.3-dual-mode-1 / 2026-08-14-v10.2-dual-mode-1 / 2026-08-14-v10.1-dual-mode-1 / 2026-08-14-v10.0-dual-mode-1
   const errors = [];
 
   document.documentElement.dataset.frontendRevision = REVISION;
@@ -73,6 +73,7 @@
     ensureStyle(`/companion-v10-stage4.css?v=${REVISION}`, "uaiCompanionV10Stage4Css");
     ensureStyle(`/companion-v10-stage5.css?v=${REVISION}`, "uaiCompanionV10Stage5Css");
     ensureStyle(`/companion-v10-stage6.css?v=${REVISION}`, "uaiCompanionV10Stage6Css");
+    ensureStyle(`/companion-v11.css?v=${REVISION}`, "uaiCompanionV11Css");
 
     ensureScript(`/companion-characters-core.js?v=${REVISION}`, "uaiCompanionCharactersCoreScript");
     ensureScript(`/companion-character-editor.js?v=${REVISION}`, "uaiCompanionCharacterEditorScript");
@@ -85,6 +86,7 @@
     ensureScript(`/companion-v10-stage2.js?v=${REVISION}`, "uaiCompanionV10Stage2Script");
     ensureScript(`/companion-v10-stage4.js?v=${REVISION}`, "uaiCompanionV10Stage4Script");
     ensureScript(`/companion-v10-stage5.js?v=${REVISION}`, "uaiCompanionV10Stage5Script");
+    ensureScript(`/companion-v11.js?v=${REVISION}`, "uaiCompanionV11Script");
 
     if (document.getElementById("uaiModeRouterScript")) return;
     const script = document.createElement("script");
@@ -122,6 +124,7 @@
       window.__UNLIMITED_BOOT__.companionV10Stage2Ready = Boolean(window.UnlimitedCompanionV10Stage2);
       window.__UNLIMITED_BOOT__.companionV10Stage4Ready = Boolean(window.UnlimitedCompanionV10Stage4);
       window.__UNLIMITED_BOOT__.companionV10Stage5Ready = Boolean(window.UnlimitedCompanionV10Stage5);
+      window.__UNLIMITED_BOOT__.companionV11Ready = Boolean(window.UnlimitedCompanionV11);
       return;
     }
     const parts = [];
