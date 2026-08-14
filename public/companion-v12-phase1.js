@@ -1,8 +1,31 @@
 // Companion V12.4 phase 1 — visual state hooks for the desktop composer.
 (() => {
-  const REVISION = "2026-08-14-v12.4-phase1-1";
+  const REVISION = "2026-08-14-v12.5-phase1-loader-1";
   let boundInput = null;
   let scheduled = false;
+
+  function ensureStyle(href, id) {
+    if (document.getElementById(id)) return;
+    const link = document.createElement("link");
+    link.id = id;
+    link.rel = "stylesheet";
+    link.href = href;
+    document.head.appendChild(link);
+  }
+
+  function ensureScript(src, id) {
+    if (document.getElementById(id)) return;
+    const script = document.createElement("script");
+    script.id = id;
+    script.src = src;
+    script.async = false;
+    document.body.appendChild(script);
+  }
+
+  function loadPhase2Background() {
+    ensureStyle(`/companion-v12-phase2-background.css?v=${encodeURIComponent(REVISION)}`, "uaiCompanionV12Phase2BackgroundCss");
+    ensureScript(`/companion-v12-phase2-background.js?v=${encodeURIComponent(REVISION)}`, "uaiCompanionV12Phase2BackgroundScript");
+  }
 
   function sync(root) {
     const input = root?.querySelector("#uaiCompanionInput");
@@ -45,6 +68,7 @@
 
   function init() {
     document.documentElement.dataset.companionV124Phase1Revision = REVISION;
+    loadPhase2Background();
     new MutationObserver(schedule).observe(document.body, {
       subtree: true,
       childList: true,
