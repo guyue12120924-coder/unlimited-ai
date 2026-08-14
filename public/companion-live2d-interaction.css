@@ -29,7 +29,6 @@
   box-shadow:0 10px 30px rgba(9,4,36,.20),0 0 24px rgba(203,121,255,.10);
 }
 
-/* Replying state: stronger aura, tiny stage pulse, no distracting whole-body bounce. */
 #uaiCompanionRoot.uai-c-live2d-speaking .uai-c-live2d-stage::before{
   opacity:.78;
   animation:uaiLive2DSpeakingAura 1.8s ease-in-out infinite alternate!important;
@@ -45,7 +44,6 @@
     drop-shadow(0 0 38px rgba(112,119,255,.10));
 }
 
-/* Scene-aware character lighting. */
 #uaiCompanionRoot[data-v127-theme="galaxy"] .uai-c-live2d-stage::before{
   background:radial-gradient(ellipse at 54% 42%,rgba(255,196,242,.20),rgba(182,103,255,.18) 25%,rgba(102,119,255,.08) 48%,transparent 71%);
 }
@@ -59,7 +57,6 @@
   background:radial-gradient(ellipse at 54% 42%,rgba(83,231,255,.17),rgba(194,73,255,.20) 28%,rgba(255,65,174,.08) 51%,transparent 72%);
 }
 
-/* Emotion tint lives in the aura instead of recoloring the character texture. */
 #uaiCompanionRoot[data-v129-live2d-emotion="happy"] .uai-c-live2d-stage::before{
   background:radial-gradient(ellipse at 54% 42%,rgba(255,239,175,.25),rgba(255,150,218,.21) 26%,rgba(176,122,255,.08) 49%,transparent 72%);
 }
@@ -74,7 +71,6 @@
   background:radial-gradient(ellipse at 54% 42%,rgba(255,188,213,.22),rgba(255,68,140,.17) 28%,rgba(130,72,198,.06) 52%,transparent 74%);
 }
 
-/* Slightly safer reading column for long answers. */
 #uaiCompanionRoot.uai-c-live2d-active .uai-c-messages{
   padding-right:38%!important;
 }
@@ -85,7 +81,6 @@
   line-height:1.74!important;
 }
 
-/* Tap / reply particle burst. */
 #uaiCompanionRoot .uai-c-live2d-burst{
   position:absolute;
   z-index:11;
@@ -118,7 +113,7 @@
   0%{opacity:0;transform:translate(-50%,-50%) scale(.35)}
   18%{opacity:1}
   70%{opacity:.82;transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(1.08) rotate(6deg)}
-  100%{opacity:0;transform:translate(calc(-50% + var(--dx) * 1.16),calc(-50% + var(--dy) * 1.16)) scale(.72) rotate(14deg)}
+  100%{opacity:0;transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(.72) rotate(14deg)}
 }
 
 @media (prefers-reduced-motion:reduce){
