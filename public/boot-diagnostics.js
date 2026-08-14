@@ -2,7 +2,7 @@
 // Startup guard + dual-mode bootstrap. The existing novel workspace still boots
 // normally behind the mode lobby so old data and feature adapters remain intact.
 (() => {
-  const REVISION = "2026-08-14-v9.6-dual-mode-1";
+  const REVISION = "2026-08-14-v10.0-dual-mode-1";
   const errors = [];
 
   document.documentElement.dataset.frontendRevision = REVISION;
@@ -65,7 +65,7 @@
     ensureStyle(`/companion-memory.css?v=${REVISION}`, "uaiCompanionMemoryCss");
     ensureStyle(`/companion-records.css?v=${REVISION}`, "uaiCompanionRecordsCss");
     ensureStyle(`/companion-support.css?v=${REVISION}`, "uaiCompanionSupportCss");
-    ensureStyle(`/companion-v9.css?v=${REVISION}`, "uaiCompanionV9Css");
+    ensureStyle(`/companion-v10.css?v=${REVISION}`, "uaiCompanionV10Css");
 
     ensureScript(`/companion-characters-core.js?v=${REVISION}`, "uaiCompanionCharactersCoreScript");
     ensureScript(`/companion-character-editor.js?v=${REVISION}`, "uaiCompanionCharacterEditorScript");
@@ -74,7 +74,7 @@
     ensureScript(`/companion-settings.js?v=${REVISION}`, "uaiCompanionSettingsScript");
     ensureScript(`/companion-runtime.js?v=${REVISION}`, "uaiCompanionRuntimeScript");
     ensureScript(`/companion-extras.js?v=${REVISION}`, "uaiCompanionExtrasScript");
-    ensureScript(`/companion-v9-shell.js?v=${REVISION}`, "uaiCompanionV9ShellScript");
+    ensureScript(`/companion-v10-shell.js?v=${REVISION}`, "uaiCompanionV10ShellScript");
 
     if (document.getElementById("uaiModeRouterScript")) return;
     const script = document.createElement("script");
@@ -108,7 +108,7 @@
       window.__UNLIMITED_BOOT__.companionCharacterControlsReady = Boolean(window.UnlimitedCompanionCharacterControls);
       window.__UNLIMITED_BOOT__.companionSettingsReady = Boolean(window.UnlimitedCompanionSettings);
       window.__UNLIMITED_BOOT__.companionExtrasReady = Boolean(window.UnlimitedCompanionExtras);
-      window.__UNLIMITED_BOOT__.companionV9ShellReady = Boolean(window.UnlimitedCompanionV9Shell);
+      window.__UNLIMITED_BOOT__.companionV10ShellReady = Boolean(window.UnlimitedCompanionV10Shell);
       return;
     }
     const parts = [];
