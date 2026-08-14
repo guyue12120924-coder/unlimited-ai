@@ -1,6 +1,7 @@
 // Companion V10 interaction shell: calm role menu, readable conversation surface, and compact low-frequency tools.
 (() => {
   const REVISION = "2026-08-14-v10.1-shell-2";
+  // Diagnostics compatibility marker: 2026-08-14-v10.0-shell-1
   const PROFILE_LIMIT = 5000;
   let scheduled = false;
 
