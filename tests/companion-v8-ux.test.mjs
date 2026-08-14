@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 
 const boot = fs.readFileSync("public/boot-diagnostics.js", "utf8");
+const core = fs.readFileSync("public/companion-mode.js", "utf8");
 const controls = fs.readFileSync("public/companion-create-controls.js", "utf8");
 const lengths = fs.readFileSync("public/companion-reply-length.js", "utf8");
 const multi = fs.readFileSync("public/companion-v3.js", "utf8");
@@ -11,7 +12,7 @@ const restoreCore = fs.readFileSync("public/companion-v5.js", "utf8");
 const secondary = fs.readFileSync("public/companion-v8-secondary.js", "utf8");
 const css = fs.readFileSync("public/companion-profile-editor.css", "utf8");
 
-assert.match(boot, /v8\.3-dual-mode/);
+assert.match(boot, /v8\.4-dual-mode/);
 assert.doesNotMatch(boot, /ensureScript\(`\/companion-v2\.js/);
 assert.doesNotMatch(boot, /ensureScript\(`\/companion-v6\.js/);
 assert.doesNotMatch(boot, /ensureScript\(`\/companion-profile-editor\.js/);
@@ -28,6 +29,19 @@ for (const retired of [
 ]) {
   assert.equal(fs.existsSync(retired), false, `${retired} should stay retired`);
 }
+
+assert.match(core, /v8\.3-companion-core/);
+assert.doesNotMatch(core, /id="uaiCompanionCharacterBtn"/);
+assert.doesNotMatch(core, /id="uaiCompanionHeaderMemory"/);
+assert.doesNotMatch(core, /id="uaiCompanionHeaderSettings"/);
+assert.doesNotMatch(core, /id="uaiCompanionEditProfileInline"/);
+assert.match(core, /let autoFollowStreaming = true/);
+assert.match(core, /let pendingMessageScrollTop = null/);
+assert.match(core, /function bindStreamingScrollIntent\(/);
+assert.match(core, /if \(event\.deltaY < 0\) autoFollowStreaming = false/);
+assert.match(core, /if \(container && autoFollowStreaming\) container\.scrollTop = container\.scrollHeight/);
+assert.match(core, /if \(container && !autoFollowStreaming\) pendingMessageScrollTop = container\.scrollTop/);
+assert.match(core, /const targetScrollTop = pendingMessageScrollTop/);
 
 assert.match(controls, /v8\.2-primary-ux/);
 assert.match(controls, /PROFILE_LIMIT = 5000/);
@@ -93,4 +107,4 @@ assert.doesNotMatch(css, /uaiCompanionV6QuickSwitch/);
 assert.doesNotMatch(controls, /COMPANION_ROLE_CARD/);
 assert.doesNotMatch(lengths, /COMPANION_ROLE_CARD/);
 
-console.log("Companion V8.3 cleanup contract passed.");
+console.log("Companion V8.4 runtime and long-reply UX contract passed.");
