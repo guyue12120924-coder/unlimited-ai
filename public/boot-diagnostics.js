@@ -2,7 +2,7 @@
 // Startup guard + dual-mode bootstrap. The existing novel workspace still boots
 // normally behind the mode lobby so old data and feature adapters remain intact.
 (() => {
-  const REVISION = "2026-08-14-v9.0-dual-mode-1";
+  const REVISION = "2026-08-14-v9.1-dual-mode-1";
   const errors = [];
 
   document.documentElement.dataset.frontendRevision = REVISION;
@@ -68,11 +68,10 @@
     ensureStyle(`/companion-v9.css?v=${REVISION}`, "uaiCompanionV9Css");
 
     ensureScript(`/companion-v3.js?v=${REVISION}`, "uaiCompanionV3Script");
-    ensureScript(`/companion-v3-guard.js?v=${REVISION}`, "uaiCompanionV3GuardScript");
     ensureScript(`/companion-v4.js?v=${REVISION}`, "uaiCompanionV4Script");
     ensureScript(`/companion-v5.js?v=${REVISION}`, "uaiCompanionV5Script");
     ensureScript(`/companion-create-controls.js?v=${REVISION}`, "uaiCompanionCreateControlsScript");
-    ensureScript(`/companion-reply-length.js?v=${REVISION}`, "uaiCompanionReplyLengthScript");
+    ensureScript(`/companion-runtime.js?v=${REVISION}`, "uaiCompanionRuntimeScript");
     ensureScript(`/companion-v8-secondary.js?v=${REVISION}`, "uaiCompanionV8SecondaryScript");
     ensureScript(`/companion-v9-shell.js?v=${REVISION}`, "uaiCompanionV9ShellScript");
 
@@ -102,11 +101,10 @@
       window.__UNLIMITED_BOOT__.ready = true;
       window.__UNLIMITED_BOOT__.modeRouterReady = Boolean(window.UnlimitedModeRouter);
       window.__UNLIMITED_BOOT__.companionMultiReady = Boolean(window.UnlimitedCompanionMulti);
-      window.__UNLIMITED_BOOT__.companionGuardReady = Boolean(window.UnlimitedCompanionGuard);
+      window.__UNLIMITED_BOOT__.companionRuntimeReady = Boolean(window.UnlimitedCompanionRuntime);
       window.__UNLIMITED_BOOT__.companionMemorySearchReady = Boolean(window.UnlimitedCompanionMemorySearch);
       window.__UNLIMITED_BOOT__.companionProfileRestoreReady = Boolean(window.UnlimitedCompanionProfileRestore);
       window.__UNLIMITED_BOOT__.companionCharacterControlsReady = Boolean(window.UnlimitedCompanionCharacterControls);
-      window.__UNLIMITED_BOOT__.companionReplyLengthReady = Boolean(window.UnlimitedCompanionReplyLength);
       window.__UNLIMITED_BOOT__.companionV8SecondaryReady = Boolean(window.UnlimitedCompanionV8Secondary);
       window.__UNLIMITED_BOOT__.companionV9ShellReady = Boolean(window.UnlimitedCompanionV9Shell);
       return;
