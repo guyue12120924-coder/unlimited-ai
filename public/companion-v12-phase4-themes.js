@@ -1,6 +1,6 @@
-// Companion V12.7/12.14 phase 4 — lightweight scene themes + Live2D presence/voice loaders.
+// Companion V12.7/12.15 phase 4 — lightweight scene themes + Live2D presence/voice loaders.
 (() => {
-  const REVISION = "2026-08-15-v12.14-phase4-live2d-voice-1";
+  const REVISION = "2026-08-15-v12.15-phase4-neural-voice-1";
   const THEMES = ["galaxy", "sakura", "moonlight", "neon"];
   const LABELS = {
     galaxy: "星河梦境",
@@ -36,9 +36,12 @@
     // Presence/reaction bridge stays isolated from the stable chat/runtime core.
     ensureStyle(`/companion-live2d-interaction.css?v=${encodeURIComponent(REVISION)}`, "uaiCompanionLive2dInteractionCss");
     ensureScript(`/companion-live2d-interaction.js?v=${encodeURIComponent(REVISION)}`, "uaiCompanionLive2dInteractionScript");
-    // V12.14: zero-server browser TTS + future real-audio amplitude bridge.
+    // V12.14: browser TTS remains as a zero-server fallback.
     ensureStyle(`/companion-live2d-voice.css?v=${encodeURIComponent(REVISION)}`, "uaiCompanionLive2dVoiceCss");
     ensureScript(`/companion-live2d-voice.js?v=${encodeURIComponent(REVISION)}`, "uaiCompanionLive2dVoiceScript");
+    // V12.15: Cloudflare neural TTS, true audio amplitude lip sync, stop/replay and fallback.
+    ensureStyle(`/companion-live2d-neural-voice.css?v=${encodeURIComponent(REVISION)}`, "uaiCompanionLive2dNeuralVoiceCss");
+    ensureScript(`/companion-live2d-neural-voice.js?v=${encodeURIComponent(REVISION)}`, "uaiCompanionLive2dNeuralVoiceScript");
   }
 
   function getRoot() {
