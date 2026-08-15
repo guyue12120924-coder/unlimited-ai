@@ -1,8 +1,8 @@
 // public/boot-diagnostics.js
 // Startup guard + dual-mode bootstrap.
 (() => {
-  const REVISION = "2026-08-15-v12.16-voice-conversation-1";
-  // Diagnostics compatibility markers: 2026-08-15-v12.14-live2d-voice-1 / 2026-08-14-v12.11-live2d-hosted-core-1 / 2026-08-14-v12.10-live2d-sample-1 / 2026-08-14-v12.9-live2d-1 / 2026-08-14-v12.4-dual-mode-1 / 2026-08-14-v12.3-dual-mode-1 / 2026-08-14-v12.2-dual-mode-1 / 2026-08-14-v12.1-dual-mode-1 / 2026-08-14-v12.0-dual-mode-1 / 2026-08-14-v11.6-dual-mode-1
+  const REVISION = "2026-08-15-v12.17-call-mode-1";
+  // Diagnostics compatibility markers: 2026-08-15-v12.16-voice-conversation-1 / 2026-08-15-v12.14-live2d-voice-1 / 2026-08-14-v12.11-live2d-hosted-core-1 / 2026-08-14-v12.10-live2d-sample-1 / 2026-08-14-v12.9-live2d-1 / 2026-08-14-v12.4-dual-mode-1
   const errors = [];
 
   document.documentElement.dataset.frontendRevision = REVISION;
@@ -86,6 +86,7 @@
     ensureStyle(`/companion-live2d-voice.css?v=${REVISION}`, "uaiCompanionLive2dVoiceCss");
     ensureStyle(`/companion-live2d-neural-voice.css?v=${REVISION}`, "uaiCompanionLive2dNeuralVoiceCss");
     ensureStyle(`/companion-voice-input.css?v=${REVISION}`, "uaiCompanionVoiceInputCss");
+    ensureStyle(`/companion-call-mode.css?v=${REVISION}`, "uaiCompanionCallModeCss");
 
     ensureScript(`/companion-characters-core.js?v=${REVISION}`, "uaiCompanionCharactersCoreScript");
     ensureScript(`/companion-character-editor.js?v=${REVISION}`, "uaiCompanionCharacterEditorScript");
@@ -112,6 +113,7 @@
     ensureScript(`/companion-live2d-voice.js?v=${REVISION}`, "uaiCompanionLive2dVoiceScript");
     ensureScript(`/companion-live2d-neural-voice.js?v=${REVISION}`, "uaiCompanionLive2dNeuralVoiceScript");
     ensureScript(`/companion-voice-input.js?v=${REVISION}`, "uaiCompanionVoiceInputScript");
+    ensureScript(`/companion-call-mode.js?v=${REVISION}`, "uaiCompanionCallModeScript");
 
     if (document.getElementById("uaiModeRouterScript")) return;
     const script = document.createElement("script");
@@ -163,6 +165,7 @@
       window.__UNLIMITED_BOOT__.companionVoiceReady = Boolean(window.UnlimitedCompanionVoice);
       window.__UNLIMITED_BOOT__.companionNeuralVoiceReady = Boolean(window.UnlimitedCompanionNeuralVoice);
       window.__UNLIMITED_BOOT__.companionVoiceInputReady = Boolean(window.UnlimitedCompanionVoiceInput);
+      window.__UNLIMITED_BOOT__.companionCallModeReady = Boolean(window.UnlimitedCompanionCallMode);
       return;
     }
     const parts = [];
