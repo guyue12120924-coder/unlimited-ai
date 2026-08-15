@@ -1,6 +1,7 @@
-// Companion V12.11 — Live2D virtual character stage with zero-setup hosted Core.
+// Companion V12.18 — Live2D virtual character stage + model-aware audio lip sync.
+// Compatibility marker: 2026-08-14-v12.11-live2d-hosted-core-1
 (() => {
-  const REVISION = "2026-08-14-v12.11-live2d-hosted-core-1";
+  const REVISION = "2026-08-15-v12.18-live2d-lipsync-1";
   const ACTIVE_KEY = "uai_companion_active_character_v1";
   const MODEL_ASSIGNMENTS_KEY = "uai_companion_live2d_assignments_v1";
   const CONFIG_URL = "/live2d/characters.json";
@@ -23,7 +24,11 @@
   let currentSignature = "";
   let boundMain = null;
   let resizeObserver = null;
-  let status = { state: "idle", characterId: "", modelUrl: "", message: "" };
+  let mouthTarget = 0;
+  let mouthValue = 0;
+  let mouthParameterIds = [];
+  let mouthBindingCleanup = null;
+  let status = { state: "idle", characterId: "", modelUrl: "", message: "", lipSyncIds: [] };
 
   function safeParse(value, fallback) {
     try { return JSON.parse(value) ?? fallback; } catch { return fallback; }
@@ -76,10 +81,12 @@
 
   function setStatus(root, state, message = "", modelUrl = "") {
     const characterId = activeCharacter().id;
-    status = { state, message, modelUrl, characterId };
+    status = { state, message, modelUrl, characterId, lipSyncIds: [...mouthParameterIds] };
     if (root) {
       root.dataset.v129Live2dStatus = state;
       root.dataset.v129Live2dCharacter = characterId;
+      if (mouthParameterIds.length) root.dataset.v129Live2dLipSync = mouthParameterIds.join(",");
+      else delete root.dataset.v129Live2dLipSync;
     }
     document.documentElement.dataset.companionLive2dStatus = state;
     updateStatusNote(state, message);
@@ -342,8 +349,89 @@
     try { app?.ticker?.start?.(); } catch {}
   }
 
+  function coreParameterIds(model = currentModel) {
+    const ids = model?.internalModel?.coreModel?.getModel?.()?.parameters?.ids;
+    if (!ids) return [];
+    try { return Array.from(ids).map((id) => String(id)).filter(Boolean); }
+    catch { return []; }
+  }
+
+  function resolveLipSyncIds(model = currentModel) {
+    if (!model) return [];
+    const internal = model.internalModel;
+    const declared = [];
+    const motionIds = internal?.motionManager?.lipSyncIds;
+    if (Array.isArray(motionIds)) declared.push(...motionIds);
+    try {
+      const settingIds = internal?.settings?.getLipSyncParameters?.();
+      if (Array.isArray(settingIds)) declared.push(...settingIds);
+    } catch {}
+
+    const uniqueDeclared = [...new Set(declared.map(String).filter(Boolean))];
+    const actual = new Set(coreParameterIds(model));
+    if (uniqueDeclared.length) {
+      const verified = actual.size ? uniqueDeclared.filter((id) => actual.has(id)) : uniqueDeclared;
+      if (verified.length) return verified;
+    }
+
+    const common = ["ParamMouthOpenY", "ParamA", "PARAM_MOUTH_OPEN_Y"];
+    if (actual.size) return common.filter((id) => actual.has(id));
+    return ["ParamMouthOpenY"];
+  }
+
+  function applyMouthFrame() {
+    const model = currentModel;
+    if (!model) return false;
+    const core = model.internalModel?.coreModel;
+    const setter = core?.setParameterValueById;
+    if (typeof setter !== "function") return false;
+    if (!mouthParameterIds.length) mouthParameterIds = resolveLipSyncIds(model);
+    if (!mouthParameterIds.length) return false;
+
+    const target = clamp(mouthTarget, 0, 1, 0);
+    const response = target > mouthValue ? 0.72 : 0.48;
+    mouthValue += (target - mouthValue) * response;
+    if (target === 0 && mouthValue < 0.012) mouthValue = 0;
+    const driven = clamp(Math.pow(mouthValue, 0.78) * 1.12, 0, 1, 0);
+
+    let changed = false;
+    for (const id of mouthParameterIds) {
+      try {
+        setter.call(core, id, driven, 1);
+        changed = true;
+      } catch {}
+    }
+    return changed;
+  }
+
+  function unbindMouthDriver() {
+    try { mouthBindingCleanup?.(); } catch {}
+    mouthBindingCleanup = null;
+    mouthParameterIds = [];
+    mouthTarget = 0;
+    mouthValue = 0;
+  }
+
+  function bindMouthDriver(model) {
+    unbindMouthDriver();
+    if (!model) return [];
+    const internal = model.internalModel;
+    mouthParameterIds = resolveLipSyncIds(model);
+    const apply = () => applyMouthFrame();
+    if (typeof internal?.on === "function") {
+      internal.on("beforeModelUpdate", apply);
+      mouthBindingCleanup = () => {
+        try { internal.off?.("beforeModelUpdate", apply); } catch {}
+      };
+    }
+    const root = liveRoot();
+    if (root && mouthParameterIds.length) root.dataset.v129Live2dLipSync = mouthParameterIds.join(",");
+    return [...mouthParameterIds];
+  }
+
   function destroyCurrentModel(root, nextState = "idle", message = "") {
     loadToken += 1;
+    unbindMouthDriver();
     if (currentModel) {
       try { app?.stage?.removeChild?.(currentModel); } catch {}
       try { currentModel.destroy?.({ children: true }); } catch { try { currentModel.destroy?.(); } catch {} }
@@ -354,6 +442,7 @@
     stopTicker();
     updateCredit(null);
     root?.classList.remove("uai-c-live2d-active");
+    root?.removeAttribute?.("data-v129-live2d-lip-sync");
     if (nextState) setStatus(root, nextState, message);
   }
 
@@ -430,14 +519,13 @@
 
   function setMouthOpen(value) {
     if (!currentModel) return false;
-    const amount = clamp(value, 0, 1, 0);
-    const core = currentModel.internalModel?.coreModel;
-    const setter = core?.setParameterValueById;
-    if (typeof setter !== "function") return false;
-    for (const id of ["ParamMouthOpenY", "PARAM_MOUTH_OPEN_Y"]) {
-      try { setter.call(core, id, amount); return true; } catch {}
-    }
-    return false;
+    mouthTarget = clamp(value, 0, 1, 0);
+    if (!mouthParameterIds.length) mouthParameterIds = resolveLipSyncIds(currentModel);
+    // Apply immediately as well as in beforeModelUpdate. The immediate write makes
+    // manual/test calls responsive; the frame hook prevents motion/physics from
+    // overwriting the mouth before the model is rendered.
+    applyMouthFrame();
+    return mouthParameterIds.length > 0;
   }
 
   async function loadModel(root, character, spec, signature) {
@@ -451,6 +539,7 @@
       if (!app) throw new Error("PixiJS 初始化失败");
 
       if (currentModel) {
+        unbindMouthDriver();
         try { app.stage.removeChild(currentModel); } catch {}
         try { currentModel.destroy?.({ children: true }); } catch { try { currentModel.destroy?.(); } catch {} }
       }
@@ -476,6 +565,7 @@
       model.interactive = false;
       model.on?.("hit", (hitAreas) => playTapReaction(Array.isArray(hitAreas) ? hitAreas : []));
       app.stage.addChild(model);
+      bindMouthDriver(model);
       resizeRenderer();
       fitModel();
       updateCredit(spec);
@@ -587,8 +677,9 @@
     window.UnlimitedCompanionLive2D = {
       revision: REVISION,
       refresh,
-      getStatus: () => ({ ...status }),
+      getStatus: () => ({ ...status, lipSyncIds: [...mouthParameterIds], mouthTarget, mouthValue }),
       getModel: () => currentModel,
+      getLipSyncStatus: () => ({ ids: [...mouthParameterIds], target: mouthTarget, value: mouthValue }),
       setModelForCharacter,
       clearModelForCharacter,
       setEmotion,
