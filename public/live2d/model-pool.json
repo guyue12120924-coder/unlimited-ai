@@ -1,0 +1,63 @@
+{
+  "version": 1,
+  "source": {
+    "owner": "Live2D Inc.",
+    "repository": "Live2D/CubismWebSamples",
+    "commit": "b1de66b0b1f1cb881d95fb6158622aeb6a2827bd",
+    "license": "Live2D Free Material License / Live2D Cubism Sample Data Terms of Use"
+  },
+  "models": [
+    {
+      "id": "mao",
+      "label": "Mao · 魔女系",
+      "model": "https://cdn.jsdelivr.net/gh/Live2D/CubismWebSamples@b1de66b0b1f1cb881d95fb6158622aeb6a2827bd/Samples/Resources/Mao/Mao.model3.json",
+      "idleMotionGroup": "Idle",
+      "tapMotionGroups": ["TapBody"],
+      "position": { "x": 0.80, "y": 1.08, "height": 0.98 },
+      "sample": {
+        "name": "Mao",
+        "owner": "Live2D Inc.",
+        "notice": "Official Live2D sample · subject to Live2D sample-data terms"
+      }
+    },
+    {
+      "id": "haru",
+      "label": "Haru · 元气系",
+      "model": "https://cdn.jsdelivr.net/gh/Live2D/CubismWebSamples@b1de66b0b1f1cb881d95fb6158622aeb6a2827bd/Samples/Resources/Haru/Haru.model3.json",
+      "idleMotionGroup": "Idle",
+      "tapMotionGroups": ["TapBody"],
+      "position": { "x": 0.80, "y": 1.07, "height": 0.98 },
+      "sample": {
+        "name": "Haru",
+        "owner": "Live2D Inc.",
+        "notice": "Official Live2D sample · subject to Live2D sample-data terms"
+      }
+    },
+    {
+      "id": "hiyori",
+      "label": "Hiyori · 清新系",
+      "model": "https://cdn.jsdelivr.net/gh/Live2D/CubismWebSamples@b1de66b0b1f1cb881d95fb6158622aeb6a2827bd/Samples/Resources/Hiyori/Hiyori.model3.json",
+      "idleMotionGroup": "Idle",
+      "tapMotionGroups": ["TapBody"],
+      "position": { "x": 0.80, "y": 1.07, "height": 0.98 },
+      "sample": {
+        "name": "Hiyori Momose",
+        "owner": "Live2D Inc.",
+        "notice": "Official Live2D sample · subject to Live2D sample-data terms"
+      }
+    },
+    {
+      "id": "rice",
+      "label": "Rice · 战斗系",
+      "model": "https://cdn.jsdelivr.net/gh/Live2D/CubismWebSamples@b1de66b0b1f1cb881d95fb6158622aeb6a2827bd/Samples/Resources/Rice/Rice.model3.json",
+      "idleMotionGroup": "Idle",
+      "tapMotionGroups": ["TapBody"],
+      "position": { "x": 0.80, "y": 1.06, "height": 0.97 },
+      "sample": {
+        "name": "Rice Glassfield",
+        "owner": "Live2D Inc.",
+        "notice": "Official Live2D sample · subject to Live2D sample-data terms"
+      }
+    }
+  ]
+}
