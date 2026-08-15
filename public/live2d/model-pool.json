@@ -1,63 +1,92 @@
 {
-  "version": 1,
+  "version": 2,
   "source": {
     "owner": "Live2D Inc.",
-    "repository": "Live2D/CubismWebSamples",
-    "commit": "b1de66b0b1f1cb881d95fb6158622aeb6a2827bd",
-    "license": "Live2D Free Material License / Live2D Cubism Sample Data Terms of Use"
+    "license": "Live2D Free Material License / Live2D Cubism Sample Data Terms of Use",
+    "note": "Mao/Hiyori/Rice are loaded from Live2D/CubismWebSamples. Other official sample runtimes use a pinned public mirror of the Live2D sample packages."
   },
   "models": [
     {
       "id": "mao",
+      "catalogNo": 1,
       "label": "Mao · 魔女系",
       "model": "https://cdn.jsdelivr.net/gh/Live2D/CubismWebSamples@b1de66b0b1f1cb881d95fb6158622aeb6a2827bd/Samples/Resources/Mao/Mao.model3.json",
       "idleMotionGroup": "Idle",
       "tapMotionGroups": ["TapBody"],
       "position": { "x": 0.80, "y": 1.08, "height": 0.98 },
-      "sample": {
-        "name": "Mao",
-        "owner": "Live2D Inc.",
-        "notice": "Official Live2D sample · subject to Live2D sample-data terms"
-      }
+      "sample": { "name": "Mao", "owner": "Live2D Inc.", "notice": "Official Live2D sample · subject to Live2D sample-data terms" }
     },
     {
-      "id": "haru",
-      "label": "Haru · 元气系",
-      "model": "https://cdn.jsdelivr.net/gh/Live2D/CubismWebSamples@b1de66b0b1f1cb881d95fb6158622aeb6a2827bd/Samples/Resources/Haru/Haru.model3.json",
+      "id": "shizuku",
+      "catalogNo": 6,
+      "label": "Shizuku · 温柔系",
+      "model": "https://cdn.jsdelivr.net/gh/ttoommoommii/joho.github.io@7be0056adca11e7b7bdfb2d2171881d42c2b5558/src0710LocalFile/shizuku/shizuku.model3.json",
       "idleMotionGroup": "Idle",
-      "tapMotionGroups": ["TapBody"],
+      "tapMotionGroups": ["Tap"],
       "position": { "x": 0.80, "y": 1.07, "height": 0.98 },
-      "sample": {
-        "name": "Haru",
-        "owner": "Live2D Inc.",
-        "notice": "Official Live2D sample · subject to Live2D sample-data terms"
-      }
+      "autoEligible": false,
+      "sample": { "name": "Shizuku", "owner": "Live2D Inc.", "notice": "Official Live2D sample · individual terms require keeping the Shizuku name/settings" }
     },
     {
       "id": "hiyori",
+      "catalogNo": 3,
       "label": "Hiyori · 清新系",
       "model": "https://cdn.jsdelivr.net/gh/Live2D/CubismWebSamples@b1de66b0b1f1cb881d95fb6158622aeb6a2827bd/Samples/Resources/Hiyori/Hiyori.model3.json",
       "idleMotionGroup": "Idle",
       "tapMotionGroups": ["TapBody"],
       "position": { "x": 0.80, "y": 1.07, "height": 0.98 },
-      "sample": {
-        "name": "Hiyori Momose",
-        "owner": "Live2D Inc.",
-        "notice": "Official Live2D sample · subject to Live2D sample-data terms"
-      }
+      "sample": { "name": "Hiyori Momose", "owner": "Live2D Inc.", "notice": "Official Live2D sample · character design must not be altered" }
     },
     {
       "id": "rice",
+      "catalogNo": 4,
       "label": "Rice · 战斗系",
       "model": "https://cdn.jsdelivr.net/gh/Live2D/CubismWebSamples@b1de66b0b1f1cb881d95fb6158622aeb6a2827bd/Samples/Resources/Rice/Rice.model3.json",
       "idleMotionGroup": "Idle",
       "tapMotionGroups": ["TapBody"],
       "position": { "x": 0.80, "y": 1.06, "height": 0.97 },
-      "sample": {
-        "name": "Rice Glassfield",
-        "owner": "Live2D Inc.",
-        "notice": "Official Live2D sample · subject to Live2D sample-data terms"
-      }
+      "sample": { "name": "Rice Glassfield", "owner": "Live2D Inc.", "notice": "Official Live2D sample · subject to Live2D sample-data terms" }
+    },
+    {
+      "id": "miara",
+      "catalogNo": 5,
+      "label": "Miara · 幻想系",
+      "model": "https://cdn.jsdelivr.net/gh/ttoommoommii/joho.github.io@7be0056adca11e7b7bdfb2d2171881d42c2b5558/src0710LocalFile/miara/miara_pro_t04.model3.json",
+      "idleMotionGroup": "Idle",
+      "tapMotionGroups": ["Tap"],
+      "position": { "x": 0.80, "y": 1.06, "height": 0.94 },
+      "sample": { "name": "Miara", "owner": "Live2D Inc.", "notice": "Official Live2D sample · character design must not be altered" }
+    },
+    {
+      "id": "epsilon",
+      "catalogNo": 7,
+      "label": "Epsilon · 表情系",
+      "model": "https://cdn.jsdelivr.net/gh/ttoommoommii/joho.github.io@7be0056adca11e7b7bdfb2d2171881d42c2b5558/src0710LocalFile/epsilon/Epsilon.model3.json",
+      "idleMotionGroup": "Idle",
+      "tapMotionGroups": ["Tap"],
+      "position": { "x": 0.80, "y": 1.07, "height": 0.98 },
+      "sample": { "name": "Epsilon", "owner": "Live2D Inc.", "notice": "Official Live2D sample · subject to Live2D sample-data terms" }
+    },
+    {
+      "id": "hibiki",
+      "catalogNo": 9,
+      "label": "Hibiki · 日常系",
+      "model": "https://cdn.jsdelivr.net/gh/ttoommoommii/joho.github.io@7be0056adca11e7b7bdfb2d2171881d42c2b5558/src0710LocalFile/hibiki/hibiki.model3.json",
+      "idleMotionGroup": "Idle",
+      "tapMotionGroups": ["Tap"],
+      "position": { "x": 0.80, "y": 1.07, "height": 0.98 },
+      "sample": { "name": "Hibiki", "owner": "Live2D Inc.", "notice": "Official Live2D sample · subject to Live2D sample-data terms" }
+    },
+    {
+      "id": "tsumiki",
+      "catalogNo": 10,
+      "label": "Tsumiki · 元气校园系",
+      "model": "https://cdn.jsdelivr.net/gh/ttoommoommii/joho.github.io@7be0056adca11e7b7bdfb2d2171881d42c2b5558/src0710LocalFile/tsumiki/tsumiki.model3.json",
+      "idleMotionGroup": "Idle",
+      "tapMotionGroups": ["Tap"],
+      "position": { "x": 0.80, "y": 1.07, "height": 0.98 },
+      "autoEligible": false,
+      "sample": { "name": "Tsumiki Harugasa", "owner": "Live2D Inc. / collaboration character", "notice": "Collaboration-character sample · special non-commercial/no-alter/no-redistribute terms apply" }
     }
   ]
 }
