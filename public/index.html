@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#101210" />
-  <meta name="unlimited-frontend-revision" content="2026-08-15-v12.18-live2d-lipsync-1" />
+  <meta name="unlimited-frontend-revision" content="2026-08-15-v12.20-live2d-emotion-1" />
   <title>Unlimited AI - 小说创作工作台</title>
   <link rel="stylesheet" href="/styles.css?v=20260809-2" />
   <link rel="stylesheet" href="/studio.css?v=20260809-2" />
@@ -46,184 +46,27 @@
           <button class="iconbtn" id="personaToggle" type="button" title="切换人物模式" aria-label="切换人物模式">😈</button>
           <button class="iconbtn" id="settingsBtn" type="button" title="设置与外观" aria-label="打开设置与外观">⚙</button>
           <button class="iconbtn secondary-action" id="donateBtn" type="button" title="打赏" aria-label="打开打赏">☕</button>
-          <a
-            href="https://github.com/guyue12120924-coder/unlimited-ai-first"
-            target="_blank"
-            rel="noreferrer"
-            class="iconbtn secondary-action"
-            id="githubBtn"
-            title="GitHub 开源地址"
-            aria-label="打开 GitHub 开源地址"
-          >
-            <svg height="19" width="19" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
-              <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-.89 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 0.27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
-            </svg>
+          <a href="https://github.com/guyue12120924-coder/unlimited-ai-first" target="_blank" rel="noreferrer" class="iconbtn secondary-action" id="githubBtn" title="GitHub 开源地址" aria-label="打开 GitHub 开源地址">
+            <svg height="19" width="19" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-.89 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 0.27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg>
           </a>
         </div>
       </div>
     </header>
 
-    <main id="history">
-      <div class="chat" id="chat">
-        <div class="empty-state" id="emptyState">
-          <div class="empty-kicker">NEW CHAPTER</div>
-          <h1>让故事从这里发生</h1>
-          <p>开始构思、续写或打磨一段文字。生成的片段可以收录进章节，再进入沉浸阅读。</p>
-        </div>
-        <div id="bottom-spacer"></div>
-      </div>
-    </main>
+    <main id="history"><div class="chat" id="chat"><div class="empty-state" id="emptyState"><div class="empty-kicker">NEW CHAPTER</div><h1>让故事从这里发生</h1><p>开始构思、续写或打磨一段文字。生成的片段可以收录进章节，再进入沉浸阅读。</p></div><div id="bottom-spacer"></div></div></main>
 
-    <div class="input-floating">
-      <div class="input-inner" id="composer">
-        <div class="composer-main">
-          <textarea id="msg" rows="1" placeholder="写下你的想法、剧情或续写要求…" aria-label="消息内容"></textarea>
-          <div class="composer-actions">
-            <button id="sendBtn" type="button" aria-label="发送消息"><span>发送</span><b aria-hidden="true">↑</b></button>
-            <button id="stopBtn" type="button" aria-label="停止生成"><span>停止</span><b aria-hidden="true">■</b></button>
-          </div>
-        </div>
-        <div class="composer-footer"><span>内容仅保存在当前浏览器</span><span><kbd>Enter</kbd> 发送&nbsp;&nbsp;<kbd>Shift</kbd> + <kbd>Enter</kbd> 换行</span></div>
-      </div>
-    </div>
+    <div class="input-floating"><div class="input-inner" id="composer"><div class="composer-main"><textarea id="msg" rows="1" placeholder="写下你的想法、剧情或续写要求…" aria-label="消息内容"></textarea><div class="composer-actions"><button id="sendBtn" type="button" aria-label="发送消息"><span>发送</span><b aria-hidden="true">↑</b></button><button id="stopBtn" type="button" aria-label="停止生成"><span>停止</span><b aria-hidden="true">■</b></button></div></div><div class="composer-footer"><span>内容仅保存在当前浏览器</span><span><kbd>Enter</kbd> 发送&nbsp;&nbsp;<kbd>Shift</kbd> + <kbd>Enter</kbd> 换行</span></div></div></div>
 
-    <div class="modal-mask" id="settingsMask" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
-      <section id="settings" class="modal-panel">
-        <div class="modal-header" id="settingsHeader">
-          <div>
-            <div class="eyebrow">PREFERENCES</div>
-            <h2 id="settingsTitle">设置</h2>
-          </div>
-          <button class="close-btn" id="closeSettings" type="button" aria-label="关闭设置">×</button>
-        </div>
-        <p class="privacy-note">所有设置与内容仅保存在当前浏览器的 localStorage 中。</p>
+    <div class="modal-mask" id="settingsMask" role="dialog" aria-modal="true" aria-labelledby="settingsTitle"><section id="settings" class="modal-panel"><div class="modal-header" id="settingsHeader"><div><div class="eyebrow">PREFERENCES</div><h2 id="settingsTitle">设置</h2></div><button class="close-btn" id="closeSettings" type="button" aria-label="关闭设置">×</button></div><p class="privacy-note">所有设置与内容仅保存在当前浏览器的 localStorage 中。</p><div class="settings-section"><div class="section-heading"><div><h3>阅读与外观</h3><p>调整界面主题和聊天字号。</p></div></div><div class="appearance-controls" id="controlsPanel"><button id="themeToggle" class="control-btn" type="button">切换浅色主题</button><div class="font-stepper" aria-label="聊天字号"><button id="fontDecrease" type="button" title="减小字体">A−</button><span>聊天字号</span><button id="fontIncrease" type="button" title="增大字体">A＋</button></div></div></div><div class="settings-section"><div class="section-heading"><div><h3>本地对话记忆</h3><p>开启后，刷新或重开浏览器仍会恢复对话。</p></div><label class="switch-row" for="historyKeep"><input type="checkbox" id="historyKeep" /><span class="switch-ui" aria-hidden="true"></span><span>保留</span></label></div><button class="text-btn danger" id="clearHistory" type="button">清除当前会话历史</button></div><div class="settings-section"><div class="section-heading"><div><h3>网页自定义人物模板</h3><p>仅在右上角显示 😇 时生效；😈 模式会忽略这里。</p></div><label class="switch-row" for="promptKeep"><input type="checkbox" id="promptKeep" /><span class="switch-ui" aria-hidden="true"></span><span>保留</span></label></div><textarea id="customPrompt" placeholder="在这里填写网页端自定义 system prompt"></textarea><div class="modal-actions"><button class="text-btn danger" id="clearPrompt" type="button">清除模板</button><button class="primary-btn" id="savePrompt" type="button">保存设置</button></div></div></section></div>
 
-        <div class="settings-section">
-          <div class="section-heading">
-            <div>
-              <h3>阅读与外观</h3>
-              <p>调整界面主题和聊天字号。</p>
-            </div>
-          </div>
-          <div class="appearance-controls" id="controlsPanel">
-            <button id="themeToggle" class="control-btn" type="button">切换浅色主题</button>
-            <div class="font-stepper" aria-label="聊天字号">
-              <button id="fontDecrease" type="button" title="减小字体">A−</button>
-              <span>聊天字号</span>
-              <button id="fontIncrease" type="button" title="增大字体">A＋</button>
-            </div>
-          </div>
-        </div>
+    <div class="modal-mask" id="donateMask" role="dialog" aria-modal="true" aria-labelledby="donateTitle"><section id="donateCard" class="modal-panel compact-modal"><div class="modal-header" id="donateHead"><div><div class="eyebrow">SUPPORT</div><h2 id="donateTitle">请我喝杯咖啡</h2></div><button class="close-btn" id="donateClose" type="button" aria-label="关闭打赏">×</button></div><div id="donateBody"><img id="donateImg" src="/donate.png" alt="微信支付二维码" /><p id="donateNote">如果这个服务帮助到了你，一杯咖啡会支持它继续运行。</p></div></section></div>
 
-        <div class="settings-section">
-          <div class="section-heading">
-            <div>
-              <h3>本地对话记忆</h3>
-              <p>开启后，刷新或重开浏览器仍会恢复对话。</p>
-            </div>
-            <label class="switch-row" for="historyKeep">
-              <input type="checkbox" id="historyKeep" />
-              <span class="switch-ui" aria-hidden="true"></span>
-              <span>保留</span>
-            </label>
-          </div>
-          <button class="text-btn danger" id="clearHistory" type="button">清除当前会话历史</button>
-        </div>
+    <div id="readerMask" role="dialog" aria-modal="true" aria-labelledby="readerTitle"><section class="reader-shell"><header class="reader-header"><div class="reader-title-block"><div class="eyebrow">READING MODE</div><h2 id="readerTitle">小说阅读</h2><p id="readerSummary">从当前会话选择 AI 回复片段</p></div><div class="reader-toolbar"><button class="reader-tool mobile-only" id="readerSegmentsToggle" type="button">片段</button><button class="reader-tool" id="readerCopy" type="button">复制全文</button><div class="reader-font-controls" aria-label="阅读字号"><button id="readerFontDecrease" type="button" title="减小阅读字号">A−</button><button id="readerFontIncrease" type="button" title="增大阅读字号">A＋</button></div><button class="close-btn reader-close" id="readerClose" type="button" aria-label="关闭阅读模式">×</button></div></header><div class="reader-layout"><aside class="reader-sidebar" id="readerSidebar"><div class="reader-sidebar-head"><strong>内容片段</strong><div><button id="readerSelectAll" type="button">全选</button><button id="readerClear" type="button">清空</button></div></div><div class="reader-segments" id="readerSegments"></div></aside><main class="reader-page-wrap" id="readerPageWrap"><article class="reader-page" id="readerContent"></article><div class="reader-empty" id="readerEmpty"><span>暂无可阅读内容</span><p>先让 AI 生成内容，或从左侧选择要合并的回复片段。</p></div></main></div></section></div>
 
-        <div class="settings-section">
-          <div class="section-heading">
-            <div>
-              <h3>网页自定义人物模板</h3>
-              <p>仅在右上角显示 😇 时生效；😈 模式会忽略这里。</p>
-            </div>
-            <label class="switch-row" for="promptKeep">
-              <input type="checkbox" id="promptKeep" />
-              <span class="switch-ui" aria-hidden="true"></span>
-              <span>保留</span>
-            </label>
-          </div>
-          <textarea id="customPrompt" placeholder="在这里填写网页端自定义 system prompt"></textarea>
-          <div class="modal-actions">
-            <button class="text-btn danger" id="clearPrompt" type="button">清除模板</button>
-            <button class="primary-btn" id="savePrompt" type="button">保存设置</button>
-          </div>
-        </div>
-      </section>
-    </div>
-
-    <div class="modal-mask" id="donateMask" role="dialog" aria-modal="true" aria-labelledby="donateTitle">
-      <section id="donateCard" class="modal-panel compact-modal">
-        <div class="modal-header" id="donateHead">
-          <div>
-            <div class="eyebrow">SUPPORT</div>
-            <h2 id="donateTitle">请我喝杯咖啡</h2>
-          </div>
-          <button class="close-btn" id="donateClose" type="button" aria-label="关闭打赏">×</button>
-        </div>
-        <div id="donateBody">
-          <img id="donateImg" src="/donate.png" alt="微信支付二维码" />
-          <p id="donateNote">如果这个服务帮助到了你，一杯咖啡会支持它继续运行。</p>
-        </div>
-      </section>
-    </div>
-
-    <div id="readerMask" role="dialog" aria-modal="true" aria-labelledby="readerTitle">
-      <section class="reader-shell">
-        <header class="reader-header">
-          <div class="reader-title-block">
-            <div class="eyebrow">READING MODE</div>
-            <h2 id="readerTitle">小说阅读</h2>
-            <p id="readerSummary">从当前会话选择 AI 回复片段</p>
-          </div>
-          <div class="reader-toolbar">
-            <button class="reader-tool mobile-only" id="readerSegmentsToggle" type="button">片段</button>
-            <button class="reader-tool" id="readerCopy" type="button">复制全文</button>
-            <div class="reader-font-controls" aria-label="阅读字号">
-              <button id="readerFontDecrease" type="button" title="减小阅读字号">A−</button>
-              <button id="readerFontIncrease" type="button" title="增大阅读字号">A＋</button>
-            </div>
-            <button class="close-btn reader-close" id="readerClose" type="button" aria-label="关闭阅读模式">×</button>
-          </div>
-        </header>
-
-        <div class="reader-layout">
-          <aside class="reader-sidebar" id="readerSidebar">
-            <div class="reader-sidebar-head">
-              <strong>内容片段</strong>
-              <div>
-                <button id="readerSelectAll" type="button">全选</button>
-                <button id="readerClear" type="button">清空</button>
-              </div>
-            </div>
-            <div class="reader-segments" id="readerSegments"></div>
-          </aside>
-
-          <main class="reader-page-wrap" id="readerPageWrap">
-            <article class="reader-page" id="readerContent"></article>
-            <div class="reader-empty" id="readerEmpty">
-              <span>暂无可阅读内容</span>
-              <p>先让 AI 生成内容，或从左侧选择要合并的回复片段。</p>
-            </div>
-          </main>
-        </div>
-      </section>
-    </div>
-
-    <div id="sessionOverlay"></div>
-    <aside id="sessionPanel" aria-label="会话管理">
-      <div class="session-header">
-        <div>
-          <div class="eyebrow">CONVERSATIONS</div>
-          <strong>会话管理</strong>
-        </div>
-        <button id="closeSessionPanel" class="close-btn" type="button" aria-label="关闭会话管理">×</button>
-      </div>
-      <div class="session-list" id="sessionList"></div>
-      <button id="newSessionBtn" class="new-session-btn" type="button">新建会话</button>
-    </aside>
+    <div id="sessionOverlay"></div><aside id="sessionPanel" aria-label="会话管理"><div class="session-header"><div><div class="eyebrow">CONVERSATIONS</div><strong>会话管理</strong></div><button id="closeSessionPanel" class="close-btn" type="button" aria-label="关闭会话管理">×</button></div><div class="session-list" id="sessionList"></div><button id="newSessionBtn" class="new-session-btn" type="button">新建会话</button></aside>
   </div>
 
-  <script src="/boot-diagnostics.js?v=20260815-v12.18-live2d-lipsync-1"></script>
+  <script src="/boot-diagnostics.js?v=20260815-v12.20-live2d-emotion-1"></script>
   <script src="/config.js?v=20260809-2"></script>
   <script src="/data-migration.js?v=20260809-3"></script>
   <script src="/model-status.js?v=20260809-2"></script>
