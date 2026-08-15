@@ -1,8 +1,8 @@
 // public/boot-diagnostics.js
 // Startup guard + dual-mode bootstrap.
 (() => {
-  const REVISION = "2026-08-15-v12.20-live2d-emotion-1";
-  // Diagnostics compatibility markers: 2026-08-15-v12.18-live2d-lipsync-1 / 2026-08-15-v12.17-call-mode-2 / 2026-08-15-v12.16-voice-conversation-1 / 2026-08-15-v12.14-live2d-voice-1 / 2026-08-14-v12.11-live2d-hosted-core-1
+  const REVISION = "2026-08-15-v12.21-live2d-model-pool-1";
+  // Compatibility markers: v12.20 emotion / v12.19 diagnostics / v12.18 lip sync / v12.17 call mode.
   const errors = [];
 
   document.documentElement.dataset.frontendRevision = REVISION;
@@ -16,27 +16,37 @@
 
   function ensureStyle(href, id) {
     if (document.getElementById(id)) return;
-    const link = document.createElement("link"); link.id = id; link.rel = "stylesheet"; link.href = href; document.head.appendChild(link);
+    const link = document.createElement("link");
+    link.id = id; link.rel = "stylesheet"; link.href = href;
+    document.head.appendChild(link);
   }
+
   function ensureScript(src, id) {
     if (document.getElementById(id)) return;
-    const script = document.createElement("script"); script.id = id; script.async = false; script.src = src;
-    script.addEventListener("error", () => errors.push(`资源加载失败：${src}`), { once: true }); document.body.appendChild(script);
+    const script = document.createElement("script");
+    script.id = id; script.async = false; script.src = src;
+    script.addEventListener("error", () => errors.push(`资源加载失败：${src}`), { once: true });
+    document.body.appendChild(script);
   }
+
   function describeError(event) {
     if (event?.reason) return event.reason?.stack || event.reason?.message || String(event.reason);
     const message = event?.error?.stack || event?.error?.message || event?.message || "Unknown frontend error";
     const location = event?.filename ? `\n位置：${event.filename}${event.lineno ? `:${event.lineno}` : ""}${event.colno ? `:${event.colno}` : ""}` : "";
     return `${message}${location}`;
   }
+
   window.addEventListener("error", (event) => errors.push(describeError(event)), true);
   window.addEventListener("unhandledrejection", (event) => errors.push(describeError(event)));
 
   function showFailure(message) {
     if (document.getElementById("frontendBootFailure")) return;
-    const panel = document.createElement("div"); panel.id = "frontendBootFailure"; panel.setAttribute("role", "alert");
+    const panel = document.createElement("div");
+    panel.id = "frontendBootFailure";
+    panel.setAttribute("role", "alert");
     panel.style.cssText = "position:fixed;right:16px;bottom:16px;z-index:99999;max-width:620px;padding:12px 14px;border:1px solid rgba(239,140,130,.55);border-radius:10px;background:rgba(30,16,16,.96);color:#ffe8e5;box-shadow:0 18px 50px rgba(0,0,0,.45);font:12px/1.55 system-ui,sans-serif;white-space:pre-wrap;word-break:break-all";
-    panel.textContent = `前端初始化失败（${REVISION}）\n${message}`; document.body.appendChild(panel);
+    panel.textContent = `前端初始化失败（${REVISION}）\n${message}`;
+    document.body.appendChild(panel);
   }
 
   function loadModeRouter() {
@@ -51,7 +61,8 @@
       ["/companion-v12-polish.css","uaiCompanionV12PolishCss"],["/companion-v12-phase1.css","uaiCompanionV12Phase1Css"],["/companion-live2d.css","uaiCompanionLive2dCss"],
       ["/companion-live2d-voice.css","uaiCompanionLive2dVoiceCss"],["/companion-live2d-neural-voice.css","uaiCompanionLive2dNeuralVoiceCss"],
       ["/companion-voice-input.css","uaiCompanionVoiceInputCss"],["/companion-call-mode.css","uaiCompanionCallModeCss"],
-      ["/companion-live2d-polish.css","uaiCompanionLive2dPolishCss"],["/companion-live2d-emotion-engine.css","uaiCompanionLive2dEmotionEngineCss"]
+      ["/companion-live2d-model-pool.css","uaiCompanionLive2dModelPoolCss"],["/companion-live2d-polish.css","uaiCompanionLive2dPolishCss"],
+      ["/companion-live2d-emotion-engine.css","uaiCompanionLive2dEmotionEngineCss"]
     ]) ensureStyle(`${href}?v=${REVISION}`, id);
 
     for (const [src, id] of [
@@ -63,14 +74,21 @@
       ["/companion-v11-stage3.js","uaiCompanionV11Stage3Script"],["/companion-v11-stage4.js","uaiCompanionV11Stage4Script"],["/companion-v12-galaxy.js","uaiCompanionV12GalaxyScript"],
       ["/companion-v12-stage2.js","uaiCompanionV12Stage2Script"],["/companion-v12-final.js","uaiCompanionV12FinalScript"],["/companion-v12-polish.js","uaiCompanionV12PolishScript"],
       ["/companion-v12-phase1.js","uaiCompanionV12Phase1Script"],["/companion-live2d.js","uaiCompanionLive2dScript"],["/companion-live2d-voice.js","uaiCompanionLive2dVoiceScript"],
-      ["/companion-live2d-neural-voice.js","uaiCompanionLive2dNeuralVoiceScript"],["/companion-voice-input.js","uaiCompanionVoiceInputScript"],
-      ["/companion-call-mode.js","uaiCompanionCallModeScript"],["/companion-live2d-polish.js","uaiCompanionLive2dPolishScript"],
-      ["/companion-live2d-emotion-engine.js","uaiCompanionLive2dEmotionEngineScript"]
+      ["/companion-live2d-neural-voice.js","uaiCompanionNeuralVoiceScript"],["/companion-voice-input.js","uaiCompanionVoiceInputScript"],
+      ["/companion-call-mode.js","uaiCompanionCallModeScript"],["/companion-live2d-model-pool.js","uaiCompanionLive2dModelPoolScript"],
+      ["/companion-live2d-polish.js","uaiCompanionLive2dPolishScript"],["/companion-live2d-emotion-engine.js","uaiCompanionLive2dEmotionEngineScript"]
     ]) ensureScript(`${src}?v=${REVISION}`, id);
 
     if (document.getElementById("uaiModeRouterScript")) return;
-    const script = document.createElement("script"); script.id = "uaiModeRouterScript"; script.src = `/mode-router.js?v=${REVISION}`; script.async = false;
-    script.addEventListener("error", () => { document.documentElement.classList.remove("uai-mode-gate-pending"); document.body.dataset.uaiMode = "novel"; showFailure("模式选择模块加载失败，已回退到原小说工作台。刷新页面后可重试。"); }, { once: true });
+    const script = document.createElement("script");
+    script.id = "uaiModeRouterScript";
+    script.src = `/mode-router.js?v=${REVISION}`;
+    script.async = false;
+    script.addEventListener("error", () => {
+      document.documentElement.classList.remove("uai-mode-gate-pending");
+      document.body.dataset.uaiMode = "novel";
+      showFailure("模式选择模块加载失败，已回退到原小说工作台。刷新页面后可重试。");
+    }, { once: true });
     document.body.appendChild(script);
   }
 
@@ -93,15 +111,19 @@
         companionV12PolishReady: Boolean(window.UnlimitedCompanionV123), companionV12Phase1Ready: Boolean(window.UnlimitedCompanionV124Phase1),
         companionLive2dReady: Boolean(window.UnlimitedCompanionLive2D), companionVoiceReady: Boolean(window.UnlimitedCompanionVoice),
         companionNeuralVoiceReady: Boolean(window.UnlimitedCompanionNeuralVoice), companionVoiceInputReady: Boolean(window.UnlimitedCompanionVoiceInput),
-        companionCallModeReady: Boolean(window.UnlimitedCompanionCallMode), companionLive2dPolishReady: Boolean(window.UnlimitedCompanionLive2DPolish),
-        companionLive2dEmotionReady: Boolean(window.UnlimitedCompanionLive2DEmotionEngine)
+        companionCallModeReady: Boolean(window.UnlimitedCompanionCallMode), companionLive2dModelPoolReady: Boolean(window.UnlimitedCompanionLive2DModelPool),
+        companionLive2dPolishReady: Boolean(window.UnlimitedCompanionLive2DPolish), companionLive2dEmotionReady: Boolean(window.UnlimitedCompanionLive2DEmotionEngine)
       });
       return;
     }
-    const parts = []; if (missing.length) parts.push(`缺少：${missing.map(([,label]) => label).join("、")}`); if (errors.length) parts.push(`捕获到的错误：\n${errors.slice(0,8).join("\n\n")}`); showFailure(parts.join("\n"));
+    const parts = [];
+    if (missing.length) parts.push(`缺少：${missing.map(([,label]) => label).join("、")}`);
+    if (errors.length) parts.push(`捕获到的错误：\n${errors.slice(0,8).join("\n\n")}`);
+    showFailure(parts.join("\n"));
   }
 
   loadModeRouter();
   const schedule = () => window.setTimeout(verifyBoot, 4000);
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", schedule, { once: true }); else schedule();
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", schedule, { once: true });
+  else schedule();
 })();
