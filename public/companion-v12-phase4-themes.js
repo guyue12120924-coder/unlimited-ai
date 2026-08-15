@@ -1,6 +1,6 @@
-// Companion V12.7/12.15 phase 4 — lightweight scene themes + Live2D presence/voice loaders.
+// Companion V12.7/12.16 phase 4 — lightweight scene themes + Live2D voice conversation loaders.
 (() => {
-  const REVISION = "2026-08-15-v12.15-phase4-neural-voice-1";
+  const REVISION = "2026-08-15-v12.16-phase4-voice-conversation-1";
   const THEMES = ["galaxy", "sakura", "moonlight", "neon"];
   const LABELS = {
     galaxy: "星河梦境",
@@ -42,6 +42,9 @@
     // V12.15: Cloudflare neural TTS, true audio amplitude lip sync, stop/replay and fallback.
     ensureStyle(`/companion-live2d-neural-voice.css?v=${encodeURIComponent(REVISION)}`, "uaiCompanionLive2dNeuralVoiceCss");
     ensureScript(`/companion-live2d-neural-voice.js?v=${encodeURIComponent(REVISION)}`, "uaiCompanionLive2dNeuralVoiceScript");
+    // V12.16: microphone input -> Workers AI Whisper -> editable composer text.
+    ensureStyle(`/companion-voice-input.css?v=${encodeURIComponent(REVISION)}`, "uaiCompanionVoiceInputCss");
+    ensureScript(`/companion-voice-input.js?v=${encodeURIComponent(REVISION)}`, "uaiCompanionVoiceInputScript");
   }
 
   function getRoot() {
