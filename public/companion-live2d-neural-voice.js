@@ -1,6 +1,6 @@
 // Companion V12.15 — Cloudflare neural TTS with true audio-driven Live2D lip sync.
 (() => {
-  const REVISION = "2026-08-15-v12.15-neural-voice-2";
+  const REVISION = "2026-08-15-v12.15-neural-voice-3";
   const KEY = "uai_companion_neural_voice_v1";
   const ACTIVE_KEY = "uai_companion_active_character_v1";
   const DEFAULTS = {
@@ -25,8 +25,9 @@
   let lastBlobs = [];
   let neuralStatus = "unknown";
   let neuralStatusText = "正在检查 Cloudflare 神经语音…";
-  let migrated = false;
+  let lastNeuralCheckAt = 0;
   let systemWatchTimer = null;
+  const migratedCharacters = new Set();
 
   function liveRoot() {
     if (document.body.dataset.uaiMode !== "companion") return null;
@@ -47,8 +48,8 @@
     return value && typeof value === "object" && !Array.isArray(value) ? value : {};
   }
 
-  function hasOwnSettings() {
-    return Boolean(readMap()[activeCharacterId()]);
+  function hasOwnSettings(id = activeCharacterId()) {
+    return Boolean(readMap()[id]);
   }
 
   function getSettings() {
@@ -82,16 +83,19 @@
   function migrateAndDisableBaseAuto() {
     const base = baseVoice();
     if (!base) return false;
+    const id = activeCharacterId();
     const old = base.getSettings?.() || {};
-    if (!migrated && !hasOwnSettings() && old.enabled) {
-      const map = readMap();
-      map[activeCharacterId()] = {
-        ...DEFAULTS,
-        enabled: true,
-        dialogueOnly: old.dialogueOnly !== false
-      };
-      localStorage.setItem(KEY, JSON.stringify(map));
-      migrated = true;
+    if (!migratedCharacters.has(id)) {
+      if (!hasOwnSettings(id) && old.enabled) {
+        const map = readMap();
+        map[id] = {
+          ...DEFAULTS,
+          enabled: true,
+          dialogueOnly: old.dialogueOnly !== false
+        };
+        localStorage.setItem(KEY, JSON.stringify(map));
+      }
+      migratedCharacters.add(id);
     }
     if (old.enabled) base.setSettings?.({ enabled: false });
     return true;
@@ -114,7 +118,7 @@
       .slice(0, 1800);
   }
 
-  function chunkText(text, max = 230) {
+  function chunkText(text, max = 420) {
     const source = String(text || "").trim();
     if (!source) return [];
     const parts = source.match(/[^。！？!?；;\n]+[。！？!?；;\n]?/g) || [source];
@@ -126,29 +130,34 @@
         chunks.push(current.trim());
         current = part.trim();
       } else current = candidate;
-      while (current.length > max * 1.6) {
+      while (current.length > max * 1.45) {
         chunks.push(current.slice(0, max));
         current = current.slice(max);
       }
     }
     if (current.trim()) chunks.push(current.trim());
-    return chunks.filter(Boolean).slice(0, 8);
+    return chunks.filter(Boolean).slice(0, 5);
+  }
+
+  function neuralReady() {
+    return neuralStatus === "ready" || neuralStatus === "verified";
   }
 
   async function checkNeuralStatus() {
+    lastNeuralCheckAt = Date.now();
     try {
       const response = await fetch(`/api/companion/tts/status?ts=${Date.now()}`, { cache: "no-store" });
       const data = await response.json().catch(() => ({}));
       neuralStatus = response.ok && data.available ? "ready" : "unavailable";
       neuralStatusText = neuralStatus === "ready"
-        ? "Cloudflare 神经语音已就绪 · 真实音频嘴型"
+        ? "Cloudflare Workers AI 已连接 · 首次播放时验证 MeloTTS"
         : "神经语音暂不可用，将自动使用系统语音";
     } catch {
       neuralStatus = "unavailable";
       neuralStatusText = "神经语音连接失败，将自动使用系统语音";
     }
     refreshUi();
-    return neuralStatus === "ready";
+    return neuralReady();
   }
 
   async function fetchNeuralChunk(text, signal) {
@@ -197,7 +206,8 @@
     try { window.UnlimitedCompanionLive2DInteraction?.endVoice?.(); } catch {}
     setState("");
     if (!options.keepLast) {
-      // Generated blobs intentionally remain in memory for instant replay.
+      lastText = "";
+      lastBlobs = [];
     }
   }
 
@@ -207,6 +217,7 @@
         audio.removeEventListener("ended", onEnd);
         audio.removeEventListener("error", onError);
         audio.removeEventListener("pause", onPause);
+        audio.removeEventListener("emptied", onPause);
       };
       const finish = () => { cleanup(); resolve(); };
       const onEnd = () => finish();
@@ -215,6 +226,7 @@
       audio.addEventListener("ended", onEnd, { once: true });
       audio.addEventListener("error", onError, { once: true });
       audio.addEventListener("pause", onPause, { once: true });
+      audio.addEventListener("emptied", onPause, { once: true });
       if (token !== playToken) finish();
     });
   }
@@ -283,10 +295,13 @@
     if (!settings.enabled && !options.force) return false;
     const cleaned = extractSpeechText(text, settings);
     if (!cleaned) return false;
-    lastText = cleaned;
     const provider = options.provider || settings.provider;
 
     stop({ keepLast: true });
+    lastText = cleaned;
+    // A new reply invalidates the previous generated audio. Without this,
+    // replay after a neural failure could accidentally play an older reply.
+    lastBlobs = [];
     if (provider === "system") return speakSystem(cleaned, options);
 
     const chunks = chunkText(cleaned);
@@ -294,18 +309,27 @@
     abortController = new AbortController();
     setState("loading");
     try {
-      if (neuralStatus === "unknown") await checkNeuralStatus();
-      if (neuralStatus !== "ready") throw new Error("Neural TTS unavailable");
+      if (
+        neuralStatus === "unknown"
+        || (neuralStatus === "unavailable" && Date.now() - lastNeuralCheckAt > 30000)
+      ) {
+        await checkNeuralStatus();
+      }
+      if (!neuralReady()) throw new Error("Neural TTS unavailable");
       const blobs = await Promise.all(chunks.map((chunk) => fetchNeuralChunk(chunk, abortController.signal)));
       abortController = null;
       lastBlobs = blobs;
+      neuralStatus = "verified";
+      neuralStatusText = "Cloudflare MeloTTS 已验证 · 真实音频嘴型已启用";
+      refreshUi();
       await playBlobs(blobs, settings, options);
       return true;
     } catch (error) {
       abortController = null;
       if (error?.name === "AbortError") return false;
+      lastNeuralCheckAt = Date.now();
       neuralStatus = "unavailable";
-      neuralStatusText = "神经语音本次失败，已切换系统语音";
+      neuralStatusText = "神经语音本次失败，已切换系统语音；稍后会自动重试";
       refreshUi();
       if ((provider === "auto" || settings.fallbackSystem) && baseVoice()?.supported?.()) {
         return speakSystem(cleaned, options);
