@@ -1,8 +1,8 @@
 // public/boot-diagnostics.js
 // Startup guard + dual-mode bootstrap.
 (() => {
-  const REVISION = "2026-08-15-v12.22-curated-live2d-pool-1";
-  // Compatibility markers: v12.21-live2d-model-pool / v12.20 emotion / v12.19 diagnostics / v12.18 lip sync / v12.17 call mode.
+  const REVISION = "2026-08-15-v12.23-ux-hardening-2";
+  // Compatibility markers: v12.22 curated pool / v12.20 emotion / v12.19 diagnostics / v12.18 lip sync / v12.17 call mode.
   const errors = [];
 
   document.documentElement.dataset.frontendRevision = REVISION;
@@ -62,7 +62,7 @@
       ["/companion-live2d-voice.css","uaiCompanionLive2dVoiceCss"],["/companion-live2d-neural-voice.css","uaiCompanionLive2dNeuralVoiceCss"],
       ["/companion-voice-input.css","uaiCompanionVoiceInputCss"],["/companion-call-mode.css","uaiCompanionCallModeCss"],
       ["/companion-live2d-model-pool.css","uaiCompanionLive2dModelPoolCss"],["/companion-live2d-polish.css","uaiCompanionLive2dPolishCss"],
-      ["/companion-live2d-emotion-engine.css","uaiCompanionLive2dEmotionEngineCss"]
+      ["/companion-live2d-emotion-engine.css","uaiCompanionLive2dEmotionEngineCss"],["/companion-v12-ux-hardening.css","uaiCompanionV123UxHardeningCss"]
     ]) ensureStyle(`${href}?v=${REVISION}`, id);
 
     for (const [src, id] of [
@@ -76,7 +76,8 @@
       ["/companion-v12-phase1.js","uaiCompanionV12Phase1Script"],["/companion-live2d.js","uaiCompanionLive2dScript"],["/companion-live2d-voice.js","uaiCompanionLive2dVoiceScript"],
       ["/companion-live2d-neural-voice.js","uaiCompanionLive2dNeuralVoiceScript"],["/companion-voice-input.js","uaiCompanionVoiceInputScript"],
       ["/companion-call-mode.js","uaiCompanionCallModeScript"],["/companion-live2d-model-pool.js","uaiCompanionLive2dModelPoolScript"],
-      ["/companion-live2d-polish.js","uaiCompanionLive2dPolishScript"],["/companion-live2d-emotion-engine.js","uaiCompanionLive2dEmotionEngineScript"]
+      ["/companion-live2d-polish.js","uaiCompanionLive2dPolishScript"],["/companion-live2d-emotion-engine.js","uaiCompanionLive2dEmotionEngineScript"],
+      ["/companion-v12-ux-hardening.js","uaiCompanionV123UxHardeningScript"]
     ]) ensureScript(`${src}?v=${REVISION}`, id);
 
     if (document.getElementById("uaiModeRouterScript")) return;
@@ -112,7 +113,8 @@
         companionLive2dReady: Boolean(window.UnlimitedCompanionLive2D), companionVoiceReady: Boolean(window.UnlimitedCompanionVoice),
         companionNeuralVoiceReady: Boolean(window.UnlimitedCompanionNeuralVoice), companionVoiceInputReady: Boolean(window.UnlimitedCompanionVoiceInput),
         companionCallModeReady: Boolean(window.UnlimitedCompanionCallMode), companionLive2dModelPoolReady: Boolean(window.UnlimitedCompanionLive2DModelPool),
-        companionLive2dPolishReady: Boolean(window.UnlimitedCompanionLive2DPolish), companionLive2dEmotionReady: Boolean(window.UnlimitedCompanionLive2DEmotionEngine)
+        companionLive2dPolishReady: Boolean(window.UnlimitedCompanionLive2DPolish), companionLive2dEmotionReady: Boolean(window.UnlimitedCompanionLive2DEmotionEngine),
+        companionV123UxHardeningReady: Boolean(window.UnlimitedCompanionV123UXHardening)
       });
       return;
     }
