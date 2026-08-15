@@ -30,7 +30,8 @@ assert(order.every((value) => value >= 0), "all product experience scripts must 
 assert(order.every((value, position) => position === 0 || value > order[position - 1]), "product experience scripts must load in order");
 assert(order.every((value) => value > sidebarIndex), "stable sidebar must load before every product experience adapter");
 assert.match(index, /v3-product\.css/);
-assert.match(index, /v12\.14-live2d-voice-1/);
+assert.match(index, /2026-08-15-v12\.17-call-mode-1/);
+assert.match(index, /boot-diagnostics\.js\?v=20260815-v12\.17-call-mode-1/);
 assert.match(index, /<span>AI 小说创作<\/span>/, "initial brand subtitle must already match the final V3 copy");
 assert.match(index, /v3-sidebar\.js\?v=20260809-2/, "static label fix must use a fresh browser cache key");
 assert.doesNotMatch(index, /removeAttribute\("data-v2-outline-ready"\)/, "temporary outline inline patch must live in V3 runtime, not index.html");
