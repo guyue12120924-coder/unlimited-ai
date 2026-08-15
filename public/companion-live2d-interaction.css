@@ -1,11 +1,11 @@
-/* Companion V12.12 — Live2D response/emotion polish. */
+/* Companion V12.13 — Live2D presence, relationship and voice polish. */
 #uaiCompanionRoot .uai-c-live2d-presence{
   position:absolute;
   z-index:9;
   right:6.2%;
   top:102px;
   min-width:118px;
-  max-width:220px;
+  max-width:240px;
   padding:7px 12px;
   border:1px solid rgba(255,255,255,.10);
   border-radius:999px;
@@ -21,27 +21,53 @@
   pointer-events:none;
   transition:opacity .24s ease,transform .24s ease,border-color .24s ease,background .24s ease;
 }
-#uaiCompanionRoot .uai-c-live2d-presence.show{opacity:.84;transform:translateY(0) scale(1)}
+#uaiCompanionRoot .uai-c-live2d-presence.show{opacity:.86;transform:translateY(0) scale(1)}
 #uaiCompanionRoot .uai-c-live2d-presence[data-state="speaking"],
-#uaiCompanionRoot .uai-c-live2d-presence[data-state="streaming"]{
+#uaiCompanionRoot .uai-c-live2d-presence[data-state="streaming"],
+#uaiCompanionRoot .uai-c-live2d-presence[data-state="voice"]{
   border-color:rgba(239,185,255,.20);
   background:linear-gradient(135deg,rgba(54,28,112,.76),rgba(107,49,139,.52));
   box-shadow:0 10px 30px rgba(9,4,36,.20),0 0 24px rgba(203,121,255,.10);
 }
+#uaiCompanionRoot .uai-c-live2d-presence[data-state="welcome"]{
+  border-color:rgba(255,193,231,.22);
+  background:linear-gradient(135deg,rgba(80,35,118,.77),rgba(137,58,125,.48));
+  box-shadow:0 12px 34px rgba(13,5,44,.22),0 0 26px rgba(255,105,194,.11);
+}
+#uaiCompanionRoot .uai-c-live2d-presence[data-state="idle"]{
+  opacity:.66;
+  border-color:rgba(220,205,255,.12);
+  background:rgba(29,20,72,.50);
+}
 
-#uaiCompanionRoot.uai-c-live2d-speaking .uai-c-live2d-stage::before{
+#uaiCompanionRoot.uai-c-live2d-speaking .uai-c-live2d-stage::before,
+#uaiCompanionRoot.uai-c-live2d-voice .uai-c-live2d-stage::before{
   opacity:.78;
   animation:uaiLive2DSpeakingAura 1.8s ease-in-out infinite alternate!important;
 }
-#uaiCompanionRoot.uai-c-live2d-speaking .uai-c-live2d-floor{
+#uaiCompanionRoot.uai-c-live2d-speaking .uai-c-live2d-floor,
+#uaiCompanionRoot.uai-c-live2d-voice .uai-c-live2d-floor{
   opacity:.66;
   animation-duration:2.4s!important;
 }
-#uaiCompanionRoot.uai-c-live2d-speaking .uai-c-live2d-canvas{
+#uaiCompanionRoot.uai-c-live2d-speaking .uai-c-live2d-canvas,
+#uaiCompanionRoot.uai-c-live2d-voice .uai-c-live2d-canvas{
   filter:
     drop-shadow(0 20px 32px rgba(18,7,65,.28))
     drop-shadow(0 0 18px rgba(233,179,255,.18))
     drop-shadow(0 0 38px rgba(112,119,255,.10));
+}
+#uaiCompanionRoot.uai-c-live2d-idle-reaction .uai-c-live2d-stage::before{
+  opacity:.66;
+  animation:uaiLive2DIdleAura 1.8s ease-in-out 1!important;
+}
+
+/* Relationship level subtly changes warmth without recoloring the model. */
+#uaiCompanionRoot[data-v129-live2d-relation-level="3"] .uai-c-live2d-floor{opacity:.56}
+#uaiCompanionRoot[data-v129-live2d-relation-level="4"] .uai-c-live2d-floor{opacity:.61}
+#uaiCompanionRoot[data-v129-live2d-relation-level="4"] .uai-c-live2d-stage::after{
+  opacity:.72;
+  filter:blur(13px);
 }
 
 #uaiCompanionRoot[data-v127-theme="galaxy"] .uai-c-live2d-stage::before{
@@ -71,15 +97,10 @@
   background:radial-gradient(ellipse at 54% 42%,rgba(255,188,213,.22),rgba(255,68,140,.17) 28%,rgba(130,72,198,.06) 52%,transparent 74%);
 }
 
-#uaiCompanionRoot.uai-c-live2d-active .uai-c-messages{
-  padding-right:38%!important;
-}
-#uaiCompanionRoot.uai-c-live2d-active .uai-c-message-row.assistant>div{
-  max-width:620px!important;
-}
-#uaiCompanionRoot.uai-c-live2d-active .uai-c-message-row.assistant .uai-c-bubble{
-  line-height:1.74!important;
-}
+/* Keep long answers out of the character stage. */
+#uaiCompanionRoot.uai-c-live2d-active .uai-c-messages{padding-right:38%!important}
+#uaiCompanionRoot.uai-c-live2d-active .uai-c-message-row.assistant>div{max-width:620px!important}
+#uaiCompanionRoot.uai-c-live2d-active .uai-c-message-row.assistant .uai-c-bubble{line-height:1.74!important}
 
 #uaiCompanionRoot .uai-c-live2d-burst{
   position:absolute;
@@ -109,6 +130,11 @@
   from{transform:rotate(-4deg) scale(.98);filter:blur(22px) saturate(1)}
   to{transform:rotate(-2deg) scale(1.055);filter:blur(25px) saturate(1.16)}
 }
+@keyframes uaiLive2DIdleAura{
+  0%{transform:rotate(-4deg) scale(1);filter:blur(22px)}
+  50%{transform:rotate(-3deg) scale(1.035);filter:blur(24px)}
+  100%{transform:rotate(-4deg) scale(1);filter:blur(22px)}
+}
 @keyframes uaiLive2DBurst{
   0%{opacity:0;transform:translate(-50%,-50%) scale(.35)}
   18%{opacity:1}
@@ -117,6 +143,8 @@
 }
 
 @media (prefers-reduced-motion:reduce){
-  #uaiCompanionRoot.uai-c-live2d-speaking .uai-c-live2d-stage::before{animation:none!important}
+  #uaiCompanionRoot.uai-c-live2d-speaking .uai-c-live2d-stage::before,
+  #uaiCompanionRoot.uai-c-live2d-voice .uai-c-live2d-stage::before,
+  #uaiCompanionRoot.uai-c-live2d-idle-reaction .uai-c-live2d-stage::before{animation:none!important}
   #uaiCompanionRoot .uai-c-live2d-burst i{animation-duration:1.4s}
 }
