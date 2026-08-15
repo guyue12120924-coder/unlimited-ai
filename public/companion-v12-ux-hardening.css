@@ -1,0 +1,195 @@
+/* Companion V12.23 — final desktop interaction hardening. */
+
+/* ---------- final stacking / click ownership ---------- */
+#uaiCompanionRoot.uai-c-v123-hardened .uai-c-header{
+  isolation:isolate!important;
+  z-index:40!important;
+}
+#uaiCompanionRoot.uai-c-v123-hardened .uai-c-v11-header-actions{
+  position:relative!important;
+  z-index:44!important;
+  pointer-events:auto!important;
+}
+#uaiCompanionRoot.uai-c-v123-hardened .uai-c-v11-header-actions button,
+#uaiCompanionRoot.uai-c-v123-hardened #uaiCompanionV15VoiceDock{
+  pointer-events:auto!important;
+}
+#uaiCompanionRoot.uai-c-v123-hardened #uaiCompanionNeuralVoiceToggle{
+  cursor:pointer!important;
+}
+#uaiCompanionRoot.uai-c-v123-hardened #uaiCompanionNeuralVoiceToggle:not(.speaking):not(.loading).active{
+  /* Enabled is visible, but it no longer looks like a permanently pressed/error state. */
+  border-color:rgba(220,180,255,.25)!important;
+  background:linear-gradient(135deg,rgba(78,46,135,.72),rgba(99,48,121,.50))!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 0 14px rgba(188,100,244,.07)!important;
+}
+#uaiCompanionRoot.uai-c-v123-hardened #uaiCompanionNeuralVoiceToggle.speaking,
+#uaiCompanionRoot.uai-c-v123-hardened #uaiCompanionNeuralVoiceToggle.loading{
+  border-color:rgba(237,185,255,.40)!important;
+}
+
+/* ---------- role popup: opaque, dark, and always above sidebar actions ---------- */
+#uaiCompanionRoot.uai-c-v123-hardened .uai-c-sidebar{
+  overflow:visible!important;
+}
+#uaiCompanionRoot.uai-c-v123-hardened .uai-c-profile-card{
+  z-index:20!important;
+  overflow:visible!important;
+}
+#uaiCompanionRoot.uai-c-v123-hardened .uai-c-profile-card.uai-c-v123-role-menu-open,
+#uaiCompanionRoot.uai-c-v123-hardened .uai-c-profile-card:has(.uai-c-v10-role-more[aria-expanded="true"]){
+  z-index:120!important;
+}
+#uaiCompanionRoot.uai-c-v123-hardened .uai-c-v10-role-actions{
+  position:relative!important;
+  z-index:130!important;
+}
+#uaiCompanionRoot.uai-c-v123-hardened .uai-c-v10-role-menu{
+  position:absolute!important;
+  top:40px!important;
+  right:-2px!important;
+  z-index:160!important;
+  width:174px!important;
+  padding:7px!important;
+  overflow:hidden!important;
+  border:1px solid rgba(206,178,255,.24)!important;
+  border-radius:14px!important;
+  background:linear-gradient(160deg,#211a47 0%,#171437 58%,#12112d 100%)!important;
+  color:#f7f1ff!important;
+  box-shadow:0 22px 58px rgba(3,1,18,.56),0 0 0 1px rgba(255,255,255,.025) inset!important;
+  backdrop-filter:blur(20px) saturate(1.2)!important;
+  opacity:1!important;
+}
+#uaiCompanionRoot.uai-c-v123-hardened .uai-c-v10-role-menu button{
+  min-height:39px!important;
+  padding:0 11px!important;
+  border:0!important;
+  border-radius:9px!important;
+  background:transparent!important;
+  color:rgba(246,238,255,.88)!important;
+  font-size:12px!important;
+  font-weight:600!important;
+  text-align:left!important;
+}
+#uaiCompanionRoot.uai-c-v123-hardened .uai-c-v10-role-menu button:hover,
+#uaiCompanionRoot.uai-c-v123-hardened .uai-c-v10-role-menu button:focus-visible{
+  outline:none!important;
+  background:linear-gradient(90deg,rgba(132,82,236,.28),rgba(180,76,184,.12))!important;
+  color:#fff!important;
+}
+
+/* ---------- real desktop sidebar collapse ---------- */
+@media (min-width:901px) and (max-width:1359px){
+  #uaiCompanionRoot.uai-c-v123-sidebar-collapsed .uai-c-shell{
+    grid-template-columns:76px minmax(0,1fr)!important;
+  }
+}
+@media (min-width:1360px){
+  #uaiCompanionRoot.uai-c-v123-sidebar-collapsed .uai-c-shell{
+    grid-template-columns:76px minmax(0,1fr) 330px!important;
+  }
+}
+@media (min-width:901px){
+  #uaiCompanionRoot.uai-c-v123-sidebar-collapsed .uai-c-sidebar{
+    padding:14px 10px 16px!important;
+    overflow:hidden!important;
+  }
+  #uaiCompanionRoot.uai-c-v123-sidebar-collapsed .uai-c-v121-brand{
+    justify-content:center!important;
+    margin-left:0!important;
+    margin-right:0!important;
+    padding:0!important;
+  }
+  #uaiCompanionRoot.uai-c-v123-sidebar-collapsed .uai-c-v121-brand>i,
+  #uaiCompanionRoot.uai-c-v123-sidebar-collapsed .uai-c-v121-brand>strong{
+    display:none!important;
+  }
+  #uaiCompanionRoot.uai-c-v123-sidebar-collapsed .uai-c-v121-brand>button{
+    margin:0!important;
+    width:38px!important;
+    height:38px!important;
+    color:#e7d9ff!important;
+    background:rgba(105,71,185,.26)!important;
+  }
+  #uaiCompanionRoot.uai-c-v123-sidebar-collapsed .uai-c-profile-card{
+    min-height:60px!important;
+    grid-template-columns:1fr!important;
+    place-items:center!important;
+    padding:6px!important;
+  }
+  #uaiCompanionRoot.uai-c-v123-sidebar-collapsed .uai-c-profile-card .uai-c-avatar{
+    width:44px!important;height:44px!important;border-radius:15px!important;
+  }
+  #uaiCompanionRoot.uai-c-v123-sidebar-collapsed .uai-c-profile-copy,
+  #uaiCompanionRoot.uai-c-v123-sidebar-collapsed .uai-c-v10-role-actions,
+  #uaiCompanionRoot.uai-c-v123-sidebar-collapsed .uai-c-side-label,
+  #uaiCompanionRoot.uai-c-v123-sidebar-collapsed .uai-c-session-list,
+  #uaiCompanionRoot.uai-c-v123-sidebar-collapsed .uai-c-side-actions{
+    display:none!important;
+  }
+  #uaiCompanionRoot.uai-c-v123-sidebar-collapsed .uai-c-new-chat{
+    width:44px!important;min-width:44px!important;min-height:44px!important;margin:8px auto 10px!important;padding:0!important;font-size:0!important;
+  }
+  #uaiCompanionRoot.uai-c-v123-sidebar-collapsed .uai-c-new-chat::before{
+    content:"＋";font-size:18px;font-weight:750;color:#fff;
+  }
+  #uaiCompanionRoot.uai-c-v123-sidebar-collapsed .uai-c-v121-rail-nav{
+    margin:7px 0!important;gap:7px!important;
+  }
+  #uaiCompanionRoot.uai-c-v123-sidebar-collapsed .uai-c-v121-rail-nav button{
+    width:44px!important;min-width:44px!important;min-height:44px!important;margin:0 auto!important;padding:0!important;justify-content:center!important;
+  }
+  #uaiCompanionRoot.uai-c-v123-sidebar-collapsed .uai-c-v121-rail-nav button span{display:none!important}
+  #uaiCompanionRoot.uai-c-v123-sidebar-collapsed .uai-c-v121-rail-nav button i{margin:0!important}
+  #uaiCompanionRoot.uai-c-v123-sidebar-collapsed .uai-c-v10-search{
+    width:44px!important;min-width:44px!important;margin:6px auto!important;padding:0!important;display:grid!important;place-items:center!important;
+  }
+  #uaiCompanionRoot.uai-c-v123-sidebar-collapsed .uai-c-v10-search>strong,
+  #uaiCompanionRoot.uai-c-v123-sidebar-collapsed .uai-c-v10-search>kbd{display:none!important}
+  #uaiCompanionRoot.uai-c-v123-sidebar-collapsed .uai-c-v10-search>span{font-size:18px!important}
+}
+
+/* ---------- immersive mode: one stable column, no hidden third-grid residue ---------- */
+@media (min-width:901px){
+  #uaiCompanionRoot.uai-c-v123-hardened.uai-c-v11-immersive .uai-c-shell{
+    grid-template-columns:minmax(0,1fr)!important;
+  }
+  #uaiCompanionRoot.uai-c-v123-hardened.uai-c-v11-immersive .uai-c-sidebar,
+  #uaiCompanionRoot.uai-c-v123-hardened.uai-c-v11-immersive .uai-c-v12-sidepanel{
+    display:none!important;
+  }
+  #uaiCompanionRoot.uai-c-v123-hardened.uai-c-v11-immersive .uai-c-main{
+    grid-column:1!important;
+    width:100%!important;
+    min-width:0!important;
+  }
+}
+#uaiCompanionRoot.uai-c-v123-layout-switching .uai-c-shell,
+#uaiCompanionRoot.uai-c-v123-layout-switching .uai-c-sidebar,
+#uaiCompanionRoot.uai-c-v123-layout-switching .uai-c-main,
+#uaiCompanionRoot.uai-c-v123-layout-switching .uai-c-header,
+#uaiCompanionRoot.uai-c-v123-layout-switching .uai-c-composer-wrap{
+  transition:none!important;
+}
+
+/* New V12.7 scene owns the ambience. Hide obsolete canvases/compositors so a
+   grid resize cannot flash two independently resized backgrounds. */
+#uaiCompanionRoot.uai-c-v123-modern-scene .uai-c-v121-sparkle-layer,
+#uaiCompanionRoot.uai-c-v123-modern-scene .uai-c-v12-galaxy-layer{
+  display:none!important;
+}
+
+@media (max-width:900px){
+  #uaiCompanionRoot.uai-c-v123-hardened .uai-c-v10-role-menu{
+    width:min(190px,72vw)!important;
+    right:0!important;
+  }
+}
+
+@media (prefers-reduced-motion:reduce){
+  #uaiCompanionRoot.uai-c-v123-hardened *,
+  #uaiCompanionRoot.uai-c-v123-hardened *::before,
+  #uaiCompanionRoot.uai-c-v123-hardened *::after{
+    scroll-behavior:auto!important;
+  }
+}
