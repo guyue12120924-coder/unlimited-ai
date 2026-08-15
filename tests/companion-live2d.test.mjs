@@ -20,6 +20,8 @@ const polish = read("public/companion-live2d-polish.js");
 const polishCss = read("public/companion-live2d-polish.css");
 const emotion = read("public/companion-live2d-emotion-engine.js");
 const emotionCss = read("public/companion-live2d-emotion-engine.css");
+const uxHardening = read("public/companion-v12-ux-hardening.js");
+const uxHardeningCss = read("public/companion-v12-ux-hardening.css");
 const themeLoader = read("public/companion-v12-phase4-themes.js");
 const galaxy = read("public/companion-v12-galaxy.js");
 const wrangler = read("wrangler.toml");
@@ -29,19 +31,49 @@ const stt = read("src/stt.js");
 const config = JSON.parse(read("public/live2d/characters.json"));
 const readme = read("public/live2d/README.md");
 
-// V12.22 must be browser-visible and directly boot the curated pool + final Live2D layers.
-assert.match(index, /2026-08-15-v12\.22-curated-live2d-pool-\d+/);
-assert.match(index, /boot-diagnostics\.js\?v=20260815-v12\.22-curated-live2d-pool-\d+/);
-assert.match(boot, /v12\.22-curated-live2d-pool/);
+// V12.23 must be browser-visible and boot the UX hardening layer last.
+assert.match(index, /2026-08-15-v12\.23-ux-hardening-\d+/);
+assert.match(index, /boot-diagnostics\.js\?v=20260815-v12\.23-ux-hardening-\d+/);
+assert.match(boot, /v12\.23-ux-hardening/);
 for (const asset of [
   "companion-live2d.css","companion-live2d.js","companion-live2d-voice.css","companion-live2d-voice.js",
   "companion-live2d-neural-voice.css","companion-live2d-neural-voice.js","companion-voice-input.css","companion-voice-input.js",
   "companion-call-mode.css","companion-call-mode.js","companion-live2d-model-pool.css","companion-live2d-model-pool.js",
-  "companion-live2d-polish.css","companion-live2d-polish.js","companion-live2d-emotion-engine.css","companion-live2d-emotion-engine.js"
+  "companion-live2d-polish.css","companion-live2d-polish.js","companion-live2d-emotion-engine.css","companion-live2d-emotion-engine.js",
+  "companion-v12-ux-hardening.css","companion-v12-ux-hardening.js"
 ]) assert.ok(boot.includes(asset), `boot is missing ${asset}`);
 assert.match(boot, /companionLive2dModelPoolReady/);
 assert.match(boot, /companionLive2dEmotionReady/);
 assert.match(boot, /companionLive2dPolishReady/);
+assert.match(boot, /companionV123UxHardeningReady/);
+
+// V12.23 final UX ownership: sidebar collapse, role-menu stacking, stable immersive mode and neural voice toggle.
+assert.match(uxHardening, /v12\.23-ux-hardening-2/);
+assert.match(uxHardening, /uai_companion_sidebar_collapsed_v1/);
+assert.match(uxHardening, /function setSidebarCollapsed\(/);
+assert.match(uxHardening, /\.uai-c-v121-brand > button/);
+assert.match(uxHardening, /uai-c-v123-sidebar-collapsed/);
+assert.match(uxHardening, /function syncRoleMenu\(/);
+assert.match(uxHardening, /uai-c-v123-role-menu-open/);
+assert.match(uxHardening, /function setImmersive\(/);
+assert.match(uxHardening, /const changed = root\.classList\.contains\("uai-c-v11-immersive"\) !== next/);
+assert.match(uxHardening, /uai-c-v123-layout-switching/);
+assert.match(uxHardening, /stopImmediatePropagation/);
+assert.match(uxHardening, /function suppressLegacyRenderers\(/);
+assert.match(uxHardening, /uai-c-v121-sparkle-layer, \.uai-c-v12-galaxy-layer/);
+assert.match(uxHardening, /function toggleVoice\(/);
+assert.match(uxHardening, /UnlimitedCompanionNeuralVoice/);
+assert.match(uxHardening, /neuralToggle\.disabled = false/);
+assert.match(uxHardening, /v123PointerToggle/);
+assert.match(uxHardening, /window\.UnlimitedCompanionV123UXHardening/);
+assert.match(uxHardeningCss, /uai-c-v123-role-menu-open/);
+assert.match(uxHardeningCss, /background:linear-gradient\(160deg,#211a47/);
+assert.match(uxHardeningCss, /z-index:160!important/);
+assert.match(uxHardeningCss, /uai-c-v123-sidebar-collapsed/);
+assert.match(uxHardeningCss, /grid-template-columns:76px minmax\(0,1fr\) 330px!important/);
+assert.match(uxHardeningCss, /uai-c-v11-immersive \.uai-c-v12-sidepanel/);
+assert.match(uxHardeningCss, /uai-c-v123-modern-scene \.uai-c-v121-sparkle-layer/);
+assert.match(uxHardeningCss, /#uaiCompanionNeuralVoiceToggle/);
 
 // Stable Live2D runtime + model-aware V12.18 lip sync, including legacy uppercase Cubism parameter IDs.
 assert.match(runtime, /v12\.18-live2d-lipsync/);
@@ -221,4 +253,4 @@ assert.ok(config.byName?.["李萌"]?.fallback, "Li Meng base config must retain 
 assert.match(readme, /model pool/i);
 assert.equal(fs.existsSync("public/live2d/vendor/live2dcubismcore.min.js"), false);
 
-console.log("Companion Live2D contract passed: curated eight-model pool + Haru migration + adaptive lip sync/emotions + diagnostics + voice call.");
+console.log("Companion Live2D contract passed: V12.23 UX hardening + curated eight-model pool + adaptive lip sync/emotions + voice call.");
