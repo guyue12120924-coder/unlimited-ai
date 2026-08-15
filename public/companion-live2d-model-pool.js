@@ -2,7 +2,7 @@
 (() => {
   if (window.UnlimitedCompanionLive2DModelPool) return;
 
-  const REVISION = "2026-08-15-v12.21-live2d-model-pool-1";
+  const REVISION = "2026-08-15-v12.21-live2d-model-pool-2";
   const POOL_URL = "/live2d/model-pool.json";
   const KEYS = {
     characters: "uai_companion_characters_v1",
@@ -121,35 +121,36 @@
       const before = JSON.stringify(assignments);
       const counts = Object.fromEntries(pool.map((item) => [item.id, 0]));
 
-      // Keep user-selected/manual assignments untouched and count pool models already in use.
+      // Existing pool assignments are counted first. Custom URLs remain manual and are never overwritten.
       for (const character of list) {
         const assigned = assignments[character.id];
         const poolId = poolIdFromAssignment(assigned);
         if (poolId && byId(poolId)) counts[poolId] += 1;
       }
 
-      // 李萌 keeps the current Mao appearance unless the user has explicitly selected another model.
+      // 李萌 keeps Mao by default; remaining roles take the least-used model so the first pool-sized set stays unique.
       const mao = byId("mao") || pool[0];
       for (const character of list) {
         const id = String(character.id);
         const name = String(character?.profile?.name || "").trim();
         const existing = assignments[id];
+        const existingPoolId = poolIdFromAssignment(existing);
+        const alreadyCounted = Boolean(existingPoolId && byId(existingPoolId));
         const isManual = Boolean(existing && !existing.autoPoolId);
         if (isManual) continue;
 
         let selected = existing?.autoPoolId ? byId(existing.autoPoolId) : null;
         if (name === "李萌") selected = mao;
-        if (!selected) {
-          selected = chooseLeastUsed(character, counts);
-          if (selected) counts[selected.id] = (counts[selected.id] || 0) + 1;
-        }
+        if (!selected) selected = chooseLeastUsed(character, counts);
         if (!selected) continue;
+        if (!alreadyCounted) counts[selected.id] = (counts[selected.id] || 0) + 1;
+
         if (!assignmentMatchesModel(existing, selected, "autoPoolId")) {
           assignments[id] = specFromModel(selected, { autoPoolId: selected.id, autoPoolRevision: REVISION });
         }
       }
 
-      // Remove only stale auto-generated entries for characters that were deleted.
+      // Remove only stale auto-generated entries for roles that were deleted.
       for (const [id, assignment] of Object.entries(assignments)) {
         if (!currentIds.has(id) && assignment?.autoPoolId) delete assignments[id];
       }
@@ -189,6 +190,7 @@
     localStorage.setItem(KEYS.assignments, JSON.stringify(assignments));
     await syncAssignments();
     window.UnlimitedCompanionLive2D?.refresh?.();
+    window.UnlimitedCompanionLive2DEmotionEngine?.refresh?.();
     schedule();
     return true;
   }
@@ -215,7 +217,7 @@
         <div class="uai-c-v21-head"><div><strong>角色外观模型</strong><span>每个 AI 伙伴独立分配 Live2D；自动模式会尽量错开模型</span></div><em>V12.21</em></div>
         <div class="uai-c-v21-row"><select data-v21-model aria-label="角色 Live2D 模型"><option value="auto">自动分配</option>${pool.map((item) => `<option value="${item.id}">${item.label}</option>`).join("")}</select><button type="button" data-v21-reassign>重新分配</button></div>
         <div class="uai-c-v21-status" data-v21-status></div>
-        <small>当前模型来自 Live2D 官方 Sample Data Collection；发布/使用时需遵守对应样例素材条款。</small>`;
+        <small>官方 Sample Data Collection 模型；当前角色仍保留模型来源标识，使用时需遵守对应样例素材条款。</small>`;
       const modelBlock = host.querySelector(".uai-c-v17-model");
       if (modelBlock) modelBlock.insertAdjacentElement("beforebegin", panel); else host.appendChild(panel);
       panel.querySelector("[data-v21-model]")?.addEventListener("change", async (event) => {
