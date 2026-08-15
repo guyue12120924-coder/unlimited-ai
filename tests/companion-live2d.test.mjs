@@ -9,8 +9,13 @@ const interaction = read("public/companion-live2d-interaction.js");
 const interactionCss = read("public/companion-live2d-interaction.css");
 const voice = read("public/companion-live2d-voice.js");
 const voiceCss = read("public/companion-live2d-voice.css");
+const neuralVoice = read("public/companion-live2d-neural-voice.js");
+const neuralVoiceCss = read("public/companion-live2d-neural-voice.css");
 const themeLoader = read("public/companion-v12-phase4-themes.js");
 const galaxy = read("public/companion-v12-galaxy.js");
+const wrangler = read("wrangler.toml");
+const workerVoice = read("src/worker-voice.js");
+const tts = read("src/tts.js");
 const config = JSON.parse(read("public/live2d/characters.json"));
 const readme = read("public/live2d/README.md");
 
@@ -67,12 +72,14 @@ assert.match(css, /display:none!important/);
 assert.match(css, /\.uai-c-live2d-credit/);
 assert.match(css, /\.uai-c-live2d-status-note/);
 
-// Presence bridge remains loaded from the scene enhancement chain.
-assert.match(themeLoader, /v12\.14-phase4-live2d-voice/);
+// Presence/voice bridges remain loaded from the scene enhancement chain.
+assert.match(themeLoader, /v12\.15-phase4-neural-voice/);
 assert.match(themeLoader, /companion-live2d-interaction\.css/);
 assert.match(themeLoader, /companion-live2d-interaction\.js/);
 assert.match(themeLoader, /companion-live2d-voice\.css/);
 assert.match(themeLoader, /companion-live2d-voice\.js/);
+assert.match(themeLoader, /companion-live2d-neural-voice\.css/);
+assert.match(themeLoader, /companion-live2d-neural-voice\.js/);
 assert.match(interaction, /v12\.13-live2d-presence/);
 assert.match(interaction, /uai_companion_live2d_presence_v1/);
 assert.match(interaction, /function classifyEmotion\(/);
@@ -95,7 +102,6 @@ assert.match(interaction, /function endVoice\(/);
 assert.match(interaction, /function attachAudioElement\(/);
 assert.match(interaction, /window\.UnlimitedCompanionLive2DInteraction/);
 
-// The relationship thresholds must remain aligned with the existing right-side companion panel.
 for (const marker of [
   "value.days >= 7 && value.messages >= 180 && value.sessions >= 8",
   "value.days >= 3 && value.messages >= 70 && value.sessions >= 4",
@@ -119,8 +125,7 @@ assert.match(interactionCss, /uaiLive2DIdleAura/);
 assert.match(interactionCss, /uaiLive2DBurst/);
 assert.doesNotMatch(interactionCss, /var\(--d[xy]\)\s*\*/);
 
-// V12.14 browser TTS: per-character settings, automatic Chinese voice selection,
-// role-play dialogue extraction, reply auto-speak and real amplitude support for future audio TTS.
+// V12.14 browser TTS stays as a zero-server fallback and audio analyser.
 assert.match(voice, /v12\.14-live2d-voice/);
 assert.match(voice, /uai_companion_voice_v1/);
 assert.match(voice, /SpeechSynthesisUtterance/);
@@ -129,20 +134,46 @@ assert.match(voice, /function chooseVoice\(/);
 assert.match(voice, /function extractSpeechText\(/);
 assert.match(voice, /dialogueOnly/);
 assert.match(voice, /function chunkSpeech\(/);
-assert.match(voice, /function ensureHeaderToggle\(/);
-assert.match(voice, /uaiCompanionVoiceToggle/);
-assert.match(voice, /function ensureSettingsPanel\(/);
-assert.match(voice, /uaiCompanionVoicePanel/);
 assert.match(voice, /function attachAudio\(/);
 assert.match(voice, /createMediaElementSource/);
 assert.match(voice, /createAnalyser/);
 assert.match(voice, /getByteTimeDomainData/);
 assert.match(voice, /setVoiceLevel/);
-assert.match(voice, /uaiCompanionComposerWrap\.generating/);
 assert.match(voice, /window\.UnlimitedCompanionVoice/);
 assert.match(voiceCss, /uai-c-v14-voice-trigger/);
 assert.match(voiceCss, /uai-c-v14-voice-panel/);
-assert.match(voiceCss, /uaiV14VoicePulse/);
+
+// V12.15 neural voice: Cloudflare MP3 first, system fallback, true audio lip sync, stop/replay.
+assert.match(neuralVoice, /v12\.15-neural-voice/);
+assert.match(neuralVoice, /uai_companion_neural_voice_v1/);
+assert.match(neuralVoice, /\/api\/companion\/tts\/status/);
+assert.match(neuralVoice, /fetch\("\/api\/companion\/tts"/);
+assert.match(neuralVoice, /response\.blob\(\)/);
+assert.match(neuralVoice, /new Audio\(url\)/);
+assert.match(neuralVoice, /attachAudio\?\.\(audio/);
+assert.match(neuralVoice, /function replay\(/);
+assert.match(neuralVoice, /function stop\(/);
+assert.match(neuralVoice, /AbortController/);
+assert.match(neuralVoice, /fallbackSystem/);
+assert.match(neuralVoice, /provider: "auto"/);
+assert.match(neuralVoice, /uaiCompanionVoiceReplay/);
+assert.match(neuralVoice, /uaiCompanionVoiceStop/);
+assert.match(neuralVoice, /window\.UnlimitedCompanionNeuralVoice/);
+assert.match(neuralVoiceCss, /uai-c-v15-neural-voice-ready/);
+assert.match(neuralVoiceCss, /uai-c-v15-voice-panel/);
+assert.match(neuralVoiceCss, /data-v15-neural-voice-state="speaking"/);
+
+// Worker binding and endpoint must stay isolated from the stable chat worker.
+assert.match(wrangler, /main = "src\/worker-voice\.js"/);
+assert.match(wrangler, /\[ai\][\s\S]*binding = "AI"/);
+assert.match(workerVoice, /import worker from "\.\/worker\.js"/);
+assert.match(workerVoice, /\/api\/companion\/tts/);
+assert.match(workerVoice, /handleCompanionTts/);
+assert.match(tts, /@cf\/myshell-ai\/melotts/);
+assert.match(tts, /env\.AI\.run/);
+assert.match(tts, /returnRawResponse: true/);
+assert.match(tts, /audio\/mpeg/);
+assert.match(tts, /AI_BINDING_MISSING/);
 
 assert.equal(config.version, 5);
 assert.match(config.defaultModel?.model || "", /^https:\/\/cdn\.jsdelivr\.net\/gh\/Live2D\/CubismWebSamples@/);
@@ -168,7 +199,6 @@ assert.match(readme, /live2dcubismcore\.min\.js/);
 assert.match(readme, /official Live2D `Mao` sample/i);
 assert.match(readme, /official hosted Cubism Core/i);
 assert.match(readme, /setModelForCharacter/);
-
 assert.equal(fs.existsSync("public/live2d/vendor/live2dcubismcore.min.js"), false);
 
-console.log("Companion Live2D contract passed: hosted runtime + presence + browser TTS + future real-audio lip sync.");
+console.log("Companion Live2D contract passed: hosted model + presence + browser fallback + Workers AI neural TTS + true audio lip sync + replay/stop.");
