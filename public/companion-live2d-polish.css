@@ -1,0 +1,38 @@
+/* Companion V12.19 — Live2D diagnostics / lip-sync tuning / barge-in polish. */
+#uaiCompanionRoot .uai-c-v19-interrupt-ready{
+  color:#fff4f8!important;border-color:rgba(255,120,171,.38)!important;
+  background:linear-gradient(135deg,rgba(142,43,91,.68),rgba(101,48,151,.58))!important;
+  box-shadow:0 0 24px rgba(255,85,151,.13),inset 0 1px 0 rgba(255,255,255,.08)!important;
+  animation:uaiV19Interrupt 1.25s ease-in-out infinite alternate;
+}
+#uaiCompanionRoot .uai-c-v17-call-bar[data-state="interrupting"]{
+  border-color:rgba(105,239,209,.30);box-shadow:0 16px 46px rgba(7,4,28,.30),0 0 42px rgba(79,232,201,.13)
+}
+#uaiCompanionRoot .uai-c-v17-call-bar button:disabled{opacity:.48;cursor:default}
+
+#uaiCompanionRoot .uai-c-v19-polish{
+  margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,.075);display:grid;gap:11px
+}
+#uaiCompanionRoot .uai-c-v19-title{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
+#uaiCompanionRoot .uai-c-v19-title>div{display:grid;gap:3px}
+#uaiCompanionRoot .uai-c-v19-title strong{font-size:13px;color:rgba(255,255,255,.94)}
+#uaiCompanionRoot .uai-c-v19-title span{font-size:10px;line-height:1.5;color:rgba(235,226,255,.45)}
+#uaiCompanionRoot .uai-c-v19-title em{font:650 9px/1 ui-monospace,SFMono-Regular,Consolas,monospace;font-style:normal;color:rgba(171,244,225,.65);padding:5px 7px;border-radius:999px;border:1px solid rgba(124,235,207,.14);background:rgba(71,153,137,.10)}
+#uaiCompanionRoot .uai-c-v19-voice-presets{display:flex;flex-wrap:wrap;gap:7px}
+#uaiCompanionRoot .uai-c-v19-voice-presets button,#uaiCompanionRoot .uai-c-v19-actions button{
+  height:30px;padding:0 11px;border:1px solid rgba(211,173,255,.16);border-radius:10px;background:rgba(94,55,148,.25);color:rgba(250,243,255,.82);cursor:pointer
+}
+#uaiCompanionRoot .uai-c-v19-voice-presets button:hover,#uaiCompanionRoot .uai-c-v19-actions button:hover{background:rgba(125,68,181,.38);border-color:rgba(231,192,255,.25);color:#fff}
+#uaiCompanionRoot .uai-c-v19-mouth{display:grid;grid-template-columns:1fr auto;gap:7px;font-size:10px;color:rgba(235,226,255,.52)}
+#uaiCompanionRoot .uai-c-v19-mouth b{font-size:10px;color:rgba(255,225,248,.76)}
+#uaiCompanionRoot .uai-c-v19-mouth input{grid-column:1/-1;width:100%;accent-color:#b56fe9}
+#uaiCompanionRoot .uai-c-v19-actions{display:flex;flex-wrap:wrap;gap:8px}
+#uaiCompanionRoot .uai-c-v19-diagnostic{
+  min-height:34px;padding:9px 11px;border:1px solid rgba(255,255,255,.075);border-radius:11px;background:rgba(8,8,32,.30);
+  font:10px/1.55 ui-monospace,SFMono-Regular,Consolas,monospace;color:rgba(226,218,248,.52);word-break:break-word
+}
+#uaiCompanionRoot .uai-c-v19-diagnostic.ok{border-color:rgba(101,230,197,.17);background:rgba(43,132,111,.09);color:rgba(185,246,226,.68)}
+#uaiCompanionRoot .uai-c-v19-diagnostic.warn{border-color:rgba(255,184,110,.20);background:rgba(145,88,30,.10);color:rgba(255,220,178,.72)}
+
+@keyframes uaiV19Interrupt{from{transform:scale(1);filter:saturate(1)}to{transform:scale(1.045);filter:saturate(1.15)}}
+@media(prefers-reduced-motion:reduce){#uaiCompanionRoot .uai-c-v19-interrupt-ready{animation:none!important}}
