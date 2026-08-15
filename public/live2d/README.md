@@ -33,6 +33,63 @@ public/live2d/characters/limeng/
     ...exp3.json
 ```
 
+## Automatic model adaptation (V12.20)
+
+A newly loaded formal model no longer needs hand-written emotion mappings before it can be used.
+
+After the `.model3.json` model becomes ready, the companion automatically scans:
+
+- Live2D `LipSync` parameter IDs;
+- expression names and expression files;
+- motion groups, motion files and motion counts.
+
+The browser then generates a per-character map for:
+
+```text
+normal
+happy
+shy
+caring
+sad
+angry
+thinking
+```
+
+Semantic names such as `happy`, `smile`, `shy`, `love`, `sad`, `angry` and `thinking` are preferred. Models that use generic names such as `exp_01`, `exp_02`, etc. receive a stable fallback assignment so each emotion still maps to a concrete model expression and motion.
+
+The generated mapping is stored under:
+
+```text
+uai_companion_live2d_emotion_map_v1
+```
+
+Changing the active model changes the model signature, which causes the mapping to rebuild automatically. Therefore, replacing Mao with a formal 李萌 model follows this path automatically:
+
+```text
+load model
+→ detect LipSync parameters
+→ scan expressions and motions
+→ generate emotion mapping
+→ patch setEmotion()
+→ AI replies / calls / welcome reactions use the formal model's own capabilities
+```
+
+In Companion Settings → Live2D interaction calibration, the UI can preview every emotion, rebuild the scan and copy the generated mapping JSON.
+
+## Lip sync
+
+The runtime does not assume every model uses `ParamMouthOpenY`. It first reads the model-declared LipSync group and only falls back to common parameter names when needed.
+
+For the current Mao sample this resolves to:
+
+```text
+ParamA
+```
+
+The mouth value is applied on the model's `beforeModelUpdate` hook so motions, expressions and physics do not immediately overwrite the audio-driven mouth value.
+
+The calibration panel also provides a per-character mouth sensitivity control and a direct `测试张嘴` action.
+
 ## Cubism Core — zero manual setup
 
 This public repository intentionally does **not** commit `live2dcubismcore.min.js`.
@@ -72,7 +129,7 @@ UnlimitedCompanionLive2D.setModelForCharacter(
   "/live2d/characters/example/example.model3.json",
   {
     idleMotionGroup: "Idle",
-    position: { x: 0.74, y: 0.99, height: 0.82 }
+    position: { x: 0.80, y: 1.06, height: 0.98 }
   }
 );
 ```
@@ -89,13 +146,26 @@ Remove an override with:
 UnlimitedCompanionLive2D.clearModelForCharacter("character-id");
 ```
 
-## Runtime API reserved for AI reactions
+## Runtime APIs
+
+Core Live2D:
 
 ```js
 UnlimitedCompanionLive2D.setEmotion("happy");
 UnlimitedCompanionLive2D.setExpression("smile");
 UnlimitedCompanionLive2D.playMotion("Happy");
 UnlimitedCompanionLive2D.setMouthOpen(0.6);
+UnlimitedCompanionLive2D.getLipSyncStatus();
 ```
 
-These calls are best-effort because motion and expression group names depend on the model. Configure model-specific mappings in `characters.json`.
+Adaptive emotion layer:
+
+```js
+UnlimitedCompanionLive2DEmotionEngine.getCapabilities();
+UnlimitedCompanionLive2DEmotionEngine.getMapping();
+UnlimitedCompanionLive2DEmotionEngine.rebuild();
+UnlimitedCompanionLive2DEmotionEngine.previewEmotion("shy");
+UnlimitedCompanionLive2DEmotionEngine.exportMapping();
+```
+
+The adaptive layer patches the public `setEmotion()` path, so the existing AI reply, presence, voice-call and return-greeting logic automatically benefits from the model-specific mapping without rewriting those systems.
