@@ -2,7 +2,7 @@
 (() => {
   if (window.UnlimitedCompanionV123UXHardening) return;
 
-  const REVISION = "2026-08-15-v12.23-ux-hardening-1";
+  const REVISION = "2026-08-15-v12.23-ux-hardening-2";
   const COLLAPSE_KEY = "uai_companion_sidebar_collapsed_v1";
   const IMMERSIVE_KEY = "uai_companion_immersive_v1";
   let scheduled = false;
@@ -33,20 +33,31 @@
     return enabled;
   }
 
+  function syncImmersiveButton(root, enabled) {
+    const button = root?.querySelector("#uaiV11ImmersiveToggle");
+    if (button) {
+      button.classList.toggle("active", enabled);
+      button.setAttribute("aria-pressed", enabled ? "true" : "false");
+      const label = button.querySelector("span");
+      if (label) label.textContent = enabled ? "退出沉浸" : "沉浸";
+    }
+    document.documentElement.dataset.companionImmersive = enabled ? "1" : "0";
+  }
+
   function setImmersive(root, enabled, options = {}) {
     if (!root) return false;
     const next = Boolean(enabled);
+    const changed = root.classList.contains("uai-c-v11-immersive") !== next;
+    if (!options.noStore) localStorage.setItem(IMMERSIVE_KEY, next ? "1" : "0");
+
+    if (!changed) {
+      syncImmersiveButton(root, next);
+      return next;
+    }
+
     root.classList.add("uai-c-v123-layout-switching");
     root.classList.toggle("uai-c-v11-immersive", next);
-    if (!options.noStore) localStorage.setItem(IMMERSIVE_KEY, next ? "1" : "0");
-    const button = root.querySelector("#uaiV11ImmersiveToggle");
-    if (button) {
-      button.classList.toggle("active", next);
-      button.setAttribute("aria-pressed", next ? "true" : "false");
-      const label = button.querySelector("span");
-      if (label) label.textContent = next ? "退出沉浸" : "沉浸";
-    }
-    document.documentElement.dataset.companionImmersive = next ? "1" : "0";
+    syncImmersiveButton(root, next);
     // Two frames are enough for Grid/Live2D ResizeObserver to settle while all
     // old layout transitions are suppressed by the V12.23 CSS.
     requestAnimationFrame(() => requestAnimationFrame(() => {
@@ -140,8 +151,9 @@
     root.classList.add("uai-c-v123-hardened");
     root.dataset.v123UxHardening = REVISION;
     setSidebarCollapsed(root, boolValue(localStorage.getItem(COLLAPSE_KEY)), { noStore: true });
-    // Old V11 modules may re-apply the class from storage. Reconcile button copy
-    // and the class in one place without writing storage on every mutation.
+    // Old V11 modules may re-apply the class from storage. Reconcile only when
+    // there is actual state drift; an ordinary DOM mutation must not cause a
+    // fresh immersive layout cycle.
     setImmersive(root, boolValue(localStorage.getItem(IMMERSIVE_KEY)), { noStore: true });
     syncRoleMenu(root);
     suppressLegacyRenderers(root);
@@ -165,12 +177,13 @@
       return;
     }
 
-    // Disabled legacy controls do not reliably emit click. Pointerdown capture
-    // gives the final neural control a reliable activation path.
+    // Use pointerdown capture so an overlapping legacy layer cannot swallow the
+    // actual neural toggle. The following click is marked and consumed once.
     const voice = event.target.closest?.("#uaiCompanionNeuralVoiceToggle");
     if (voice) {
       event.preventDefault();
       event.stopImmediatePropagation();
+      voice.dataset.v123PointerToggle = "1";
       void toggleVoice(root);
     }
   }
@@ -187,11 +200,12 @@
       return;
     }
 
-    // Prevent the neural toggle's old click listener from firing after the
-    // pointerdown hardening handler already toggled it once.
-    if (event.target.closest?.("#uaiCompanionNeuralVoiceToggle")) {
+    const voice = event.target.closest?.("#uaiCompanionNeuralVoiceToggle");
+    if (voice) {
       event.preventDefault();
       event.stopImmediatePropagation();
+      if (voice.dataset.v123PointerToggle === "1") delete voice.dataset.v123PointerToggle;
+      else void toggleVoice(root); // keyboard / assistive activation
       return;
     }
 
