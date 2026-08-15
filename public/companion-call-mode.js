@@ -2,7 +2,7 @@
 (() => {
   if (window.UnlimitedCompanionCallMode) return;
 
-  const REVISION = "2026-08-15-v12.17-call-mode-2";
+  const REVISION = "2026-08-15-v12.17-call-mode-3";
   const KEY = "uai_companion_call_mode_v1";
   const ACTIVE_KEY = "uai_companion_active_character_v1";
   const MODEL_KEY = "uai_companion_live2d_assignments_v1";
@@ -87,9 +87,9 @@
     merged.autoSend = merged.autoSend !== false;
     merged.autoListen = merged.autoListen !== false;
     merged.playbackRate = Math.max(.84, Math.min(1.16, Number(merged.playbackRate) || .98));
-    merged.modelX = Math.max(.15, Math.min(.90, Number(merged.modelX) || .80));
-    merged.modelY = Math.max(.75, Math.min(1.22, Number(merged.modelY) || 1.06));
-    merged.modelHeight = Math.max(.55, Math.min(1.35, Number(merged.modelHeight) || .98));
+    merged.modelX = Math.max(.48, Math.min(.96, Number(merged.modelX) || .80));
+    merged.modelY = Math.max(.72, Math.min(1.08, Number(merged.modelY) || 1.06));
+    merged.modelHeight = Math.max(.46, Math.min(1.08, Number(merged.modelHeight) || .98));
     return merged;
   }
 
@@ -104,9 +104,9 @@
     next.autoListen = Boolean(next.autoListen);
     next.voiceEnabled = Boolean(next.voiceEnabled);
     next.dialogueOnly = Boolean(next.dialogueOnly);
-    next.modelX = Math.max(.15, Math.min(.90, Number(next.modelX) || .80));
-    next.modelY = Math.max(.75, Math.min(1.22, Number(next.modelY) || 1.06));
-    next.modelHeight = Math.max(.55, Math.min(1.35, Number(next.modelHeight) || .98));
+    next.modelX = Math.max(.48, Math.min(.96, Number(next.modelX) || .80));
+    next.modelY = Math.max(.72, Math.min(1.08, Number(next.modelY) || 1.06));
+    next.modelHeight = Math.max(.46, Math.min(1.08, Number(next.modelHeight) || .98));
     map[id] = next;
     localStorage.setItem(KEY, JSON.stringify(map));
     syncVoiceProfile();
@@ -138,6 +138,8 @@
     originalFetch = window.fetch.bind(window);
     window.fetch = async function uaiCompanionFetch(input, init = {}) {
       let isTts = false;
+      let requestInit = init;
+      let selectedVoice = "";
       try {
         const rawUrl = typeof input === "string" ? input : input?.url;
         const url = new URL(rawUrl, location.href);
@@ -148,20 +150,23 @@
           const settings = getSettings();
           body.engine = settings.voiceEngine === "system" ? "auto" : settings.voiceEngine;
           body.voice_id = settings.voiceId;
-          const response = await originalFetch(input, { ...init, body: JSON.stringify(body) });
-          lastTtsEngine = response.headers.get("x-tts-engine") || "";
-          lastTtsVoice = response.headers.get("x-tts-voice") || settings.voiceId;
-          window.dispatchEvent(new CustomEvent("uai:companion-tts-engine", {
-            detail: { engine: lastTtsEngine, voice: lastTtsVoice, ok: response.ok }
-          }));
-          refreshUi();
-          return response;
+          selectedVoice = settings.voiceId;
+          requestInit = { ...init, body: JSON.stringify(body) };
         }
-      } catch {}
-      const response = await originalFetch(input, init);
+      } catch {
+        // Parsing/enrichment is optional; the original request is still sent exactly once.
+        isTts = false;
+        requestInit = init;
+      }
+
+      const response = await originalFetch(input, requestInit);
       if (isTts) {
         lastTtsEngine = response.headers.get("x-tts-engine") || "";
-        lastTtsVoice = response.headers.get("x-tts-voice") || "";
+        lastTtsVoice = response.headers.get("x-tts-voice") || selectedVoice;
+        window.dispatchEvent(new CustomEvent("uai:companion-tts-engine", {
+          detail: { engine: lastTtsEngine, voice: lastTtsVoice, ok: response.ok }
+        }));
+        refreshUi();
       }
       return response;
     };
@@ -378,9 +383,9 @@
           <div><strong>正式 Live2D 模型</strong><span>填写可访问的 .model3.json 地址；留空继续使用当前默认/官方测试模型</span></div>
           <input id="uaiV17ModelUrl" type="url" placeholder="https://.../character.model3.json 或 /live2d/...model3.json">
           <div class="uai-c-v17-model-sliders">
-            <label>左右 <input id="uaiV17ModelX" type="range" min="0.15" max="0.90" step="0.01"></label>
-            <label>上下 <input id="uaiV17ModelY" type="range" min="0.75" max="1.22" step="0.01"></label>
-            <label>大小 <input id="uaiV17ModelHeight" type="range" min="0.55" max="1.35" step="0.01"></label>
+            <label>左右 <input id="uaiV17ModelX" type="range" min="0.48" max="0.96" step="0.01"></label>
+            <label>上下 <input id="uaiV17ModelY" type="range" min="0.72" max="1.08" step="0.01"></label>
+            <label>大小 <input id="uaiV17ModelHeight" type="range" min="0.46" max="1.08" step="0.01"></label>
           </div>
           <div class="uai-c-v17-actions"><button id="uaiV17ApplyModel" type="button">应用模型</button><button id="uaiV17RestoreModel" type="button">恢复默认</button><small data-model-status></small></div>
         </div>`;
