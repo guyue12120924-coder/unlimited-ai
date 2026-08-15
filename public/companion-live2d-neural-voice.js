@@ -1,6 +1,6 @@
 // Companion V12.15 — Cloudflare neural TTS with true audio-driven Live2D lip sync.
 (() => {
-  const REVISION = "2026-08-15-v12.15-neural-voice-1";
+  const REVISION = "2026-08-15-v12.15-neural-voice-2";
   const KEY = "uai_companion_neural_voice_v1";
   const ACTIVE_KEY = "uai_companion_active_character_v1";
   const DEFAULTS = {
@@ -26,6 +26,7 @@
   let neuralStatus = "unknown";
   let neuralStatusText = "正在检查 Cloudflare 神经语音…";
   let migrated = false;
+  let systemWatchTimer = null;
 
   function liveRoot() {
     if (document.body.dataset.uaiMode !== "companion") return null;
@@ -189,27 +190,32 @@
     playToken += 1;
     abortController?.abort?.();
     abortController = null;
+    if (systemWatchTimer) window.clearInterval(systemWatchTimer);
+    systemWatchTimer = null;
     stopAudioOnly();
     try { baseVoice()?.stop?.({ silent: true }); } catch {}
     try { window.UnlimitedCompanionLive2DInteraction?.endVoice?.(); } catch {}
     setState("");
     if (!options.keepLast) {
-      // Keep the generated blobs for replay; only current playback is stopped.
+      // Generated blobs intentionally remain in memory for instant replay.
     }
   }
 
   function waitForAudio(audio, token) {
     return new Promise((resolve, reject) => {
-      const finish = () => {
+      const cleanup = () => {
         audio.removeEventListener("ended", onEnd);
         audio.removeEventListener("error", onError);
-        resolve();
+        audio.removeEventListener("pause", onPause);
       };
+      const finish = () => { cleanup(); resolve(); };
       const onEnd = () => finish();
-      const onError = () => reject(new Error("Audio playback failed"));
+      const onPause = () => finish();
+      const onError = () => { cleanup(); reject(new Error("Audio playback failed")); };
       audio.addEventListener("ended", onEnd, { once: true });
       audio.addEventListener("error", onError, { once: true });
-      if (token !== playToken) resolve();
+      audio.addEventListener("pause", onPause, { once: true });
+      if (token !== playToken) finish();
     });
   }
 
@@ -242,6 +248,18 @@
     return true;
   }
 
+  function watchSystemSpeech() {
+    if (systemWatchTimer) window.clearInterval(systemWatchTimer);
+    systemWatchTimer = window.setInterval(() => {
+      const synth = window.speechSynthesis;
+      if (!synth?.speaking && !synth?.pending) {
+        window.clearInterval(systemWatchTimer);
+        systemWatchTimer = null;
+        setState("");
+      }
+    }, 220);
+  }
+
   async function speakSystem(text, options = {}) {
     const base = baseVoice();
     if (!base?.speak) return false;
@@ -255,7 +273,8 @@
         dialogueOnly: getSettings().dialogueOnly
       }
     });
-    window.setTimeout(() => setState(""), 900);
+    if (result) watchSystemSpeech();
+    else setState("");
     return result;
   }
 
