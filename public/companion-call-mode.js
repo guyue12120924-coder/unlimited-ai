@@ -2,13 +2,15 @@
 (() => {
   if (window.UnlimitedCompanionCallMode) return;
 
-  const REVISION = "2026-08-15-v12.17-call-mode-1";
+  const REVISION = "2026-08-15-v12.17-call-mode-2";
   const KEY = "uai_companion_call_mode_v1";
   const ACTIVE_KEY = "uai_companion_active_character_v1";
   const MODEL_KEY = "uai_companion_live2d_assignments_v1";
   const DEFAULTS = {
     autoSend: true,
     autoListen: true,
+    voiceEnabled: true,
+    dialogueOnly: true,
     voiceEngine: "auto",
     voiceId: "ara",
     playbackRate: 0.98,
@@ -38,6 +40,8 @@
   let lastVoiceState = "";
   let sawGeneration = false;
   let originalFetch = null;
+  let lastTtsEngine = "";
+  let lastTtsVoice = "";
 
   function liveRoot() {
     if (document.body.dataset.uaiMode !== "companion") return null;
@@ -64,8 +68,7 @@
   function defaultVoiceForCharacter() {
     const relationship = activeCharacter()?.relationship;
     if (relationship === "boyfriend") return "rex";
-    if (relationship === "friend") return "sal";
-    if (relationship === "confidant") return "sal";
+    if (relationship === "friend" || relationship === "confidant") return "sal";
     return "ara";
   }
 
@@ -79,6 +82,10 @@
     const merged = { ...DEFAULTS, voiceId: defaultVoiceForCharacter(), ...(value && typeof value === "object" ? value : {}) };
     if (!ENGINES.has(merged.voiceEngine)) merged.voiceEngine = "auto";
     if (!VOICES.has(merged.voiceId)) merged.voiceId = defaultVoiceForCharacter();
+    merged.voiceEnabled = merged.voiceEnabled !== false;
+    merged.dialogueOnly = merged.dialogueOnly !== false;
+    merged.autoSend = merged.autoSend !== false;
+    merged.autoListen = merged.autoListen !== false;
     merged.playbackRate = Math.max(.84, Math.min(1.16, Number(merged.playbackRate) || .98));
     merged.modelX = Math.max(.15, Math.min(.90, Number(merged.modelX) || .80));
     merged.modelY = Math.max(.75, Math.min(1.22, Number(merged.modelY) || 1.06));
@@ -95,6 +102,8 @@
     next.playbackRate = Math.max(.84, Math.min(1.16, Number(next.playbackRate) || .98));
     next.autoSend = Boolean(next.autoSend);
     next.autoListen = Boolean(next.autoListen);
+    next.voiceEnabled = Boolean(next.voiceEnabled);
+    next.dialogueOnly = Boolean(next.dialogueOnly);
     next.modelX = Math.max(.15, Math.min(.90, Number(next.modelX) || .80));
     next.modelY = Math.max(.75, Math.min(1.22, Number(next.modelY) || 1.06));
     next.modelHeight = Math.max(.55, Math.min(1.35, Number(next.modelHeight) || .98));
@@ -107,31 +116,54 @@
 
   function syncVoiceProfile() {
     const voice = window.UnlimitedCompanionNeuralVoice;
-    if (!voice?.setSettings) return;
+    if (!voice?.setSettings || !voice?.getSettings) return false;
     const settings = getSettings();
-    voice.setSettings({
+    const current = voice.getSettings() || {};
+    const target = {
+      enabled: settings.voiceEnabled,
       provider: settings.voiceEngine === "system" ? "system" : "auto",
-      playbackRate: settings.playbackRate
-    });
+      playbackRate: settings.playbackRate,
+      dialogueOnly: settings.dialogueOnly
+    };
+    const same = Boolean(current.enabled) === Boolean(target.enabled)
+      && String(current.provider || "auto") === target.provider
+      && Math.abs((Number(current.playbackRate) || 1) - target.playbackRate) < .005
+      && Boolean(current.dialogueOnly) === Boolean(target.dialogueOnly);
+    if (!same) voice.setSettings(target);
+    return true;
   }
 
   function installTtsFetchBridge() {
     if (window.__UAI_COMPANION_TTS_FETCH_BRIDGE__) return;
     originalFetch = window.fetch.bind(window);
-    window.fetch = function uaiCompanionFetch(input, init = {}) {
+    window.fetch = async function uaiCompanionFetch(input, init = {}) {
+      let isTts = false;
       try {
         const rawUrl = typeof input === "string" ? input : input?.url;
         const url = new URL(rawUrl, location.href);
         const method = String(init?.method || (typeof input !== "string" ? input?.method : "GET") || "GET").toUpperCase();
-        if (url.origin === location.origin && url.pathname === "/api/companion/tts" && method === "POST" && typeof init.body === "string") {
+        isTts = url.origin === location.origin && url.pathname === "/api/companion/tts" && method === "POST";
+        if (isTts && typeof init.body === "string") {
           const body = JSON.parse(init.body);
           const settings = getSettings();
           body.engine = settings.voiceEngine === "system" ? "auto" : settings.voiceEngine;
           body.voice_id = settings.voiceId;
-          return originalFetch(input, { ...init, body: JSON.stringify(body) });
+          const response = await originalFetch(input, { ...init, body: JSON.stringify(body) });
+          lastTtsEngine = response.headers.get("x-tts-engine") || "";
+          lastTtsVoice = response.headers.get("x-tts-voice") || settings.voiceId;
+          window.dispatchEvent(new CustomEvent("uai:companion-tts-engine", {
+            detail: { engine: lastTtsEngine, voice: lastTtsVoice, ok: response.ok }
+          }));
+          refreshUi();
+          return response;
         }
       } catch {}
-      return originalFetch(input, init);
+      const response = await originalFetch(input, init);
+      if (isTts) {
+        lastTtsEngine = response.headers.get("x-tts-engine") || "";
+        lastTtsVoice = response.headers.get("x-tts-voice") || "";
+      }
+      return response;
     };
     window.__UAI_COMPANION_TTS_FETCH_BRIDGE__ = true;
   }
@@ -142,24 +174,27 @@
     return value && typeof value === "object" ? value : null;
   }
 
+  function lastAssistantBubble(root = liveRoot()) {
+    const rows = root?.querySelectorAll?.("#uaiCompanionMessages .uai-c-message-row.assistant");
+    const row = rows?.length ? rows[rows.length - 1] : null;
+    return String(row?.querySelector?.(".uai-c-bubble")?.textContent || "").trim();
+  }
+
   function setStatus(text, state = "") {
     const root = liveRoot();
     const bar = root?.querySelector("#uaiCompanionCallBar");
     const label = bar?.querySelector("[data-call-status]");
     if (label && label.textContent !== text) label.textContent = text;
-    if (bar) bar.dataset.state = state;
+    if (bar && bar.dataset.state !== state) bar.dataset.state = state;
   }
 
   function formatDuration(ms) {
     const total = Math.max(0, Math.floor(ms / 1000));
-    const minutes = Math.floor(total / 60);
-    const seconds = total % 60;
-    return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+    return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
   }
 
   function updateCallTimer() {
-    const root = liveRoot();
-    const node = root?.querySelector("#uaiCompanionCallBar [data-call-time]");
+    const node = liveRoot()?.querySelector("#uaiCompanionCallBar [data-call-time]");
     if (node && callActive) node.textContent = formatDuration(Date.now() - callStartedAt);
   }
 
@@ -207,13 +242,12 @@
     callActive = true;
     callStartedAt = Date.now();
     sawGeneration = false;
+    saveSettings({ voiceEnabled: true });
     const root = liveRoot();
     if (root) {
       root.dataset.v17CallMode = "active";
       ensureUi(root);
     }
-    syncVoiceProfile();
-    window.UnlimitedCompanionNeuralVoice?.setSettings?.({ enabled: true });
     clearInterval(callTimer);
     callTimer = setInterval(updateCallTimer, 500);
     updateCallTimer();
@@ -291,7 +325,8 @@
       actions.prepend(button);
     }
     button.classList.toggle("active", callActive);
-    button.innerHTML = callActive ? `<span>☎</span><b>通话中</b>` : `<span>☎</span><b>通话</b>`;
+    const desired = callActive ? `<span>☎</span><b>通话中</b>` : `<span>☎</span><b>通话</b>`;
+    if (button.innerHTML !== desired) button.innerHTML = desired;
   }
 
   function ensureCallBar(root) {
@@ -313,7 +348,8 @@
       main.appendChild(bar);
     }
     const name = bar.querySelector("[data-call-name]");
-    if (name) name.textContent = `正在和 ${activeCharacter()?.name || "她"} 通话`;
+    const copy = `正在和 ${activeCharacter()?.name || "她"} 通话`;
+    if (name && name.textContent !== copy) name.textContent = copy;
     bar.hidden = !callActive;
   }
 
@@ -330,13 +366,14 @@
       panel.className = "uai-c-v17-panel";
       panel.innerHTML = `
         <div class="uai-c-v17-panel-head"><div><strong>语音通话与角色声线</strong><span>Hands-free 通话；声线和模型按当前角色独立保存</span></div></div>
+        <div class="uai-c-v17-checks"><label><input id="uaiV17VoiceEnabled" type="checkbox">自动朗读角色回复</label><label><input id="uaiV17DialogueOnly" type="checkbox">只朗读角色真正说出口的台词</label></div>
         <div class="uai-c-v17-grid">
           <label>语音引擎<select id="uaiV17Engine"><option value="auto">自动 · Grok → Melo</option><option value="grok">Grok 多声线</option><option value="melo">MeloTTS</option><option value="system">浏览器系统语音</option></select></label>
           <label>角色声线<select id="uaiV17Voice">${Object.entries(VOICE_LABELS).map(([id,label]) => `<option value="${id}">${label}</option>`).join("")}</select></label>
           <label class="range">语速 <b id="uaiV17RateLabel">0.98×</b><input id="uaiV17Rate" type="range" min="0.84" max="1.16" step="0.02"></label>
         </div>
         <div class="uai-c-v17-checks"><label><input id="uaiV17AutoSend" type="checkbox">语音识别后自动发送</label><label><input id="uaiV17AutoListen" type="checkbox">对方说完后自动继续听我说</label></div>
-        <div class="uai-c-v17-actions"><button id="uaiV17Preview" type="button">试听当前声线</button><small>Grok TTS 支持独立 voice；若不可用会自动降级到 MeloTTS / 系统语音。</small></div>
+        <div class="uai-c-v17-actions"><button id="uaiV17Preview" type="button">试听当前声线</button><small data-voice-status>Grok 支持独立 voice；不可用时自动降级到 MeloTTS / 系统语音。</small></div>
         <div class="uai-c-v17-model">
           <div><strong>正式 Live2D 模型</strong><span>填写可访问的 .model3.json 地址；留空继续使用当前默认/官方测试模型</span></div>
           <input id="uaiV17ModelUrl" type="url" placeholder="https://.../character.model3.json 或 /live2d/...model3.json">
@@ -349,13 +386,15 @@
         </div>`;
       const anchor = modal.querySelector("#uaiCompanionV15VoicePanel") || reply.closest(".uai-c-field");
       anchor?.insertAdjacentElement("afterend", panel);
+      panel.querySelector("#uaiV17VoiceEnabled")?.addEventListener("change", (event) => saveSettings({ voiceEnabled: event.target.checked }));
+      panel.querySelector("#uaiV17DialogueOnly")?.addEventListener("change", (event) => saveSettings({ dialogueOnly: event.target.checked }));
       panel.querySelector("#uaiV17Engine")?.addEventListener("change", (event) => saveSettings({ voiceEngine: event.target.value }));
       panel.querySelector("#uaiV17Voice")?.addEventListener("change", (event) => saveSettings({ voiceId: event.target.value }));
       panel.querySelector("#uaiV17Rate")?.addEventListener("input", (event) => saveSettings({ playbackRate: Number(event.target.value) }));
       panel.querySelector("#uaiV17AutoSend")?.addEventListener("change", (event) => saveSettings({ autoSend: event.target.checked }));
       panel.querySelector("#uaiV17AutoListen")?.addEventListener("change", (event) => saveSettings({ autoListen: event.target.checked }));
       panel.querySelector("#uaiV17Preview")?.addEventListener("click", () => {
-        syncVoiceProfile();
+        saveSettings({ voiceEnabled: true });
         window.UnlimitedCompanionNeuralVoice?.speak?.("晚上好呀，我在这里。以后就用这个声音陪你聊天，好不好？", { force: true, preview: true });
       });
       panel.querySelector("#uaiV17ApplyModel")?.addEventListener("click", () => applyModelFromPanel(panel));
@@ -368,20 +407,32 @@
     if (!panel) return;
     const settings = getSettings();
     const assignment = currentModelAssignment();
-    const setValue = (selector, value) => { const node = panel.querySelector(selector); if (node && String(node.value) !== String(value)) node.value = String(value); };
+    const setValue = (selector, value) => {
+      const node = panel.querySelector(selector);
+      if (node && String(node.value) !== String(value)) node.value = String(value);
+    };
     setValue("#uaiV17Engine", settings.voiceEngine);
     setValue("#uaiV17Voice", settings.voiceId);
     setValue("#uaiV17Rate", settings.playbackRate);
     const rateLabel = panel.querySelector("#uaiV17RateLabel");
     if (rateLabel) rateLabel.textContent = `${settings.playbackRate.toFixed(2)}×`;
+    const voiceEnabled = panel.querySelector("#uaiV17VoiceEnabled");
+    const dialogueOnly = panel.querySelector("#uaiV17DialogueOnly");
     const autoSend = panel.querySelector("#uaiV17AutoSend");
     const autoListen = panel.querySelector("#uaiV17AutoListen");
+    if (voiceEnabled) voiceEnabled.checked = settings.voiceEnabled;
+    if (dialogueOnly) dialogueOnly.checked = settings.dialogueOnly;
     if (autoSend) autoSend.checked = settings.autoSend;
     if (autoListen) autoListen.checked = settings.autoListen;
     setValue("#uaiV17ModelUrl", assignment?.model || "");
     setValue("#uaiV17ModelX", assignment?.position?.x ?? settings.modelX);
     setValue("#uaiV17ModelY", assignment?.position?.y ?? settings.modelY);
     setValue("#uaiV17ModelHeight", assignment?.position?.height ?? settings.modelHeight);
+    const voiceStatus = panel.querySelector("[data-voice-status]");
+    if (voiceStatus) {
+      const engineLabel = lastTtsEngine ? (lastTtsEngine === "grok" ? `Grok · ${VOICE_LABELS[lastTtsVoice] || lastTtsVoice}` : "MeloTTS") : "尚未实际生成语音";
+      voiceStatus.textContent = `当前输出：${engineLabel}。Grok 不可用时会自动降级。`;
+    }
   }
 
   function ensureUi(root) {
@@ -408,6 +459,12 @@
     const generating = Boolean(root.querySelector("#uaiCompanionComposerWrap.generating"));
     const voiceState = root.dataset.v15NeuralVoiceState || "";
 
+    // When playback really starts, refresh the Live2D expression/motion from the spoken reply.
+    if (["speaking", "preview"].includes(voiceState) && !["speaking", "preview"].includes(lastVoiceState) && voiceState !== "preview") {
+      const text = lastAssistantBubble(root);
+      if (text) window.UnlimitedCompanionLive2DInteraction?.reactToText?.(text);
+    }
+
     if (callActive) {
       if (generating) {
         sawGeneration = true;
@@ -426,14 +483,8 @@
         if (!sendRecognizedText()) setStatus("已经转成文字，确认后发送", "ready");
       }
 
-      if (lastGenerating && !generating && sawGeneration) {
-        // V12.15 starts TTS about 180ms after generation ends. Wait beyond that
-        // before deciding that this turn has no spoken reply.
-        startListeningSoon(1350);
-      }
-      if (["speaking", "preview", "loading"].includes(lastVoiceState) && !voiceState && !generating) {
-        startListeningSoon(700);
-      }
+      if (lastGenerating && !generating && sawGeneration) startListeningSoon(1350);
+      if (["speaking", "preview", "loading"].includes(lastVoiceState) && !voiceState && !generating) startListeningSoon(700);
     }
 
     lastMicState = micState;
@@ -476,6 +527,7 @@
     window.addEventListener("storage", (event) => {
       if ([ACTIVE_KEY, KEY, MODEL_KEY].includes(event.key)) schedule();
     });
+    window.addEventListener("uai:companion-tts-engine", schedule);
     document.addEventListener("visibilitychange", () => {
       if (document.hidden && callActive) endCall();
       else schedule();
