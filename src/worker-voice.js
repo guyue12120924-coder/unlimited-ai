@@ -2,7 +2,7 @@ import worker from "./worker.js";
 import { handleCompanionTts } from "./tts.js";
 import { handleCompanionStt } from "./stt.js";
 
-const REVISION = "2026-08-15-v12.16-voice-conversation-1";
+const REVISION = "2026-08-15-v12.17-call-voice-1";
 
 function sameSiteRequest(request) {
   const url = new URL(request.url);
@@ -25,8 +25,11 @@ function forbidden() {
 function statusResponse(env) {
   return new Response(JSON.stringify({
     available: Boolean(env.AI && typeof env.AI.run === "function"),
-    provider: "Cloudflare Workers AI",
-    ttsModel: "@cf/myshell-ai/melotts",
+    provider: "Cloudflare AI",
+    ttsEngines: [
+      { id: "grok", model: "xai/grok-tts", voices: ["ara", "eve", "sal", "rex", "leo"] },
+      { id: "melo", model: "@cf/myshell-ai/melotts", voices: [] }
+    ],
     sttModel: "@cf/openai/whisper-large-v3-turbo",
     revision: REVISION
   }), {
