@@ -2,7 +2,7 @@
 (() => {
   if (window.UnlimitedCompanionV123UXHardening) return;
 
-  const REVISION = "2026-08-15-v12.23-ux-hardening-3";
+  const REVISION = "2026-08-15-v12.23-ux-hardening-2";
   const COLLAPSE_KEY = "uai_companion_sidebar_collapsed_v1";
   const IMMERSIVE_KEY = "uai_companion_immersive_v1";
   let scheduled = false;
