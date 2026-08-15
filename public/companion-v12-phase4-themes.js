@@ -1,6 +1,6 @@
-// Companion V12.7/12.13 phase 4 — lightweight scene theme renderer + scene state + Live2D presence loader.
+// Companion V12.7/12.14 phase 4 — lightweight scene themes + Live2D presence/voice loaders.
 (() => {
-  const REVISION = "2026-08-15-v12.13-phase4-live2d-presence-1";
+  const REVISION = "2026-08-15-v12.14-phase4-live2d-voice-1";
   const THEMES = ["galaxy", "sakura", "moonlight", "neon"];
   const LABELS = {
     galaxy: "星河梦境",
@@ -33,9 +33,12 @@
   function loadPhase5SceneState() {
     ensureStyle(`/companion-v12-phase5-scene-state.css?v=${encodeURIComponent(REVISION)}`, "uaiCompanionV12Phase5SceneStateCss");
     ensureScript(`/companion-v12-phase5-scene-state.js?v=${encodeURIComponent(REVISION)}`, "uaiCompanionV12Phase5SceneStateScript");
-    // V12.13: presence layer stays isolated from the stable chat/runtime core.
+    // Presence/reaction bridge stays isolated from the stable chat/runtime core.
     ensureStyle(`/companion-live2d-interaction.css?v=${encodeURIComponent(REVISION)}`, "uaiCompanionLive2dInteractionCss");
     ensureScript(`/companion-live2d-interaction.js?v=${encodeURIComponent(REVISION)}`, "uaiCompanionLive2dInteractionScript");
+    // V12.14: zero-server browser TTS + future real-audio amplitude bridge.
+    ensureStyle(`/companion-live2d-voice.css?v=${encodeURIComponent(REVISION)}`, "uaiCompanionLive2dVoiceCss");
+    ensureScript(`/companion-live2d-voice.js?v=${encodeURIComponent(REVISION)}`, "uaiCompanionLive2dVoiceScript");
   }
 
   function getRoot() {
