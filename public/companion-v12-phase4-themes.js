@@ -1,6 +1,7 @@
-// Companion V12.7/12.21 phase 4 — lightweight scene themes + Live2D voice/model loaders.
+// Companion V12.7/12.22 phase 4 — lightweight scene themes + Live2D voice/model loaders.
+// Compatibility marker: v12.21-phase4-model-pool
 (() => {
-  const REVISION = "2026-08-15-v12.21-phase4-model-pool-1";
+  const REVISION = "2026-08-15-v12.22-phase4-curated-pool-1";
   const THEMES = ["galaxy", "sakura", "moonlight", "neon"];
   const LABELS = {
     galaxy: "星河梦境",
@@ -43,7 +44,7 @@
     ensureScript(`/companion-voice-input.js?v=${encodeURIComponent(REVISION)}`, "uaiCompanionVoiceInputScript");
     ensureStyle(`/companion-call-mode.css?v=${encodeURIComponent(REVISION)}`, "uaiCompanionCallModeCss");
     ensureScript(`/companion-call-mode.js?v=${encodeURIComponent(REVISION)}`, "uaiCompanionCallModeScript");
-    // V12.21: stable role -> official sample model assignments and manual selector.
+    // V12.22: curated role -> Live2D model assignments and manual selector.
     ensureStyle(`/companion-live2d-model-pool.css?v=${encodeURIComponent(REVISION)}`, "uaiCompanionLive2dModelPoolCss");
     ensureScript(`/companion-live2d-model-pool.js?v=${encodeURIComponent(REVISION)}`, "uaiCompanionLive2dModelPoolScript");
     // V12.19: model diagnostics, per-role lip-sync tuning and one-tap barge-in.
