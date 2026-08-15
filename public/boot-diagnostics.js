@@ -1,8 +1,8 @@
 // public/boot-diagnostics.js
 // Startup guard + dual-mode bootstrap.
 (() => {
-  const REVISION = "2026-08-15-v12.21-live2d-model-pool-1";
-  // Compatibility markers: v12.20 emotion / v12.19 diagnostics / v12.18 lip sync / v12.17 call mode.
+  const REVISION = "2026-08-15-v12.22-curated-live2d-pool-1";
+  // Compatibility markers: v12.21-live2d-model-pool / v12.20 emotion / v12.19 diagnostics / v12.18 lip sync / v12.17 call mode.
   const errors = [];
 
   document.documentElement.dataset.frontendRevision = REVISION;
