@@ -25,10 +25,11 @@ const stt = read("src/stt.js");
 const config = JSON.parse(read("public/live2d/characters.json"));
 const readme = read("public/live2d/README.md");
 
-// V12.17 must be visible from the top boot/cache chain without tying tests to a patch number.
-assert.match(index, /2026-08-15-v12\.17-call-mode-\d+/);
-assert.match(index, /boot-diagnostics\.js\?v=20260815-v12\.17-call-mode-\d+/);
-assert.match(boot, /v12\.17-call-mode/);
+// V12.18 must be visible from the top boot/cache chain so the browser cannot
+// keep the pre-fix Live2D runtime after a Cloudflare deployment.
+assert.match(index, /2026-08-15-v12\.18-live2d-lipsync-\d+/);
+assert.match(index, /boot-diagnostics\.js\?v=20260815-v12\.18-live2d-lipsync-\d+/);
+assert.match(boot, /v12\.18-live2d-lipsync/);
 for (const asset of [
   "companion-live2d.css",
   "companion-live2d.js",
@@ -47,7 +48,8 @@ assert.match(boot, /companionNeuralVoiceReady/);
 assert.match(boot, /companionVoiceInputReady/);
 assert.match(boot, /companionCallModeReady/);
 
-// Stable Live2D runtime contract.
+// Stable Live2D runtime contract + V12.18 model-aware lip sync.
+assert.match(runtime, /v12\.18-live2d-lipsync/);
 assert.match(runtime, /v12\.11-live2d-hosted-core/);
 assert.match(runtime, /uai_companion_live2d_assignments_v1/);
 assert.match(runtime, /pixi\.js@6\.5\.10/);
@@ -68,6 +70,18 @@ assert.ok(
 for (const api of ["setEmotion", "setExpression", "playMotion", "setMouthOpen", "setModelForCharacter", "clearModelForCharacter"]) {
   assert.match(runtime, new RegExp(api));
 }
+assert.match(runtime, /function resolveLipSyncIds\(/);
+assert.match(runtime, /motionManager\?\.lipSyncIds/);
+assert.match(runtime, /getLipSyncParameters/);
+assert.match(runtime, /ParamMouthOpenY/);
+assert.match(runtime, /ParamA/);
+assert.match(runtime, /function bindMouthDriver\(/);
+assert.match(runtime, /function unbindMouthDriver\(/);
+assert.match(runtime, /beforeModelUpdate/);
+assert.match(runtime, /function applyMouthFrame\(/);
+assert.match(runtime, /mouthTarget/);
+assert.match(runtime, /mouthValue/);
+assert.match(runtime, /getLipSyncStatus/);
 assert.match(runtime, /ticker\?\.stop/);
 assert.match(runtime, /ticker\?\.start/);
 assert.match(runtime, /window\.UnlimitedCompanionLive2D/);
@@ -273,4 +287,4 @@ assert.match(readme, /official Live2D `Mao` sample/i);
 assert.match(readme, /official hosted Cubism Core/i);
 assert.equal(fs.existsSync("public/live2d/vendor/live2dcubismcore.min.js"), false);
 
-console.log("Companion Live2D contract passed: Live2D + presence + Grok/Melo voices + real lip sync + Whisper + hands-free call + model swap.");
+console.log("Companion Live2D contract passed: model-aware lip sync + presence + Grok/Melo voices + Whisper + hands-free call + model swap.");
