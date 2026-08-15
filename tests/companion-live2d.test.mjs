@@ -29,10 +29,10 @@ const stt = read("src/stt.js");
 const config = JSON.parse(read("public/live2d/characters.json"));
 const readme = read("public/live2d/README.md");
 
-// V12.21 must be browser-visible and directly boot the model-pool + final Live2D layers.
-assert.match(index, /2026-08-15-v12\.21-live2d-model-pool-\d+/);
-assert.match(index, /boot-diagnostics\.js\?v=20260815-v12\.21-live2d-model-pool-\d+/);
-assert.match(boot, /v12\.21-live2d-model-pool/);
+// V12.22 must be browser-visible and directly boot the curated pool + final Live2D layers.
+assert.match(index, /2026-08-15-v12\.22-curated-live2d-pool-\d+/);
+assert.match(index, /boot-diagnostics\.js\?v=20260815-v12\.22-curated-live2d-pool-\d+/);
+assert.match(boot, /v12\.22-curated-live2d-pool/);
 for (const asset of [
   "companion-live2d.css","companion-live2d.js","companion-live2d-voice.css","companion-live2d-voice.js",
   "companion-live2d-neural-voice.css","companion-live2d-neural-voice.js","companion-voice-input.css","companion-voice-input.js",
@@ -43,7 +43,7 @@ assert.match(boot, /companionLive2dModelPoolReady/);
 assert.match(boot, /companionLive2dEmotionReady/);
 assert.match(boot, /companionLive2dPolishReady/);
 
-// Stable Live2D runtime + model-aware V12.18 lip sync.
+// Stable Live2D runtime + model-aware V12.18 lip sync, including legacy uppercase Cubism parameter IDs.
 assert.match(runtime, /v12\.18-live2d-lipsync/);
 assert.match(runtime, /pixi-live2d-display@0\.4\.0/);
 assert.match(runtime, /function resolveLipSyncIds\(/);
@@ -51,6 +51,7 @@ assert.match(runtime, /motionManager\?\.lipSyncIds/);
 assert.match(runtime, /getLipSyncParameters/);
 assert.match(runtime, /ParamMouthOpenY/);
 assert.match(runtime, /ParamA/);
+assert.match(runtime, /PARAM_MOUTH_OPEN_Y/);
 assert.match(runtime, /beforeModelUpdate/);
 assert.match(runtime, /function applyMouthFrame\(/);
 assert.match(runtime, /getLipSyncStatus/);
@@ -94,11 +95,13 @@ for (const voiceId of ["ara","eve","sal","rex","leo"]) assert.ok(callMode.includ
 assert.match(callMode, /setModelForCharacter/);
 assert.match(callModeCss, /uai-c-v17-call-bar/);
 
-// V12.21 assigns a stable official model to every role and preserves explicit manual choices.
-assert.match(modelPool, /v12\.21-live2d-model-pool-2/);
+// V12.22 curated model pool: exact user selection, stable automatic allocation, Haru retirement migration.
+assert.match(modelPool, /v12\.22-curated-live2d-pool-1/);
 assert.match(modelPool, /\/live2d\/model-pool\.json/);
 assert.match(modelPool, /uai_companion_characters_v1/);
 assert.match(modelPool, /uai_companion_live2d_assignments_v1/);
+assert.match(modelPool, /function automaticPool\(/);
+assert.match(modelPool, /autoEligible/);
 assert.match(modelPool, /function chooseLeastUsed\(/);
 assert.match(modelPool, /const alreadyCounted/);
 assert.match(modelPool, /counts\[selected\.id\]/);
@@ -106,33 +109,48 @@ assert.match(modelPool, /name === "李萌"/);
 assert.match(modelPool, /selected = mao/);
 assert.match(modelPool, /autoPoolId/);
 assert.match(modelPool, /poolManualId/);
-assert.match(modelPool, /const isManual = Boolean\(existing && !existing\.autoPoolId\)/);
+assert.match(modelPool, /function migrateRetiredAssignments\(/);
+assert.match(modelPool, /HARU_URL/);
+assert.match(modelPool, /poolManualId === "haru"/);
+assert.match(modelPool, /poolManualId: "shizuku"/);
+assert.match(modelPool, /migratedFrom: "haru"/);
 assert.match(modelPool, /function setManualModel\(/);
 assert.match(modelPool, /function setAuto\(/);
 assert.match(modelPool, /UnlimitedCompanionLive2D\?\.refresh/);
 assert.match(modelPool, /UnlimitedCompanionLive2DEmotionEngine\?\.refresh/);
 assert.match(modelPool, /uaiCompanionV21ModelPoolPanel/);
 assert.match(modelPool, /data-v21-model/);
+assert.match(modelPool, /当前精选 8 个 Live2D/);
 assert.match(modelPool, /window\.UnlimitedCompanionLive2DModelPool/);
 assert.match(modelPoolCss, /uai-c-v21-model-pool/);
 assert.match(modelPoolCss, /uai-c-v21-status/);
 
-assert.equal(poolConfig.version, 1);
-assert.equal(poolConfig.source?.repository, "Live2D/CubismWebSamples");
-assert.equal(poolConfig.source?.commit, "b1de66b0b1f1cb881d95fb6158622aeb6a2827bd");
-assert.ok(poolConfig.models.length >= 4, "model pool should provide multiple distinct character appearances");
+assert.equal(poolConfig.version, 2);
+assert.equal(poolConfig.models.length, 8, "curated pool must contain exactly eight selected appearances");
+const expectedIds = ["mao","shizuku","hiyori","rice","miara","epsilon","hibiki","tsumiki"];
+assert.deepEqual(poolConfig.models.map((item) => item.id), expectedIds);
+assert.deepEqual(poolConfig.models.map((item) => item.catalogNo), [1,6,3,4,5,7,9,10]);
 const poolIds = new Set(poolConfig.models.map((item) => item.id));
-for (const id of ["mao","haru","hiyori","rice"]) assert.ok(poolIds.has(id), `model pool is missing ${id}`);
+for (const retired of ["haru","izumi","miku","hatsune-miku","unitychan","unity-chan"]) {
+  assert.equal(poolIds.has(retired), false, `retired candidate must not remain in pool: ${retired}`);
+}
 for (const item of poolConfig.models) {
-  assert.match(item.model, /^https:\/\/cdn\.jsdelivr\.net\/gh\/Live2D\/CubismWebSamples@b1de66b0b1f1cb881d95fb6158622aeb6a2827bd\/Samples\/Resources\//);
+  assert.match(item.model, /^https:\/\/cdn\.jsdelivr\.net\/gh\//);
   assert.match(item.model, /\.model3\.json$/);
-  assert.equal(item.sample?.owner, "Live2D Inc.");
+  assert.match(String(item.sample?.owner || ""), /Live2D Inc\./);
   assert.ok(item.position?.height > 0);
 }
 assert.match(poolConfig.models.find((item) => item.id === "mao")?.model || "", /\/Mao\/Mao\.model3\.json$/);
-assert.match(poolConfig.models.find((item) => item.id === "haru")?.model || "", /\/Haru\/Haru\.model3\.json$/);
+assert.match(poolConfig.models.find((item) => item.id === "shizuku")?.model || "", /\/shizuku\/shizuku\.model3\.json$/);
 assert.match(poolConfig.models.find((item) => item.id === "hiyori")?.model || "", /\/Hiyori\/Hiyori\.model3\.json$/);
 assert.match(poolConfig.models.find((item) => item.id === "rice")?.model || "", /\/Rice\/Rice\.model3\.json$/);
+assert.match(poolConfig.models.find((item) => item.id === "miara")?.model || "", /\/miara\/miara_pro_t04\.model3\.json$/);
+assert.match(poolConfig.models.find((item) => item.id === "epsilon")?.model || "", /\/epsilon\/Epsilon\.model3\.json$/);
+assert.match(poolConfig.models.find((item) => item.id === "hibiki")?.model || "", /\/hibiki\/hibiki\.model3\.json$/);
+assert.match(poolConfig.models.find((item) => item.id === "tsumiki")?.model || "", /\/tsumiki\/tsumiki\.model3\.json$/);
+assert.equal(poolConfig.models.find((item) => item.id === "shizuku")?.autoEligible, false);
+assert.equal(poolConfig.models.find((item) => item.id === "tsumiki")?.autoEligible, false);
+assert.equal(poolConfig.models.filter((item) => item.autoEligible !== false).length, 6, "six normal auto slots should cover the six-character product limit");
 
 // V12.19 diagnostics / barge-in / per-role mouth tuning.
 assert.match(polish, /v12\.19-live2d-polish/);
@@ -177,7 +195,7 @@ assert.match(emotion, /window\.UnlimitedCompanionLive2DEmotionEngine/);
 assert.match(emotionCss, /uai-c-v20-emotion-panel/);
 assert.match(emotionCss, /data-v120-emotion-mapped="happy"/);
 
-// Deep loader also carries the model pool and final diagnostics/emotion layers as a fallback.
+// Deep loader still carries the model pool and final diagnostics/emotion layers as a fallback.
 assert.match(themeLoader, /v12\.21-phase4-model-pool/);
 for (const asset of [
   "companion-live2d-model-pool.css","companion-live2d-model-pool.js",
@@ -194,7 +212,7 @@ assert.match(tts, /@cf\/myshell-ai\/melotts/);
 assert.match(stt, /@cf\/openai\/whisper-large-v3-turbo/);
 assert.match(stt, /vad_filter: true/);
 
-// Existing base config remains a safe Mao fallback; V12.21 supplies per-role local assignments above it.
+// Existing base config remains a safe Mao fallback; V12.22 supplies curated per-role assignments above it.
 assert.equal(config.version, 5);
 assert.match(config.defaultModel?.model || "", /\/Samples\/Resources\/Mao\/Mao\.model3\.json$/);
 assert.equal(config.defaultModel?.sample?.name, "Mao");
@@ -203,4 +221,4 @@ assert.ok(config.byName?.["李萌"]?.fallback, "Li Meng base config must retain 
 assert.match(readme, /model pool/i);
 assert.equal(fs.existsSync("public/live2d/vendor/live2dcubismcore.min.js"), false);
 
-console.log("Companion Live2D contract passed: stable role model pool + adaptive lip sync/emotions + diagnostics + barge-in + voice call.");
+console.log("Companion Live2D contract passed: curated eight-model pool + Haru migration + adaptive lip sync/emotions + diagnostics + voice call.");
