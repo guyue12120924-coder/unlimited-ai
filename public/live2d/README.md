@@ -2,65 +2,86 @@
 
 The companion chat supports Cubism 3/4 `.model3.json` models through the browser Live2D stage.
 
-## V12.21 automatic model pool
+## V12.22 curated model pool
 
-Companion roles no longer all share the same Live2D appearance by default. The browser loads the pool definition from:
+The model pool is defined at:
 
 ```text
 /public/live2d/model-pool.json
 ```
 
-The first verified pool uses runtime files from the official `Live2D/CubismWebSamples` repository pinned to one upstream commit:
+The current curated selection follows the user-approved catalog order:
 
 ```text
-Mao
-Haru
-Hiyori Momose
-Rice Glassfield
+#1  Mao
+#6  Shizuku        (replaces the former Haru slot)
+#3  Hiyori Momose
+#4  Rice Glassfield
+#5  Miara
+#7  Epsilon
+#9  Hibiki
+#10 Tsumiki Harugasa
 ```
 
-The assignment layer is `public/companion-live2d-model-pool.js`.
+Removed / rejected models are intentionally not part of the pool:
+
+```text
+Haru
+Izumi
+Hatsune Miku
+Unity-chan
+```
+
+`public/companion-live2d-model-pool.js` manages per-character assignments.
 
 Behavior:
 
-- `李萌` keeps Mao automatically, because Mao is the appearance already used by the current companion UI.
-- Other roles are assigned the least-used pool model, with a stable role-id hash used to break ties.
-- With up to the number of unique models in the pool, automatic assignment tries to avoid duplicate appearances.
-- If there are more roles than models, models are reused in balanced order.
-- Automatic assignments are persisted in `uai_companion_live2d_assignments_v1`, so a refresh does not randomly change a role's appearance.
-- A user-selected pool model or custom `.model3.json` URL is treated as manual and is never overwritten by automatic assignment.
-- Deleting a role removes only its stale auto-generated pool assignment.
-- Changing a role's model refreshes the Live2D runtime and the V12.20 emotion scanner, so lip sync / expressions / motions are rebuilt for the newly selected model.
+- `李萌` keeps Mao automatically unless the user explicitly chooses another model.
+- Normal automatic assignment uses the least-used eligible model and a stable role-id hash to break ties.
+- Six normal automatic models are available, matching the product's six-character limit, so automatic roles can remain visually distinct.
+- Automatic assignments persist in `uai_companion_live2d_assignments_v1`; refreshing the page does not randomly change faces.
+- A manually selected pool model or custom `.model3.json` URL is never overwritten by automatic assignment.
+- Switching models refreshes both the Live2D runtime and the V12.20 emotion scanner so lip sync, expressions and motions adapt to the new model.
+- Old V12.21 Haru assignments are migrated. An explicit/manual Haru choice becomes Shizuku, as requested. An old automatic Haru assignment returns to automatic allocation instead of silently assigning a special-terms character to an arbitrary renamed role.
 
-Companion Settings → `角色外观模型` provides an `自动分配` option plus a manual model selector. The pool runtime API is also available:
+Companion Settings → `角色外观模型` provides automatic allocation plus all eight manual choices.
 
 ```js
 UnlimitedCompanionLive2DModelPool.getModels();
 UnlimitedCompanionLive2DModelPool.getCurrent();
-UnlimitedCompanionLive2DModelPool.setModel(characterId, "haru");
+UnlimitedCompanionLive2DModelPool.setModel(characterId, "epsilon");
 UnlimitedCompanionLive2DModelPool.setAuto(characterId);
 UnlimitedCompanionLive2DModelPool.sync();
 ```
 
-### Sample-data notice
+### Runtime sources
 
-The pool deliberately uses models from Live2D's official Sample Data Collection rather than random extracted game/VTuber assets. These models remain Live2D sample material and are subject to the Live2D Free Material License Agreement, Live2D Cubism Sample Data Terms of Use, and any model-specific conditions.
+Mao, Hiyori and Rice use runtime assets pinned from `Live2D/CubismWebSamples`.
 
-Do not assume that an official sample model is unrestricted character art. Before public/commercial deployment, review the current terms for the exact model and intended content. Keep the on-screen sample source/identity notice enabled.
+Shizuku, Miara, Epsilon, Hibiki and Tsumiki use a pinned public GitHub mirror of the official Live2D sample packages. The model URLs are pinned to a commit so upstream changes do not silently alter the application.
+
+### Sample-data and character terms
+
+These are sample characters, not unrestricted original assets owned by this project. Keep the source notice enabled and review the current Live2D Free Material License, Cubism Sample Data Terms, and any character-specific terms before public/commercial deployment.
+
+Two entries are deliberately excluded from automatic assignment:
+
+- **Shizuku** — her model-specific conditions require keeping the Shizuku name/settings, so she is a manual choice rather than being silently assigned to a differently named AI role.
+- **Tsumiki Harugasa** — a collaboration-character sample with stricter use conditions, so she is also manual-only.
+
+Hiyori and Miara also have model-specific character-design restrictions; the project uses their exported runtime appearance without modifying the character design.
 
 ## Base / fallback behavior
 
-The base configuration still contains the local formal-model path for 李萌:
+The base configuration still contains the optional local-model path for 李萌:
 
 ```text
 /live2d/characters/limeng/limeng.model3.json
 ```
 
-If no V12.21 local pool/manual assignment exists, the runtime follows the normal resolution order from `characters.json` and ultimately falls back to official Mao. V12.21 normally creates a local Mao pool assignment for 李萌 first, so her existing appearance is preserved without requiring a local model file.
+If no local pool/manual assignment exists, the runtime follows `characters.json` and ultimately retains Mao as the safe base fallback. V12.22 normally creates a Mao pool assignment for 李萌 first.
 
 ## Optional folder for a custom local model
-
-A custom model can still be placed like this. File names inside the folder may vary as long as the `.model3.json` references them correctly.
 
 ```text
 public/live2d/characters/limeng/
@@ -79,15 +100,13 @@ public/live2d/characters/limeng/
 
 ## Automatic model adaptation (V12.20)
 
-A newly loaded model no longer needs hand-written emotion mappings before it can be used.
+Every newly loaded `.model3.json` is scanned for:
 
-After the `.model3.json` model becomes ready, the companion automatically scans:
+- model-declared `LipSync` parameter IDs;
+- expression names/files;
+- motion groups/files/counts.
 
-- Live2D `LipSync` parameter IDs;
-- expression names and expression files;
-- motion groups, motion files and motion counts.
-
-The browser then generates a per-character map for:
+The browser builds a per-character map for:
 
 ```text
 normal
@@ -99,7 +118,7 @@ angry
 thinking
 ```
 
-Semantic names such as `happy`, `smile`, `shy`, `love`, `sad`, `angry` and `thinking` are preferred. Models that use generic names such as `exp_01`, `exp_02`, etc. receive a stable fallback assignment so each emotion still maps to a concrete model expression and motion when possible.
+Semantic names such as `happy`, `smile`, `shy`, `blushing`, `sad`, `angry` and `thinking` are preferred. Generic expression names receive stable fallback slots.
 
 The generated mapping is stored under:
 
@@ -107,57 +126,48 @@ The generated mapping is stored under:
 uai_companion_live2d_emotion_map_v1
 ```
 
-Changing the active model changes the model signature, which causes the mapping to rebuild automatically:
+Changing the model changes its capability signature and automatically rebuilds the mapping:
 
 ```text
-select / assign model
-→ detect LipSync parameters
-→ scan expressions and motions
-→ generate emotion mapping
-→ patch setEmotion()
-→ AI replies / calls / welcome reactions use that model's capabilities
+select model
+→ detect LipSync
+→ scan expressions/motions
+→ build emotion mapping
+→ AI replies / calls / welcome reactions use that model
 ```
 
-In Companion Settings → Live2D interaction calibration, the UI can preview every emotion, rebuild the scan and copy the generated mapping JSON.
+The settings calibration panel can preview emotions, rebuild the scan, copy the generated mapping, tune mouth sensitivity and run `测试张嘴`.
 
 ## Lip sync
 
-The runtime does not assume every model uses `ParamMouthOpenY`. It first reads the model-declared LipSync group and only falls back to common parameter names when needed.
-
-For Mao this resolves to:
-
-```text
-ParamA
-```
-
-Haru and Hiyori declare:
+The runtime does not assume one mouth parameter. It reads the model-declared LipSync group first, then falls back to common Cubism IDs:
 
 ```text
 ParamMouthOpenY
+ParamA
+PARAM_MOUTH_OPEN_Y
 ```
 
-The mouth value is applied on the model's `beforeModelUpdate` hook so motions, expressions and physics do not immediately overwrite the audio-driven mouth value. The calibration panel also provides a per-character mouth sensitivity control and a direct `测试张嘴` action.
+Examples in the current pool include Mao (`ParamA`), Miara (`ParamMouthOpenY`), and Shizuku/Tsumiki (`PARAM_MOUTH_OPEN_Y`). This also protects legacy models such as Hibiki that may omit an explicit LipSync group.
+
+The mouth value is applied on `beforeModelUpdate`, after normal motion/expression work has had a chance to run, so the audio-driven mouth is not immediately overwritten.
 
 ## Cubism Core — zero manual setup
 
 This public repository intentionally does **not** commit `live2dcubismcore.min.js`.
 
-At runtime the companion page uses the following priority:
+Runtime priority:
 
-1. If `/live2d/vendor/live2dcubismcore.min.js` exists, use that local copy.
-2. Otherwise load Live2D's official hosted Cubism Core for Web from `cubism.live2d.com`.
+1. `/live2d/vendor/live2dcubismcore.min.js`, when supplied by a private/self-hosted build.
+2. Live2D's official hosted Cubism Core for Web.
 
-That means the default Cloudflare/GitHub deployment does not require the user to download the SDK or upload a Core file manually.
-
-The official hosted Core URL currently used by the runtime is:
+Current hosted fallback:
 
 ```text
 https://cubism.live2d.com/sdk-web/cubismcore/live2dcubismcore.min.js
 ```
 
 ## Per-character override
-
-The browser runtime exposes:
 
 ```js
 UnlimitedCompanionLive2D.setModelForCharacter(
@@ -170,13 +180,13 @@ UnlimitedCompanionLive2D.setModelForCharacter(
 );
 ```
 
-Overrides are saved in local storage under:
+Overrides are saved under:
 
 ```text
 uai_companion_live2d_assignments_v1
 ```
 
-Remove an override with:
+Remove one with:
 
 ```js
 UnlimitedCompanionLive2D.clearModelForCharacter("character-id");
@@ -189,7 +199,7 @@ Core Live2D:
 ```js
 UnlimitedCompanionLive2D.setEmotion("happy");
 UnlimitedCompanionLive2D.setExpression("smile");
-UnlimitedCompanionLive2D.playMotion("Happy");
+UnlimitedCompanionLive2D.playMotion("Tap");
 UnlimitedCompanionLive2D.setMouthOpen(0.6);
 UnlimitedCompanionLive2D.getLipSyncStatus();
 ```
@@ -204,4 +214,4 @@ UnlimitedCompanionLive2DEmotionEngine.previewEmotion("shy");
 UnlimitedCompanionLive2DEmotionEngine.exportMapping();
 ```
 
-The adaptive layer patches the public `setEmotion()` path, so the existing AI reply, presence, voice-call and return-greeting logic automatically benefits from the model-specific mapping without rewriting those systems.
+The adaptive layer patches the public emotion path, so AI replies, presence behavior, voice calls and return greetings automatically benefit from whichever selected model is active.
