@@ -74,7 +74,7 @@
       ["/companion-v11-stage3.js","uaiCompanionV11Stage3Script"],["/companion-v11-stage4.js","uaiCompanionV11Stage4Script"],["/companion-v12-galaxy.js","uaiCompanionV12GalaxyScript"],
       ["/companion-v12-stage2.js","uaiCompanionV12Stage2Script"],["/companion-v12-final.js","uaiCompanionV12FinalScript"],["/companion-v12-polish.js","uaiCompanionV12PolishScript"],
       ["/companion-v12-phase1.js","uaiCompanionV12Phase1Script"],["/companion-live2d.js","uaiCompanionLive2dScript"],["/companion-live2d-voice.js","uaiCompanionLive2dVoiceScript"],
-      ["/companion-live2d-neural-voice.js","uaiCompanionNeuralVoiceScript"],["/companion-voice-input.js","uaiCompanionVoiceInputScript"],
+      ["/companion-live2d-neural-voice.js","uaiCompanionLive2dNeuralVoiceScript"],["/companion-voice-input.js","uaiCompanionVoiceInputScript"],
       ["/companion-call-mode.js","uaiCompanionCallModeScript"],["/companion-live2d-model-pool.js","uaiCompanionLive2dModelPoolScript"],
       ["/companion-live2d-polish.js","uaiCompanionLive2dPolishScript"],["/companion-live2d-emotion-engine.js","uaiCompanionLive2dEmotionEngineScript"]
     ]) ensureScript(`${src}?v=${REVISION}`, id);
