@@ -1,6 +1,6 @@
-// Companion V12.7/12.16 phase 4 — lightweight scene themes + Live2D voice conversation loaders.
+// Companion V12.7/12.17 phase 4 — lightweight scene themes + Live2D voice conversation loaders.
 (() => {
-  const REVISION = "2026-08-15-v12.16-phase4-voice-conversation-1";
+  const REVISION = "2026-08-15-v12.17-phase4-call-mode-1";
   const THEMES = ["galaxy", "sakura", "moonlight", "neon"];
   const LABELS = {
     galaxy: "星河梦境",
@@ -33,18 +33,17 @@
   function loadPhase5SceneState() {
     ensureStyle(`/companion-v12-phase5-scene-state.css?v=${encodeURIComponent(REVISION)}`, "uaiCompanionV12Phase5SceneStateCss");
     ensureScript(`/companion-v12-phase5-scene-state.js?v=${encodeURIComponent(REVISION)}`, "uaiCompanionV12Phase5SceneStateScript");
-    // Presence/reaction bridge stays isolated from the stable chat/runtime core.
     ensureStyle(`/companion-live2d-interaction.css?v=${encodeURIComponent(REVISION)}`, "uaiCompanionLive2dInteractionCss");
     ensureScript(`/companion-live2d-interaction.js?v=${encodeURIComponent(REVISION)}`, "uaiCompanionLive2dInteractionScript");
-    // V12.14: browser TTS remains as a zero-server fallback.
     ensureStyle(`/companion-live2d-voice.css?v=${encodeURIComponent(REVISION)}`, "uaiCompanionLive2dVoiceCss");
     ensureScript(`/companion-live2d-voice.js?v=${encodeURIComponent(REVISION)}`, "uaiCompanionLive2dVoiceScript");
-    // V12.15: Cloudflare neural TTS, true audio amplitude lip sync, stop/replay and fallback.
     ensureStyle(`/companion-live2d-neural-voice.css?v=${encodeURIComponent(REVISION)}`, "uaiCompanionLive2dNeuralVoiceCss");
     ensureScript(`/companion-live2d-neural-voice.js?v=${encodeURIComponent(REVISION)}`, "uaiCompanionLive2dNeuralVoiceScript");
-    // V12.16: microphone input -> Workers AI Whisper -> editable composer text.
     ensureStyle(`/companion-voice-input.css?v=${encodeURIComponent(REVISION)}`, "uaiCompanionVoiceInputCss");
     ensureScript(`/companion-voice-input.js?v=${encodeURIComponent(REVISION)}`, "uaiCompanionVoiceInputScript");
+    // V12.17: hands-free call loop, per-role Grok voice and formal Live2D model controls.
+    ensureStyle(`/companion-call-mode.css?v=${encodeURIComponent(REVISION)}`, "uaiCompanionCallModeCss");
+    ensureScript(`/companion-call-mode.js?v=${encodeURIComponent(REVISION)}`, "uaiCompanionCallModeScript");
   }
 
   function getRoot() {
