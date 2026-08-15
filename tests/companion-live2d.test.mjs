@@ -16,6 +16,8 @@ const voiceInput = read("public/companion-voice-input.js");
 const voiceInputCss = read("public/companion-voice-input.css");
 const callMode = read("public/companion-call-mode.js");
 const callModeCss = read("public/companion-call-mode.css");
+const polish = read("public/companion-live2d-polish.js");
+const polishCss = read("public/companion-live2d-polish.css");
 const themeLoader = read("public/companion-v12-phase4-themes.js");
 const galaxy = read("public/companion-v12-galaxy.js");
 const wrangler = read("wrangler.toml");
@@ -25,8 +27,7 @@ const stt = read("src/stt.js");
 const config = JSON.parse(read("public/live2d/characters.json"));
 const readme = read("public/live2d/README.md");
 
-// V12.18 must be visible from the top boot/cache chain so the browser cannot
-// keep the pre-fix Live2D runtime after a Cloudflare deployment.
+// V12.18 remains the top cache boundary for the core lip-sync fix.
 assert.match(index, /2026-08-15-v12\.18-live2d-lipsync-\d+/);
 assert.match(index, /boot-diagnostics\.js\?v=20260815-v12\.18-live2d-lipsync-\d+/);
 assert.match(boot, /v12\.18-live2d-lipsync/);
@@ -94,8 +95,8 @@ assert.match(css, /padding-right:35%!important/);
 assert.match(css, /\.uai-c-v122-portrait-wrap/);
 assert.match(css, /display:none!important/);
 
-// Scene loader still provides a deep fallback for every voice/call layer.
-assert.match(themeLoader, /v12\.17-phase4-call-mode/);
+// Scene loader provides the complete voice/call stack plus V12.19 polish.
+assert.match(themeLoader, /v12\.19-phase4-live2d-polish/);
 for (const asset of [
   "companion-live2d-interaction.css",
   "companion-live2d-interaction.js",
@@ -106,8 +107,35 @@ for (const asset of [
   "companion-voice-input.css",
   "companion-voice-input.js",
   "companion-call-mode.css",
-  "companion-call-mode.js"
+  "companion-call-mode.js",
+  "companion-live2d-polish.css",
+  "companion-live2d-polish.js"
 ]) assert.ok(themeLoader.includes(asset), `theme loader is missing ${asset}`);
+
+// V12.19 product polish: barge-in, per-character mouth gain, diagnostics and manual mouth test.
+assert.match(polish, /v12\.19-live2d-polish/);
+assert.match(polish, /uai_companion_live2d_polish_v1/);
+assert.match(polish, /mouthSensitivity/);
+assert.match(polish, /function patchLipSyncApi\(/);
+assert.match(polish, /Math\.pow\(raw, \.90\)/);
+assert.match(polish, /function diagnostics\(/);
+assert.match(polish, /motionManager\?\.lipSyncIds/);
+assert.match(polish, /getLipSyncParameters/);
+assert.match(polish, /v129Live2dLipSync/);
+assert.match(polish, /function testMouth\(/);
+assert.match(polish, /requestAnimationFrame\(frame\)/);
+assert.match(polish, /function interruptAndListen\(/);
+assert.match(polish, /UnlimitedCompanionNeuralVoice\?\.stop/);
+assert.match(polish, /UnlimitedCompanionVoiceInput\?\.start/);
+assert.match(polish, /stopImmediatePropagation/);
+assert.match(polish, /uaiCompanionV19PolishPanel/);
+assert.match(polish, /data-v19-mouth-test/);
+assert.match(polish, /data-v19-diagnose/);
+for (const voiceId of ["ara", "eve", "sal", "rex", "leo"]) assert.ok(polish.includes(voiceId), `V12.19 quick voice preset missing ${voiceId}`);
+assert.match(polish, /window\.UnlimitedCompanionLive2DPolish/);
+assert.match(polishCss, /uai-c-v19-interrupt-ready/);
+assert.match(polishCss, /uai-c-v19-diagnostic\.ok/);
+assert.match(polishCss, /uai-c-v19-diagnostic\.warn/);
 
 assert.match(interaction, /v12\.13-live2d-presence/);
 for (const marker of [
@@ -287,4 +315,4 @@ assert.match(readme, /official Live2D `Mao` sample/i);
 assert.match(readme, /official hosted Cubism Core/i);
 assert.equal(fs.existsSync("public/live2d/vendor/live2dcubismcore.min.js"), false);
 
-console.log("Companion Live2D contract passed: model-aware lip sync + presence + Grok/Melo voices + Whisper + hands-free call + model swap.");
+console.log("Companion Live2D contract passed: model-aware lip sync + V12.19 diagnostics/barge-in + presence + Grok/Melo voices + Whisper + hands-free call + model swap.");
