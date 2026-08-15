@@ -1,0 +1,82 @@
+/* Companion V12.16 — microphone speech input. */
+#uaiCompanionRoot .uai-c-v16-mic{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  height:44px;
+  min-width:44px;
+  padding:0 11px;
+  border:1px solid rgba(255,255,255,.11);
+  border-radius:14px;
+  background:linear-gradient(145deg,rgba(64,39,128,.72),rgba(92,42,131,.52));
+  color:rgba(252,247,255,.88);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 8px 22px rgba(20,8,60,.10);
+  cursor:pointer;
+  transition:transform .18s ease,border-color .18s ease,background .18s ease,box-shadow .18s ease,color .18s ease,opacity .18s ease;
+}
+#uaiCompanionRoot .uai-c-v16-mic:hover:not(:disabled){
+  transform:translateY(-1px);
+  border-color:rgba(225,177,255,.26);
+  background:linear-gradient(145deg,rgba(78,47,148,.80),rgba(113,49,146,.58));
+  color:#fff;
+}
+#uaiCompanionRoot .uai-c-v16-mic span{font-size:15px;line-height:1}
+#uaiCompanionRoot .uai-c-v16-mic b{font:650 10px/1 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;white-space:nowrap}
+#uaiCompanionRoot .uai-c-v16-mic:disabled{opacity:.52;cursor:wait}
+
+#uaiCompanionRoot .uai-c-v16-mic.recording{
+  min-width:76px;
+  border-color:rgba(255,126,185,.33);
+  background:linear-gradient(145deg,rgba(144,43,104,.88),rgba(110,34,101,.70));
+  color:#fff5fb;
+  animation:uaiV16MicRecording .9s ease-in-out infinite alternate;
+}
+#uaiCompanionRoot .uai-c-v16-mic.loading{
+  min-width:78px;
+  border-color:rgba(147,180,255,.27);
+  background:linear-gradient(145deg,rgba(62,71,155,.82),rgba(80,48,145,.68));
+  animation:uaiV16MicLoading 1.05s ease-in-out infinite;
+}
+
+#uaiCompanionRoot .uai-c-v16-mic-note{
+  position:absolute;
+  right:18px;
+  bottom:calc(100% + 8px);
+  max-width:min(420px,70%);
+  padding:8px 12px;
+  border:1px solid rgba(255,255,255,.09);
+  border-radius:12px;
+  background:rgba(23,15,61,.82);
+  color:rgba(245,237,255,.76);
+  font:600 11px/1.45 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  box-shadow:0 12px 28px rgba(8,4,28,.22),inset 0 1px 0 rgba(255,255,255,.04);
+  backdrop-filter:blur(16px);
+  pointer-events:none;
+  z-index:20;
+}
+#uaiCompanionRoot .uai-c-v16-mic-note[data-state="recording"]{border-color:rgba(255,137,193,.16);color:rgba(255,225,240,.88)}
+#uaiCompanionRoot .uai-c-v16-mic-note[data-state="transcribing"]{border-color:rgba(147,180,255,.16);color:rgba(222,230,255,.88)}
+#uaiCompanionRoot .uai-c-v16-mic-note[data-state="done"]{border-color:rgba(130,239,201,.16);color:rgba(205,255,236,.85)}
+#uaiCompanionRoot .uai-c-v16-mic-note[data-state="error"]{border-color:rgba(255,135,163,.20);color:rgba(255,211,224,.90)}
+
+@keyframes uaiV16MicRecording{
+  from{box-shadow:0 0 9px rgba(255,82,157,.08),inset 0 1px 0 rgba(255,255,255,.06)}
+  to{box-shadow:0 0 26px rgba(255,82,157,.22),0 0 42px rgba(255,82,157,.07),inset 0 1px 0 rgba(255,255,255,.09)}
+}
+@keyframes uaiV16MicLoading{
+  0%,100%{opacity:.76;box-shadow:0 0 8px rgba(127,139,255,.06)}
+  50%{opacity:1;box-shadow:0 0 24px rgba(127,139,255,.20)}
+}
+
+@media (max-width:980px){
+  #uaiCompanionRoot .uai-c-v16-mic{width:44px;min-width:44px;padding:0}
+  #uaiCompanionRoot .uai-c-v16-mic b{display:none}
+  #uaiCompanionRoot .uai-c-v16-mic.recording,
+  #uaiCompanionRoot .uai-c-v16-mic.loading{min-width:44px}
+  #uaiCompanionRoot .uai-c-v16-mic-note{right:10px;max-width:82%}
+}
+@media (prefers-reduced-motion:reduce){
+  #uaiCompanionRoot .uai-c-v16-mic.recording,
+  #uaiCompanionRoot .uai-c-v16-mic.loading{animation:none}
+}
