@@ -8,6 +8,7 @@ const css = read("public/companion-live2d.css");
 const interaction = read("public/companion-live2d-interaction.js");
 const interactionCss = read("public/companion-live2d-interaction.css");
 const themeLoader = read("public/companion-v12-phase4-themes.js");
+const galaxy = read("public/companion-v12-galaxy.js");
 const config = JSON.parse(read("public/live2d/characters.json"));
 const readme = read("public/live2d/README.md");
 
@@ -61,25 +62,53 @@ assert.match(css, /display:none!important/);
 assert.match(css, /\.uai-c-live2d-credit/);
 assert.match(css, /\.uai-c-live2d-status-note/);
 
-// V12.12 behavior bridge is loaded from the existing scene enhancement chain.
-assert.match(themeLoader, /v12\.12-phase4-live2d-interaction/);
+// V12.13 presence bridge is loaded from the existing scene enhancement chain.
+assert.match(themeLoader, /v12\.13-phase4-live2d-presence/);
 assert.match(themeLoader, /companion-live2d-interaction\.css/);
 assert.match(themeLoader, /companion-live2d-interaction\.js/);
-assert.match(interaction, /v12\.12-live2d-interaction/);
+assert.match(interaction, /v12\.13-live2d-presence/);
+assert.match(interaction, /uai_companion_live2d_presence_v1/);
 assert.match(interaction, /function classifyEmotion\(/);
+assert.match(interaction, /function relationshipStage\(/);
+assert.match(interaction, /function latestChatAt\(/);
+assert.match(interaction, /function maybeWelcome\(/);
+assert.match(interaction, /function idleReaction\(/);
+assert.match(interaction, /function ensureIdleLoop\(/);
 assert.match(interaction, /uai-c-live2d-speaking/);
+assert.match(interaction, /uai-c-live2d-idle-reaction/);
 assert.match(interaction, /setMouthOpen/);
 assert.match(interaction, /playMotion\?\.\("TapBody"/);
+assert.match(interaction, /playMotion\?\.\("Idle"/);
 assert.match(interaction, /uai-c-live2d-burst/);
 assert.match(interaction, /uai-c-live2d-presence/);
 assert.match(interaction, /uaiCompanionComposerWrap\.generating/);
+assert.match(interaction, /function beginVoice\(/);
+assert.match(interaction, /function setVoiceLevel\(/);
+assert.match(interaction, /function endVoice\(/);
+assert.match(interaction, /function attachAudioElement\(/);
 assert.match(interaction, /window\.UnlimitedCompanionLive2DInteraction/);
+
+// The relationship thresholds must remain aligned with the existing right-side companion panel.
+for (const marker of [
+  "value.days >= 7 && value.messages >= 180 && value.sessions >= 8",
+  "value.days >= 3 && value.messages >= 70 && value.sessions >= 4",
+  "value.messages >= 20 || value.sessions >= 2"
+]) {
+  assert.ok(galaxy.includes(marker), `galaxy relationship stage is missing: ${marker}`);
+  assert.ok(interaction.includes(marker), `Live2D relationship stage drifted from companion panel: ${marker}`);
+}
+
 assert.match(interactionCss, /padding-right:38%!important/);
 assert.match(interactionCss, /data-v127-theme="sakura"/);
 assert.match(interactionCss, /data-v127-theme="moonlight"/);
 assert.match(interactionCss, /data-v127-theme="neon"/);
 assert.match(interactionCss, /data-v129-live2d-emotion="caring"/);
+assert.match(interactionCss, /data-v129-live2d-relation-level="4"/);
+assert.match(interactionCss, /data-state="welcome"/);
+assert.match(interactionCss, /data-state="idle"/);
+assert.match(interactionCss, /data-state="voice"/);
 assert.match(interactionCss, /uaiLive2DSpeakingAura/);
+assert.match(interactionCss, /uaiLive2DIdleAura/);
 assert.match(interactionCss, /uaiLive2DBurst/);
 assert.doesNotMatch(interactionCss, /var\(--d[xy]\)\s*\*/);
 
@@ -110,4 +139,4 @@ assert.match(readme, /setModelForCharacter/);
 
 assert.equal(fs.existsSync("public/live2d/vendor/live2dcubismcore.min.js"), false);
 
-console.log("Companion Live2D contract passed: hosted runtime + polished stage + reply emotion bridge + tap feedback.");
+console.log("Companion Live2D contract passed: hosted runtime + polished stage + emotion + relationship + return/idle presence + voice hooks.");
