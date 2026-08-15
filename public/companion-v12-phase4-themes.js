@@ -1,6 +1,6 @@
-// Companion V12.7/12.19 phase 4 — lightweight scene themes + Live2D voice conversation loaders.
+// Companion V12.7/12.20 phase 4 — lightweight scene themes + Live2D voice conversation loaders.
 (() => {
-  const REVISION = "2026-08-15-v12.19-phase4-live2d-polish-1";
+  const REVISION = "2026-08-15-v12.20-phase4-emotion-engine-1";
   const THEMES = ["galaxy", "sakura", "moonlight", "neon"];
   const LABELS = {
     galaxy: "星河梦境",
@@ -47,6 +47,9 @@
     // V12.19: model diagnostics, per-role lip-sync tuning and one-tap barge-in.
     ensureStyle(`/companion-live2d-polish.css?v=${encodeURIComponent(REVISION)}`, "uaiCompanionLive2dPolishCss");
     ensureScript(`/companion-live2d-polish.js?v=${encodeURIComponent(REVISION)}`, "uaiCompanionLive2dPolishScript");
+    // V12.20: scan model capabilities and map AI emotions to the model's own expressions/motions.
+    ensureStyle(`/companion-live2d-emotion-engine.css?v=${encodeURIComponent(REVISION)}`, "uaiCompanionLive2dEmotionEngineCss");
+    ensureScript(`/companion-live2d-emotion-engine.js?v=${encodeURIComponent(REVISION)}`, "uaiCompanionLive2dEmotionEngineScript");
   }
 
   function getRoot() {
