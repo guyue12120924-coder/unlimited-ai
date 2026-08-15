@@ -7,6 +7,8 @@ const runtime = read("public/companion-live2d.js");
 const css = read("public/companion-live2d.css");
 const interaction = read("public/companion-live2d-interaction.js");
 const interactionCss = read("public/companion-live2d-interaction.css");
+const voice = read("public/companion-live2d-voice.js");
+const voiceCss = read("public/companion-live2d-voice.css");
 const themeLoader = read("public/companion-v12-phase4-themes.js");
 const galaxy = read("public/companion-v12-galaxy.js");
 const config = JSON.parse(read("public/live2d/characters.json"));
@@ -14,8 +16,11 @@ const readme = read("public/live2d/README.md");
 
 assert.match(boot, /companion-live2d\.css/);
 assert.match(boot, /companion-live2d\.js/);
+assert.match(boot, /companion-live2d-voice\.css/);
+assert.match(boot, /companion-live2d-voice\.js/);
 assert.match(boot, /companionLive2dReady/);
-assert.match(boot, /v12\.(?:10|11)-live2d/);
+assert.match(boot, /companionVoiceReady/);
+assert.match(boot, /v12\.14-live2d-voice/);
 
 assert.match(runtime, /v12\.11-live2d-hosted-core/);
 assert.match(runtime, /uai_companion_live2d_assignments_v1/);
@@ -62,10 +67,12 @@ assert.match(css, /display:none!important/);
 assert.match(css, /\.uai-c-live2d-credit/);
 assert.match(css, /\.uai-c-live2d-status-note/);
 
-// V12.13 presence bridge is loaded from the existing scene enhancement chain.
-assert.match(themeLoader, /v12\.13-phase4-live2d-presence/);
+// Presence bridge remains loaded from the scene enhancement chain.
+assert.match(themeLoader, /v12\.14-phase4-live2d-voice/);
 assert.match(themeLoader, /companion-live2d-interaction\.css/);
 assert.match(themeLoader, /companion-live2d-interaction\.js/);
+assert.match(themeLoader, /companion-live2d-voice\.css/);
+assert.match(themeLoader, /companion-live2d-voice\.js/);
 assert.match(interaction, /v12\.13-live2d-presence/);
 assert.match(interaction, /uai_companion_live2d_presence_v1/);
 assert.match(interaction, /function classifyEmotion\(/);
@@ -112,6 +119,31 @@ assert.match(interactionCss, /uaiLive2DIdleAura/);
 assert.match(interactionCss, /uaiLive2DBurst/);
 assert.doesNotMatch(interactionCss, /var\(--d[xy]\)\s*\*/);
 
+// V12.14 browser TTS: per-character settings, automatic Chinese voice selection,
+// role-play dialogue extraction, reply auto-speak and real amplitude support for future audio TTS.
+assert.match(voice, /v12\.14-live2d-voice/);
+assert.match(voice, /uai_companion_voice_v1/);
+assert.match(voice, /SpeechSynthesisUtterance/);
+assert.match(voice, /speechSynthesis\.getVoices/);
+assert.match(voice, /function chooseVoice\(/);
+assert.match(voice, /function extractSpeechText\(/);
+assert.match(voice, /dialogueOnly/);
+assert.match(voice, /function chunkSpeech\(/);
+assert.match(voice, /function ensureHeaderToggle\(/);
+assert.match(voice, /uaiCompanionVoiceToggle/);
+assert.match(voice, /function ensureSettingsPanel\(/);
+assert.match(voice, /uaiCompanionVoicePanel/);
+assert.match(voice, /function attachAudio\(/);
+assert.match(voice, /createMediaElementSource/);
+assert.match(voice, /createAnalyser/);
+assert.match(voice, /getByteTimeDomainData/);
+assert.match(voice, /setVoiceLevel/);
+assert.match(voice, /uaiCompanionComposerWrap\.generating/);
+assert.match(voice, /window\.UnlimitedCompanionVoice/);
+assert.match(voiceCss, /uai-c-v14-voice-trigger/);
+assert.match(voiceCss, /uai-c-v14-voice-panel/);
+assert.match(voiceCss, /uaiV14VoicePulse/);
+
 assert.equal(config.version, 5);
 assert.match(config.defaultModel?.model || "", /^https:\/\/cdn\.jsdelivr\.net\/gh\/Live2D\/CubismWebSamples@/);
 assert.match(config.defaultModel?.model || "", /\/Samples\/Resources\/Mao\/Mao\.model3\.json$/);
@@ -139,4 +171,4 @@ assert.match(readme, /setModelForCharacter/);
 
 assert.equal(fs.existsSync("public/live2d/vendor/live2dcubismcore.min.js"), false);
 
-console.log("Companion Live2D contract passed: hosted runtime + polished stage + emotion + relationship + return/idle presence + voice hooks.");
+console.log("Companion Live2D contract passed: hosted runtime + presence + browser TTS + future real-audio lip sync.");
