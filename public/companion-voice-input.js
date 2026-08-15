@@ -1,6 +1,6 @@
 // Companion V12.16 — microphone input -> Cloudflare Whisper -> companion composer.
 (() => {
-  const REVISION = "2026-08-15-v12.16-voice-input-1";
+  const REVISION = "2026-08-15-v12.16-voice-input-2";
   const MAX_RECORD_MS = 30000;
   let boundRoot = null;
   let observer = null;
@@ -9,9 +9,12 @@
   let chunks = [];
   let stopTimer = null;
   let tickTimer = null;
+  let resetTimer = null;
+  let transcribeController = null;
   let startedAt = 0;
   let state = "idle";
   let lastError = "";
+  let discardNextRecording = false;
 
   function liveRoot() {
     if (document.body.dataset.uaiMode !== "companion") return null;
@@ -33,11 +36,16 @@
     return candidates.find((type) => window.MediaRecorder?.isTypeSupported?.(type)) || "";
   }
 
-  function clearTimers() {
+  function clearRecordTimers() {
     if (stopTimer) clearTimeout(stopTimer);
     if (tickTimer) clearInterval(tickTimer);
     stopTimer = null;
     tickTimer = null;
+  }
+
+  function clearResetTimer() {
+    if (resetTimer) clearTimeout(resetTimer);
+    resetTimer = null;
   }
 
   function stopTracks() {
@@ -45,36 +53,63 @@
     stream = null;
   }
 
+  function scheduleIdle(ms) {
+    clearResetTimer();
+    resetTimer = setTimeout(() => {
+      resetTimer = null;
+      if (["done", "error"].includes(state)) setState("idle");
+    }, ms);
+  }
+
+  function setHtmlIfChanged(element, html) {
+    if (element && element.innerHTML !== html) element.innerHTML = html;
+  }
+
+  function setTextIfChanged(element, text) {
+    if (element && element.textContent !== text) element.textContent = text;
+  }
+
   function setState(next, message = "") {
+    if (["requesting", "recording", "transcribing"].includes(next)) clearResetTimer();
     state = next;
     lastError = next === "error" ? message : "";
     const root = liveRoot();
     if (!root) return;
-    root.dataset.v16VoiceInputState = next;
+    if (root.dataset.v16VoiceInputState !== next) root.dataset.v16VoiceInputState = next;
     const button = root.querySelector("#uaiCompanionMicButton");
     const note = root.querySelector("#uaiCompanionMicNote");
     if (button) {
       button.classList.toggle("recording", next === "recording");
-      button.classList.toggle("loading", next === "transcribing");
-      button.disabled = next === "transcribing" || !supported();
+      button.classList.toggle("loading", next === "requesting" || next === "transcribing");
+      button.disabled = ["requesting", "transcribing"].includes(next) || !supported();
       button.setAttribute("aria-pressed", next === "recording" ? "true" : "false");
-      if (next === "recording") button.innerHTML = `<span>■</span><b data-mic-time>00:00</b>`;
-      else if (next === "transcribing") button.innerHTML = `<span>✦</span><b>识别中</b>`;
-      else button.innerHTML = `<span>🎙</span><b>说话</b>`;
-      button.title = !supported()
+      const desiredHtml = next === "recording"
+        ? `<span>■</span><b data-mic-time>00:00</b>`
+        : next === "requesting"
+          ? `<span>✦</span><b>准备中</b>`
+          : next === "transcribing"
+            ? `<span>✦</span><b>识别中</b>`
+            : `<span>🎙</span><b>说话</b>`;
+      setHtmlIfChanged(button, desiredHtml);
+      const title = !supported()
         ? "当前浏览器不支持麦克风录音"
         : next === "recording"
           ? "停止录音并识别"
-          : "按一下开始说话";
+          : next === "requesting"
+            ? "正在请求麦克风权限"
+            : "按一下开始说话";
+      if (button.title !== title) button.title = title;
     }
     if (note) {
-      note.hidden = next === "idle";
-      note.textContent = message || (
-        next === "recording" ? "正在听你说话… 再点一次结束"
-          : next === "transcribing" ? "正在把你的语音变成文字…"
-            : ""
+      const text = message || (
+        next === "requesting" ? "正在打开麦克风…"
+          : next === "recording" ? "正在听你说话… 再点一次结束"
+            : next === "transcribing" ? "正在把你的语音变成文字…"
+              : ""
       );
-      note.dataset.state = next;
+      note.hidden = next === "idle";
+      setTextIfChanged(note, text);
+      if (note.dataset.state !== next) note.dataset.state = next;
     }
   }
 
@@ -83,8 +118,8 @@
     const label = root?.querySelector("#uaiCompanionMicButton [data-mic-time]");
     if (!label || !startedAt) return;
     const elapsed = Math.max(0, Date.now() - startedAt);
-    const seconds = Math.floor(elapsed / 1000);
-    label.textContent = `00:${String(seconds).padStart(2, "0")}`;
+    const seconds = Math.min(30, Math.floor(elapsed / 1000));
+    setTextIfChanged(label, `00:${String(seconds).padStart(2, "0")}`);
   }
 
   function composerInput(root = liveRoot()) {
@@ -106,47 +141,61 @@
 
   async function transcribe(blob) {
     if (!blob || blob.size < 300) {
-      setState("error", "没有听到有效语音，请再试一次。 ");
-      setTimeout(() => setState("idle"), 1800);
+      setState("error", "没有听到有效语音，请再试一次。");
+      scheduleIdle(1800);
       return;
     }
+    transcribeController?.abort?.();
+    transcribeController = new AbortController();
+    const controller = transcribeController;
     setState("transcribing");
     try {
       const response = await fetch("/api/companion/stt", {
         method: "POST",
         headers: { "Content-Type": blob.type || "application/octet-stream" },
         body: blob,
+        signal: controller.signal,
         cache: "no-store"
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data?.error || `Speech recognition HTTP ${response.status}`);
+      if (controller !== transcribeController) return;
       const text = String(data?.text || "").trim();
       if (!text) throw new Error("没有识别到文字");
       writeTranscript(text);
       setState("done", `已识别：${text.length > 42 ? `${text.slice(0, 42)}…` : text}`);
-      setTimeout(() => setState("idle"), 2200);
+      scheduleIdle(2200);
     } catch (error) {
-      setState("error", error?.message || "语音识别失败，请再试一次。 ");
-      setTimeout(() => setState("idle"), 2600);
+      if (error?.name === "AbortError") return;
+      setState("error", error?.message || "语音识别失败，请再试一次。");
+      scheduleIdle(2600);
+    } finally {
+      if (controller === transcribeController) transcribeController = null;
     }
   }
 
-  function finishRecording() {
+  function finishRecording(options = {}) {
     if (!recorder || recorder.state === "inactive") return;
+    discardNextRecording = Boolean(options.discard);
     try { recorder.stop(); } catch {}
   }
 
   async function startRecording() {
-    if (!supported() || state === "transcribing") return;
+    if (!supported() || ["requesting", "transcribing"].includes(state)) return;
     if (state === "recording") {
       finishRecording();
       return;
     }
 
+    clearResetTimer();
+    transcribeController?.abort?.();
+    transcribeController = null;
+    discardNextRecording = false;
     // Avoid recording the companion's own TTS through the speakers.
     try { window.UnlimitedCompanionNeuralVoice?.stop?.({ keepLast: true }); } catch {}
     try { window.UnlimitedCompanionVoice?.stop?.({ silent: true }); } catch {}
 
+    setState("requesting");
     try {
       stream = await navigator.mediaDevices.getUserMedia({
         audio: {
@@ -155,6 +204,10 @@
           autoGainControl: true
         }
       });
+      if (state !== "requesting") {
+        stopTracks();
+        return;
+      }
       chunks = [];
       const mimeType = chooseMimeType();
       recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
@@ -162,35 +215,45 @@
         if (event.data?.size) chunks.push(event.data);
       });
       recorder.addEventListener("stop", () => {
-        clearTimers();
+        clearRecordTimers();
         stopTracks();
-        const type = recorder?.mimeType || chunks[0]?.type || "audio/webm";
+        const currentRecorder = recorder;
+        const type = currentRecorder?.mimeType || chunks[0]?.type || "audio/webm";
         const blob = new Blob(chunks, { type });
+        const shouldDiscard = discardNextRecording;
+        discardNextRecording = false;
         recorder = null;
         chunks = [];
+        startedAt = 0;
+        if (shouldDiscard) {
+          setState("idle");
+          return;
+        }
         transcribe(blob);
       }, { once: true });
       recorder.addEventListener("error", () => {
-        clearTimers();
+        clearRecordTimers();
         stopTracks();
         recorder = null;
         chunks = [];
-        setState("error", "录音失败，请检查麦克风权限。 ");
-        setTimeout(() => setState("idle"), 2400);
+        startedAt = 0;
+        setState("error", "录音失败，请检查麦克风权限。");
+        scheduleIdle(2400);
       }, { once: true });
       recorder.start(250);
       startedAt = Date.now();
       setState("recording");
       updateTimer();
       tickTimer = setInterval(updateTimer, 500);
-      stopTimer = setTimeout(finishRecording, MAX_RECORD_MS);
+      stopTimer = setTimeout(() => finishRecording(), MAX_RECORD_MS);
     } catch (error) {
-      clearTimers();
+      clearRecordTimers();
       stopTracks();
       recorder = null;
+      startedAt = 0;
       const denied = error?.name === "NotAllowedError" || error?.name === "SecurityError";
-      setState("error", denied ? "麦克风权限被拒绝，请允许网页使用麦克风。" : "无法打开麦克风，请检查设备。 ");
-      setTimeout(() => setState("idle"), 2800);
+      setState("error", denied ? "麦克风权限被拒绝，请允许网页使用麦克风。" : "无法打开麦克风，请检查设备。");
+      scheduleIdle(2800);
     }
   }
 
@@ -232,15 +295,18 @@
   }
 
   function stopAll() {
-    clearTimers();
-    if (recorder && recorder.state !== "inactive") {
-      try { recorder.stop(); } catch {}
+    clearRecordTimers();
+    clearResetTimer();
+    transcribeController?.abort?.();
+    transcribeController = null;
+    if (recorder && recorder.state !== "inactive") finishRecording({ discard: true });
+    else {
+      stopTracks();
+      recorder = null;
+      chunks = [];
+      startedAt = 0;
+      state = "idle";
     }
-    stopTracks();
-    recorder = null;
-    chunks = [];
-    startedAt = 0;
-    state = "idle";
   }
 
   function init() {
@@ -252,7 +318,7 @@
       attributeFilter: ["hidden", "data-uai-mode", "class"]
     });
     document.addEventListener("visibilitychange", () => {
-      if (document.hidden && state === "recording") finishRecording();
+      if (document.hidden && state === "recording") finishRecording({ discard: true });
       else sync();
     });
     window.addEventListener("pagehide", stopAll, { passive: true });
@@ -261,6 +327,7 @@
       supported,
       start: startRecording,
       stop: finishRecording,
+      cancel: () => finishRecording({ discard: true }),
       get state() { return state; },
       refresh: sync
     };
