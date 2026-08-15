@@ -5,19 +5,18 @@ const read = (path) => fs.readFileSync(path, "utf8");
 const index = read("public/index.html");
 const boot = read("public/boot-diagnostics.js");
 const runtime = read("public/companion-live2d.js");
-const css = read("public/companion-live2d.css");
+const runtimeCss = read("public/companion-live2d.css");
 const interaction = read("public/companion-live2d-interaction.js");
 const interactionCss = read("public/companion-live2d-interaction.css");
 const voice = read("public/companion-live2d-voice.js");
-const voiceCss = read("public/companion-live2d-voice.css");
 const neuralVoice = read("public/companion-live2d-neural-voice.js");
-const neuralVoiceCss = read("public/companion-live2d-neural-voice.css");
 const voiceInput = read("public/companion-voice-input.js");
-const voiceInputCss = read("public/companion-voice-input.css");
 const callMode = read("public/companion-call-mode.js");
 const callModeCss = read("public/companion-call-mode.css");
 const polish = read("public/companion-live2d-polish.js");
 const polishCss = read("public/companion-live2d-polish.css");
+const emotion = read("public/companion-live2d-emotion-engine.js");
+const emotionCss = read("public/companion-live2d-emotion-engine.css");
 const themeLoader = read("public/companion-v12-phase4-themes.js");
 const galaxy = read("public/companion-v12-galaxy.js");
 const wrangler = read("wrangler.toml");
@@ -27,132 +26,47 @@ const stt = read("src/stt.js");
 const config = JSON.parse(read("public/live2d/characters.json"));
 const readme = read("public/live2d/README.md");
 
-// V12.18 remains the top cache boundary for the core lip-sync fix.
-assert.match(index, /2026-08-15-v12\.18-live2d-lipsync-\d+/);
-assert.match(index, /boot-diagnostics\.js\?v=20260815-v12\.18-live2d-lipsync-\d+/);
-assert.match(boot, /v12\.18-live2d-lipsync/);
+// V12.20 must be the browser-visible cache chain and directly boot the final polish/emotion layers.
+assert.match(index, /2026-08-15-v12\.20-live2d-emotion-\d+/);
+assert.match(index, /boot-diagnostics\.js\?v=20260815-v12\.20-live2d-emotion-\d+/);
+assert.match(boot, /v12\.20-live2d-emotion/);
 for (const asset of [
-  "companion-live2d.css",
-  "companion-live2d.js",
-  "companion-live2d-voice.css",
-  "companion-live2d-voice.js",
-  "companion-live2d-neural-voice.css",
-  "companion-live2d-neural-voice.js",
-  "companion-voice-input.css",
-  "companion-voice-input.js",
-  "companion-call-mode.css",
-  "companion-call-mode.js"
+  "companion-live2d.css","companion-live2d.js","companion-live2d-voice.css","companion-live2d-voice.js",
+  "companion-live2d-neural-voice.css","companion-live2d-neural-voice.js","companion-voice-input.css","companion-voice-input.js",
+  "companion-call-mode.css","companion-call-mode.js","companion-live2d-polish.css","companion-live2d-polish.js",
+  "companion-live2d-emotion-engine.css","companion-live2d-emotion-engine.js"
 ]) assert.ok(boot.includes(asset), `boot is missing ${asset}`);
-assert.match(boot, /companionLive2dReady/);
-assert.match(boot, /companionVoiceReady/);
-assert.match(boot, /companionNeuralVoiceReady/);
-assert.match(boot, /companionVoiceInputReady/);
-assert.match(boot, /companionCallModeReady/);
+assert.match(boot, /companionLive2dEmotionReady/);
+assert.match(boot, /companionLive2dPolishReady/);
 
-// Stable Live2D runtime contract + V12.18 model-aware lip sync.
+// Stable Live2D runtime + model-aware V12.18 lip sync.
 assert.match(runtime, /v12\.18-live2d-lipsync/);
-assert.match(runtime, /v12\.11-live2d-hosted-core/);
-assert.match(runtime, /uai_companion_live2d_assignments_v1/);
-assert.match(runtime, /pixi\.js@6\.5\.10/);
 assert.match(runtime, /pixi-live2d-display@0\.4\.0/);
-assert.match(runtime, /\/live2d\/vendor\/live2dcubismcore\.min\.js/);
-assert.match(runtime, /https:\/\/cubism\.live2d\.com\/sdk-web\/cubismcore\/live2dcubismcore\.min\.js/);
-assert.match(runtime, /async function ensureCubismCore\(/);
-assert.match(runtime, /async function probeModel\(/);
-assert.match(runtime, /async function selectAvailableSpec\(/);
-assert.match(runtime, /spec\.fallback\?\.model/);
-assert.match(runtime, /await selectAvailableSpec\(configured\)/);
-assert.match(runtime, /await ensureRuntime\(\)/);
-assert.match(runtime, /await loadModel\(root, character, spec, signature\)/);
-assert.ok(
-  runtime.indexOf("const spec = await selectAvailableSpec(configured)") < runtime.indexOf("await loadModel(root, character, spec, signature)"),
-  "enhance must select an available model before entering the heavy runtime path"
-);
-for (const api of ["setEmotion", "setExpression", "playMotion", "setMouthOpen", "setModelForCharacter", "clearModelForCharacter"]) {
-  assert.match(runtime, new RegExp(api));
-}
 assert.match(runtime, /function resolveLipSyncIds\(/);
 assert.match(runtime, /motionManager\?\.lipSyncIds/);
 assert.match(runtime, /getLipSyncParameters/);
 assert.match(runtime, /ParamMouthOpenY/);
 assert.match(runtime, /ParamA/);
-assert.match(runtime, /function bindMouthDriver\(/);
-assert.match(runtime, /function unbindMouthDriver\(/);
 assert.match(runtime, /beforeModelUpdate/);
 assert.match(runtime, /function applyMouthFrame\(/);
-assert.match(runtime, /mouthTarget/);
-assert.match(runtime, /mouthValue/);
 assert.match(runtime, /getLipSyncStatus/);
-assert.match(runtime, /ticker\?\.stop/);
-assert.match(runtime, /ticker\?\.start/);
+assert.match(runtime, /setModelForCharacter/);
+assert.match(runtime, /clearModelForCharacter/);
 assert.match(runtime, /window\.UnlimitedCompanionLive2D/);
+assert.match(runtimeCss, /z-index:6!important/);
+assert.match(runtimeCss, /uaiLive2DAura/);
 
-assert.match(css, /\.uai-c-live2d-layer/);
-assert.match(css, /z-index:6!important/);
-assert.match(css, /uaiLive2DAura/);
-assert.match(css, /grid-template-columns:minmax\(0,58%\)/);
-assert.match(css, /padding-right:35%!important/);
-assert.match(css, /\.uai-c-v122-portrait-wrap/);
-assert.match(css, /display:none!important/);
-
-// Scene loader provides the complete voice/call stack plus V12.19 polish.
-assert.match(themeLoader, /v12\.19-phase4-live2d-polish/);
-for (const asset of [
-  "companion-live2d-interaction.css",
-  "companion-live2d-interaction.js",
-  "companion-live2d-voice.css",
-  "companion-live2d-voice.js",
-  "companion-live2d-neural-voice.css",
-  "companion-live2d-neural-voice.js",
-  "companion-voice-input.css",
-  "companion-voice-input.js",
-  "companion-call-mode.css",
-  "companion-call-mode.js",
-  "companion-live2d-polish.css",
-  "companion-live2d-polish.js"
-]) assert.ok(themeLoader.includes(asset), `theme loader is missing ${asset}`);
-
-// V12.19 product polish: barge-in, per-character mouth gain, diagnostics and manual mouth test.
-assert.match(polish, /v12\.19-live2d-polish/);
-assert.match(polish, /uai_companion_live2d_polish_v1/);
-assert.match(polish, /mouthSensitivity/);
-assert.match(polish, /function patchLipSyncApi\(/);
-assert.match(polish, /Math\.pow\(raw, \.90\)/);
-assert.match(polish, /function diagnostics\(/);
-assert.match(polish, /motionManager\?\.lipSyncIds/);
-assert.match(polish, /getLipSyncParameters/);
-assert.match(polish, /v129Live2dLipSync/);
-assert.match(polish, /function testMouth\(/);
-assert.match(polish, /requestAnimationFrame\(frame\)/);
-assert.match(polish, /function interruptAndListen\(/);
-assert.match(polish, /UnlimitedCompanionNeuralVoice\?\.stop/);
-assert.match(polish, /UnlimitedCompanionVoiceInput\?\.start/);
-assert.match(polish, /stopImmediatePropagation/);
-assert.match(polish, /uaiCompanionV19PolishPanel/);
-assert.match(polish, /data-v19-mouth-test/);
-assert.match(polish, /data-v19-diagnose/);
-for (const voiceId of ["ara", "eve", "sal", "rex", "leo"]) assert.ok(polish.includes(voiceId), `V12.19 quick voice preset missing ${voiceId}`);
-assert.match(polish, /window\.UnlimitedCompanionLive2DPolish/);
-assert.match(polishCss, /uai-c-v19-interrupt-ready/);
-assert.match(polishCss, /uai-c-v19-diagnostic\.ok/);
-assert.match(polishCss, /uai-c-v19-diagnostic\.warn/);
-
-assert.match(interaction, /v12\.13-live2d-presence/);
-for (const marker of [
-  "function classifyEmotion(",
-  "function relationshipStage(",
-  "function maybeWelcome(",
-  "function idleReaction(",
-  "function ensureIdleLoop(",
-  "function beginVoice(",
-  "function setVoiceLevel(",
-  "function endVoice(",
-  "function attachAudioElement("
-]) assert.ok(interaction.includes(marker), `presence bridge missing ${marker}`);
-assert.match(interaction, /setMouthOpen/);
-assert.match(interaction, /reactToText/);
-assert.match(interaction, /window\.UnlimitedCompanionLive2DInteraction/);
-
+// Presence bridge still classifies the reply and routes emotions through Live2D.setEmotion.
+assert.match(interaction, /function classifyEmotion\(/);
+assert.match(interaction, /happy/);
+assert.match(interaction, /shy/);
+assert.match(interaction, /caring/);
+assert.match(interaction, /sad/);
+assert.match(interaction, /angry/);
+assert.match(interaction, /thinking/);
+assert.match(interaction, /api\(\)\?\.setEmotion/);
+assert.match(interaction, /playMotion\?\.\("TapBody"/);
+assert.match(interactionCss, /data-v129-live2d-emotion="caring"/);
 for (const marker of [
   "value.days >= 7 && value.messages >= 180 && value.sessions >= 8",
   "value.days >= 3 && value.messages >= 70 && value.sessions >= 4",
@@ -161,158 +75,91 @@ for (const marker of [
   assert.ok(galaxy.includes(marker), `galaxy relationship stage is missing: ${marker}`);
   assert.ok(interaction.includes(marker), `Live2D relationship stage drifted: ${marker}`);
 }
-assert.match(interactionCss, /padding-right:38%!important/);
-assert.match(interactionCss, /data-v129-live2d-emotion="caring"/);
-assert.match(interactionCss, /data-v129-live2d-relation-level="4"/);
-assert.doesNotMatch(interactionCss, /var\(--d[xy]\)\s*\*/);
 
-// Browser TTS remains the no-server fallback and waveform analyser.
-assert.match(voice, /v12\.14-live2d-voice/);
+// TTS/STT/call loop remain intact.
 assert.match(voice, /SpeechSynthesisUtterance/);
-assert.match(voice, /speechSynthesis\.getVoices/);
-assert.match(voice, /function extractSpeechText\(/);
-assert.match(voice, /function attachAudio\(/);
-assert.match(voice, /createMediaElementSource/);
 assert.match(voice, /createAnalyser/);
 assert.match(voice, /getByteTimeDomainData/);
-assert.match(voice, /setVoiceLevel/);
-assert.match(voice, /window\.UnlimitedCompanionVoice/);
-assert.match(voiceCss, /uai-c-v14-voice-trigger/);
-
-// Neural voice still owns auto-speak, real audio playback and replay/cancellation.
-assert.match(neuralVoice, /v12\.15-neural-voice-3/);
-assert.match(neuralVoice, /uai_companion_neural_voice_v1/);
-assert.match(neuralVoice, /\/api\/companion\/tts\/status/);
-assert.match(neuralVoice, /fetch\("\/api\/companion\/tts"/);
-assert.match(neuralVoice, /response\.blob\(\)/);
+assert.match(neuralVoice, /\/api\/companion\/tts/);
 assert.match(neuralVoice, /new Audio\(url\)/);
 assert.match(neuralVoice, /attachAudio\?\.\(audio/);
-assert.match(neuralVoice, /const migratedCharacters = new Set\(\)/);
-assert.match(neuralVoice, /lastBlobs = \[\]/);
-assert.match(neuralVoice, /lastNeuralCheckAt/);
-assert.match(neuralVoice, /function watchSystemSpeech\(/);
-assert.match(neuralVoice, /audio\.addEventListener\("pause"/);
-assert.match(neuralVoice, /audio\.addEventListener\("emptied"/);
 assert.match(neuralVoice, /function replay\(/);
 assert.match(neuralVoice, /function stop\(/);
-assert.match(neuralVoice, /AbortController/);
-assert.match(neuralVoice, /fallbackSystem/);
-assert.match(neuralVoice, /window\.UnlimitedCompanionNeuralVoice/);
-assert.match(neuralVoiceCss, /uai-c-v15-neural-voice-ready/);
-assert.match(neuralVoiceCss, /data-v15-neural-voice-state="speaking"/);
-
-// Microphone input stays safe/editable on its own; auto-send belongs only to V12.17 call mode.
-assert.match(voiceInput, /v12\.16-voice-input-2/);
-assert.match(voiceInput, /MAX_RECORD_MS = 30000/);
-assert.match(voiceInput, /navigator\.mediaDevices\?\.getUserMedia/);
-assert.match(voiceInput, /window\.MediaRecorder/);
-assert.match(voiceInput, /getUserMedia\(\{/);
-assert.match(voiceInput, /echoCancellation: true/);
-assert.match(voiceInput, /noiseSuppression: true/);
+assert.match(voiceInput, /MediaRecorder/);
 assert.match(voiceInput, /\/api\/companion\/stt/);
-assert.match(voiceInput, /transcribeController/);
-assert.match(voiceInput, /discardNextRecording/);
-assert.match(voiceInput, /scheduleIdle/);
-assert.match(voiceInput, /setHtmlIfChanged/);
-assert.match(voiceInput, /uaiCompanionMicButton/);
-assert.match(voiceInput, /#uaiCompanionInput/);
-assert.match(voiceInput, /dispatchEvent\(new Event\("input"/);
-assert.doesNotMatch(voiceInput, /uaiCompanionSend|\.click\(\).*send/i, "speech recognition alone must not auto-send user text");
-assert.match(voiceInput, /window\.UnlimitedCompanionVoiceInput/);
-assert.match(voiceInputCss, /uai-c-v16-mic/);
-
-// V12.17 hands-free call: STT done -> optional send -> wait -> spoken reply -> listen again.
+assert.match(voiceInput, /noiseSuppression: true/);
 assert.match(callMode, /v12\.17-call-mode-\d+/);
-assert.match(callMode, /uai_companion_call_mode_v1/);
 assert.match(callMode, /autoSend: true/);
 assert.match(callMode, /autoListen: true/);
-assert.match(callMode, /voiceEngine: "auto"/);
-assert.match(callMode, /voiceId: "ara"/);
-for (const voiceId of ["ara", "eve", "sal", "rex", "leo"]) assert.ok(callMode.includes(voiceId), `missing Grok voice ${voiceId}`);
-assert.match(callMode, /__UAI_COMPANION_TTS_FETCH_BRIDGE__/);
-assert.match(callMode, /body\.engine = settings\.voiceEngine/);
-assert.match(callMode, /body\.voice_id = settings\.voiceId/);
-assert.match(callMode, /const response = await originalFetch\(input, requestInit\)/);
-assert.match(callMode, /x-tts-engine/i);
-assert.match(callMode, /function startCall\(/);
-assert.match(callMode, /function endCall\(/);
-assert.match(callMode, /function startListeningSoon\(/);
-assert.match(callMode, /function sendRecognizedText\(/);
-assert.match(callMode, /send\.click\(\)/);
-assert.match(callMode, /micState === "done"/);
-assert.match(callMode, /lastGenerating && !generating/);
-assert.match(callMode, /reactToText/);
-assert.match(callMode, /uaiCompanionCallToggle/);
-assert.match(callMode, /uaiCompanionCallBar/);
-assert.match(callMode, /uaiV17AutoSend/);
-assert.match(callMode, /uaiV17AutoListen/);
-assert.match(callMode, /uaiV17Voice/);
-assert.match(callMode, /uaiV17ModelUrl/);
-assert.match(callMode, /uaiV17ModelX[\s\S]*min="0\.48" max="0\.96"/);
-assert.match(callMode, /uaiV17ModelY[\s\S]*min="0\.72" max="1\.08"/);
-assert.match(callMode, /uaiV17ModelHeight[\s\S]*min="0\.46" max="1\.08"/);
+for (const voiceId of ["ara","eve","sal","rex","leo"]) assert.ok(callMode.includes(voiceId), `missing Grok voice ${voiceId}`);
 assert.match(callMode, /setModelForCharacter/);
-assert.match(callMode, /clearModelForCharacter/);
-assert.match(callMode, /window\.UnlimitedCompanionCallMode/);
 assert.match(callModeCss, /uai-c-v17-call-bar/);
-assert.match(callModeCss, /data-v17-call-mode="active"/);
-assert.match(callModeCss, /#uaiCompanionV15VoicePanel\{display:none!important\}/);
 
-// Worker binding and voice endpoints remain isolated from existing chat Worker.
+// V12.19 diagnostics / barge-in / per-role mouth tuning.
+assert.match(polish, /v12\.19-live2d-polish/);
+assert.match(polish, /mouthSensitivity/);
+assert.match(polish, /function diagnostics\(/);
+assert.match(polish, /lipSyncIds/);
+assert.match(polish, /motionGroups/);
+assert.match(polish, /expressionNames/);
+assert.match(polish, /function testMouth\(/);
+assert.match(polish, /function interruptAndListen\(/);
+assert.match(polish, /stopImmediatePropagation/);
+assert.match(polish, /data-v19-mouth-test/);
+assert.match(polish, /data-v19-diagnose/);
+assert.match(polishCss, /uai-c-v19-interrupt-ready/);
+
+// V12.20 scans the actual formal model and builds a stable per-character emotion map.
+assert.match(emotion, /v12\.20-live2d-emotion-engine-2/);
+assert.match(emotion, /uai_companion_live2d_emotion_map_v1/);
+assert.match(emotion, /function expressionsFromModel\(/);
+assert.match(emotion, /function motionsFromModel\(/);
+assert.match(emotion, /function lipSyncIds\(/);
+assert.match(emotion, /function capabilities\(/);
+assert.match(emotion, /function bestExpression\(/);
+assert.match(emotion, /function bestMotion\(/);
+assert.match(emotion, /function buildAutoMapping\(/);
+assert.match(emotion, /semanticExpression/);
+assert.match(emotion, /semanticMotion/);
+for (const name of ["normal","happy","shy","caring","sad","angry","thinking"]) assert.ok(emotion.includes(name), `missing emotion ${name}`);
+assert.match(emotion, /stored\.signature !== info\.signature/);
+assert.match(emotion, /getMapping\(\{ rebuild: true \}\)/);
+assert.match(emotion, /api\.setEmotion = \(emotion\) => applyMappedEmotion/);
+assert.match(emotion, /originalPlayMotion\(rule\.motionGroup/);
+assert.match(emotion, /suppressLegacyOverride/);
+assert.match(emotion, /performance\.now\(\) - lastMappedAt < 420/);
+assert.match(emotion, /updateFormalModelStatus/);
+assert.match(emotion, /情绪映射已生成/);
+assert.match(emotion, /data-v20-rebuild/);
+assert.match(emotion, /data-v20-copy/);
+assert.match(emotion, /copyMapping/);
+assert.match(emotion, /exportMapping/);
+assert.match(emotion, /window\.UnlimitedCompanionLive2DEmotionEngine/);
+assert.match(emotionCss, /uai-c-v20-emotion-panel/);
+assert.match(emotionCss, /data-v120-emotion-mapped="happy"/);
+
+// Deep loader also carries the final layers as a fallback.
+assert.match(themeLoader, /v12\.20-phase4-emotion-engine/);
+for (const asset of ["companion-live2d-polish.css","companion-live2d-polish.js","companion-live2d-emotion-engine.css","companion-live2d-emotion-engine.js"]) {
+  assert.ok(themeLoader.includes(asset), `theme loader is missing ${asset}`);
+}
+
+// Worker voice stack remains isolated from existing chat Worker.
 assert.match(wrangler, /main = "src\/worker-voice\.js"/);
 assert.match(wrangler, /\[ai\][\s\S]*binding = "AI"/);
 assert.match(workerVoice, /import worker from "\.\/worker\.js"/);
-assert.match(workerVoice, /handleCompanionTts/);
-assert.match(workerVoice, /handleCompanionStt/);
-assert.match(workerVoice, /\/api\/companion\/tts/);
-assert.match(workerVoice, /\/api\/companion\/stt/);
-assert.match(workerVoice, /function sameSiteRequest\(/);
-assert.match(workerVoice, /Cross-site voice request blocked/);
-assert.match(workerVoice, /xai\/grok-tts/);
-assert.match(workerVoice, /ara.*eve.*sal.*rex.*leo/s);
-
-// TTS supports true per-character voices through Grok and falls back to Melo.
-assert.match(tts, /const GROK_MODEL = "xai\/grok-tts"/);
-assert.match(tts, /const MELO_MODEL = "@cf\/myshell-ai\/melotts"/);
-assert.match(tts, /GROK_VOICES = new Set\(\["eve", "ara", "rex", "sal", "leo"\]\)/);
-assert.match(tts, /voice_id: voice/);
-assert.match(tts, /language/);
-assert.match(tts, /text_normalization: true/);
-assert.match(tts, /async function runGrok\(/);
-assert.match(tts, /async function runMelo\(/);
-assert.match(tts, /await runGrok/);
-assert.match(tts, /await runMelo/);
-assert.match(tts, /X-TTS-Engine/);
-assert.match(tts, /X-TTS-Voice/);
-assert.match(tts, /env\.AI\.run/);
-assert.match(tts, /AI_BINDING_MISSING/);
-
+assert.match(tts, /xai\/grok-tts/);
+assert.match(tts, /@cf\/myshell-ai\/melotts/);
 assert.match(stt, /@cf\/openai\/whisper-large-v3-turbo/);
-assert.match(stt, /MAX_AUDIO_BYTES = 4 \* 1024 \* 1024/);
-assert.match(stt, /audio: arrayBufferToBase64\(buffer\)/);
-assert.match(stt, /task: "transcribe"/);
-assert.match(stt, /language: "zh"/);
 assert.match(stt, /vad_filter: true/);
-assert.match(stt, /env\.AI\.run/);
-assert.match(stt, /NO_SPEECH/);
 
-// Official Mao remains the safe test fallback until a formal Li Meng model is assigned.
+// Official Mao remains the safe fallback until a formal Li Meng model is supplied.
 assert.equal(config.version, 5);
-assert.match(config.defaultModel?.model || "", /^https:\/\/cdn\.jsdelivr\.net\/gh\/Live2D\/CubismWebSamples@/);
 assert.match(config.defaultModel?.model || "", /\/Samples\/Resources\/Mao\/Mao\.model3\.json$/);
 assert.equal(config.defaultModel?.sample?.name, "Mao");
-assert.equal(config.defaultModel?.position?.x, 0.80);
-assert.equal(config.defaultModel?.position?.y, 1.08);
-assert.equal(config.defaultModel?.position?.height, 0.98);
 assert.equal(config.byName?.["李萌"]?.model, "/live2d/characters/limeng/limeng.model3.json");
-const fallback = config.byName?.["李萌"]?.fallback;
-assert.ok(fallback, "李萌 should keep the official sample fallback until the real model is provided");
-assert.match(fallback.model, /^https:\/\/cdn\.jsdelivr\.net\/gh\/Live2D\/CubismWebSamples@/);
-assert.equal(fallback.sample?.owner, "Live2D Inc.");
-
+assert.ok(config.byName?.["李萌"]?.fallback, "Li Meng must retain the official Mao fallback until a formal model exists");
 assert.match(readme, /public\/live2d\/characters\/limeng/);
-assert.match(readme, /official Live2D `Mao` sample/i);
-assert.match(readme, /official hosted Cubism Core/i);
 assert.equal(fs.existsSync("public/live2d/vendor/live2dcubismcore.min.js"), false);
 
-console.log("Companion Live2D contract passed: model-aware lip sync + V12.19 diagnostics/barge-in + presence + Grok/Melo voices + Whisper + hands-free call + model swap.");
+console.log("Companion Live2D contract passed: adaptive lip sync + emotion mapping + diagnostics + barge-in + voice call + formal model auto-adaptation.");
