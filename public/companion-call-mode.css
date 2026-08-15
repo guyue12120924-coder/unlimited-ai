@@ -1,4 +1,5 @@
 /* Companion V12.17 — hands-free call / role voice / formal Live2D controls. */
+#uaiCompanionRoot.uai-c-v17-call-ready #uaiCompanionV15VoicePanel{display:none!important}
 #uaiCompanionRoot .uai-c-v17-call-toggle{
   height:36px;padding:0 13px;border:1px solid rgba(255,255,255,.11);border-radius:999px;
   display:inline-flex;align-items:center;gap:7px;background:linear-gradient(135deg,rgba(36,24,86,.72),rgba(74,37,116,.48));
