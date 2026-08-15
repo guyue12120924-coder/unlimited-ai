@@ -15,14 +15,7 @@ const phase3 = read("public/v2-product-phase3.js");
 
 const runtimeIndex = index.indexOf("/v3-runtime.js");
 const sidebarIndex = index.indexOf("/v3-sidebar.js");
-const order = [
-  "/user-flow.js",
-  "/ai-to-manuscript.js",
-  "/v2-experience.js",
-  "/v2-product.js",
-  "/v2-product-phase2.js",
-  "/v2-product-phase3.js"
-].map((item) => index.indexOf(item));
+const order = ["/user-flow.js","/ai-to-manuscript.js","/v2-experience.js","/v2-product.js","/v2-product-phase2.js","/v2-product-phase3.js"].map((item) => index.indexOf(item));
 
 assert(runtimeIndex >= 0, "V3 runtime must be loaded");
 assert(sidebarIndex > runtimeIndex, "stable sidebar must load after V3 runtime");
@@ -30,8 +23,8 @@ assert(order.every((value) => value >= 0), "all product experience scripts must 
 assert(order.every((value, position) => position === 0 || value > order[position - 1]), "product experience scripts must load in order");
 assert(order.every((value) => value > sidebarIndex), "stable sidebar must load before every product experience adapter");
 assert.match(index, /v3-product\.css/);
-assert.match(index, /2026-08-15-v12\.18-live2d-lipsync-\d+/);
-assert.match(index, /boot-diagnostics\.js\?v=20260815-v12\.18-live2d-lipsync-\d+/);
+assert.match(index, /2026-08-15-v12\.20-live2d-emotion-\d+/);
+assert.match(index, /boot-diagnostics\.js\?v=20260815-v12\.20-live2d-emotion-\d+/);
 assert.match(index, /<span>AI 小说创作<\/span>/, "initial brand subtitle must already match the final V3 copy");
 assert.match(index, /v3-sidebar\.js\?v=20260809-2/, "static label fix must use a fresh browser cache key");
 assert.doesNotMatch(index, /removeAttribute\("data-v2-outline-ready"\)/, "temporary outline inline patch must live in V3 runtime, not index.html");
@@ -63,34 +56,27 @@ assert.match(sidebar, /UnlimitedV3Sidebar/);
 assert.match(experience, /isPristineProject/);
 assert.match(experience, /createFirstChapter/);
 assert.match(experience, /Existing work is never rewritten/);
-
 assert.match(aiToManuscript, /加入正文/);
 assert.match(userFlow, /nextChapterAction/);
 assert.match(userFlow, /workflowCompleteChapter/);
-
 assert.match(phase1, /data-v2-edit="polish"/);
 assert.match(phase1, /替换原文/);
 assert.match(phase1, /插入原文后/);
-
 assert.match(phase2, /删除章节前/);
 assert.match(phase2, /v210MobileNav/);
 assert.match(phase2, /对话<\/button><button type="button" data-v210-view="draft">正文/);
-
 assert.match(phase3, /BACKUP_FORMAT = "unlimited-ai-backup"/);
 assert.match(phase3, /exportCompleteBackup/);
 assert.match(phase3, /restoreLocalData/);
 assert.match(phase3, /恢复前/);
 assert.match(phase3, /dataHealth/);
-
 assert.match(phase3, /v213DraftEmpty/);
 assert.match(phase3, /还没有人物/);
 assert.match(phase3, /还没有大纲/);
 assert.match(phase3, /还没有设定/);
-
 assert.match(phase3, /v211-long-workspace/);
 assert.match(phase3, /LONG_CHAT_ROWS = 80/);
 assert.match(phase3, /LONG_BOOK_CHARS = 120000/);
-
 assert.match(phase3, /runDiagnostics/);
 assert.match(phase3, /产品自检/);
 
