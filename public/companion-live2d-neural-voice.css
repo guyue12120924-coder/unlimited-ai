@@ -80,7 +80,8 @@
 #uaiCompanionRoot .uai-c-v15-voice-actions button:hover:not(:disabled){background:rgba(132,67,187,.41);border-color:rgba(238,188,255,.28)}
 #uaiCompanionRoot .uai-c-v15-voice-actions button:disabled{opacity:.35;cursor:not-allowed}
 #uaiCompanionRoot .uai-c-v15-voice-actions small{flex:1 1 100%;font-size:10px;line-height:1.45;color:rgba(230,221,255,.40)}
-#uaiCompanionRoot .uai-c-v15-voice-actions small[data-state="ready"]{color:rgba(167,238,216,.66)}
+#uaiCompanionRoot .uai-c-v15-voice-actions small[data-state="ready"]{color:rgba(181,218,255,.70)}
+#uaiCompanionRoot .uai-c-v15-voice-actions small[data-state="verified"]{color:rgba(154,247,210,.78)}
 #uaiCompanionRoot .uai-c-v15-voice-actions small[data-state="unavailable"]{color:rgba(255,194,218,.62)}
 
 #uaiCompanionRoot[data-v15-neural-voice-state="loading"] .uai-c-live2d-stage::before{opacity:.78;animation:uaiV15NeuralAura 1.3s ease-in-out infinite alternate!important}
