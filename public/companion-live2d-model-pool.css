@@ -1,0 +1,32 @@
+/* Companion V12.21 — per-character Live2D model pool. */
+#uaiCompanionRoot .uai-c-v21-model-pool{
+  margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,.075);display:grid;gap:10px
+}
+#uaiCompanionRoot .uai-c-v21-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
+#uaiCompanionRoot .uai-c-v21-head>div{display:grid;gap:3px}
+#uaiCompanionRoot .uai-c-v21-head strong{font-size:13px;color:rgba(255,255,255,.94)}
+#uaiCompanionRoot .uai-c-v21-head span{font-size:10px;line-height:1.5;color:rgba(235,226,255,.45)}
+#uaiCompanionRoot .uai-c-v21-head em{
+  font:650 9px/1 ui-monospace,SFMono-Regular,Consolas,monospace;font-style:normal;
+  color:rgba(255,213,246,.72);padding:5px 7px;border-radius:999px;border:1px solid rgba(232,148,229,.16);background:rgba(141,74,151,.12)
+}
+#uaiCompanionRoot .uai-c-v21-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}
+#uaiCompanionRoot .uai-c-v21-row select{
+  width:100%;height:36px;padding:0 11px;border:1px solid rgba(255,255,255,.10);border-radius:11px;
+  background:rgba(12,10,42,.62);color:rgba(255,255,255,.91);outline:none
+}
+#uaiCompanionRoot .uai-c-v21-row select:focus{border-color:rgba(201,145,255,.30);box-shadow:0 0 0 3px rgba(164,99,227,.08)}
+#uaiCompanionRoot .uai-c-v21-row button{
+  height:36px;padding:0 12px;border:1px solid rgba(213,171,255,.18);border-radius:11px;
+  background:linear-gradient(135deg,rgba(105,61,162,.38),rgba(78,50,137,.30));color:rgba(255,244,255,.91);cursor:pointer
+}
+#uaiCompanionRoot .uai-c-v21-row button:hover{background:linear-gradient(135deg,rgba(127,67,183,.50),rgba(98,58,158,.42));border-color:rgba(238,188,255,.27)}
+#uaiCompanionRoot .uai-c-v21-status{
+  min-height:30px;padding:8px 10px;border:1px solid rgba(119,228,205,.10);border-radius:10px;
+  background:linear-gradient(135deg,rgba(52,128,115,.10),rgba(104,63,155,.08));font-size:10px;line-height:1.45;color:rgba(194,245,229,.72)
+}
+#uaiCompanionRoot .uai-c-v21-model-pool>small{font-size:9px;line-height:1.45;color:rgba(231,222,255,.36)}
+@media(max-width:760px){
+  #uaiCompanionRoot .uai-c-v21-row{grid-template-columns:1fr}
+  #uaiCompanionRoot .uai-c-v21-row button{width:100%}
+}
