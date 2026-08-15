@@ -1,29 +1,64 @@
 import worker from "./worker.js";
 import { handleCompanionTts } from "./tts.js";
+import { handleCompanionStt } from "./stt.js";
 
-const REVISION = "2026-08-15-v12.15-neural-voice-1";
+const REVISION = "2026-08-15-v12.16-voice-conversation-1";
+
+function sameSiteRequest(request) {
+  const url = new URL(request.url);
+  const origin = request.headers.get("origin");
+  if (origin) return origin === url.origin;
+  const site = String(request.headers.get("sec-fetch-site") || "").toLowerCase();
+  return !site || site === "same-origin" || site === "same-site" || site === "none";
+}
+
+function forbidden() {
+  return new Response(JSON.stringify({ error: "Cross-site voice request blocked" }), {
+    status: 403,
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+      "Cache-Control": "no-store"
+    }
+  });
+}
+
+function statusResponse(env) {
+  return new Response(JSON.stringify({
+    available: Boolean(env.AI && typeof env.AI.run === "function"),
+    provider: "Cloudflare Workers AI",
+    ttsModel: "@cf/myshell-ai/melotts",
+    sttModel: "@cf/openai/whisper-large-v3-turbo",
+    revision: REVISION
+  }), {
+    status: 200,
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+      "Cache-Control": "no-store"
+    }
+  });
+}
 
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+    const isVoicePost = request.method === "POST"
+      && (url.pathname === "/api/companion/tts" || url.pathname === "/api/companion/stt");
+
+    if (isVoicePost && !sameSiteRequest(request)) return forbidden();
 
     if (request.method === "POST" && url.pathname === "/api/companion/tts") {
       return handleCompanionTts(request, env);
     }
 
-    if (request.method === "GET" && url.pathname === "/api/companion/tts/status") {
-      return new Response(JSON.stringify({
-        available: Boolean(env.AI && typeof env.AI.run === "function"),
-        provider: "Cloudflare Workers AI",
-        model: "@cf/myshell-ai/melotts",
-        revision: REVISION
-      }), {
-        status: 200,
-        headers: {
-          "Content-Type": "application/json; charset=utf-8",
-          "Cache-Control": "no-store"
-        }
-      });
+    if (request.method === "POST" && url.pathname === "/api/companion/stt") {
+      return handleCompanionStt(request, env);
+    }
+
+    if (
+      request.method === "GET"
+      && (url.pathname === "/api/companion/tts/status" || url.pathname === "/api/companion/stt/status")
+    ) {
+      return statusResponse(env);
     }
 
     return worker.fetch(request, env, ctx);
