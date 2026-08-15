@@ -25,9 +25,9 @@ const stt = read("src/stt.js");
 const config = JSON.parse(read("public/live2d/characters.json"));
 const readme = read("public/live2d/README.md");
 
-// V12.17 must be visible from the top boot/cache chain.
-assert.match(index, /2026-08-15-v12\.17-call-mode-1/);
-assert.match(index, /boot-diagnostics\.js\?v=20260815-v12\.17-call-mode-1/);
+// V12.17 must be visible from the top boot/cache chain without tying tests to a patch number.
+assert.match(index, /2026-08-15-v12\.17-call-mode-\d+/);
+assert.match(index, /boot-diagnostics\.js\?v=20260815-v12\.17-call-mode-\d+/);
 assert.match(boot, /v12\.17-call-mode/);
 for (const asset of [
   "companion-live2d.css",
@@ -180,7 +180,7 @@ assert.match(voiceInput, /window\.UnlimitedCompanionVoiceInput/);
 assert.match(voiceInputCss, /uai-c-v16-mic/);
 
 // V12.17 hands-free call: STT done -> optional send -> wait -> spoken reply -> listen again.
-assert.match(callMode, /v12\.17-call-mode-2/);
+assert.match(callMode, /v12\.17-call-mode-\d+/);
 assert.match(callMode, /uai_companion_call_mode_v1/);
 assert.match(callMode, /autoSend: true/);
 assert.match(callMode, /autoListen: true/);
@@ -190,7 +190,8 @@ for (const voiceId of ["ara", "eve", "sal", "rex", "leo"]) assert.ok(callMode.in
 assert.match(callMode, /__UAI_COMPANION_TTS_FETCH_BRIDGE__/);
 assert.match(callMode, /body\.engine = settings\.voiceEngine/);
 assert.match(callMode, /body\.voice_id = settings\.voiceId/);
-assert.match(callMode, /X-TTS|x-tts-engine/i);
+assert.match(callMode, /const response = await originalFetch\(input, requestInit\)/);
+assert.match(callMode, /x-tts-engine/i);
 assert.match(callMode, /function startCall\(/);
 assert.match(callMode, /function endCall\(/);
 assert.match(callMode, /function startListeningSoon\(/);
@@ -205,6 +206,9 @@ assert.match(callMode, /uaiV17AutoSend/);
 assert.match(callMode, /uaiV17AutoListen/);
 assert.match(callMode, /uaiV17Voice/);
 assert.match(callMode, /uaiV17ModelUrl/);
+assert.match(callMode, /uaiV17ModelX[\s\S]*min="0\.48" max="0\.96"/);
+assert.match(callMode, /uaiV17ModelY[\s\S]*min="0\.72" max="1\.08"/);
+assert.match(callMode, /uaiV17ModelHeight[\s\S]*min="0\.46" max="1\.08"/);
 assert.match(callMode, /setModelForCharacter/);
 assert.match(callMode, /clearModelForCharacter/);
 assert.match(callMode, /window\.UnlimitedCompanionCallMode/);
