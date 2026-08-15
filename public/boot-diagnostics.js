@@ -1,8 +1,8 @@
 // public/boot-diagnostics.js
 // Startup guard + dual-mode bootstrap.
 (() => {
-  const REVISION = "2026-08-14-v12.11-live2d-hosted-core-1";
-  // Diagnostics compatibility markers: 2026-08-14-v12.10-live2d-sample-1 / 2026-08-14-v12.9-live2d-1 / 2026-08-14-v12.4-dual-mode-1 / 2026-08-14-v12.3-dual-mode-1 / 2026-08-14-v12.2-dual-mode-1 / 2026-08-14-v12.1-dual-mode-1 / 2026-08-14-v12.0-dual-mode-1 / 2026-08-14-v11.6-dual-mode-1
+  const REVISION = "2026-08-15-v12.14-live2d-voice-1";
+  // Diagnostics compatibility markers: 2026-08-14-v12.11-live2d-hosted-core-1 / 2026-08-14-v12.10-live2d-sample-1 / 2026-08-14-v12.9-live2d-1 / 2026-08-14-v12.4-dual-mode-1 / 2026-08-14-v12.3-dual-mode-1 / 2026-08-14-v12.2-dual-mode-1 / 2026-08-14-v12.1-dual-mode-1 / 2026-08-14-v12.0-dual-mode-1 / 2026-08-14-v11.6-dual-mode-1
   const errors = [];
 
   document.documentElement.dataset.frontendRevision = REVISION;
@@ -83,6 +83,7 @@
     ensureStyle(`/companion-v12-polish.css?v=${REVISION}`, "uaiCompanionV12PolishCss");
     ensureStyle(`/companion-v12-phase1.css?v=${REVISION}`, "uaiCompanionV12Phase1Css");
     ensureStyle(`/companion-live2d.css?v=${REVISION}`, "uaiCompanionLive2dCss");
+    ensureStyle(`/companion-live2d-voice.css?v=${REVISION}`, "uaiCompanionLive2dVoiceCss");
 
     ensureScript(`/companion-characters-core.js?v=${REVISION}`, "uaiCompanionCharactersCoreScript");
     ensureScript(`/companion-character-editor.js?v=${REVISION}`, "uaiCompanionCharacterEditorScript");
@@ -106,6 +107,7 @@
     ensureScript(`/companion-v12-polish.js?v=${REVISION}`, "uaiCompanionV12PolishScript");
     ensureScript(`/companion-v12-phase1.js?v=${REVISION}`, "uaiCompanionV12Phase1Script");
     ensureScript(`/companion-live2d.js?v=${REVISION}`, "uaiCompanionLive2dScript");
+    ensureScript(`/companion-live2d-voice.js?v=${REVISION}`, "uaiCompanionLive2dVoiceScript");
 
     if (document.getElementById("uaiModeRouterScript")) return;
     const script = document.createElement("script");
@@ -154,6 +156,7 @@
       window.__UNLIMITED_BOOT__.companionV12PolishReady = Boolean(window.UnlimitedCompanionV123);
       window.__UNLIMITED_BOOT__.companionV12Phase1Ready = Boolean(window.UnlimitedCompanionV124Phase1);
       window.__UNLIMITED_BOOT__.companionLive2dReady = Boolean(window.UnlimitedCompanionLive2D);
+      window.__UNLIMITED_BOOT__.companionVoiceReady = Boolean(window.UnlimitedCompanionVoice);
       return;
     }
     const parts = [];
