@@ -2,7 +2,7 @@
 (() => {
   if (window.UnlimitedCompanionV123UXHardening) return;
 
-  const REVISION = "2026-08-15-v12.23-ux-hardening-2";
+  const REVISION = "2026-08-15-v12.23-ux-hardening-3";
   const COLLAPSE_KEY = "uai_companion_sidebar_collapsed_v1";
   const IMMERSIVE_KEY = "uai_companion_immersive_v1";
   let scheduled = false;
@@ -58,8 +58,6 @@
     root.classList.add("uai-c-v123-layout-switching");
     root.classList.toggle("uai-c-v11-immersive", next);
     syncImmersiveButton(root, next);
-    // Two frames are enough for Grid/Live2D ResizeObserver to settle while all
-    // old layout transitions are suppressed by the V12.23 CSS.
     requestAnimationFrame(() => requestAnimationFrame(() => {
       root.classList.remove("uai-c-v123-layout-switching");
       window.UnlimitedCompanionLive2D?.refresh?.();
@@ -91,9 +89,6 @@
     const modern = modernSceneReady(root);
     root?.classList.toggle("uai-c-v123-modern-scene", modern);
     if (!modern) return;
-    // These two are fallback/legacy ambience layers. Keeping their RAF/canvas
-    // compositing visible underneath the newer theme scene caused occasional
-    // full-screen flashes when immersive mode changed the grid dimensions.
     root.querySelectorAll(".uai-c-v121-sparkle-layer, .uai-c-v12-galaxy-layer").forEach((node) => {
       node.setAttribute("aria-hidden", "true");
       node.style.display = "none";
@@ -108,6 +103,11 @@
     const neural = neuralVoiceApi();
     if (neural?.getSettings && neural?.setSettings) {
       const next = !Boolean(neural.getSettings()?.enabled);
+      // V12.17 owns a per-character voiceEnabled flag and periodically mirrors
+      // it back into the neural layer. Update both stores together so clicking
+      // "off" cannot be immediately overwritten back to "on".
+      const callMode = window.UnlimitedCompanionCallMode;
+      if (callMode?.setSettings) callMode.setSettings({ voiceEnabled: next });
       neural.setSettings({ enabled: next });
       if (!next) neural.stop?.({ keepLast: true });
       else await neural.speak?.("语音已经打开啦。以后我的回复会说给你听。", { force: true, preview: true });
@@ -135,7 +135,6 @@
       neuralToggle.title = neural.getSettings?.().enabled ? "关闭自动语音回复" : "开启自动语音回复";
     }
 
-    // V12.14's browser-only button is obsolete once the neural layer is alive.
     const legacy = root?.querySelector("#uaiCompanionVoiceToggle");
     if (legacy && neural) {
       legacy.disabled = false;
@@ -151,9 +150,6 @@
     root.classList.add("uai-c-v123-hardened");
     root.dataset.v123UxHardening = REVISION;
     setSidebarCollapsed(root, boolValue(localStorage.getItem(COLLAPSE_KEY)), { noStore: true });
-    // Old V11 modules may re-apply the class from storage. Reconcile only when
-    // there is actual state drift; an ordinary DOM mutation must not cause a
-    // fresh immersive layout cycle.
     setImmersive(root, boolValue(localStorage.getItem(IMMERSIVE_KEY)), { noStore: true });
     syncRoleMenu(root);
     suppressLegacyRenderers(root);
@@ -177,13 +173,14 @@
       return;
     }
 
-    // Use pointerdown capture so an overlapping legacy layer cannot swallow the
-    // actual neural toggle. The following click is marked and consumed once.
     const voice = event.target.closest?.("#uaiCompanionNeuralVoiceToggle");
     if (voice) {
       event.preventDefault();
       event.stopImmediatePropagation();
       voice.dataset.v123PointerToggle = "1";
+      window.setTimeout(() => {
+        if (voice.dataset.v123PointerToggle === "1") delete voice.dataset.v123PointerToggle;
+      }, 650);
       void toggleVoice(root);
     }
   }
@@ -205,7 +202,7 @@
       event.preventDefault();
       event.stopImmediatePropagation();
       if (voice.dataset.v123PointerToggle === "1") delete voice.dataset.v123PointerToggle;
-      else void toggleVoice(root); // keyboard / assistive activation
+      else void toggleVoice(root);
       return;
     }
 
