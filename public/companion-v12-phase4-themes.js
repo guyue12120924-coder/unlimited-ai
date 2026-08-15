@@ -1,6 +1,6 @@
-// Companion V12.7/12.17 phase 4 — lightweight scene themes + Live2D voice conversation loaders.
+// Companion V12.7/12.19 phase 4 — lightweight scene themes + Live2D voice conversation loaders.
 (() => {
-  const REVISION = "2026-08-15-v12.17-phase4-call-mode-1";
+  const REVISION = "2026-08-15-v12.19-phase4-live2d-polish-1";
   const THEMES = ["galaxy", "sakura", "moonlight", "neon"];
   const LABELS = {
     galaxy: "星河梦境",
@@ -44,6 +44,9 @@
     // V12.17: hands-free call loop, per-role Grok voice and formal Live2D model controls.
     ensureStyle(`/companion-call-mode.css?v=${encodeURIComponent(REVISION)}`, "uaiCompanionCallModeCss");
     ensureScript(`/companion-call-mode.js?v=${encodeURIComponent(REVISION)}`, "uaiCompanionCallModeScript");
+    // V12.19: model diagnostics, per-role lip-sync tuning and one-tap barge-in.
+    ensureStyle(`/companion-live2d-polish.css?v=${encodeURIComponent(REVISION)}`, "uaiCompanionLive2dPolishCss");
+    ensureScript(`/companion-live2d-polish.js?v=${encodeURIComponent(REVISION)}`, "uaiCompanionLive2dPolishScript");
   }
 
   function getRoot() {
