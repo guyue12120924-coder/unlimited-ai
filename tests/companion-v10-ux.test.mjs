@@ -8,7 +8,8 @@ const editor = fs.readFileSync("public/companion-character-editor.js", "utf8");
 const settings = fs.readFileSync("public/companion-settings.js", "utf8");
 const extras = fs.readFileSync("public/companion-extras.js", "utf8");
 
-assert.match(boot, /v12\.21-live2d-model-pool/);
+assert.match(boot, /v12\.23-ux-hardening/);
+assert.match(boot, /companion-v12-ux-hardening\.js/);
 assert.match(boot, /companion-live2d-model-pool\.js/);
 assert.match(boot, /companion-v10\.css/);
 assert.match(boot, /companion-v10-shell\.js/);
@@ -87,4 +88,4 @@ assert.match(settings, /约 5000 字/);
 assert.match(extras, /ensureLongReplies/);
 assert.match(extras, /showMonthlyReview/);
 
-console.log("Companion V10.2 visual refinement remains stable under the V12.21 boot shell.");
+console.log("Companion V10.2 visual refinement remains stable under the V12.23 hardened boot shell.");
