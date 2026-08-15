@@ -2,21 +2,65 @@
 
 The companion chat supports Cubism 3/4 `.model3.json` models through the browser Live2D stage.
 
-## Current behavior
+## V12.21 automatic model pool
 
-The runtime first looks for the current 李萌 model at:
+Companion roles no longer all share the same Live2D appearance by default. The browser loads the pool definition from:
+
+```text
+/public/live2d/model-pool.json
+```
+
+The first verified pool uses runtime files from the official `Live2D/CubismWebSamples` repository pinned to one upstream commit:
+
+```text
+Mao
+Haru
+Hiyori Momose
+Rice Glassfield
+```
+
+The assignment layer is `public/companion-live2d-model-pool.js`.
+
+Behavior:
+
+- `李萌` keeps Mao automatically, because Mao is the appearance already used by the current companion UI.
+- Other roles are assigned the least-used pool model, with a stable role-id hash used to break ties.
+- With up to the number of unique models in the pool, automatic assignment tries to avoid duplicate appearances.
+- If there are more roles than models, models are reused in balanced order.
+- Automatic assignments are persisted in `uai_companion_live2d_assignments_v1`, so a refresh does not randomly change a role's appearance.
+- A user-selected pool model or custom `.model3.json` URL is treated as manual and is never overwritten by automatic assignment.
+- Deleting a role removes only its stale auto-generated pool assignment.
+- Changing a role's model refreshes the Live2D runtime and the V12.20 emotion scanner, so lip sync / expressions / motions are rebuilt for the newly selected model.
+
+Companion Settings → `角色外观模型` provides an `自动分配` option plus a manual model selector. The pool runtime API is also available:
+
+```js
+UnlimitedCompanionLive2DModelPool.getModels();
+UnlimitedCompanionLive2DModelPool.getCurrent();
+UnlimitedCompanionLive2DModelPool.setModel(characterId, "haru");
+UnlimitedCompanionLive2DModelPool.setAuto(characterId);
+UnlimitedCompanionLive2DModelPool.sync();
+```
+
+### Sample-data notice
+
+The pool deliberately uses models from Live2D's official Sample Data Collection rather than random extracted game/VTuber assets. These models remain Live2D sample material and are subject to the Live2D Free Material License Agreement, Live2D Cubism Sample Data Terms of Use, and any model-specific conditions.
+
+Do not assume that an official sample model is unrestricted character art. Before public/commercial deployment, review the current terms for the exact model and intended content. Keep the on-screen sample source/identity notice enabled.
+
+## Base / fallback behavior
+
+The base configuration still contains the local formal-model path for 李萌:
 
 ```text
 /live2d/characters/limeng/limeng.model3.json
 ```
 
-If that local model does not exist, the browser falls back to the official Live2D `Mao` sample model hosted from the Live2D `CubismWebSamples` GitHub repository. The fallback is pinned to a specific upstream commit so later upstream changes do not silently change the test model.
+If no V12.21 local pool/manual assignment exists, the runtime follows the normal resolution order from `characters.json` and ultimately falls back to official Mao. V12.21 normally creates a local Mao pool assignment for 李萌 first, so her existing appearance is preserved without requiring a local model file.
 
-The Mao model is **development/test data only** in this project. When it is active, the UI displays an official-sample credit. Once a real 李萌 model exists at the local path above, it automatically takes priority and the Mao fallback/credit disappear.
+## Optional folder for a custom local model
 
-## Recommended folder for the real 李萌 model
-
-Place the exported model like this. File names inside the folder may vary as long as `limeng.model3.json` references them correctly.
+A custom model can still be placed like this. File names inside the folder may vary as long as the `.model3.json` references them correctly.
 
 ```text
 public/live2d/characters/limeng/
@@ -35,7 +79,7 @@ public/live2d/characters/limeng/
 
 ## Automatic model adaptation (V12.20)
 
-A newly loaded formal model no longer needs hand-written emotion mappings before it can be used.
+A newly loaded model no longer needs hand-written emotion mappings before it can be used.
 
 After the `.model3.json` model becomes ready, the companion automatically scans:
 
@@ -55,7 +99,7 @@ angry
 thinking
 ```
 
-Semantic names such as `happy`, `smile`, `shy`, `love`, `sad`, `angry` and `thinking` are preferred. Models that use generic names such as `exp_01`, `exp_02`, etc. receive a stable fallback assignment so each emotion still maps to a concrete model expression and motion.
+Semantic names such as `happy`, `smile`, `shy`, `love`, `sad`, `angry` and `thinking` are preferred. Models that use generic names such as `exp_01`, `exp_02`, etc. receive a stable fallback assignment so each emotion still maps to a concrete model expression and motion when possible.
 
 The generated mapping is stored under:
 
@@ -63,15 +107,15 @@ The generated mapping is stored under:
 uai_companion_live2d_emotion_map_v1
 ```
 
-Changing the active model changes the model signature, which causes the mapping to rebuild automatically. Therefore, replacing Mao with a formal 李萌 model follows this path automatically:
+Changing the active model changes the model signature, which causes the mapping to rebuild automatically:
 
 ```text
-load model
+select / assign model
 → detect LipSync parameters
 → scan expressions and motions
 → generate emotion mapping
 → patch setEmotion()
-→ AI replies / calls / welcome reactions use the formal model's own capabilities
+→ AI replies / calls / welcome reactions use that model's capabilities
 ```
 
 In Companion Settings → Live2D interaction calibration, the UI can preview every emotion, rebuild the scan and copy the generated mapping JSON.
@@ -80,15 +124,19 @@ In Companion Settings → Live2D interaction calibration, the UI can preview eve
 
 The runtime does not assume every model uses `ParamMouthOpenY`. It first reads the model-declared LipSync group and only falls back to common parameter names when needed.
 
-For the current Mao sample this resolves to:
+For Mao this resolves to:
 
 ```text
 ParamA
 ```
 
-The mouth value is applied on the model's `beforeModelUpdate` hook so motions, expressions and physics do not immediately overwrite the audio-driven mouth value.
+Haru and Hiyori declare:
 
-The calibration panel also provides a per-character mouth sensitivity control and a direct `测试张嘴` action.
+```text
+ParamMouthOpenY
+```
+
+The mouth value is applied on the model's `beforeModelUpdate` hook so motions, expressions and physics do not immediately overwrite the audio-driven mouth value. The calibration panel also provides a per-character mouth sensitivity control and a direct `测试张嘴` action.
 
 ## Cubism Core — zero manual setup
 
@@ -106,18 +154,6 @@ The official hosted Core URL currently used by the runtime is:
 ```text
 https://cubism.live2d.com/sdk-web/cubismcore/live2dcubismcore.min.js
 ```
-
-A private/self-hosted deployment may still place an official SDK copy at the local path above if desired; it will automatically take priority.
-
-## Official sample notice
-
-The Mao fallback is a Live2D original sample used for SDK integration testing. This project keeps the sample data on Live2D's official GitHub host rather than copying the model files into this repository.
-
-When the sample is rendered, the UI provides the short notice:
-
-> This content uses sample data owned and copyrighted by Live2D Inc.
-
-Before redistributing or publishing a derivative that uses Live2D sample data, review the current Live2D Free Material License Agreement and the Live2D Cubism Sample Data Terms of Use.
 
 ## Per-character override
 
