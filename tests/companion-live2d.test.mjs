@@ -13,6 +13,9 @@ const neuralVoice = read("public/companion-live2d-neural-voice.js");
 const voiceInput = read("public/companion-voice-input.js");
 const callMode = read("public/companion-call-mode.js");
 const callModeCss = read("public/companion-call-mode.css");
+const modelPool = read("public/companion-live2d-model-pool.js");
+const modelPoolCss = read("public/companion-live2d-model-pool.css");
+const poolConfig = JSON.parse(read("public/live2d/model-pool.json"));
 const polish = read("public/companion-live2d-polish.js");
 const polishCss = read("public/companion-live2d-polish.css");
 const emotion = read("public/companion-live2d-emotion-engine.js");
@@ -26,16 +29,17 @@ const stt = read("src/stt.js");
 const config = JSON.parse(read("public/live2d/characters.json"));
 const readme = read("public/live2d/README.md");
 
-// V12.20 must be the browser-visible cache chain and directly boot the final polish/emotion layers.
-assert.match(index, /2026-08-15-v12\.20-live2d-emotion-\d+/);
-assert.match(index, /boot-diagnostics\.js\?v=20260815-v12\.20-live2d-emotion-\d+/);
-assert.match(boot, /v12\.20-live2d-emotion/);
+// V12.21 must be browser-visible and directly boot the model-pool + final Live2D layers.
+assert.match(index, /2026-08-15-v12\.21-live2d-model-pool-\d+/);
+assert.match(index, /boot-diagnostics\.js\?v=20260815-v12\.21-live2d-model-pool-\d+/);
+assert.match(boot, /v12\.21-live2d-model-pool/);
 for (const asset of [
   "companion-live2d.css","companion-live2d.js","companion-live2d-voice.css","companion-live2d-voice.js",
   "companion-live2d-neural-voice.css","companion-live2d-neural-voice.js","companion-voice-input.css","companion-voice-input.js",
-  "companion-call-mode.css","companion-call-mode.js","companion-live2d-polish.css","companion-live2d-polish.js",
-  "companion-live2d-emotion-engine.css","companion-live2d-emotion-engine.js"
+  "companion-call-mode.css","companion-call-mode.js","companion-live2d-model-pool.css","companion-live2d-model-pool.js",
+  "companion-live2d-polish.css","companion-live2d-polish.js","companion-live2d-emotion-engine.css","companion-live2d-emotion-engine.js"
 ]) assert.ok(boot.includes(asset), `boot is missing ${asset}`);
+assert.match(boot, /companionLive2dModelPoolReady/);
 assert.match(boot, /companionLive2dEmotionReady/);
 assert.match(boot, /companionLive2dPolishReady/);
 
@@ -58,12 +62,7 @@ assert.match(runtimeCss, /uaiLive2DAura/);
 
 // Presence bridge still classifies the reply and routes emotions through Live2D.setEmotion.
 assert.match(interaction, /function classifyEmotion\(/);
-assert.match(interaction, /happy/);
-assert.match(interaction, /shy/);
-assert.match(interaction, /caring/);
-assert.match(interaction, /sad/);
-assert.match(interaction, /angry/);
-assert.match(interaction, /thinking/);
+for (const name of ["happy","shy","caring","sad","angry","thinking"]) assert.ok(interaction.includes(name), `presence bridge missing ${name}`);
 assert.match(interaction, /api\(\)\?\.setEmotion/);
 assert.match(interaction, /playMotion\?\.\("TapBody"/);
 assert.match(interactionCss, /data-v129-live2d-emotion="caring"/);
@@ -95,6 +94,46 @@ for (const voiceId of ["ara","eve","sal","rex","leo"]) assert.ok(callMode.includ
 assert.match(callMode, /setModelForCharacter/);
 assert.match(callModeCss, /uai-c-v17-call-bar/);
 
+// V12.21 assigns a stable official model to every role and preserves explicit manual choices.
+assert.match(modelPool, /v12\.21-live2d-model-pool-2/);
+assert.match(modelPool, /\/live2d\/model-pool\.json/);
+assert.match(modelPool, /uai_companion_characters_v1/);
+assert.match(modelPool, /uai_companion_live2d_assignments_v1/);
+assert.match(modelPool, /function chooseLeastUsed\(/);
+assert.match(modelPool, /const alreadyCounted/);
+assert.match(modelPool, /counts\[selected\.id\]/);
+assert.match(modelPool, /name === "李萌"/);
+assert.match(modelPool, /selected = mao/);
+assert.match(modelPool, /autoPoolId/);
+assert.match(modelPool, /poolManualId/);
+assert.match(modelPool, /const isManual = Boolean\(existing && !existing\.autoPoolId\)/);
+assert.match(modelPool, /function setManualModel\(/);
+assert.match(modelPool, /function setAuto\(/);
+assert.match(modelPool, /UnlimitedCompanionLive2D\?\.refresh/);
+assert.match(modelPool, /UnlimitedCompanionLive2DEmotionEngine\?\.refresh/);
+assert.match(modelPool, /uaiCompanionV21ModelPoolPanel/);
+assert.match(modelPool, /data-v21-model/);
+assert.match(modelPool, /window\.UnlimitedCompanionLive2DModelPool/);
+assert.match(modelPoolCss, /uai-c-v21-model-pool/);
+assert.match(modelPoolCss, /uai-c-v21-status/);
+
+assert.equal(poolConfig.version, 1);
+assert.equal(poolConfig.source?.repository, "Live2D/CubismWebSamples");
+assert.equal(poolConfig.source?.commit, "b1de66b0b1f1cb881d95fb6158622aeb6a2827bd");
+assert.ok(poolConfig.models.length >= 4, "model pool should provide multiple distinct character appearances");
+const poolIds = new Set(poolConfig.models.map((item) => item.id));
+for (const id of ["mao","haru","hiyori","rice"]) assert.ok(poolIds.has(id), `model pool is missing ${id}`);
+for (const item of poolConfig.models) {
+  assert.match(item.model, /^https:\/\/cdn\.jsdelivr\.net\/gh\/Live2D\/CubismWebSamples@b1de66b0b1f1cb881d95fb6158622aeb6a2827bd\/Samples\/Resources\//);
+  assert.match(item.model, /\.model3\.json$/);
+  assert.equal(item.sample?.owner, "Live2D Inc.");
+  assert.ok(item.position?.height > 0);
+}
+assert.match(poolConfig.models.find((item) => item.id === "mao")?.model || "", /\/Mao\/Mao\.model3\.json$/);
+assert.match(poolConfig.models.find((item) => item.id === "haru")?.model || "", /\/Haru\/Haru\.model3\.json$/);
+assert.match(poolConfig.models.find((item) => item.id === "hiyori")?.model || "", /\/Hiyori\/Hiyori\.model3\.json$/);
+assert.match(poolConfig.models.find((item) => item.id === "rice")?.model || "", /\/Rice\/Rice\.model3\.json$/);
+
 // V12.19 diagnostics / barge-in / per-role mouth tuning.
 assert.match(polish, /v12\.19-live2d-polish/);
 assert.match(polish, /mouthSensitivity/);
@@ -109,7 +148,7 @@ assert.match(polish, /data-v19-mouth-test/);
 assert.match(polish, /data-v19-diagnose/);
 assert.match(polishCss, /uai-c-v19-interrupt-ready/);
 
-// V12.20 scans the actual formal model and builds a stable per-character emotion map.
+// V12.20 scans the actual selected model and builds a stable per-character emotion map.
 assert.match(emotion, /v12\.20-live2d-emotion-engine-2/);
 assert.match(emotion, /uai_companion_live2d_emotion_map_v1/);
 assert.match(emotion, /function expressionsFromModel\(/);
@@ -138,11 +177,13 @@ assert.match(emotion, /window\.UnlimitedCompanionLive2DEmotionEngine/);
 assert.match(emotionCss, /uai-c-v20-emotion-panel/);
 assert.match(emotionCss, /data-v120-emotion-mapped="happy"/);
 
-// Deep loader also carries the final layers as a fallback.
-assert.match(themeLoader, /v12\.20-phase4-emotion-engine/);
-for (const asset of ["companion-live2d-polish.css","companion-live2d-polish.js","companion-live2d-emotion-engine.css","companion-live2d-emotion-engine.js"]) {
-  assert.ok(themeLoader.includes(asset), `theme loader is missing ${asset}`);
-}
+// Deep loader also carries the model pool and final diagnostics/emotion layers as a fallback.
+assert.match(themeLoader, /v12\.21-phase4-model-pool/);
+for (const asset of [
+  "companion-live2d-model-pool.css","companion-live2d-model-pool.js",
+  "companion-live2d-polish.css","companion-live2d-polish.js",
+  "companion-live2d-emotion-engine.css","companion-live2d-emotion-engine.js"
+]) assert.ok(themeLoader.includes(asset), `theme loader is missing ${asset}`);
 
 // Worker voice stack remains isolated from existing chat Worker.
 assert.match(wrangler, /main = "src\/worker-voice\.js"/);
@@ -153,13 +194,13 @@ assert.match(tts, /@cf\/myshell-ai\/melotts/);
 assert.match(stt, /@cf\/openai\/whisper-large-v3-turbo/);
 assert.match(stt, /vad_filter: true/);
 
-// Official Mao remains the safe fallback until a formal Li Meng model is supplied.
+// Existing base config remains a safe Mao fallback; V12.21 supplies per-role local assignments above it.
 assert.equal(config.version, 5);
 assert.match(config.defaultModel?.model || "", /\/Samples\/Resources\/Mao\/Mao\.model3\.json$/);
 assert.equal(config.defaultModel?.sample?.name, "Mao");
 assert.equal(config.byName?.["李萌"]?.model, "/live2d/characters/limeng/limeng.model3.json");
-assert.ok(config.byName?.["李萌"]?.fallback, "Li Meng must retain the official Mao fallback until a formal model exists");
-assert.match(readme, /public\/live2d\/characters\/limeng/);
+assert.ok(config.byName?.["李萌"]?.fallback, "Li Meng base config must retain Mao fallback");
+assert.match(readme, /model pool/i);
 assert.equal(fs.existsSync("public/live2d/vendor/live2dcubismcore.min.js"), false);
 
-console.log("Companion Live2D contract passed: adaptive lip sync + emotion mapping + diagnostics + barge-in + voice call + formal model auto-adaptation.");
+console.log("Companion Live2D contract passed: stable role model pool + adaptive lip sync/emotions + diagnostics + barge-in + voice call.");
