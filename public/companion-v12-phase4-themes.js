@@ -1,6 +1,6 @@
-// Companion V12.7/12.20 phase 4 — lightweight scene themes + Live2D voice conversation loaders.
+// Companion V12.7/12.21 phase 4 — lightweight scene themes + Live2D voice/model loaders.
 (() => {
-  const REVISION = "2026-08-15-v12.20-phase4-emotion-engine-1";
+  const REVISION = "2026-08-15-v12.21-phase4-model-pool-1";
   const THEMES = ["galaxy", "sakura", "moonlight", "neon"];
   const LABELS = {
     galaxy: "星河梦境",
@@ -41,9 +41,11 @@
     ensureScript(`/companion-live2d-neural-voice.js?v=${encodeURIComponent(REVISION)}`, "uaiCompanionLive2dNeuralVoiceScript");
     ensureStyle(`/companion-voice-input.css?v=${encodeURIComponent(REVISION)}`, "uaiCompanionVoiceInputCss");
     ensureScript(`/companion-voice-input.js?v=${encodeURIComponent(REVISION)}`, "uaiCompanionVoiceInputScript");
-    // V12.17: hands-free call loop, per-role Grok voice and formal Live2D model controls.
     ensureStyle(`/companion-call-mode.css?v=${encodeURIComponent(REVISION)}`, "uaiCompanionCallModeCss");
     ensureScript(`/companion-call-mode.js?v=${encodeURIComponent(REVISION)}`, "uaiCompanionCallModeScript");
+    // V12.21: stable role -> official sample model assignments and manual selector.
+    ensureStyle(`/companion-live2d-model-pool.css?v=${encodeURIComponent(REVISION)}`, "uaiCompanionLive2dModelPoolCss");
+    ensureScript(`/companion-live2d-model-pool.js?v=${encodeURIComponent(REVISION)}`, "uaiCompanionLive2dModelPoolScript");
     // V12.19: model diagnostics, per-role lip-sync tuning and one-tap barge-in.
     ensureStyle(`/companion-live2d-polish.css?v=${encodeURIComponent(REVISION)}`, "uaiCompanionLive2dPolishCss");
     ensureScript(`/companion-live2d-polish.js?v=${encodeURIComponent(REVISION)}`, "uaiCompanionLive2dPolishScript");
