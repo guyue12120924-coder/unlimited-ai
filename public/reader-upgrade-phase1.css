@@ -1,0 +1,312 @@
+#readerMask {
+  --reader-bg: #e9e3d6;
+  --reader-header-bg: #f3eee4;
+  --reader-sidebar-bg: #ddd6c8;
+  --reader-page-bg: #e9e3d6;
+  --reader-ink: #29271f;
+  --reader-muted: #746e63;
+  --reader-soft: rgba(255, 255, 255, 0.42);
+  --reader-border: rgba(54, 49, 39, 0.18);
+  --reader-accent: #66794d;
+  --reader-line-height: 1.9;
+  background: var(--reader-bg);
+  color: var(--reader-ink);
+}
+
+#readerMask[data-reader-theme="eye"] {
+  --reader-bg: #dfe7d4;
+  --reader-header-bg: #edf2e6;
+  --reader-sidebar-bg: #d3ddc6;
+  --reader-page-bg: #e5eddc;
+  --reader-ink: #273126;
+  --reader-muted: #657064;
+  --reader-soft: rgba(255, 255, 255, 0.38);
+  --reader-border: rgba(48, 66, 47, 0.17);
+  --reader-accent: #597253;
+}
+
+#readerMask[data-reader-theme="light"] {
+  --reader-bg: #f4f4f2;
+  --reader-header-bg: #ffffff;
+  --reader-sidebar-bg: #eeeeeb;
+  --reader-page-bg: #fafaf8;
+  --reader-ink: #242424;
+  --reader-muted: #6e6e69;
+  --reader-soft: rgba(0, 0, 0, 0.035);
+  --reader-border: rgba(0, 0, 0, 0.12);
+  --reader-accent: #5c724e;
+}
+
+#readerMask[data-reader-theme="dark"] {
+  --reader-bg: #171816;
+  --reader-header-bg: #20211e;
+  --reader-sidebar-bg: #1b1c19;
+  --reader-page-bg: #171816;
+  --reader-ink: #e8e5dc;
+  --reader-muted: #aaa69b;
+  --reader-soft: rgba(255, 255, 255, 0.055);
+  --reader-border: rgba(255, 255, 255, 0.12);
+  --reader-accent: #a8c686;
+}
+
+#readerMask .reader-header {
+  min-height: 82px;
+  background: var(--reader-header-bg);
+  border-color: var(--reader-border);
+  color: var(--reader-ink);
+}
+
+#readerMask .reader-title-block h2,
+#readerMask .reader-chapter-text,
+#readerMask .reader-font-controls button,
+#readerMask .reader-close {
+  color: var(--reader-ink);
+}
+
+#readerMask .reader-title-block p,
+#readerMask .reader-chapter-label,
+#readerMask .reader-empty p,
+#readerMask .reader-segment-copy span {
+  color: var(--reader-muted);
+}
+
+#readerMask .reader-title-block .eyebrow {
+  color: var(--reader-accent);
+}
+
+#readerMask .reader-sidebar {
+  background: var(--reader-sidebar-bg);
+  border-color: var(--reader-border);
+}
+
+#readerMask .reader-sidebar-head,
+#readerMask .reader-chapter-label::after {
+  border-color: var(--reader-border);
+  background-color: transparent;
+}
+
+#readerMask .reader-page-wrap {
+  background: var(--reader-page-bg);
+  scroll-behavior: smooth;
+}
+
+#readerMask .reader-page {
+  line-height: var(--reader-line-height);
+  transition: width 180ms ease, max-width 180ms ease;
+}
+
+#readerMask[data-reader-width="narrow"] .reader-page {
+  width: min(620px, 100%);
+}
+
+#readerMask[data-reader-width="normal"] .reader-page {
+  width: min(760px, 100%);
+}
+
+#readerMask[data-reader-width="wide"] .reader-page {
+  width: min(940px, 100%);
+}
+
+#readerMask .reader-tool,
+#readerMask .reader-font-controls,
+#readerMask .reader-sidebar-head button,
+#readerMask .reader-pref-control,
+#readerMask .reader-chapter-nav,
+#readerMask .reader-progress-chip {
+  border-color: var(--reader-border);
+  background: var(--reader-soft);
+  color: var(--reader-ink);
+}
+
+#readerMask .reader-segment-item:hover,
+#readerMask .reader-segment-item.selected {
+  background: var(--reader-soft);
+}
+
+#readerMask .reader-segment-item.selected {
+  border-color: color-mix(in srgb, var(--reader-accent) 50%, transparent);
+}
+
+#readerMask .reader-segment-copy strong {
+  color: var(--reader-ink);
+}
+
+.reader-upgrade-controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 7px;
+  min-width: 0;
+}
+
+.reader-pref-control {
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 7px 0 10px;
+  border: 1px solid;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+
+.reader-pref-control > span {
+  color: var(--reader-muted);
+  font-size: 10px;
+}
+
+.reader-pref-control select {
+  width: auto;
+  min-width: 48px;
+  max-width: 76px;
+  color: var(--reader-ink);
+  font-size: 11px;
+}
+
+#readerMask[data-reader-theme="dark"] select option {
+  color: #e8e5dc;
+  background: #20211e;
+}
+
+#readerMask:not([data-reader-theme="dark"]) select option {
+  color: #29271f;
+  background: #f3eee4;
+}
+
+.reader-chapter-nav {
+  min-height: 38px;
+  display: inline-flex;
+  align-items: stretch;
+  overflow: hidden;
+  border: 1px solid;
+  border-radius: 10px;
+}
+
+.reader-chapter-nav.is-empty {
+  display: none;
+}
+
+.reader-chapter-nav button {
+  width: 34px;
+  border: 0;
+  background: transparent;
+  color: var(--reader-ink);
+  cursor: pointer;
+}
+
+.reader-chapter-nav button:hover {
+  background: var(--reader-soft);
+}
+
+.reader-chapter-nav select {
+  width: min(190px, 16vw);
+  min-width: 110px;
+  border-inline: 1px solid var(--reader-border);
+  padding: 0 8px;
+  color: var(--reader-ink);
+  font-size: 11px;
+}
+
+.reader-progress-chip {
+  --reader-progress: 0%;
+  position: relative;
+  min-width: 52px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 1px solid;
+  border-radius: 10px;
+  color: var(--reader-ink);
+  font-size: 11px;
+  font-weight: 700;
+  isolation: isolate;
+}
+
+.reader-progress-chip::before {
+  content: "";
+  position: absolute;
+  inset: auto 0 0 0;
+  z-index: -1;
+  height: 3px;
+  width: var(--reader-progress);
+  background: var(--reader-accent);
+  transition: width 140ms ease;
+}
+
+#readerMask .reader-chapter {
+  scroll-margin-top: 28px;
+}
+
+#readerMask .reader-chapter-text {
+  line-height: inherit;
+}
+
+@media (max-width: 1180px) {
+  #readerMask .reader-header {
+    align-items: flex-start;
+  }
+
+  #readerMask .reader-toolbar {
+    flex-wrap: wrap;
+  }
+
+  .reader-upgrade-controls {
+    order: 2;
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .reader-chapter-nav select {
+    width: min(220px, 30vw);
+  }
+}
+
+@media (max-width: 760px) {
+  #readerMask .reader-header {
+    min-height: 0;
+    padding: 10px 12px;
+  }
+
+  #readerMask .reader-title-block p,
+  .reader-pref-control > span {
+    display: none;
+  }
+
+  #readerMask .reader-title-block h2 {
+    font-size: 19px;
+  }
+
+  .reader-upgrade-controls {
+    gap: 5px;
+  }
+
+  .reader-pref-control {
+    min-height: 34px;
+    padding: 0 5px;
+  }
+
+  .reader-pref-control select {
+    min-width: 52px;
+    font-size: 10px;
+  }
+
+  .reader-chapter-nav {
+    min-height: 34px;
+    flex: 1 1 180px;
+  }
+
+  .reader-chapter-nav select {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .reader-progress-chip {
+    height: 34px;
+  }
+
+  #readerMask .reader-page-wrap {
+    padding: 32px 18px 88px;
+  }
+}
