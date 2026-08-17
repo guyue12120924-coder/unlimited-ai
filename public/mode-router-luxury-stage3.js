@@ -1,6 +1,7 @@
 // public/mode-router-luxury-stage3.js
 (() => {
   const REVISION = "2026-08-17-v14.2-cinematic-depth";
+  const CARD_WORLD_REVISION = "2026-08-17-v14.3-card-worlds";
   if (window.UnlimitedModeLuxuryStage3) return;
 
   const state = {
@@ -33,6 +34,24 @@
 
   function effectsDisabled() {
     return reducedMotion() || coarsePointer();
+  }
+
+  function ensureCardWorldStage4() {
+    if (!document.getElementById("uaiModeRouterLuxuryStage4Css")) {
+      const link = document.createElement("link");
+      link.id = "uaiModeRouterLuxuryStage4Css";
+      link.rel = "stylesheet";
+      link.href = `/mode-router-luxury-stage4.css?v=${encodeURIComponent(CARD_WORLD_REVISION)}`;
+      document.head.appendChild(link);
+    }
+
+    if (!document.getElementById("uaiModeRouterLuxuryStage4Script")) {
+      const script = document.createElement("script");
+      script.id = "uaiModeRouterLuxuryStage4Script";
+      script.async = false;
+      script.src = `/mode-router-luxury-stage4.js?v=${encodeURIComponent(CARD_WORLD_REVISION)}`;
+      document.body.appendChild(script);
+    }
   }
 
   function lobbyVisible() {
@@ -188,6 +207,7 @@
   function sync() {
     if (lobbyVisible() && !effectsDisabled()) start();
     else stop();
+    window.UnlimitedModeLuxuryStage4?.refresh?.();
   }
 
   function install(root) {
@@ -239,6 +259,7 @@
   }
 
   function init() {
+    ensureCardWorldStage4();
     if (findAndInstall()) return;
     state.finderObserver = new MutationObserver(findAndInstall);
     state.finderObserver.observe(document.documentElement, { childList: true, subtree: true });
@@ -246,6 +267,7 @@
 
   window.UnlimitedModeLuxuryStage3 = {
     revision: REVISION,
+    cardWorldRevision: CARD_WORLD_REVISION,
     refresh: sync,
     start,
     stop
