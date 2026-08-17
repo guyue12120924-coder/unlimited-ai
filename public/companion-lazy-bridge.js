@@ -1,11 +1,12 @@
 // public/companion-lazy-bridge.js
 (() => {
-  const REVISION = "2026-08-17-v14.7-companion-lazy-bridge";
+  const REVISION = "2026-08-17-v14.8-companion-entry-ux";
   if (window.UnlimitedCompanionLazyBridge) return;
 
   let loaderPromise = null;
   let entryPromise = null;
   let warmTimer = 0;
+  let lastError = null;
 
   function loaderReady() {
     return Boolean(window.UnlimitedCompanionAssets?.load);
@@ -70,8 +71,20 @@
   function companionUi() {
     const root = document.getElementById("uaiModeRoot");
     const companion = root?.querySelector("#uaiEnterCompanion") || null;
+    const novel = root?.querySelector("#uaiEnterNovel") || null;
     const enter = companion?.querySelector(".uai-mode-enter") || null;
-    return { root, companion, enter };
+    let status = companion?.querySelector(".uai-companion-entry-status") || null;
+
+    if (companion && enter && !status) {
+      status = document.createElement("span");
+      status.className = "uai-companion-entry-status";
+      status.setAttribute("aria-live", "polite");
+      status.setAttribute("aria-atomic", "true");
+      status.hidden = true;
+      enter.insertAdjacentElement("afterend", status);
+    }
+
+    return { root, companion, novel, enter, status };
   }
 
   function labelNode(enter) {
@@ -84,48 +97,99 @@
     return node;
   }
 
-  function restoreLoadingUi() {
-    const { root, companion, enter } = companionUi();
+  function originalLabel(companion, enter) {
+    if (!companion) return "去见她";
+    if (!companion.dataset.uaiOriginalEnterLabel && enter) {
+      companion.dataset.uaiOriginalEnterLabel = labelNode(enter)?.textContent.trim() || "去见她";
+    }
+    return companion.dataset.uaiOriginalEnterLabel || "去见她";
+  }
+
+  function setLabel(companion, enter, text) {
+    if (!enter) return;
+    originalLabel(companion, enter);
+    const node = labelNode(enter);
+    if (node) node.data = `${text} `;
+  }
+
+  function setStatus(companion, status, state, message = "") {
+    if (!companion) return;
+    if (state) companion.dataset.uaiCompanionEntryState = state;
+    else delete companion.dataset.uaiCompanionEntryState;
+    if (!status) return;
+    status.textContent = message;
+    status.hidden = !message;
+  }
+
+  function lobbyInteractive() {
+    const root = document.getElementById("uaiModeRoot");
+    return Boolean(
+      document.body.dataset.uaiMode === "lobby" &&
+      root &&
+      !root.hidden &&
+      !root.classList.contains("is-transitioning")
+    );
+  }
+
+  function finishLoadingVisual({ clearStatus = true } = {}) {
+    const { root, companion, enter, status } = companionUi();
     if (!root) return;
-    root.querySelectorAll(".uai-mode-card").forEach((card) => { card.disabled = false; });
+
     if (companion) {
       companion.classList.remove("is-loading");
       companion.removeAttribute("aria-busy");
       delete companion.dataset.uaiCompanionLoading;
+      if (!root.classList.contains("is-transitioning") && document.body.dataset.uaiMode === "lobby") {
+        companion.disabled = false;
+      }
     }
-    if (enter) {
-      const node = labelNode(enter);
-      if (node) node.data = `${companion?.dataset.uaiOriginalEnterLabel || "去见她"} `;
-      enter.style.removeProperty("background");
-    }
+
+    if (enter) enter.style.removeProperty("background");
     root.style.removeProperty("--uai-companion-load-progress");
     delete root.dataset.companionAssetsLoading;
+
+    if (clearStatus) {
+      setStatus(companion, status, "", "");
+      setLabel(companion, enter, originalLabel(companion, enter));
+    }
   }
 
-  function setLoading(loading) {
-    const { root, companion, enter } = companionUi();
-    if (!root) return;
-    root.querySelectorAll(".uai-mode-card").forEach((card) => { card.disabled = loading; });
-    if (companion) {
-      if (!companion.dataset.uaiOriginalEnterLabel && enter) {
-        companion.dataset.uaiOriginalEnterLabel = labelNode(enter)?.textContent.trim() || "去见她";
-      }
-      companion.classList.toggle("is-loading", loading);
-      if (loading) {
-        companion.setAttribute("aria-busy", "true");
-        companion.dataset.uaiCompanionLoading = "true";
-      } else {
-        companion.removeAttribute("aria-busy");
-        delete companion.dataset.uaiCompanionLoading;
-      }
-    }
-    root.dataset.companionAssetsLoading = loading ? "true" : "false";
+  function beginLoadingVisual() {
+    const { root, companion, novel, enter, status } = companionUi();
+    if (!root || !companion) return;
 
-    if (!loading) restoreLoadingUi();
-    else if (enter) {
-      const node = labelNode(enter);
-      if (node) node.data = "正在准备陪伴世界… ";
-    }
+    lastError = null;
+    originalLabel(companion, enter);
+    root.querySelector("#uaiModeGrid")?.removeAttribute("data-active");
+
+    // Only the companion entry is locked. The novel card stays available so a slow
+    // companion bundle never traps the user in the lobby.
+    companion.disabled = true;
+    if (!root.classList.contains("is-transitioning") && novel) novel.disabled = false;
+
+    companion.classList.add("is-loading");
+    companion.setAttribute("aria-busy", "true");
+    companion.dataset.uaiCompanionLoading = "true";
+    root.dataset.companionAssetsLoading = "true";
+    root.style.setProperty("--uai-companion-load-progress", "0%");
+    setStatus(companion, status, "loading", "正在准备角色、记忆与语音组件；小说模式仍可直接进入");
+    setLabel(companion, enter, "正在准备陪伴世界…");
+  }
+
+  function showFailure(error) {
+    lastError = error;
+    finishLoadingVisual({ clearStatus: false });
+    const { companion, enter, status } = companionUi();
+    if (!companion) return;
+
+    const offline = navigator.onLine === false;
+    setStatus(
+      companion,
+      status,
+      "error",
+      offline ? "网络连接已断开，恢复网络后点击这张卡片重试" : "加载没有完成，点击这张卡片即可重试"
+    );
+    setLabel(companion, enter, "重试进入");
   }
 
   function updateProgress(event) {
@@ -134,10 +198,11 @@
     const loaded = Number(detail.loaded) || 0;
     const total = Math.max(1, Number(detail.total) || 1);
     const percent = Math.max(0, Math.min(100, Number(detail.percent) || 0));
-    const { root, enter } = companionUi();
-    if (!root || !enter) return;
-    const node = labelNode(enter);
-    if (node) node.data = `正在唤醒陪伴世界 · ${loaded}/${total} `;
+    const { root, companion, enter, status } = companionUi();
+    if (!root || !companion || !enter) return;
+
+    setStatus(companion, status, "loading", "正在准备角色、记忆与语音组件；小说模式仍可直接进入");
+    setLabel(companion, enter, `正在唤醒陪伴世界 · ${loaded}/${total}`);
     root.style.setProperty("--uai-companion-load-progress", `${percent}%`);
     enter.style.background = `linear-gradient(90deg, rgba(255,96,188,.20) 0 ${percent}%, rgba(255,255,255,.04) ${percent}% 100%)`;
   }
@@ -146,17 +211,24 @@
     if (entryPromise) return entryPromise;
 
     entryPromise = (async () => {
-      setLoading(true);
+      beginLoadingVisual();
       try {
         const loader = await ensureLoader();
         await loader.load();
-        if (document.body.dataset.uaiMode !== "lobby") return;
-        setLoading(false);
+
+        // The user may choose Novel while the companion bundle is loading. In that case
+        // keep the completed bundle warm for next time, but never pull them back to Companion.
+        if (!lobbyInteractive()) {
+          finishLoadingVisual();
+          return;
+        }
+
+        finishLoadingVisual();
         await window.UnlimitedModeRouter?.enterCompanion?.();
       } catch (error) {
         console.error("[Unlimited AI] deferred companion assets failed", error);
-        setLoading(false);
-        alert("AI 陪伴资源加载失败，请再试一次。小说模式不会受到影响。");
+        if (lobbyInteractive()) showFailure(error);
+        else finishLoadingVisual();
       } finally {
         entryPromise = null;
       }
@@ -200,10 +272,18 @@
     ensureLoader().catch(() => {});
   }
 
+  function handleOnline() {
+    const { companion, enter, status } = companionUi();
+    if (!companion || companion.dataset.uaiCompanionEntryState !== "error" || !lobbyInteractive()) return;
+    setStatus(companion, status, "error", "网络已恢复，点击这张卡片重新进入陪伴世界");
+    setLabel(companion, enter, "重试进入");
+  }
+
   document.addEventListener("click", intercept, true);
   document.addEventListener("pointerover", scheduleWarm, { passive: true });
   document.addEventListener("pointerout", cancelWarm, { passive: true });
   document.addEventListener("focusin", warmOnFocus);
+  window.addEventListener("online", handleOnline);
   window.addEventListener("uai:companion-assets-progress", updateProgress);
 
   window.UnlimitedCompanionLazyBridge = {
@@ -214,6 +294,7 @@
     },
     warm: ensureLoader,
     enter: prepareAndEnter,
-    get loading() { return Boolean(entryPromise); }
+    get loading() { return Boolean(entryPromise); },
+    get lastError() { return lastError; }
   };
 })();
