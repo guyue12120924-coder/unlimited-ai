@@ -1,68 +1,147 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#080817" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Unlimited AI - 小说创作工作台</title>
   <link rel="stylesheet" href="/styles.css" />
-  <link rel="stylesheet" href="/ui-system.css" />
   <link rel="stylesheet" href="/studio.css" />
   <link rel="stylesheet" href="/workflow.css" />
   <link rel="stylesheet" href="/user-flow.css" />
   <link rel="stylesheet" href="/simple-studio.css" />
-  <link rel="stylesheet" href="/manuscript-ai.css" />
-  <link rel="stylesheet" href="/manuscript-interaction-fix.css" />
-  <link rel="stylesheet" href="/v2-experience.css" />
-  <link rel="stylesheet" href="/v2-product.css" />
-  <link rel="stylesheet" href="/v2-product-phase2.css" />
-  <link rel="stylesheet" href="/v2-product-phase3.css" />
-  <link rel="stylesheet" href="/v3-product.css" />
+  <link rel="stylesheet" href="/ui-system.css?v=20260609-1" />
+  <link rel="stylesheet" href="/v2-experience.css?v=20260610-1" />
+  <link rel="stylesheet" href="/v2-product.css?v=20260610-2" />
+  <link rel="stylesheet" href="/v2-product-phase2.css?v=20260610-3" />
+  <link rel="stylesheet" href="/v2-product-phase3.css?v=20260610-4" />
+  <link rel="stylesheet" href="/v3-product.css?v=20260611-1" />
+  <link rel="stylesheet" href="/manuscript-ai.css?v=20260611-2" />
+  <link rel="stylesheet" href="/manuscript-interaction-fix.css?v=20260611-3" />
 </head>
 <body>
   <div id="app">
-    <header id="topbar">
-      <div class="brand-wrap">
-        <div class="brand-mark">U</div>
-        <div>
-          <div class="brand">Unlimited AI</div>
-          <div class="brand-subtitle">小说创作工作台</div>
+    <aside id="sidebar" class="sidebar">
+      <div class="brand-block">
+        <div class="brand-row">
+          <div class="brand-mark">U</div>
+          <div>
+            <div class="brand-title">Unlimited AI</div>
+            <div class="brand-sub">Novel Studio</div>
+          </div>
         </div>
       </div>
-      <div class="topbar-actions">
-        <button id="contextInspectorBtn" type="button">上下文</button>
-        <button id="continuityBtn" type="button">连续性</button>
-        <button id="storyMemoryBtn" type="button">记忆</button>
-      </div>
-    </header>
 
-    <main id="creativeWorkspace" class="creative-workspace">
-      <aside class="workspace-sidebar">
-        <section class="sidebar-section">
-          <h2>创作导航</h2>
-          <div id="workflowNav"></div>
+      <nav class="sidebar-nav" aria-label="创作导航">
+        <button class="nav-item active" data-studio-tab="write" type="button">
+          <span>✍</span><b>正文</b>
+        </button>
+        <button class="nav-item" data-studio-tab="outline" type="button">
+          <span>☷</span><b>大纲</b>
+        </button>
+        <button class="nav-item" data-studio-tab="characters" type="button">
+          <span>♙</span><b>人物</b>
+        </button>
+        <button class="nav-item" data-studio-tab="world" type="button">
+          <span>◎</span><b>设定</b>
+        </button>
+      </nav>
+
+      <div class="sidebar-spacer"></div>
+      <div class="sidebar-footer">
+        <button id="contextInspectorBtn" class="sidebar-tool" type="button">上下文检查</button>
+        <button id="continuityBtn" class="sidebar-tool" type="button">连续性检查</button>
+        <button id="storyMemoryBtn" class="sidebar-tool" type="button">故事记忆</button>
+      </div>
+    </aside>
+
+    <div class="app-main">
+      <header id="topbar" class="topbar">
+        <div class="topbar-left">
+          <button id="sidebarToggle" class="icon-button" type="button" aria-label="展开或收起侧栏">☰</button>
+          <div class="topbar-project">
+            <span class="project-label">当前项目</span>
+            <strong id="topbarProjectName">未命名小说</strong>
+          </div>
+        </div>
+        <div class="topbar-actions">
+          <button id="workflowBtn" class="topbar-button" type="button">创作流程</button>
+          <button id="exportBtn" class="topbar-button" type="button">导出</button>
+        </div>
+      </header>
+
+      <main class="page-shell">
+        <section id="hero" class="hero-section">
+          <div class="hero-copy">
+            <p class="eyebrow">AI NOVEL CREATION</p>
+            <h1>把想法写成一部长篇小说</h1>
+            <p class="hero-subtitle">人物、设定、大纲、正文和长篇记忆都在一个工作台里持续积累。</p>
+          </div>
+          <div class="hero-actions">
+            <button id="newProjectBtn" class="primary-button" type="button">新建小说</button>
+            <button id="openProjectBtn" class="secondary-button" type="button">打开项目</button>
+          </div>
         </section>
-      </aside>
 
-      <section class="workspace-main">
-        <div id="studioRoot"></div>
-        <div id="simpleStudioRoot"></div>
-        <div id="manuscriptAiRoot"></div>
-      </section>
-    </main>
+        <section id="creativeWorkspace" class="workspace-grid">
+          <div class="workspace-main-column">
+            <section id="studioPanel" class="studio-panel">
+              <div class="studio-header">
+                <div>
+                  <p class="panel-kicker">WRITING STUDIO</p>
+                  <h2 id="studioTitle">正文创作</h2>
+                </div>
+                <div class="studio-header-actions">
+                  <span id="saveStatus" class="save-status">已保存</span>
+                  <button id="saveProjectBtn" class="secondary-button small" type="button">保存</button>
+                </div>
+              </div>
 
-    <section id="legacyChat" class="legacy-chat" aria-label="AI 对话">
-      <div id="messages"></div>
-      <div class="composer">
-        <textarea id="msg" rows="3" placeholder="输入你的创作要求……"></textarea>
-        <div class="composer-actions">
-          <select id="model"></select>
-          <button id="send" type="button">发送</button>
-          <button id="stop" type="button">停止</button>
-        </div>
-      </div>
-    </section>
+              <div id="studioRoot"></div>
+              <div id="simpleStudioRoot"></div>
+            </section>
+          </div>
+
+          <aside class="workspace-side-column">
+            <section class="assistant-card">
+              <div class="assistant-card-header">
+                <div>
+                  <p class="panel-kicker">AI ASSISTANT</p>
+                  <h2>创作助手</h2>
+                </div>
+                <span class="assistant-status">ONLINE</span>
+              </div>
+
+              <div id="messages" class="assistant-messages" aria-live="polite"></div>
+
+              <div class="assistant-composer">
+                <textarea id="msg" rows="4" placeholder="告诉 AI 你想写什么，或让它继续、改写、润色……"></textarea>
+                <div class="assistant-composer-footer">
+                  <select id="model" aria-label="选择模型"></select>
+                  <div class="assistant-action-row">
+                    <button id="stop" class="secondary-button small" type="button">停止</button>
+                    <button id="send" class="primary-button small" type="button">发送</button>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section id="workflowCard" class="workflow-card">
+              <div class="workflow-card-header">
+                <div>
+                  <p class="panel-kicker">WORKFLOW</p>
+                  <h2>当前创作阶段</h2>
+                </div>
+              </div>
+              <div id="workflowRoot"></div>
+            </section>
+          </aside>
+        </section>
+      </main>
+    </div>
   </div>
+
+  <div id="toastHost" class="toast-host" aria-live="polite"></div>
+  <div id="modalHost"></div>
 
   <script src="/config.js"></script>
   <script src="/app.js"></script>
@@ -70,22 +149,22 @@
   <script src="/workflow.js"></script>
   <script src="/user-flow.js"></script>
   <script src="/simple-studio.js"></script>
-  <script src="/ai-to-manuscript.js"></script>
-  <script src="/manuscript-rewrite-client.js"></script>
-  <script src="/manuscript-interaction-fix.js"></script>
-  <script src="/memory-bridge.js"></script>
-  <script src="/memory-suggest.js"></script>
   <script src="/context-bridge.js"></script>
   <script src="/continuity-bridge.js"></script>
+  <script src="/memory-bridge.js"></script>
+  <script src="/memory-suggest.js"></script>
   <script src="/story-intelligence.js"></script>
   <script src="/data-migration.js"></script>
   <script src="/model-status.js"></script>
-  <script src="/v2-experience.js"></script>
-  <script src="/v2-product.js"></script>
-  <script src="/v2-product-phase2.js"></script>
-  <script src="/v2-product-phase3.js"></script>
-  <script src="/v3-runtime.js"></script>
-  <script src="/v3-sidebar.js"></script>
+  <script src="/v2-experience.js?v=20260610-1"></script>
+  <script src="/v2-product.js?v=20260610-2"></script>
+  <script src="/v2-product-phase2.js?v=20260610-3"></script>
+  <script src="/v2-product-phase3.js?v=20260610-4"></script>
+  <script src="/v3-runtime.js?v=20260611-1"></script>
+  <script src="/v3-sidebar.js?v=20260611-1"></script>
+  <script src="/ai-to-manuscript.js?v=20260611-2"></script>
+  <script src="/manuscript-rewrite-client.js?v=20260611-2"></script>
+  <script src="/manuscript-interaction-fix.js?v=20260611-3"></script>
   <script src="/boot-diagnostics.js?v=20260817-v13.3-entry-audit"></script>
 </body>
 </html>
