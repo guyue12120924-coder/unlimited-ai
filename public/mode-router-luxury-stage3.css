@@ -1,0 +1,305 @@
+/* public/mode-router-luxury-stage3.css
+ * V14.2 cinematic depth: parallax nebulae, constellation lines,
+ * gravity lens and extra card-world atmosphere.
+ */
+
+#uaiModeRoot {
+  --uai-depth-near-x: 0px;
+  --uai-depth-near-y: 0px;
+  --uai-depth-far-x: 0px;
+  --uai-depth-far-y: 0px;
+  --uai-cinema-x: 50vw;
+  --uai-cinema-y: 42vh;
+}
+
+.uai-cinematic-space {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.uai-cinema-depth-nebula,
+.uai-cinema-filament,
+.uai-cinema-horizon,
+.uai-cinema-gravity-lens,
+.uai-cinema-vignette,
+.uai-cinema-constellation {
+  position: absolute;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+.uai-cinema-depth-nebula {
+  width: 48vw;
+  height: 42vw;
+  min-width: 650px;
+  min-height: 560px;
+  border-radius: 50%;
+  filter: blur(42px) saturate(1.2);
+  mix-blend-mode: screen;
+  opacity: .34;
+  transition: opacity .55s ease, filter .55s ease;
+}
+
+.uai-cinema-depth-nebula.blue {
+  left: -15vw;
+  top: 10vh;
+  transform: translate3d(var(--uai-depth-far-x), var(--uai-depth-far-y), 0) rotate(-13deg);
+  background:
+    radial-gradient(circle at 44% 48%, rgba(74,141,255,.38), transparent 19%),
+    radial-gradient(circle at 61% 31%, rgba(130,75,255,.27), transparent 32%),
+    conic-gradient(from 210deg, transparent 0 21%, rgba(66,113,255,.14) 34%, rgba(168,84,255,.17) 49%, transparent 67%);
+}
+
+.uai-cinema-depth-nebula.pink {
+  right: -17vw;
+  top: 7vh;
+  transform: translate3d(var(--uai-depth-far-x), var(--uai-depth-far-y), 0) rotate(14deg);
+  background:
+    radial-gradient(circle at 55% 47%, rgba(255,76,172,.36), transparent 20%),
+    radial-gradient(circle at 37% 32%, rgba(174,72,255,.25), transparent 33%),
+    conic-gradient(from 150deg, transparent 0 23%, rgba(255,74,176,.13) 36%, rgba(163,76,255,.16) 50%, transparent 69%);
+}
+
+.uai-cinema-filament {
+  width: 76vw;
+  height: 110px;
+  border-radius: 50%;
+  filter: blur(11px);
+  mix-blend-mode: screen;
+  opacity: .16;
+}
+
+.uai-cinema-filament.filament-a {
+  left: -18vw;
+  top: 31%;
+  transform: translate3d(var(--uai-depth-near-x), var(--uai-depth-near-y), 0) rotate(-12deg);
+  background: linear-gradient(90deg, transparent 0 8%, rgba(82,148,255,.08) 22%, rgba(119,105,255,.48) 48%, rgba(228,218,255,.18) 58%, transparent 91%);
+  box-shadow: 0 0 36px rgba(103,113,255,.10);
+  animation: uaiCinemaFilamentA 15s ease-in-out infinite alternate;
+}
+
+.uai-cinema-filament.filament-b {
+  right: -20vw;
+  top: 53%;
+  transform: translate3d(var(--uai-depth-near-x), var(--uai-depth-near-y), 0) rotate(11deg);
+  background: linear-gradient(90deg, transparent 0 10%, rgba(213,91,255,.08) 25%, rgba(255,91,184,.42) 48%, rgba(255,222,245,.16) 62%, transparent 92%);
+  box-shadow: 0 0 36px rgba(255,87,179,.09);
+  animation: uaiCinemaFilamentB 18s ease-in-out infinite alternate;
+}
+
+.uai-cinema-horizon {
+  left: -10%;
+  right: -10%;
+  bottom: -110px;
+  height: 310px;
+  opacity: .46;
+  filter: blur(24px);
+  transform: translate3d(var(--uai-depth-far-x), var(--uai-depth-far-y), 0);
+  background:
+    radial-gradient(ellipse at 28% 100%, rgba(60,121,255,.20), transparent 45%),
+    radial-gradient(ellipse at 73% 100%, rgba(255,70,170,.18), transparent 45%),
+    radial-gradient(ellipse at 50% 100%, rgba(117,72,255,.11), transparent 56%);
+}
+
+.uai-cinema-vignette {
+  inset: 0;
+  z-index: 7;
+  box-shadow:
+    inset 0 0 170px rgba(0,0,0,.34),
+    inset 0 -120px 160px rgba(0,0,0,.28),
+    inset 0 100px 150px rgba(0,0,0,.10);
+}
+
+.uai-cinema-gravity-lens {
+  left: var(--uai-cinema-x);
+  top: var(--uai-cinema-y);
+  width: 240px;
+  height: 240px;
+  margin: -120px 0 0 -120px;
+  border-radius: 50%;
+  opacity: .26;
+  mix-blend-mode: screen;
+  transform: translateZ(0);
+  background:
+    radial-gradient(circle, rgba(255,255,255,.08) 0 2%, rgba(175,156,255,.10) 13%, rgba(119,106,255,.045) 31%, transparent 62%);
+  box-shadow: inset 0 0 50px rgba(255,255,255,.02);
+  filter: blur(2px);
+}
+
+.uai-cinema-constellation {
+  width: min(29vw, 430px);
+  height: 180px;
+  opacity: .18;
+  transition: opacity .5s ease, filter .5s ease, transform .6s ease;
+  mix-blend-mode: screen;
+}
+
+.uai-cinema-constellation.novel {
+  left: 3vw;
+  top: 16vh;
+  transform: translate3d(var(--uai-depth-near-x), var(--uai-depth-near-y), 0) rotate(-6deg);
+}
+
+.uai-cinema-constellation.companion {
+  right: 3vw;
+  top: 18vh;
+  transform: translate3d(var(--uai-depth-near-x), var(--uai-depth-near-y), 0) rotate(6deg);
+}
+
+.uai-cinema-constellation-line {
+  position: absolute;
+  height: 1px;
+  transform-origin: left center;
+  opacity: .42;
+}
+
+.uai-cinema-constellation.novel .uai-cinema-constellation-line {
+  background: linear-gradient(90deg, rgba(103,154,255,.12), rgba(140,128,255,.56), rgba(203,213,255,.08));
+}
+
+.uai-cinema-constellation.companion .uai-cinema-constellation-line {
+  background: linear-gradient(90deg, rgba(255,109,187,.10), rgba(220,121,255,.52), rgba(255,218,242,.08));
+}
+
+.uai-cinema-constellation b {
+  position: absolute;
+  margin: -2px 0 0 -2px;
+  border-radius: 50%;
+  background: #fff;
+  animation: uaiCinemaConstellationStar 3.8s ease-in-out infinite;
+}
+
+.uai-cinema-constellation.novel b {
+  box-shadow: 0 0 8px rgba(171,202,255,.92), 0 0 20px rgba(93,128,255,.38);
+}
+
+.uai-cinema-constellation.companion b {
+  box-shadow: 0 0 8px rgba(255,205,236,.92), 0 0 20px rgba(255,92,181,.34);
+}
+
+#uaiModeRoot[data-luxury-world="novel"] .uai-cinema-constellation.novel,
+#uaiModeRoot[data-luxury-world="companion"] .uai-cinema-constellation.companion {
+  opacity: .52;
+  filter: saturate(1.35) brightness(1.25);
+}
+
+#uaiModeRoot[data-luxury-world="novel"] .uai-cinema-constellation.companion,
+#uaiModeRoot[data-luxury-world="companion"] .uai-cinema-constellation.novel {
+  opacity: .08;
+}
+
+#uaiModeRoot[data-luxury-world="novel"] .uai-cinema-depth-nebula.blue,
+#uaiModeRoot[data-luxury-world="companion"] .uai-cinema-depth-nebula.pink {
+  opacity: .56;
+  filter: blur(34px) saturate(1.45);
+}
+
+#uaiModeRoot[data-luxury-world="novel"] .uai-cinema-depth-nebula.pink,
+#uaiModeRoot[data-luxury-world="companion"] .uai-cinema-depth-nebula.blue {
+  opacity: .18;
+}
+
+.uai-cinema-card-glow {
+  position: absolute !important;
+  inset: 0;
+  z-index: 2 !important;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .3s ease;
+}
+
+.uai-mode-card:hover .uai-cinema-card-glow,
+.uai-mode-card:focus-visible .uai-cinema-card-glow {
+  opacity: 1;
+}
+
+.uai-cinema-card-glow i {
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  opacity: 0;
+}
+
+.uai-mode-card.novel .uai-cinema-card-glow i {
+  background: rgba(221,230,255,.96);
+  box-shadow: 0 0 12px rgba(115,158,255,.88), 0 0 30px rgba(103,87,255,.34);
+}
+
+.uai-mode-card.companion .uai-cinema-card-glow i {
+  background: rgba(255,225,244,.96);
+  box-shadow: 0 0 12px rgba(255,113,191,.88), 0 0 30px rgba(181,84,255,.33);
+}
+
+.uai-cinema-card-glow .spark-1 { left: 8%; top: 12%; animation: uaiCinemaCardSparkOne 4.2s ease-in-out infinite; }
+.uai-cinema-card-glow .spark-2 { right: 9%; top: 34%; animation: uaiCinemaCardSparkTwo 5.1s .7s ease-in-out infinite; }
+.uai-cinema-card-glow .spark-3 { left: 36%; bottom: 8%; animation: uaiCinemaCardSparkThree 4.8s 1.2s ease-in-out infinite; }
+
+.uai-mode-card:hover .uai-mode-preview,
+.uai-mode-card:focus-visible .uai-mode-preview {
+  box-shadow:
+    inset 0 1px rgba(255,255,255,.06),
+    0 18px 46px rgba(0,0,0,.20),
+    0 0 30px rgba(132,102,255,.055);
+}
+
+@keyframes uaiCinemaFilamentA {
+  0% { opacity: .10; filter: blur(15px); }
+  100% { opacity: .24; filter: blur(8px); }
+}
+
+@keyframes uaiCinemaFilamentB {
+  0% { opacity: .11; filter: blur(14px); }
+  100% { opacity: .23; filter: blur(8px); }
+}
+
+@keyframes uaiCinemaConstellationStar {
+  0%,100% { opacity: .24; transform: scale(.72); }
+  48% { opacity: .92; transform: scale(1.25); }
+}
+
+@keyframes uaiCinemaCardSparkOne {
+  0%,100% { opacity: 0; transform: translate3d(0,8px,0) scale(.5); }
+  35% { opacity: .9; }
+  62% { opacity: .35; transform: translate3d(24px,-10px,0) scale(1.15); }
+}
+
+@keyframes uaiCinemaCardSparkTwo {
+  0%,100% { opacity: 0; transform: translate3d(0,-4px,0) scale(.55); }
+  42% { opacity: .84; }
+  70% { opacity: .28; transform: translate3d(-22px,16px,0) scale(1.05); }
+}
+
+@keyframes uaiCinemaCardSparkThree {
+  0%,100% { opacity: 0; transform: translate3d(-8px,0,0) scale(.5); }
+  44% { opacity: .82; }
+  68% { opacity: .30; transform: translate3d(20px,-18px,0) scale(1.12); }
+}
+
+@media (max-width: 900px) {
+  .uai-cinema-constellation { opacity: .10; }
+  .uai-cinema-depth-nebula { opacity: .26; }
+}
+
+@media (max-width: 760px), (pointer: coarse) {
+  .uai-cinema-gravity-lens,
+  .uai-cinema-constellation,
+  .uai-cinema-card-glow { display: none !important; }
+  .uai-cinema-filament { opacity: .09; }
+  .uai-cinema-depth-nebula { opacity: .22; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .uai-cinema-filament,
+  .uai-cinema-constellation b,
+  .uai-cinema-card-glow i { animation: none !important; }
+
+  .uai-cinema-gravity-lens,
+  .uai-cinema-constellation,
+  .uai-cinema-card-glow { display: none !important; }
+}
