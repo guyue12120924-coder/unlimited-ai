@@ -1,6 +1,7 @@
 // public/mode-router-luxury-stage5.js
 (() => {
   const REVISION = "2026-08-17-v14.4-micro-polish";
+  const HANDOFF_REVISION = "2026-08-17-v14.9-world-handoff";
   if (window.UnlimitedModeLuxuryStage5) return;
 
   const state = {
@@ -19,6 +20,23 @@
 
   function coarsePointer() {
     return Boolean(window.matchMedia?.("(pointer: coarse)").matches);
+  }
+
+  function ensureTransitionHandoff() {
+    if (!document.getElementById("uaiModeTransitionV149Css")) {
+      const link = document.createElement("link");
+      link.id = "uaiModeTransitionV149Css";
+      link.rel = "stylesheet";
+      link.href = `/mode-router-transition-v149.css?v=${encodeURIComponent(HANDOFF_REVISION)}`;
+      document.head.appendChild(link);
+    }
+
+    if (window.UnlimitedModeTransitionV149 || document.getElementById("uaiModeTransitionV149Script")) return;
+    const script = document.createElement("script");
+    script.id = "uaiModeTransitionV149Script";
+    script.async = false;
+    script.src = `/mode-router-transition-v149.js?v=${encodeURIComponent(HANDOFF_REVISION)}`;
+    document.body.appendChild(script);
   }
 
   function lobbyActive() {
@@ -173,6 +191,7 @@
       document.addEventListener("visibilitychange", state.visibilityHandler);
     }
 
+    window.UnlimitedModeTransitionV149?.refresh?.();
     return root.querySelectorAll(".uai-mode-card[data-micro-polish-mounted='1']").length >= 2;
   }
 
@@ -181,6 +200,7 @@
   }
 
   function init() {
+    ensureTransitionHandoff();
     if (findAndInstall()) return;
     state.observer = new MutationObserver(() => {
       if (findAndInstall()) {
@@ -193,8 +213,10 @@
 
   window.UnlimitedModeLuxuryStage5 = {
     revision: REVISION,
+    handoffRevision: HANDOFF_REVISION,
     refresh: findAndInstall,
-    reset: sync
+    reset: sync,
+    ensureTransitionHandoff
   };
 
   if (document.readyState === "loading") {
