@@ -2,7 +2,7 @@
 // Startup guard + dual-mode bootstrap.
 (() => {
   const REVISION = "2026-08-17-v14.5-entry-performance";
-  const MODE_ROUTER_REVISION = "2026-08-17-v13.4-mode-router-lazy-companion";
+  const MODE_ROUTER_REVISION = "2026-08-17-v13.3-mode-router-audited";
   const errors = [];
 
   document.documentElement.dataset.frontendRevision = REVISION;
@@ -79,7 +79,8 @@
       ["/mode-router-luxury-stage2.js", "uaiModeRouterLuxuryStage2Script"],
       ["/mode-router-luxury-stage3.js", "uaiModeRouterLuxuryStage3Script"],
       ["/mode-router-luxury-stage4.js", "uaiModeRouterLuxuryStage4Script"],
-      ["/mode-router-luxury-stage5.js", "uaiModeRouterLuxuryStage5Script"]
+      ["/mode-router-luxury-stage5.js", "uaiModeRouterLuxuryStage5Script"],
+      ["/companion-lazy-bridge.js", "uaiCompanionLazyBridgeScript"]
     ];
 
     routerStyles.forEach(([href, id]) => ensureStyle(`${href}?v=${encodeURIComponent(REVISION)}`, id));
@@ -103,6 +104,7 @@
       companionAssetsDeferred: !window.UnlimitedCompanionAssets?.ready,
       companionAssetsReady: Boolean(window.UnlimitedCompanionAssets?.ready),
       companionAssetsLoading: Boolean(window.UnlimitedCompanionAssets?.loading),
+      companionLazyBridgeReady: Boolean(window.UnlimitedCompanionLazyBridge),
       companionModeReady: Boolean(window.UnlimitedCompanion?.mount),
       companionMultiReady: Boolean(window.UnlimitedCompanionMulti),
       companionRuntimeReady: Boolean(window.UnlimitedCompanionRuntime),
