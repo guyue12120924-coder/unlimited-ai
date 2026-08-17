@@ -13,7 +13,7 @@ import {
 
 // Compatibility marker: buildCompanionSystemPrompt(payload) remains available in companion.js for preview/testing only.
 const NVIDIA_CHAT_URL = "https://integrate.api.nvidia.com/v1/chat/completions";
-const APP_REVISION = "2026-08-17-v14.1-worker-entry-effects";
+const APP_REVISION = "2026-08-17-v14.4-worker-entry-polish";
 
 // ============================================================
 // 小说模式默认 System Prompt
@@ -290,8 +290,8 @@ async function inspectAsset(request, env, pathname, markers = []) {
 
 async function handleDiagnostics(request, env) {
   const assets = await Promise.all([
-    inspectAsset(request, env, "/index.html", ["2026-08-17-v14.1-entry-effects", "/boot-diagnostics.js?v=20260817-v14.1-entry-effects"]),
-    inspectAsset(request, env, "/boot-diagnostics.js", ["2026-08-17-v14.1-entry-effects", "modeRouterLuxuryStage2Ready", "mode-router-luxury-stage2.js"]),
+    inspectAsset(request, env, "/index.html", ["2026-08-17-v14.4-entry-polish", "/boot-diagnostics.js?v=20260817-v14.4-entry-polish"]),
+    inspectAsset(request, env, "/boot-diagnostics.js", ["2026-08-17-v14.4-entry-polish", "modeRouterLuxuryStage5Ready", "mode-router-luxury-stage5.js"]),
     inspectAsset(request, env, "/mode-router.js", ["2026-08-17-v13.3-mode-router-audited", "modeRequestId", "uaiEnterCompanion"]),
     inspectAsset(request, env, "/mode-router.css", ["uai-mode-lobby", "uai-star-canvas", "data-uai-mode"]),
     inspectAsset(request, env, "/mode-router-stage3.css", ["uaiWorldExpand", "Audit fixes", "uaiCardSweep"]),
@@ -299,6 +299,12 @@ async function handleDiagnostics(request, env) {
     inspectAsset(request, env, "/mode-router-luxury.js", ["2026-08-17-v14.0-luxury-effects", "UnlimitedModeLuxury", "uaiLuxuryTrail"]),
     inspectAsset(request, env, "/mode-router-luxury-stage2.css", ["uaiBrandSatelliteA", "uaiSpeedRipple", "uaiSpacePulse"]),
     inspectAsset(request, env, "/mode-router-luxury-stage2.js", ["2026-08-17-v14.1-luxury-stage2", "UnlimitedModeLuxuryStage2", "spawnSpacePulse"]),
+    inspectAsset(request, env, "/mode-router-luxury-stage3.css", ["uai-cinematic-space", "uai-cinema-gravity-lens", "uaiCinemaConstellationStar"]),
+    inspectAsset(request, env, "/mode-router-luxury-stage3.js", ["2026-08-17-v14.2-cinematic-depth", "UnlimitedModeLuxuryStage3", "ensureCardWorldStage4"]),
+    inspectAsset(request, env, "/mode-router-luxury-stage4.css", ["uai-card-world-art", "uaiNovelInkStroke", "uaiCompanionHeartbeat"]),
+    inspectAsset(request, env, "/mode-router-luxury-stage4.js", ["2026-08-17-v14.3-card-worlds", "UnlimitedModeLuxuryStage4", "ensureMicroStage5"]),
+    inspectAsset(request, env, "/mode-router-luxury-stage5.css", ["uai-micro-sheen", "uaiNovelProgress", "uaiTypingDot"]),
+    inspectAsset(request, env, "/mode-router-luxury-stage5.js", ["2026-08-17-v14.4-micro-polish", "UnlimitedModeLuxuryStage5", "uai-companion-typing"]),
     inspectAsset(request, env, "/companion-mode.js", ["UnlimitedCompanion", "uai_companion_sessions_v1", "mode: \"companion\""]),
     inspectAsset(request, env, "/companion-mode.css", ["uaiCompanionRoot", "uai-c-shell"]),
     inspectAsset(request, env, "/companion-v10.css", ["grid-template-columns:236px", "uai-c-v10-message-avatar", "border-radius:50%!important"]),
@@ -326,8 +332,8 @@ async function handleDiagnostics(request, env) {
       companion: "src/companion.js -> COMPANION_ROLE_CARD"
     },
     conclusion: frontendCurrent
-      ? "V14.1 frontend assets are current and loaded from this Worker deployment."
-      : "This Worker deployment is missing one or more V14.1 frontend assets. Redeploy the current main branch.",
+      ? "V14.4 frontend assets are current and loaded from this Worker deployment."
+      : "This Worker deployment is missing one or more V14.4 frontend assets. Redeploy the current main branch.",
     assets
   });
 }
