@@ -1,6 +1,6 @@
 // public/companion-lazy-bridge.js
 (() => {
-  const REVISION = "2026-08-17-v14.8-companion-entry-ux";
+  const REVISION = "2026-08-17-v14.7-companion-lazy-bridge+v14.8-entry-ux";
   if (window.UnlimitedCompanionLazyBridge) return;
 
   let loaderPromise = null;
