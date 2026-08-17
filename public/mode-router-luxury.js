@@ -68,6 +68,14 @@
     );
   }
 
+  function particleLimit() {
+    const cores = Number(navigator.hardwareConcurrency) || 4;
+    const area = Math.max(1, state.width * state.height);
+    if (cores <= 4 || area > 3_200_000) return 120;
+    if (cores >= 8 && area < 2_600_000) return 210;
+    return 165;
+  }
+
   function createLuxuryLayers() {
     if (!state.lobby || state.lobby.querySelector(".uai-luxury-space")) return;
 
@@ -112,7 +120,9 @@
   }
 
   function spawnParticles(x, y, dx, dy, speed) {
-    const count = clamp(Math.round(2 + speed / 18), 2, 7);
+    const focused = Boolean(state.root?.dataset.luxuryWorld);
+    const rawCount = clamp(Math.round(2 + speed / 18), 2, 7);
+    const count = focused ? Math.max(1, Math.round(rawCount * .68)) : rawCount;
     const base = colorAt(x);
     const mag = Math.hypot(dx, dy) || 1;
     const nx = dx / mag;
@@ -134,9 +144,18 @@
       });
     }
 
-    if (state.particles.length > 180) {
-      state.particles.splice(0, state.particles.length - 180);
+    const limit = particleLimit();
+    if (state.particles.length > limit) {
+      state.particles.splice(0, state.particles.length - limit);
     }
+  }
+
+  function wakeRenderer() {
+    if (state.running || !state.ctx || !isLobbyVisible() || effectsDisabled()) return;
+    if (!state.points.length && !state.particles.length) return;
+    state.running = true;
+    render.lastTime = performance.now();
+    state.raf = requestAnimationFrame(render);
   }
 
   function onPointerMove(event) {
@@ -162,7 +181,9 @@
     const speed = distance / elapsed * 16;
 
     if (distance >= 2) {
-      const steps = clamp(Math.ceil(distance / 12), 1, 5);
+      const focused = Boolean(state.root?.dataset.luxuryWorld);
+      const spacing = focused ? 16 : 12;
+      const steps = clamp(Math.ceil(distance / spacing), 1, focused ? 4 : 5);
       for (let i = 1; i <= steps; i += 1) {
         const t = i / steps;
         const px = last.x + dx * t;
@@ -170,6 +191,7 @@
         state.points.push({ x: px, y: py, born: now - (steps - i) * 7, color: colorAt(px) });
       }
       spawnParticles(x, y, dx, dy, Math.min(26, speed));
+      wakeRenderer();
     }
 
     if (state.points.length > 34) state.points.splice(0, state.points.length - 34);
@@ -250,14 +272,18 @@
     drawParticles(ctx, now, dt);
     ctx.globalCompositeOperation = "source-over";
 
+    if (!state.points.length && !state.particles.length) {
+      state.running = false;
+      state.raf = 0;
+      render.lastTime = 0;
+      return;
+    }
+
     state.raf = requestAnimationFrame(render);
   }
 
   function start() {
-    if (state.running || !state.ctx || !isLobbyVisible() || effectsDisabled()) return;
-    state.running = true;
-    render.lastTime = performance.now();
-    state.raf = requestAnimationFrame(render);
+    wakeRenderer();
   }
 
   function stop() {
@@ -277,8 +303,7 @@
   }
 
   function syncRunning() {
-    if (isLobbyVisible() && !effectsDisabled()) start();
-    else stop();
+    if (!isLobbyVisible() || effectsDisabled()) stop();
   }
 
   function bindWorldHover() {
