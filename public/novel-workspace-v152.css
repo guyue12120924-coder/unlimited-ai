@@ -1,0 +1,257 @@
+/* public/novel-workspace-v152.css
+ * V15.2: chapter/session relationship clarity and AI-result destination feedback.
+ */
+
+body[data-uai-mode="novel"] .novel-v152-writing-now {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) auto;
+  align-items: center;
+  gap: 10px;
+  margin: 7px 9px 9px;
+  padding: 10px 10px 9px;
+  border: 1px solid color-mix(in srgb,var(--border-default,var(--border)) 72%,transparent);
+  border-radius: 10px;
+  background:
+    linear-gradient(145deg,color-mix(in srgb,var(--accent) 5%,transparent),transparent 48%),
+    rgba(255,255,255,.022);
+}
+
+.novel-v152-writing-copy {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.novel-v152-writing-copy > span {
+  color: color-mix(in srgb,var(--accent) 66%,var(--muted));
+  font: 740 7.5px/1.2 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  letter-spacing: .12em;
+}
+
+.novel-v152-writing-copy > strong {
+  overflow: hidden;
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 720;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.novel-v152-writing-copy > p {
+  overflow: hidden;
+  margin: 0;
+  color: var(--muted);
+  font-size: 8px;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.novel-v152-writing-state {
+  display: grid;
+  justify-items: end;
+  gap: 6px;
+}
+
+#novelV152LinkState {
+  min-height: 19px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 6px;
+  border: 1px solid var(--border-subtle,var(--border));
+  border-radius: 999px;
+  color: var(--muted);
+  background: rgba(255,255,255,.018);
+  font-size: 7px;
+  white-space: nowrap;
+}
+
+#novelV152LinkState[data-tone="good"] {
+  border-color: color-mix(in srgb,var(--accent) 26%,var(--border));
+  color: color-mix(in srgb,var(--accent) 62%,var(--text-soft));
+  background: color-mix(in srgb,var(--accent) 6%,transparent);
+}
+
+#novelV152LinkState[data-tone="warn"] {
+  border-color: color-mix(in srgb,#d8b66f 30%,var(--border));
+  color: #c9ad72;
+  background: rgba(216,182,111,.055);
+}
+
+#novelV152WritingActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+#novelV152WritingActions button {
+  min-height: 26px;
+  padding: 0 7px;
+  border: 1px solid var(--border-subtle,var(--border));
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text-soft);
+  cursor: pointer;
+  font-size: 7.5px;
+  font-weight: 660;
+}
+
+#novelV152WritingActions button:hover,
+#novelV152WritingActions button:focus-visible {
+  border-color: color-mix(in srgb,var(--accent) 28%,var(--border));
+  background: color-mix(in srgb,var(--accent) 6%,var(--surface-soft));
+  color: var(--text);
+}
+
+#novelV152WritingActions button.primary {
+  border-color: color-mix(in srgb,var(--accent) 32%,var(--border));
+  background: color-mix(in srgb,var(--accent) 8%,var(--surface-soft));
+  color: color-mix(in srgb,var(--accent) 62%,var(--text));
+}
+
+/* Chapter list: tiny manuscript progress, no extra text density. */
+body[data-uai-mode="novel"] #studioChapterList .chapter-item {
+  position: relative;
+  padding-bottom: 3px;
+}
+
+.novel-v152-chapter-progress {
+  position: absolute;
+  z-index: 2;
+  left: 8px;
+  right: 8px;
+  bottom: 2px;
+  height: 2px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255,255,255,.035);
+  pointer-events: none;
+}
+
+.novel-v152-chapter-progress > i {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: color-mix(in srgb,var(--accent) 60%,#7d94ff);
+  opacity: .56;
+  transition: width .24s ease,opacity .15s ease;
+}
+
+#studioChapterList .chapter-item[data-v152-session="current"] .novel-v152-chapter-progress > i {
+  opacity: .95;
+  box-shadow: 0 0 7px color-mix(in srgb,var(--accent) 22%,transparent);
+}
+
+#studioChapterList .chapter-item[data-v152-session="other"] .novel-v152-chapter-progress > i {
+  background: color-mix(in srgb,#d8b66f 52%,var(--accent));
+}
+
+/* Session linked to the active chapter. */
+body[data-uai-mode="novel"] #studioSessionList .studio-list-item {
+  position: relative;
+}
+
+.novel-v152-session-badge {
+  position: absolute;
+  z-index: 3;
+  top: 6px;
+  right: 31px;
+  min-height: 17px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 5px;
+  border: 1px solid color-mix(in srgb,var(--accent) 22%,var(--border));
+  border-radius: 999px;
+  background: color-mix(in srgb,var(--accent) 6%,var(--bg-surface));
+  color: color-mix(in srgb,var(--accent) 58%,var(--text-soft));
+  font-size: 6.5px;
+  font-weight: 700;
+  pointer-events: none;
+}
+
+/* AI result -> manuscript destination. */
+body[data-uai-mode="novel"] #chat .message-tools {
+  flex-wrap: wrap;
+}
+
+.novel-v152-result-flow {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 28px;
+}
+
+.novel-v152-result-destination {
+  color: color-mix(in srgb,var(--muted) 88%,transparent);
+  font-size: 8px;
+  font-weight: 560;
+  white-space: nowrap;
+}
+
+.novel-v152-result-flow.added .novel-v152-result-destination {
+  color: color-mix(in srgb,var(--accent) 58%,var(--text-soft));
+}
+
+.novel-v152-open-manuscript {
+  min-height: 27px;
+  padding: 0 8px;
+  border: 1px solid color-mix(in srgb,var(--accent) 22%,var(--border));
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text-soft);
+  cursor: pointer;
+  font-size: 8px;
+  font-weight: 650;
+}
+
+.novel-v152-open-manuscript:hover,
+.novel-v152-open-manuscript:focus-visible {
+  border-color: color-mix(in srgb,var(--accent) 38%,var(--border));
+  background: color-mix(in srgb,var(--accent) 7%,var(--surface-soft));
+  color: var(--text);
+}
+
+body:not([data-uai-mode="novel"]) .novel-v152-writing-now,
+body:not([data-uai-mode="novel"]) .novel-v152-chapter-progress,
+body:not([data-uai-mode="novel"]) .novel-v152-session-badge,
+body:not([data-uai-mode="novel"]) .novel-v152-result-flow {
+  display: none !important;
+}
+
+@media (max-width: 980px) {
+  body[data-uai-mode="novel"] .novel-v152-writing-now {
+    grid-template-columns: 1fr;
+  }
+  .novel-v152-writing-state {
+    justify-items: start;
+  }
+  #novelV152WritingActions {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 720px) {
+  body[data-uai-mode="novel"] .novel-v152-writing-now {
+    margin: 7px 8px 8px;
+    padding: 9px;
+  }
+  #novelV152WritingActions button {
+    min-height: 30px;
+    font-size: 8px;
+  }
+  .novel-v152-session-badge {
+    right: 29px;
+  }
+  .novel-v152-result-flow {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .novel-v152-chapter-progress > i {
+    transition: none !important;
+  }
+}
