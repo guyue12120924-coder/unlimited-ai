@@ -27,7 +27,9 @@
   function ensureScript(src, id) {
     if (document.getElementById(id)) return;
     const script = document.createElement("script");
-    script.id = id; script.async = false; script.src = src;
+    script.id = id;
+    script.async = false;
+    script.src = src;
     script.addEventListener("error", () => errors.push(`资源加载失败：${src}`), { once: true });
     document.body.appendChild(script);
   }
@@ -54,7 +56,7 @@
 
   function loadModeRouter() {
     for (const [href, id] of [
-      ["/mode-router.css","uaiModeRouterCss"],["/mode-router-stage3.css","uaiModeRouterStage3Css"],["/companion-mode.css","uaiCompanionCss"],["/companion-characters.css","uaiCompanionCharactersCss"],
+      ["/mode-router.css","uaiModeRouterCss"],["/mode-router-stage3.css","uaiModeRouterStage3Css"],["/mode-router-luxury.css","uaiModeRouterLuxuryCss"],["/companion-mode.css","uaiCompanionCss"],["/companion-characters.css","uaiCompanionCharactersCss"],
       ["/companion-memory.css","uaiCompanionMemoryCss"],["/companion-records.css","uaiCompanionRecordsCss"],["/companion-support.css","uaiCompanionSupportCss"],
       ["/companion-v10.css","uaiCompanionV10Css"],["/companion-v10-vibrant.css","uaiCompanionV10VibrantCss"],["/companion-v10-stage2.css","uaiCompanionV10Stage2Css"],
       ["/companion-v10-stage3.css","uaiCompanionV10Stage3Css"],["/companion-v10-stage4.css","uaiCompanionV10Stage4Css"],["/companion-v10-stage5.css","uaiCompanionV10Stage5Css"],
@@ -69,6 +71,7 @@
     ]) ensureStyle(`${href}?v=${REVISION}`, id);
 
     for (const [src, id] of [
+      ["/mode-router-luxury.js","uaiModeRouterLuxuryScript"],
       ["/companion-characters-core.js","uaiCompanionCharactersCoreScript"],["/companion-character-editor.js","uaiCompanionCharacterEditorScript"],
       ["/companion-memory.js","uaiCompanionMemoryScript"],["/companion-records.js","uaiCompanionRecordsScript"],["/companion-settings.js","uaiCompanionSettingsScript"],
       ["/companion-runtime.js","uaiCompanionRuntimeScript"],["/companion-extras.js","uaiCompanionExtrasScript"],["/companion-v10-shell.js","uaiCompanionV10ShellScript"],
@@ -76,10 +79,10 @@
       ["/companion-v11.js","uaiCompanionV11Script"],["/companion-v11-stage1.js","uaiCompanionV11Stage1Script"],["/companion-v11-stage2.js","uaiCompanionV11Stage2Script"],
       ["/companion-v11-stage3.js","uaiCompanionV11Stage3Script"],["/companion-v11-stage4.js","uaiCompanionV11Stage4Script"],["/companion-v12-galaxy.js","uaiCompanionV12GalaxyScript"],
       ["/companion-v12-stage2.js","uaiCompanionV12Stage2Script"],["/companion-v12-final.js","uaiCompanionV12FinalScript"],["/companion-v12-polish.js","uaiCompanionV12PolishScript"],
-      ["/companion-v12-phase1.js","uaiCompanionV12Phase1Script"],["/companion-live2d.js","uaiCompanionLive2dScript"],["/companion-live2d-voice.js","uaiCompanionLive2dVoiceScript"],
+      ["/companion-v12-phase1.js","uaiCompanionV124Phase1Script"],["/companion-live2d.js","uaiCompanionLive2dScript"],["/companion-live2d-voice.js","uaiCompanionLive2dVoiceScript"],
       ["/companion-live2d-neural-voice.js","uaiCompanionLive2dNeuralVoiceScript"],["/companion-voice-input.js","uaiCompanionVoiceInputScript"],
       ["/companion-call-mode.js","uaiCompanionCallModeScript"],["/companion-live2d-model-pool.js","uaiCompanionLive2dModelPoolScript"],
-      ["/companion-live2d-polish.js","uaiCompanionLive2dPolishScript"],["/companion-live2d-emotion-engine.js","uaiCompanionLive2dEmotionEngineScript"],
+      ["/companion-live2d-polish.js","uaiCompanionLive2DPolishScript"],["/companion-live2d-emotion-engine.js","uaiCompanionLive2dEmotionEngineScript"],
       ["/companion-v12-ux-hardening.js","uaiCompanionV123UxHardeningScript"]
     ]) ensureScript(`${src}?v=${REVISION}`, id);
 
@@ -110,6 +113,7 @@
         modeRouterReady: Boolean(window.UnlimitedModeRouter),
         modeRouterRevision: routerRevision,
         modeRouterStage3Ready: Boolean(document.getElementById("uaiModeRouterStage3Css")),
+        modeRouterLuxuryReady: Boolean(window.UnlimitedModeLuxury),
         companionMultiReady: Boolean(window.UnlimitedCompanionMulti), companionRuntimeReady: Boolean(window.UnlimitedCompanionRuntime),
         companionMemorySearchReady: Boolean(window.UnlimitedCompanionMemorySearch), companionProfileRestoreReady: Boolean(window.UnlimitedCompanionProfileRestore),
         companionCharacterControlsReady: Boolean(window.UnlimitedCompanionCharacterControls), companionSettingsReady: Boolean(window.UnlimitedCompanionSettings),
