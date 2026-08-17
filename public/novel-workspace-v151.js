@@ -6,6 +6,7 @@
   if (window.UnlimitedNovelWorkspaceV151) return;
 
   let panelObserver = null;
+  let modeObserver = null;
   let refreshTimer = 0;
 
   function readState() {
@@ -310,6 +311,10 @@
 
     panelObserver = new MutationObserver(() => scheduleRefresh(35));
     panelObserver.observe(body, { childList: true, subtree: true });
+
+    modeObserver = new MutationObserver(() => scheduleRefresh(10));
+    modeObserver.observe(document.body, { attributes: true, attributeFilter: ["data-uai-mode"] });
+
     scheduleRefresh(0);
   }
 
