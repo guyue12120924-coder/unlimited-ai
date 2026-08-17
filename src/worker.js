@@ -13,7 +13,7 @@ import {
 
 // Compatibility marker: buildCompanionSystemPrompt(payload) remains available in companion.js for preview/testing only.
 const NVIDIA_CHAT_URL = "https://integrate.api.nvidia.com/v1/chat/completions";
-const APP_REVISION = "2026-08-17-v13.3-worker-entry-audit";
+const APP_REVISION = "2026-08-17-v14.1-worker-entry-effects";
 
 // ============================================================
 // 小说模式默认 System Prompt
@@ -77,67 +77,31 @@ function buildMessages(payload, modelConfig) {
   const upstreamMessages = [];
 
   if (mode === "companion") {
-    // Important isolation boundary: companion requests never receive story
-    // context, story memory, continuity context, or the novel system prompt.
-    // The editable role card is the ONLY application system-role message.
     const roleCard = getCompanionRoleCard();
     const runtimeContext = buildCompanionRuntimeContext(payload);
 
-    if (roleCard) {
-      upstreamMessages.push({
-        role: "system",
-        content: roleCard
-      });
-    }
-
-    if (runtimeContext) {
-      upstreamMessages.push({
-        role: "user",
-        content: runtimeContext
-      });
-    }
+    if (roleCard) upstreamMessages.push({ role: "system", content: roleCard });
+    if (runtimeContext) upstreamMessages.push({ role: "user", content: runtimeContext });
   } else {
     const useBuiltinPersona = payload?.use_builtin_persona !== false;
-    const customSystemPrompt =
-      typeof payload?.custom_system_prompt === "string"
-        ? payload.custom_system_prompt.trim()
-        : "";
-
-    const personaPrompt = useBuiltinPersona
-      ? NOVEL_SYSTEM_PROMPT
-      : (customSystemPrompt || NOVEL_SYSTEM_PROMPT);
-
+    const customSystemPrompt = typeof payload?.custom_system_prompt === "string" ? payload.custom_system_prompt.trim() : "";
+    const personaPrompt = useBuiltinPersona ? NOVEL_SYSTEM_PROMPT : (customSystemPrompt || NOVEL_SYSTEM_PROMPT);
     const creativeContext = buildCreativeContextMessage(
       payload?.creative_context,
       payload?.memory_context,
       payload?.continuity_context
     );
 
-    const systemPrompt = [
-      personaPrompt,
-      MODEL_RUNTIME_INJECTION,
-      creativeContext
-    ].filter(Boolean).join("\n\n");
-
-    if (systemPrompt) {
-      upstreamMessages.push({
-        role: "system",
-        content: systemPrompt
-      });
-    }
+    const systemPrompt = [personaPrompt, MODEL_RUNTIME_INJECTION, creativeContext].filter(Boolean).join("\n\n");
+    if (systemPrompt) upstreamMessages.push({ role: "system", content: systemPrompt });
   }
 
   for (const msg of messages) {
     if (!msg || typeof msg !== "object") continue;
     if (msg.role !== "user" && msg.role !== "assistant") continue;
-
     const content = typeof msg.content === "string" ? msg.content : "";
     if (!content.trim()) continue;
-
-    upstreamMessages.push({
-      role: msg.role,
-      content
-    });
+    upstreamMessages.push({ role: msg.role, content });
   }
 
   return upstreamMessages;
@@ -153,13 +117,7 @@ function buildRequestBody(modelConfig, messages) {
 }
 
 function shouldFallback(status) {
-  return status === 400
-    || status === 404
-    || status === 408
-    || status === 409
-    || status === 410
-    || status === 429
-    || status >= 500;
+  return status === 400 || status === 404 || status === 408 || status === 409 || status === 410 || status === 429 || status >= 500;
 }
 
 async function requestModel(payload, env, modelConfig) {
@@ -246,34 +204,21 @@ async function streamNvidia(payload, env, requestedModelId) {
 
 async function handleMemoryExtract(request, env) {
   let payload;
-  try {
-    payload = await request.json();
-  } catch {
-    return jsonResp({ error: "Bad JSON" }, 400);
-  }
+  try { payload = await request.json(); } catch { return jsonResp({ error: "Bad JSON" }, 400); }
   const result = await extractStoryMemories(payload, env);
   return jsonResp(result.body, result.status);
 }
 
 async function handleContinuityReview(request, env) {
   let payload;
-  try {
-    payload = await request.json();
-  } catch {
-    return jsonResp({ error: "Bad JSON" }, 400);
-  }
+  try { payload = await request.json(); } catch { return jsonResp({ error: "Bad JSON" }, 400); }
   const result = await reviewContinuity(payload, env);
   return jsonResp(result.body, result.status);
 }
 
 async function handleChat(request, env) {
   let payload;
-  try {
-    payload = await request.json();
-  } catch {
-    return resp("Bad JSON", "text/plain; charset=utf-8", 400);
-  }
-
+  try { payload = await request.json(); } catch { return resp("Bad JSON", "text/plain; charset=utf-8", 400); }
   const requestedModelId = typeof payload?.model === "string" ? payload.model : DEFAULT_MODEL_ID;
   return streamNvidia(payload, env, requestedModelId);
 }
@@ -316,10 +261,7 @@ async function inspectAsset(request, env, pathname, markers = []) {
   assetUrl.searchParams.set("__diag", APP_REVISION);
   const assetRequest = new Request(assetUrl.toString(), {
     method: "GET",
-    headers: {
-      "Cache-Control": "no-cache",
-      "Pragma": "no-cache"
-    }
+    headers: { "Cache-Control": "no-cache", "Pragma": "no-cache" }
   });
 
   try {
@@ -348,11 +290,15 @@ async function inspectAsset(request, env, pathname, markers = []) {
 
 async function handleDiagnostics(request, env) {
   const assets = await Promise.all([
-    inspectAsset(request, env, "/index.html", ["2026-08-17-v13.3-entry-audit", "/boot-diagnostics.js?v=20260817-v13.3-entry-audit"]),
-    inspectAsset(request, env, "/boot-diagnostics.js", ["2026-08-17-v13.3-entry-audit", "2026-08-17-v13.3-mode-router-audited", "modeRouterStage3Ready"]),
+    inspectAsset(request, env, "/index.html", ["2026-08-17-v14.1-entry-effects", "/boot-diagnostics.js?v=20260817-v14.1-entry-effects"]),
+    inspectAsset(request, env, "/boot-diagnostics.js", ["2026-08-17-v14.1-entry-effects", "modeRouterLuxuryStage2Ready", "mode-router-luxury-stage2.js"]),
     inspectAsset(request, env, "/mode-router.js", ["2026-08-17-v13.3-mode-router-audited", "modeRequestId", "uaiEnterCompanion"]),
     inspectAsset(request, env, "/mode-router.css", ["uai-mode-lobby", "uai-star-canvas", "data-uai-mode"]),
     inspectAsset(request, env, "/mode-router-stage3.css", ["uaiWorldExpand", "Audit fixes", "uaiCardSweep"]),
+    inspectAsset(request, env, "/mode-router-luxury.css", ["uaiLuxuryAuroraBlue", "uai-energy-frame", "uaiLuxuryTrail"]),
+    inspectAsset(request, env, "/mode-router-luxury.js", ["2026-08-17-v14.0-luxury-effects", "UnlimitedModeLuxury", "uaiLuxuryTrail"]),
+    inspectAsset(request, env, "/mode-router-luxury-stage2.css", ["uaiBrandSatelliteA", "uaiSpeedRipple", "uaiSpacePulse"]),
+    inspectAsset(request, env, "/mode-router-luxury-stage2.js", ["2026-08-17-v14.1-luxury-stage2", "UnlimitedModeLuxuryStage2", "spawnSpacePulse"]),
     inspectAsset(request, env, "/companion-mode.js", ["UnlimitedCompanion", "uai_companion_sessions_v1", "mode: \"companion\""]),
     inspectAsset(request, env, "/companion-mode.css", ["uaiCompanionRoot", "uai-c-shell"]),
     inspectAsset(request, env, "/companion-v10.css", ["grid-template-columns:236px", "uai-c-v10-message-avatar", "border-radius:50%!important"]),
@@ -380,8 +326,8 @@ async function handleDiagnostics(request, env) {
       companion: "src/companion.js -> COMPANION_ROLE_CARD"
     },
     conclusion: frontendCurrent
-      ? "V13.3 frontend assets are current and loaded from this Worker deployment."
-      : "This Worker deployment is missing one or more V13.3 frontend assets. Redeploy the current main branch.",
+      ? "V14.1 frontend assets are current and loaded from this Worker deployment."
+      : "This Worker deployment is missing one or more V14.1 frontend assets. Redeploy the current main branch.",
     assets
   });
 }
@@ -399,25 +345,12 @@ export default {
       });
     }
 
-    if (request.method === "GET" && url.pathname === "/api/diagnostics") {
-      return handleDiagnostics(request, env);
-    }
+    if (request.method === "GET" && url.pathname === "/api/diagnostics") return handleDiagnostics(request, env);
+    if (request.method === "POST" && url.pathname === "/api/chat") return handleChat(request, env);
+    if (request.method === "POST" && url.pathname === "/api/memory/extract") return handleMemoryExtract(request, env);
+    if (request.method === "POST" && url.pathname === "/api/continuity/review") return handleContinuityReview(request, env);
 
-    if (request.method === "POST" && url.pathname === "/api/chat") {
-      return handleChat(request, env);
-    }
-
-    if (request.method === "POST" && url.pathname === "/api/memory/extract") {
-      return handleMemoryExtract(request, env);
-    }
-
-    if (request.method === "POST" && url.pathname === "/api/continuity/review") {
-      return handleContinuityReview(request, env);
-    }
-
-    if (env.ASSETS && typeof env.ASSETS.fetch === "function") {
-      return serveAsset(request, env);
-    }
+    if (env.ASSETS && typeof env.ASSETS.fetch === "function") return serveAsset(request, env);
 
     return resp(
       "Static assets binding 'ASSETS' is missing. Please configure [assets] in wrangler.toml.",
