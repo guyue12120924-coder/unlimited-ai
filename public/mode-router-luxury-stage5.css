@@ -84,6 +84,11 @@
   transition: transform .12s linear;
 }
 
+.uai-mode-card:hover .uai-card-copy,
+.uai-mode-card:focus-visible .uai-card-copy {
+  transform: translate3d(var(--uai-copy-x), calc(var(--uai-copy-y) - 1px), 18px);
+}
+
 .uai-mode-preview {
   transform: translate3d(var(--uai-preview-x), var(--uai-preview-y), 0);
   transition: transform .14s linear, border-color .3s ease, box-shadow .3s ease;
@@ -91,12 +96,17 @@
 
 .uai-mode-card:hover .uai-mode-preview,
 .uai-mode-card:focus-visible .uai-mode-preview {
-  transform: translate3d(var(--uai-preview-x), calc(var(--uai-preview-y) - 2px), 0);
+  transform: translate3d(var(--uai-preview-x), calc(var(--uai-preview-y) - 2px), 25px);
 }
 
 .uai-mode-tags {
   transform: translate3d(var(--uai-tags-x), var(--uai-tags-y), 0);
   transition: transform .16s linear;
+}
+
+.uai-mode-card:hover .uai-mode-tags,
+.uai-mode-card:focus-visible .uai-mode-tags {
+  transform: translate3d(var(--uai-tags-x), var(--uai-tags-y), 15px);
 }
 
 .uai-mode-enter {
@@ -134,6 +144,7 @@
 .uai-mode-card:hover .uai-mode-enter,
 .uai-mode-card:focus-visible .uai-mode-enter {
   background: rgba(255,255,255,.06);
+  transform: translate3d(var(--uai-cta-x), var(--uai-cta-y), 15px);
 }
 
 .uai-mode-card.novel:hover .uai-mode-enter,
