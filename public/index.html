@@ -1,1 +1,172 @@
-PLACEHOLDER
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0b0f19" />
+  <title>Unlimited AI - 小说创作工作台</title>
+  <link rel="stylesheet" href="/styles.css" />
+  <link rel="stylesheet" href="/studio.css" />
+  <link rel="stylesheet" href="/workflow.css" />
+  <link rel="stylesheet" href="/user-flow.css" />
+  <link rel="stylesheet" href="/simple-studio.css" />
+  <link rel="stylesheet" href="/ui-system.css" />
+  <link rel="stylesheet" href="/v2-experience.css" />
+  <link rel="stylesheet" href="/v2-product.css" />
+  <link rel="stylesheet" href="/v2-product-phase2.css" />
+  <link rel="stylesheet" href="/v2-product-phase3.css" />
+  <link rel="stylesheet" href="/v3-product.css" />
+  <link rel="stylesheet" href="/manuscript-ai.css" />
+  <link rel="stylesheet" href="/manuscript-interaction-fix.css" />
+</head>
+<body>
+  <div id="app">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <div class="sidebar-brand-mark">U</div>
+        <div>
+          <div class="sidebar-brand-title">Unlimited AI</div>
+          <div class="sidebar-brand-subtitle">小说创作工作台</div>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav" aria-label="主导航">
+        <button class="sidebar-nav-item active" data-view="write" type="button">
+          <span class="sidebar-nav-icon">✍</span>
+          <span>正文</span>
+        </button>
+        <button class="sidebar-nav-item" data-view="outline" type="button">
+          <span class="sidebar-nav-icon">☷</span>
+          <span>大纲</span>
+        </button>
+        <button class="sidebar-nav-item" data-view="characters" type="button">
+          <span class="sidebar-nav-icon">♙</span>
+          <span>人物</span>
+        </button>
+        <button class="sidebar-nav-item" data-view="world" type="button">
+          <span class="sidebar-nav-icon">◎</span>
+          <span>设定</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-bottom">
+        <button id="storyMemoryBtn" class="sidebar-bottom-button" type="button">故事记忆</button>
+        <button id="continuityBtn" class="sidebar-bottom-button" type="button">连续性检查</button>
+        <button id="contextInspectorBtn" class="sidebar-bottom-button" type="button">上下文检查</button>
+      </div>
+    </aside>
+
+    <div class="main-shell">
+      <header id="topbar" class="topbar">
+        <div class="topbar-left">
+          <button id="sidebarToggle" class="topbar-icon-button" type="button" aria-label="切换侧栏">☰</button>
+          <div class="topbar-project">
+            <span class="topbar-project-label">当前项目</span>
+            <strong id="topbarProjectName">未命名小说</strong>
+          </div>
+        </div>
+        <div class="topbar-actions">
+          <button id="workflowBtn" type="button">创作流程</button>
+          <button id="exportBtn" type="button">导出</button>
+        </div>
+      </header>
+
+      <main class="workspace-page">
+        <section class="workspace-hero">
+          <div>
+            <p class="workspace-eyebrow">AI NOVEL CREATION</p>
+            <h1>把想法写成一部长篇小说</h1>
+            <p class="workspace-subtitle">人物、设定、大纲、正文和长篇记忆都在一个工作台里持续积累。</p>
+          </div>
+          <div class="workspace-hero-actions">
+            <button id="newProjectBtn" class="primary-button" type="button">新建小说</button>
+            <button id="openProjectBtn" class="secondary-button" type="button">打开项目</button>
+          </div>
+        </section>
+
+        <section id="creativeWorkspace" class="creative-workspace">
+          <div class="creative-main">
+            <section class="workspace-card studio-card">
+              <div class="workspace-card-header">
+                <div>
+                  <p class="workspace-card-kicker">WRITING STUDIO</p>
+                  <h2 id="studioTitle">正文创作</h2>
+                </div>
+                <div class="workspace-card-actions">
+                  <span id="saveStatus" class="save-status">已保存</span>
+                  <button id="saveProjectBtn" class="secondary-button small" type="button">保存</button>
+                </div>
+              </div>
+
+              <div id="studioRoot"></div>
+              <div id="simpleStudioRoot"></div>
+            </section>
+          </div>
+
+          <aside class="creative-side">
+            <section class="workspace-card assistant-card">
+              <div class="workspace-card-header">
+                <div>
+                  <p class="workspace-card-kicker">AI ASSISTANT</p>
+                  <h2>创作助手</h2>
+                </div>
+                <span class="assistant-online">ONLINE</span>
+              </div>
+
+              <div id="messages" class="assistant-messages" aria-live="polite"></div>
+
+              <div class="assistant-composer">
+                <textarea id="msg" rows="4" placeholder="告诉 AI 你想写什么，或让它继续、改写、润色……"></textarea>
+                <div class="assistant-composer-footer">
+                  <select id="model" aria-label="选择模型"></select>
+                  <div class="assistant-composer-actions">
+                    <button id="stop" class="secondary-button small" type="button">停止</button>
+                    <button id="send" class="primary-button small" type="button">发送</button>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="workspace-card workflow-card">
+              <div class="workspace-card-header">
+                <div>
+                  <p class="workspace-card-kicker">WORKFLOW</p>
+                  <h2>当前创作阶段</h2>
+                </div>
+              </div>
+              <div id="workflowRoot"></div>
+            </section>
+          </aside>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <div id="toastHost" class="toast-host" aria-live="polite"></div>
+  <div id="modalHost"></div>
+
+  <script src="/config.js"></script>
+  <script src="/app.js"></script>
+  <script src="/studio.js"></script>
+  <script src="/workflow.js"></script>
+  <script src="/user-flow.js"></script>
+  <script src="/simple-studio.js"></script>
+  <script src="/context-bridge.js"></script>
+  <script src="/continuity-bridge.js"></script>
+  <script src="/memory-bridge.js"></script>
+  <script src="/memory-suggest.js"></script>
+  <script src="/story-intelligence.js"></script>
+  <script src="/data-migration.js"></script>
+  <script src="/model-status.js"></script>
+  <script src="/v2-experience.js"></script>
+  <script src="/v2-product.js"></script>
+  <script src="/v2-product-phase2.js"></script>
+  <script src="/v2-product-phase3.js"></script>
+  <script src="/v3-runtime.js"></script>
+  <script src="/v3-sidebar.js"></script>
+  <script src="/ai-to-manuscript.js"></script>
+  <script src="/manuscript-rewrite-client.js"></script>
+  <script src="/manuscript-interaction-fix.js"></script>
+  <script src="/boot-diagnostics.js?v=20260817-v13.3-entry-audit"></script>
+</body>
+</html>
