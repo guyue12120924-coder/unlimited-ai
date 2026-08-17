@@ -2,7 +2,7 @@
 // Startup guard + dual-mode bootstrap.
 (() => {
   const REVISION = "2026-08-17-v13.3-entry-audit";
-  const MODE_ROUTER_REVISION = "2026-08-17-v13.2-mode-router-final";
+  const MODE_ROUTER_REVISION = "2026-08-17-v13.3-mode-router-audited";
   const errors = [];
 
   document.documentElement.dataset.frontendRevision = REVISION;
