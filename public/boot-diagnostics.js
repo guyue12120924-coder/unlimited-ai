@@ -1,13 +1,13 @@
 // public/boot-diagnostics.js
 // Startup guard + dual-mode bootstrap.
 (() => {
-  const REVISION = "2026-08-15-v12.23-ux-hardening-2";
-  // Compatibility markers: v12.22 curated pool / v12.20 emotion / v12.19 diagnostics / v12.18 lip sync / v12.17 call mode.
+  const REVISION = "2026-08-17-v13.3-entry-audit";
+  const MODE_ROUTER_REVISION = "2026-08-17-v13.2-mode-router-final";
   const errors = [];
 
   document.documentElement.dataset.frontendRevision = REVISION;
   document.documentElement.classList.add("uai-mode-gate-pending");
-  window.__UNLIMITED_BOOT__ = { revision: REVISION, startedAt: Date.now(), errors };
+  window.__UNLIMITED_BOOT__ = { revision: REVISION, modeRouterRevision: MODE_ROUTER_REVISION, startedAt: Date.now(), errors };
 
   const gateStyle = document.createElement("style");
   gateStyle.id = "uaiModeGateCriticalCss";
@@ -17,14 +17,19 @@
   function ensureStyle(href, id) {
     if (document.getElementById(id)) return;
     const link = document.createElement("link");
-    link.id = id; link.rel = "stylesheet"; link.href = href;
+    link.id = id;
+    link.rel = "stylesheet";
+    link.href = href;
+    link.addEventListener("error", () => errors.push(`资源加载失败：${href}`), { once: true });
     document.head.appendChild(link);
   }
 
   function ensureScript(src, id) {
     if (document.getElementById(id)) return;
     const script = document.createElement("script");
-    script.id = id; script.async = false; script.src = src;
+    script.id = id;
+    script.async = false;
+    script.src = src;
     script.addEventListener("error", () => errors.push(`资源加载失败：${src}`), { once: true });
     document.body.appendChild(script);
   }
@@ -96,28 +101,36 @@
   function verifyBoot() {
     const expected = [["uaiModeRoot","模式选择大厅"],["creativeWorkspace","创作工作区"],["contextInspectorBtn","上下文"],["continuityBtn","连续性"],["storyMemoryBtn","记忆"]];
     const missing = expected.filter(([id]) => !document.getElementById(id));
+    const routerRevision = window.UnlimitedModeRouter?.revision || "";
+    if (routerRevision && routerRevision !== MODE_ROUTER_REVISION) {
+      errors.push(`模式路由版本不一致：期望 ${MODE_ROUTER_REVISION}，实际 ${routerRevision}`);
+    }
+
     if (!missing.length && !errors.length) {
       Object.assign(window.__UNLIMITED_BOOT__, {
         ready: true,
-        modeRouterReady: Boolean(window.UnlimitedModeRouter), companionMultiReady: Boolean(window.UnlimitedCompanionMulti),
-        companionRuntimeReady: Boolean(window.UnlimitedCompanionRuntime), companionMemorySearchReady: Boolean(window.UnlimitedCompanionMemorySearch),
-        companionProfileRestoreReady: Boolean(window.UnlimitedCompanionProfileRestore), companionCharacterControlsReady: Boolean(window.UnlimitedCompanionCharacterControls),
-        companionSettingsReady: Boolean(window.UnlimitedCompanionSettings), companionExtrasReady: Boolean(window.UnlimitedCompanionExtras),
-        companionV10ShellReady: Boolean(window.UnlimitedCompanionV10Shell), companionV10Stage2Ready: Boolean(window.UnlimitedCompanionV10Stage2),
-        companionV10Stage4Ready: Boolean(window.UnlimitedCompanionV10Stage4), companionV10Stage5Ready: Boolean(window.UnlimitedCompanionV10Stage5),
-        companionV11Ready: Boolean(window.UnlimitedCompanionV11), companionV11Stage1Ready: Boolean(window.UnlimitedCompanionV11Stage1),
-        companionV11Stage2Ready: Boolean(window.UnlimitedCompanionV11Stage2), companionV11Stage3Ready: Boolean(window.UnlimitedCompanionV11Stage3),
-        companionV11Stage4Ready: Boolean(window.UnlimitedCompanionV11Stage4), companionV12GalaxyReady: Boolean(window.UnlimitedCompanionV12Galaxy),
-        companionV12Stage2Ready: Boolean(window.UnlimitedCompanionV121), companionV12FinalReady: Boolean(window.UnlimitedCompanionV122),
-        companionV12PolishReady: Boolean(window.UnlimitedCompanionV123), companionV12Phase1Ready: Boolean(window.UnlimitedCompanionV124Phase1),
-        companionLive2dReady: Boolean(window.UnlimitedCompanionLive2D), companionVoiceReady: Boolean(window.UnlimitedCompanionVoice),
-        companionNeuralVoiceReady: Boolean(window.UnlimitedCompanionNeuralVoice), companionVoiceInputReady: Boolean(window.UnlimitedCompanionVoiceInput),
-        companionCallModeReady: Boolean(window.UnlimitedCompanionCallMode), companionLive2dModelPoolReady: Boolean(window.UnlimitedCompanionLive2DModelPool),
-        companionLive2dPolishReady: Boolean(window.UnlimitedCompanionLive2DPolish), companionLive2dEmotionReady: Boolean(window.UnlimitedCompanionLive2DEmotionEngine),
-        companionV123UxHardeningReady: Boolean(window.UnlimitedCompanionV123UXHardening)
+        modeRouterReady: Boolean(window.UnlimitedModeRouter),
+        modeRouterRevision: routerRevision,
+        modeRouterStage3Ready: Boolean(document.getElementById("uaiModeRouterStage3Css")),
+        companionMultiReady: Boolean(window.UnlimitedCompanionMulti), companionRuntimeReady: Boolean(window.UnlimitedCompanionRuntime),
+        companionMemorySearchReady: Boolean(window.UnlimitedCompanionMemorySearch), companionProfileRestoreReady: Boolean(window.UnlimitedCompanionProfileRestore),
+        companionCharacterControlsReady: Boolean(window.UnlimitedCompanionCharacterControls), companionSettingsReady: Boolean(window.UnlimitedCompanionSettings),
+        companionExtrasReady: Boolean(window.UnlimitedCompanionExtras), companionV10ShellReady: Boolean(window.UnlimitedCompanionV10Shell),
+        companionV10Stage2Ready: Boolean(window.UnlimitedCompanionV10Stage2), companionV10Stage4Ready: Boolean(window.UnlimitedCompanionV10Stage4),
+        companionV10Stage5Ready: Boolean(window.UnlimitedCompanionV10Stage5), companionV11Ready: Boolean(window.UnlimitedCompanionV11),
+        companionV11Stage1Ready: Boolean(window.UnlimitedCompanionV11Stage1), companionV11Stage2Ready: Boolean(window.UnlimitedCompanionV11Stage2),
+        companionV11Stage3Ready: Boolean(window.UnlimitedCompanionV11Stage3), companionV11Stage4Ready: Boolean(window.UnlimitedCompanionV11Stage4),
+        companionV12GalaxyReady: Boolean(window.UnlimitedCompanionV12Galaxy), companionV12Stage2Ready: Boolean(window.UnlimitedCompanionV121),
+        companionV12FinalReady: Boolean(window.UnlimitedCompanionV122), companionV12PolishReady: Boolean(window.UnlimitedCompanionV123),
+        companionV12Phase1Ready: Boolean(window.UnlimitedCompanionV124Phase1), companionLive2dReady: Boolean(window.UnlimitedCompanionLive2D),
+        companionVoiceReady: Boolean(window.UnlimitedCompanionVoice), companionNeuralVoiceReady: Boolean(window.UnlimitedCompanionNeuralVoice),
+        companionVoiceInputReady: Boolean(window.UnlimitedCompanionVoiceInput), companionCallModeReady: Boolean(window.UnlimitedCompanionCallMode),
+        companionLive2dModelPoolReady: Boolean(window.UnlimitedCompanionLive2DModelPool), companionLive2dPolishReady: Boolean(window.UnlimitedCompanionLive2DPolish),
+        companionLive2dEmotionReady: Boolean(window.UnlimitedCompanionLive2DEmotionEngine), companionV123UxHardeningReady: Boolean(window.UnlimitedCompanionV123UXHardening)
       });
       return;
     }
+
     const parts = [];
     if (missing.length) parts.push(`缺少：${missing.map(([,label]) => label).join("、")}`);
     if (errors.length) parts.push(`捕获到的错误：\n${errors.slice(0,8).join("\n\n")}`);
