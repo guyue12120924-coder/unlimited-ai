@@ -334,7 +334,7 @@
       childList: true,
       subtree: true,
       attributes: true,
-      attributeFilter: ["data-uai-mode", "class"]
+      attributeFilter: ["data-uai-mode"]
     });
 
     scheduleRefresh(0);
