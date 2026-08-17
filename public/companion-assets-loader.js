@@ -61,7 +61,7 @@
     ["/companion-v12-phase1.js", "uaiCompanionV124Phase1Script"],
     ["/companion-live2d.js", "uaiCompanionLive2dScript"],
     ["/companion-live2d-voice.js", "uaiCompanionLive2dVoiceScript"],
-    ["/companion-live2d-neural-voice.js", "uaiCompanionLive2dNeuralVoiceScript"],
+    ["/companion-live2d-neural-voice.js", "uaiCompanionNeuralVoiceScript"],
     ["/companion-voice-input.js", "uaiCompanionVoiceInputScript"],
     ["/companion-call-mode.js", "uaiCompanionCallModeScript"],
     ["/companion-live2d-model-pool.js", "uaiCompanionLive2dModelPoolScript"],
@@ -104,21 +104,26 @@
         return;
       }
 
+      if (link?.dataset.uaiLoaded === "false") {
+        link.remove();
+        link = null;
+      }
+
+      const isNew = !link;
       if (!link) {
         link = document.createElement("link");
         link.id = id;
         link.rel = "stylesheet";
         link.href = versioned(path);
         link.dataset.uaiCompanionLazy = "true";
-        document.head.appendChild(link);
       }
 
       let settled = false;
-      const timer = window.setTimeout(() => finish(new Error(`Timed out loading ${path}`)), 20000);
+      let timer = 0;
       const finish = (error) => {
         if (settled) return;
         settled = true;
-        window.clearTimeout(timer);
+        if (timer) window.clearTimeout(timer);
         link.removeEventListener("load", onLoad);
         link.removeEventListener("error", onError);
         if (error) {
@@ -132,8 +137,12 @@
       };
       const onLoad = () => finish();
       const onError = () => finish(new Error(`Failed to load ${path}`));
+
       link.addEventListener("load", onLoad, { once: true });
       link.addEventListener("error", onError, { once: true });
+      timer = window.setTimeout(() => finish(new Error(`Timed out loading ${path}`)), 20000);
+      if (isNew) document.head.appendChild(link);
+      else if (link.sheet) finish();
     });
   }
 
@@ -151,21 +160,21 @@
         script = null;
       }
 
+      const isNew = !script;
       if (!script) {
         script = document.createElement("script");
         script.id = id;
         script.async = false;
         script.src = versioned(path);
         script.dataset.uaiCompanionLazy = "true";
-        document.body.appendChild(script);
       }
 
       let settled = false;
-      const timer = window.setTimeout(() => finish(new Error(`Timed out loading ${path}`)), 20000);
+      let timer = 0;
       const finish = (error) => {
         if (settled) return;
         settled = true;
-        window.clearTimeout(timer);
+        if (timer) window.clearTimeout(timer);
         script.removeEventListener("load", onLoad);
         script.removeEventListener("error", onError);
         if (error) {
@@ -179,8 +188,11 @@
       };
       const onLoad = () => finish();
       const onError = () => finish(new Error(`Failed to load ${path}`));
+
       script.addEventListener("load", onLoad, { once: true });
       script.addEventListener("error", onError, { once: true });
+      timer = window.setTimeout(() => finish(new Error(`Timed out loading ${path}`)), 20000);
+      if (isNew) document.body.appendChild(script);
     });
   }
 
@@ -191,15 +203,15 @@
     document.documentElement.dataset.companionAssetsRevision = REVISION;
     updateBootState({ companionAssetsDeferred: false });
 
-    const stylePromise = Promise.all(STYLE_ASSETS.map(([path, id]) => loadStyle(path, id)));
-
-    for (const [path, id] of SCRIPT_ASSETS) {
-      await loadScript(path, id);
-    }
-    await stylePromise;
+    // Styles download in parallel. Scripts are inserted in the original dependency order
+    // with async=false, so browsers may fetch them in parallel while preserving execution order.
+    await Promise.all([
+      Promise.all(STYLE_ASSETS.map(([path, id]) => loadStyle(path, id))),
+      Promise.all(SCRIPT_ASSETS.map(([path, id]) => loadScript(path, id)))
+    ]);
 
     state.ready = true;
-    updateBootState({ companionAssetsDeferred: false, companionAssetsReady: true });
+    updateBootState({ companionAssetsDeferred: false, companionAssetsReady: true, companionAssetsError: "" });
     return true;
   }
 
