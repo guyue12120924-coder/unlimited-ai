@@ -119,16 +119,18 @@
 
   function setDepthVars(x, y) {
     if (!state.root) return;
-    const nearX = x * 18;
-    const nearY = y * 14;
-    const farX = x * 7;
-    const farY = y * 5;
-    state.root.style.setProperty("--uai-depth-near-x", `${nearX.toFixed(2)}px`);
-    state.root.style.setProperty("--uai-depth-near-y", `${nearY.toFixed(2)}px`);
-    state.root.style.setProperty("--uai-depth-far-x", `${farX.toFixed(2)}px`);
-    state.root.style.setProperty("--uai-depth-far-y", `${farY.toFixed(2)}px`);
+    state.root.style.setProperty("--uai-depth-near-x", `${(x * 18).toFixed(2)}px`);
+    state.root.style.setProperty("--uai-depth-near-y", `${(y * 14).toFixed(2)}px`);
+    state.root.style.setProperty("--uai-depth-far-x", `${(x * 7).toFixed(2)}px`);
+    state.root.style.setProperty("--uai-depth-far-y", `${(y * 5).toFixed(2)}px`);
     state.root.style.setProperty("--uai-cinema-x", `${state.pointerX.toFixed(1)}px`);
     state.root.style.setProperty("--uai-cinema-y", `${state.pointerY.toFixed(1)}px`);
+  }
+
+  function startMotion() {
+    if (state.running || !lobbyVisible() || effectsDisabled()) return;
+    state.running = true;
+    state.raf = requestAnimationFrame(render);
   }
 
   function onPointerMove(event) {
@@ -137,22 +139,37 @@
     state.pointerY = event.clientY;
     state.targetX = Math.max(-1, Math.min(1, (event.clientX / Math.max(window.innerWidth, 1) - .5) * 2));
     state.targetY = Math.max(-1, Math.min(1, (event.clientY / Math.max(window.innerHeight, 1) - .5) * 2));
+    startMotion();
   }
 
   function render() {
     if (!state.running) return;
-    state.currentX += (state.targetX - state.currentX) * .055;
-    state.currentY += (state.targetY - state.currentY) * .055;
+
+    state.currentX += (state.targetX - state.currentX) * .065;
+    state.currentY += (state.targetY - state.currentY) * .065;
     setDepthVars(state.currentX, state.currentY);
+
+    const settled = Math.abs(state.targetX - state.currentX) < .0015 && Math.abs(state.targetY - state.currentY) < .0015;
+    if (settled) {
+      state.currentX = state.targetX;
+      state.currentY = state.targetY;
+      setDepthVars(state.currentX, state.currentY);
+      state.running = false;
+      state.raf = 0;
+      return;
+    }
+
     state.raf = requestAnimationFrame(render);
   }
 
   function start() {
-    if (state.running || !lobbyVisible() || effectsDisabled()) return;
-    state.running = true;
-    state.pointerX = window.innerWidth * .5;
-    state.pointerY = window.innerHeight * .42;
-    state.raf = requestAnimationFrame(render);
+    if (!lobbyVisible() || effectsDisabled()) return;
+    if (!state.pointerX && !state.pointerY) {
+      state.pointerX = window.innerWidth * .5;
+      state.pointerY = window.innerHeight * .42;
+      setDepthVars(state.currentX, state.currentY);
+    }
+    startMotion();
   }
 
   function stop() {
@@ -193,6 +210,7 @@
       state.targetY = 0;
       state.pointerX = window.innerWidth * .5;
       state.pointerY = window.innerHeight * .42;
+      startMotion();
     };
     state.visibilityHandler = sync;
 
