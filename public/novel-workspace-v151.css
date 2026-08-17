@@ -177,7 +177,7 @@ body[data-uai-mode="novel"] .character-card {
   position: absolute;
   z-index: 4;
   top: 8px;
-  right: 8px;
+  right: 38px;
   min-height: 21px;
   display: inline-flex;
   align-items: center;
@@ -235,7 +235,7 @@ body:not([data-uai-mode="novel"]) .novel-v151-character-badge {
   }
   .novel-v151-actions::-webkit-scrollbar { display: none; }
   .novel-v151-actions button { flex: 0 0 auto; min-height: 31px; }
-  .novel-v151-character-badge { top: 7px; right: 7px; }
+  .novel-v151-character-badge { top: 7px; right: 37px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
