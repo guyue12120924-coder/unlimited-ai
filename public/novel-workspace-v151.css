@@ -1,0 +1,246 @@
+/* public/novel-workspace-v151.css
+ * V15.1: unified right-panel guidance for Draft / Outline / Characters / World.
+ */
+
+body[data-uai-mode="novel"] #studioPanelBody {
+  position: relative;
+}
+
+body[data-uai-mode="novel"] .novel-v151-guide {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 14px;
+  margin: 12px 12px 14px;
+  padding: 13px 13px 12px;
+  border: 1px solid color-mix(in srgb, var(--border-default, var(--border)) 76%, transparent);
+  border-radius: 12px;
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--accent) 5%, transparent), transparent 46%),
+    color-mix(in srgb, var(--bg-surface-raised, var(--surface-raised)) 66%, transparent);
+  box-shadow: inset 0 1px rgba(255,255,255,.025), 0 10px 26px rgba(0,0,0,.10);
+}
+
+.novel-v151-guide[hidden] { display: none !important; }
+
+.novel-v151-guide-copy {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.novel-v151-guide-copy > span {
+  color: color-mix(in srgb, var(--accent) 72%, var(--text-muted, var(--muted)));
+  font: 760 8px/1.15 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: .14em;
+}
+
+.novel-v151-guide-copy > strong {
+  color: var(--text-primary, var(--text));
+  font-size: 14px;
+  font-weight: 760;
+  letter-spacing: -.018em;
+  line-height: 1.3;
+}
+
+.novel-v151-guide-copy > p {
+  max-width: 520px;
+  margin: 0;
+  color: var(--text-muted, var(--muted));
+  font-size: 9.5px;
+  line-height: 1.6;
+}
+
+.novel-v151-guide-side {
+  display: grid;
+  justify-items: end;
+  gap: 9px;
+}
+
+.novel-v151-metric {
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 8px;
+  border: 1px solid var(--border-subtle, var(--border));
+  border-radius: 999px;
+  background: rgba(255,255,255,.025);
+  color: var(--text-muted, var(--muted));
+  font-size: 8px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.novel-v151-metric[data-tone="good"] {
+  border-color: color-mix(in srgb, var(--accent) 26%, var(--border));
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
+  color: color-mix(in srgb, var(--accent) 62%, var(--text-secondary, var(--text-soft)));
+}
+
+.novel-v151-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.novel-v151-actions button {
+  min-height: 29px;
+  padding: 0 9px;
+  border: 1px solid var(--border-subtle, var(--border));
+  border-radius: 8px;
+  background: rgba(255,255,255,.025);
+  color: var(--text-secondary, var(--text-soft));
+  cursor: pointer;
+  font-size: 8.5px;
+  font-weight: 670;
+  transition: border-color .15s ease, background .15s ease, color .15s ease, transform .15s ease;
+}
+
+.novel-v151-actions button:hover,
+.novel-v151-actions button:focus-visible {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--accent) 30%, var(--border));
+  background: color-mix(in srgb, var(--accent) 7%, var(--surface-soft));
+  color: var(--text-primary, var(--text));
+}
+
+.novel-v151-actions button.primary {
+  border-color: color-mix(in srgb, var(--accent) 34%, var(--border));
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface-soft));
+  color: color-mix(in srgb, var(--accent) 66%, var(--text-primary, white));
+}
+
+/* Tabs become task steps, not generic form tabs. */
+body[data-uai-mode="novel"] #studioPanel .studio-tabs {
+  position: relative;
+  gap: 4px;
+  padding: 7px 8px;
+}
+
+body[data-uai-mode="novel"] #studioPanel .studio-tabs button {
+  position: relative;
+  min-width: 0;
+}
+
+body[data-uai-mode="novel"] #studioPanel .studio-tabs button.active::after {
+  content: "";
+  position: absolute;
+  left: 9px;
+  right: 9px;
+  bottom: 2px;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--accent);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 24%, transparent);
+}
+
+/* Field hierarchy and completion cues. */
+body[data-uai-mode="novel"] #studioPanelBody label {
+  position: relative;
+}
+
+body[data-uai-mode="novel"] #studioPanelBody label.novel-v151-filled > span:first-child::after {
+  content: "";
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  margin-left: 6px;
+  border-radius: 50%;
+  vertical-align: 2px;
+  background: color-mix(in srgb, var(--accent) 78%, white);
+  box-shadow: 0 0 7px color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
+body[data-uai-mode="novel"] #studioPanelBody label[data-v151-priority="core"] {
+  padding: 11px !important;
+  border-color: color-mix(in srgb, var(--accent) 18%, var(--border-default, var(--border))) !important;
+  background: color-mix(in srgb, var(--accent) 3%, var(--bg-surface, var(--surface-solid))) !important;
+}
+
+body[data-uai-mode="novel"] #studioPanelBody label[data-v151-priority="support"] {
+  opacity: .88;
+}
+
+body[data-uai-mode="novel"] #studioPanelBody [data-v151-priority="chapter"] {
+  border-color: color-mix(in srgb, var(--accent) 18%, var(--border-default, var(--border)));
+  box-shadow: inset 0 1px rgba(255,255,255,.02);
+}
+
+/* Character cards: show completeness without adding more forms. */
+body[data-uai-mode="novel"] .character-card {
+  position: relative;
+}
+
+.novel-v151-character-badge {
+  position: absolute;
+  z-index: 4;
+  top: 8px;
+  right: 8px;
+  min-height: 21px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 7px;
+  border: 1px solid var(--border-subtle, var(--border));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--bg-surface-raised, var(--surface-raised)) 88%, transparent);
+  color: var(--text-muted, var(--muted));
+  font-size: 7.5px;
+  font-weight: 650;
+  pointer-events: none;
+}
+
+.novel-v151-character-badge[data-tone="good"] {
+  border-color: color-mix(in srgb, var(--accent) 25%, var(--border));
+  color: color-mix(in srgb, var(--accent) 58%, var(--text-secondary, var(--text-soft)));
+}
+
+/* Keep the guide visually attached to the current task. */
+.novel-v151-guide[data-tab="draft"] { border-left: 2px solid color-mix(in srgb, var(--accent) 50%, transparent); }
+.novel-v151-guide[data-tab="outline"] { border-left: 2px solid color-mix(in srgb, #8ea4ff 48%, transparent); }
+.novel-v151-guide[data-tab="characters"] { border-left: 2px solid color-mix(in srgb, #d49aaa 46%, transparent); }
+.novel-v151-guide[data-tab="world"] { border-left: 2px solid color-mix(in srgb, #d4bb79 46%, transparent); }
+
+body:not([data-uai-mode="novel"]) .novel-v151-guide,
+body:not([data-uai-mode="novel"]) .novel-v151-character-badge {
+  display: none !important;
+}
+
+@media (max-width: 1120px) {
+  body[data-uai-mode="novel"] .novel-v151-guide {
+    grid-template-columns: 1fr;
+  }
+  .novel-v151-guide-side {
+    justify-items: start;
+  }
+  .novel-v151-actions {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 720px) {
+  body[data-uai-mode="novel"] .novel-v151-guide {
+    margin: 9px 9px 11px;
+    padding: 11px;
+    border-radius: 10px;
+  }
+  .novel-v151-guide-copy > strong { font-size: 13px; }
+  .novel-v151-guide-copy > p { font-size: 9px; }
+  .novel-v151-actions {
+    width: 100%;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .novel-v151-actions::-webkit-scrollbar { display: none; }
+  .novel-v151-actions button { flex: 0 0 auto; min-height: 31px; }
+  .novel-v151-character-badge { top: 7px; right: 7px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .novel-v151-actions button,
+  body[data-uai-mode="novel"] #studioPanel .studio-tabs button.active::after {
+    transition: none !important;
+  }
+}
