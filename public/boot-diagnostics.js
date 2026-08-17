@@ -27,9 +27,7 @@
   function ensureScript(src, id) {
     if (document.getElementById(id)) return;
     const script = document.createElement("script");
-    script.id = id;
-    script.async = false;
-    script.src = src;
+    script.id = id; script.async = false; script.src = src;
     script.addEventListener("error", () => errors.push(`资源加载失败：${src}`), { once: true });
     document.body.appendChild(script);
   }
@@ -56,7 +54,7 @@
 
   function loadModeRouter() {
     for (const [href, id] of [
-      ["/mode-router.css","uaiModeRouterCss"],["/companion-mode.css","uaiCompanionCss"],["/companion-characters.css","uaiCompanionCharactersCss"],
+      ["/mode-router.css","uaiModeRouterCss"],["/mode-router-stage3.css","uaiModeRouterStage3Css"],["/companion-mode.css","uaiCompanionCss"],["/companion-characters.css","uaiCompanionCharactersCss"],
       ["/companion-memory.css","uaiCompanionMemoryCss"],["/companion-records.css","uaiCompanionRecordsCss"],["/companion-support.css","uaiCompanionSupportCss"],
       ["/companion-v10.css","uaiCompanionV10Css"],["/companion-v10-vibrant.css","uaiCompanionV10VibrantCss"],["/companion-v10-stage2.css","uaiCompanionV10Stage2Css"],
       ["/companion-v10-stage3.css","uaiCompanionV10Stage3Css"],["/companion-v10-stage4.css","uaiCompanionV10Stage4Css"],["/companion-v10-stage5.css","uaiCompanionV10Stage5Css"],
