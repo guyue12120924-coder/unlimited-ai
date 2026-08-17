@@ -1,6 +1,6 @@
 // public/mode-router.js
 (() => {
-  const REVISION = "2026-08-17-v13.3-mode-router-audited";
+  const REVISION = "2026-08-17-v13.4-mode-router-performance";
   let root = null;
   let currentMode = "lobby";
   let companionReadyPromise = null;
@@ -14,6 +14,7 @@
     stars: [],
     meteors: [],
     raf: 0,
+    frameTimer: 0,
     running: false,
     lastTime: 0,
     nextMeteorAt: 0,
@@ -26,7 +27,9 @@
     resizeHandler: null,
     pointerHandler: null,
     pointerLeaveHandler: null,
-    visibilityHandler: null
+    visibilityHandler: null,
+    motionQuery: null,
+    motionHandler: null
   };
 
   const novelQuotes = [
@@ -222,6 +225,30 @@
 
     cards.forEach((card) => {
       const kind = card.classList.contains("novel") ? "novel" : "companion";
+      const pointer = { raf: 0, x: 0, y: 0 };
+
+      const resetPointer = () => {
+        if (pointer.raf) cancelAnimationFrame(pointer.raf);
+        pointer.raf = 0;
+        card.style.setProperty("--uai-card-rx", "0deg");
+        card.style.setProperty("--uai-card-ry", "0deg");
+        card.style.setProperty("--uai-spot-x", "50%");
+        card.style.setProperty("--uai-spot-y", "50%");
+      };
+
+      const applyPointer = () => {
+        pointer.raf = 0;
+        if (transitionLock || prefersReducedMotion()) return;
+        const rect = card.getBoundingClientRect();
+        const x = (pointer.x - rect.left) / Math.max(rect.width, 1);
+        const y = (pointer.y - rect.top) / Math.max(rect.height, 1);
+        const ry = (x - 0.5) * 3.2;
+        const rx = (0.5 - y) * 2.6;
+        card.style.setProperty("--uai-card-rx", `${rx.toFixed(2)}deg`);
+        card.style.setProperty("--uai-card-ry", `${ry.toFixed(2)}deg`);
+        card.style.setProperty("--uai-spot-x", `${(x * 100).toFixed(1)}%`);
+        card.style.setProperty("--uai-spot-y", `${(y * 100).toFixed(1)}%`);
+      };
 
       card.addEventListener("pointerenter", () => {
         if (!transitionLock) grid.dataset.active = kind;
@@ -229,24 +256,15 @@
 
       card.addEventListener("pointermove", (event) => {
         if (transitionLock || prefersReducedMotion()) return;
-        const rect = card.getBoundingClientRect();
-        const x = (event.clientX - rect.left) / Math.max(rect.width, 1);
-        const y = (event.clientY - rect.top) / Math.max(rect.height, 1);
-        const ry = (x - 0.5) * 3.2;
-        const rx = (0.5 - y) * 2.6;
-        card.style.setProperty("--uai-card-rx", `${rx.toFixed(2)}deg`);
-        card.style.setProperty("--uai-card-ry", `${ry.toFixed(2)}deg`);
-        card.style.setProperty("--uai-spot-x", `${(x * 100).toFixed(1)}%`);
-        card.style.setProperty("--uai-spot-y", `${(y * 100).toFixed(1)}%`);
-      });
+        pointer.x = event.clientX;
+        pointer.y = event.clientY;
+        if (!pointer.raf) pointer.raf = requestAnimationFrame(applyPointer);
+      }, { passive: true });
 
       card.addEventListener("pointerleave", () => {
         if (!transitionLock) delete grid.dataset.active;
-        card.style.setProperty("--uai-card-rx", "0deg");
-        card.style.setProperty("--uai-card-ry", "0deg");
-        card.style.setProperty("--uai-spot-x", "50%");
-        card.style.setProperty("--uai-spot-y", "50%");
-      });
+        resetPointer();
+      }, { passive: true });
 
       card.addEventListener("focus", () => {
         if (!transitionLock) grid.dataset.active = kind;
@@ -254,6 +272,7 @@
 
       card.addEventListener("blur", () => {
         if (!transitionLock) delete grid.dataset.active;
+        resetPointer();
       });
     });
   }
@@ -267,7 +286,7 @@
 
     effects.resizeHandler = resizeCanvas;
     effects.pointerHandler = (event) => {
-      if (!root || currentMode !== "lobby" || transitionLock) return;
+      if (!root || currentMode !== "lobby" || transitionLock || prefersReducedMotion()) return;
       const x = Math.max(-1, Math.min(1, (event.clientX / Math.max(window.innerWidth, 1) - 0.5) * 2));
       const y = Math.max(-1, Math.min(1, (event.clientY / Math.max(window.innerHeight, 1) - 0.5) * 2));
       root.style.setProperty("--uai-mx", x.toFixed(3));
@@ -281,11 +300,25 @@
       if (document.hidden) stopEffects();
       else if (currentMode === "lobby" && !root?.hidden) startEffects();
     };
+    effects.motionQuery = window.matchMedia?.("(prefers-reduced-motion: reduce)") || null;
+    effects.motionHandler = () => {
+      if (prefersReducedMotion()) {
+        stopEffects();
+        effects.stars = [];
+        effects.meteors = [];
+        effects.ctx?.clearRect(0, 0, effects.width, effects.height);
+        effects.pointerLeaveHandler?.();
+        return;
+      }
+      resizeCanvas();
+      if (currentMode === "lobby" && !root?.hidden && !document.hidden) startEffects();
+    };
 
     window.addEventListener("resize", effects.resizeHandler, { passive: true });
     window.addEventListener("pointermove", effects.pointerHandler, { passive: true });
     document.documentElement.addEventListener("mouseleave", effects.pointerLeaveHandler, { passive: true });
     document.addEventListener("visibilitychange", effects.visibilityHandler);
+    effects.motionQuery?.addEventListener?.("change", effects.motionHandler);
 
     resizeCanvas();
   }
@@ -301,7 +334,16 @@
     effects.canvas.height = Math.round(effects.height * effects.dpr);
     effects.ctx.setTransform(effects.dpr, 0, 0, effects.dpr, 0, 0);
 
-    const count = Math.max(70, Math.min(155, Math.round((effects.width * effects.height) / 10500)));
+    if (prefersReducedMotion()) {
+      effects.stars = [];
+      effects.meteors = [];
+      effects.ctx.clearRect(0, 0, effects.width, effects.height);
+      return;
+    }
+
+    const cores = Number(navigator.hardwareConcurrency) || 4;
+    const quality = cores <= 4 ? 0.72 : cores >= 8 ? 1 : 0.86;
+    const count = Math.max(52, Math.min(155, Math.round((effects.width * effects.height) / 10500 * quality)));
     effects.stars = Array.from({ length: count }, () => createStar(true));
   }
 
@@ -400,8 +442,25 @@
     ctx.stroke();
   }
 
+  function effectFrameDelay() {
+    const cores = Number(navigator.hardwareConcurrency) || 4;
+    const area = Math.max(1, effects.width * effects.height);
+    if (cores <= 4 || area > 3200000) return 28;
+    if (cores >= 8 && area < 2600000) return 12;
+    return 20;
+  }
+
+  function scheduleEffectsFrame() {
+    if (!effects.running || effects.frameTimer || prefersReducedMotion()) return;
+    effects.frameTimer = window.setTimeout(() => {
+      effects.frameTimer = 0;
+      if (!effects.running || prefersReducedMotion()) return;
+      effects.raf = requestAnimationFrame(renderEffects);
+    }, effectFrameDelay());
+  }
+
   function renderEffects(now) {
-    if (!effects.running || !effects.ctx) return;
+    if (!effects.running || !effects.ctx || prefersReducedMotion()) return;
     const ctx = effects.ctx;
     const dt = Math.min(40, Math.max(0, now - (effects.lastTime || now)));
     effects.lastTime = now;
@@ -416,11 +475,12 @@
     effects.meteors = effects.meteors.filter((meteor) => meteor.age < meteor.life);
 
     ctx.globalAlpha = 1;
-    effects.raf = requestAnimationFrame(renderEffects);
+    effects.raf = 0;
+    scheduleEffectsFrame();
   }
 
   function startPreviewRotation() {
-    if (effects.quoteTimer) return;
+    if (effects.quoteTimer || prefersReducedMotion()) return;
     effects.quoteTimer = window.setInterval(() => {
       if (currentMode !== "lobby" || root?.hidden || transitionLock) return;
       effects.quoteIndex = (effects.quoteIndex + 1) % novelQuotes.length;
@@ -443,7 +503,7 @@
   }
 
   function startEffects() {
-    if (!effects.ctx || effects.running || document.hidden) return;
+    if (!effects.ctx || effects.running || document.hidden || prefersReducedMotion()) return;
     effects.running = true;
     effects.lastTime = performance.now();
     effects.raf = requestAnimationFrame(renderEffects);
@@ -455,6 +515,8 @@
     effects.lastTime = 0;
     if (effects.raf) cancelAnimationFrame(effects.raf);
     effects.raf = 0;
+    if (effects.frameTimer) window.clearTimeout(effects.frameTimer);
+    effects.frameTimer = 0;
     if (effects.quoteTimer) clearInterval(effects.quoteTimer);
     effects.quoteTimer = 0;
   }
