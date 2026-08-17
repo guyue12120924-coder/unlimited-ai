@@ -13,7 +13,7 @@ import {
 
 // Compatibility marker: buildCompanionSystemPrompt(payload) remains available in companion.js for preview/testing only.
 const NVIDIA_CHAT_URL = "https://integrate.api.nvidia.com/v1/chat/completions";
-const APP_REVISION = "2026-08-17-v14.4-worker-entry-polish";
+const APP_REVISION = "2026-08-17-v14.5-worker-entry-performance";
 
 // ============================================================
 // 小说模式默认 System Prompt
@@ -290,8 +290,10 @@ async function inspectAsset(request, env, pathname, markers = []) {
 
 async function handleDiagnostics(request, env) {
   const assets = await Promise.all([
-    inspectAsset(request, env, "/index.html", ["2026-08-17-v14.4-entry-polish", "/boot-diagnostics.js?v=20260817-v14.4-entry-polish"]),
-    inspectAsset(request, env, "/boot-diagnostics.js", ["2026-08-17-v14.4-entry-polish", "modeRouterLuxuryStage5Ready", "mode-router-luxury-stage5.js"]),
+    inspectAsset(request, env, "/index.html", ["2026-08-17-v14.5-entry-performance", "/boot-diagnostics.js?v=20260817-v14.5-entry-performance"]),
+    inspectAsset(request, env, "/boot-diagnostics.js", ["2026-08-17-v14.5-entry-performance", "companionLazyBridgeReady", "companion-lazy-bridge.js"]),
+    inspectAsset(request, env, "/companion-lazy-bridge.js", ["2026-08-17-v14.5-companion-lazy-bridge", "UnlimitedCompanionLazyBridge", "prepareAndEnter"]),
+    inspectAsset(request, env, "/companion-assets-loader.js", ["2026-08-17-v14.5-companion-lazy", "UnlimitedCompanionAssets", "SCRIPT_ASSETS"]),
     inspectAsset(request, env, "/mode-router.js", ["2026-08-17-v13.3-mode-router-audited", "modeRequestId", "uaiEnterCompanion"]),
     inspectAsset(request, env, "/mode-router.css", ["uai-mode-lobby", "uai-star-canvas", "data-uai-mode"]),
     inspectAsset(request, env, "/mode-router-stage3.css", ["uaiWorldExpand", "Audit fixes", "uaiCardSweep"]),
@@ -309,7 +311,7 @@ async function handleDiagnostics(request, env) {
     inspectAsset(request, env, "/companion-mode.css", ["uaiCompanionRoot", "uai-c-shell"]),
     inspectAsset(request, env, "/companion-v10.css", ["grid-template-columns:236px", "uai-c-v10-message-avatar", "border-radius:50%!important"]),
     inspectAsset(request, env, "/companion-v10-shell.js", ["2026-08-14-v10.0-shell-1", "uai-c-v10-role-menu", "ensureConversationStarters"]),
-    inspectAsset(request, env, "/companion-runtime.js", ["2026-08-14-v9.6-runtime-1", "chars: 5000", "patchCompanionBody"]),
+    inspectAsset(request, env, "/companion-runtime.js", ["v9.6-runtime", "chars: 5000", "patchCompanionBody"]),
     inspectAsset(request, env, "/companion-character-editor.js", ["PROFILE_LIMIT = 5000", "MAX_CHARACTERS = 6", "uaiV9NewRoleBackground"]),
     inspectAsset(request, env, "/context-bridge.js", ["contextInspectorBtn", "creative_context"]),
     inspectAsset(request, env, "/continuity-bridge.js", ["continuityBtn", "continuity_context"]),
@@ -327,13 +329,14 @@ async function handleDiagnostics(request, env) {
     assetBindingPresent: Boolean(env.ASSETS && typeof env.ASSETS.fetch === "function"),
     frontendCurrent,
     modes: ["novel", "companion"],
+    companionLoading: "deferred until the companion card is selected",
     promptLocation: {
       novel: "src/worker.js -> NOVEL_SYSTEM_PROMPT",
       companion: "src/companion.js -> COMPANION_ROLE_CARD"
     },
     conclusion: frontendCurrent
-      ? "V14.4 frontend assets are current and loaded from this Worker deployment."
-      : "This Worker deployment is missing one or more V14.4 frontend assets. Redeploy the current main branch.",
+      ? "V14.5 frontend assets are current; companion extensions are available for deferred loading."
+      : "This Worker deployment is missing one or more V14.5 frontend assets. Redeploy the current main branch.",
     assets
   });
 }
