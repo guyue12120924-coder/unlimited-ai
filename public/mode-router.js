@@ -1,11 +1,12 @@
 // public/mode-router.js
 (() => {
-  const REVISION = "2026-08-17-v13.2-mode-router-final";
+  const REVISION = "2026-08-17-v13.3-mode-router-audited";
   let root = null;
   let currentMode = "lobby";
   let companionReadyPromise = null;
   let transitionLock = false;
   let returnTimer = 0;
+  let modeRequestId = 0;
 
   const effects = {
     canvas: null,
@@ -41,6 +42,10 @@
     "我把你喜欢的事情记下来了，下次可别说我忘记了。",
     "欢迎回来。刚刚看到星星的时候，我突然想到你了。"
   ];
+
+  function prefersReducedMotion() {
+    return Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)").matches);
+  }
 
   function ensureStyle(href, id) {
     if (document.getElementById(id)) return;
@@ -223,7 +228,7 @@
       });
 
       card.addEventListener("pointermove", (event) => {
-        if (transitionLock || window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
+        if (transitionLock || prefersReducedMotion()) return;
         const rect = card.getBoundingClientRect();
         const x = (event.clientX - rect.left) / Math.max(rect.width, 1);
         const y = (event.clientY - rect.top) / Math.max(rect.height, 1);
@@ -429,10 +434,11 @@
     if (!element) return;
     element.classList.add("is-swapping");
     window.setTimeout(() => {
+      if (!element.isConnected) return;
       element.textContent = nextText;
       element.classList.remove("is-swapping");
       element.classList.add("is-arriving");
-      window.setTimeout(() => element.classList.remove("is-arriving"), 420);
+      window.setTimeout(() => element.isConnected && element.classList.remove("is-arriving"), 420);
     }, 180);
   }
 
@@ -482,7 +488,7 @@
 
     if (returnTimer) window.clearTimeout(returnTimer);
     root.classList.remove("is-returning");
-    if (animateReturn && !window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
+    if (animateReturn && !prefersReducedMotion()) {
       void root.offsetWidth;
       root.classList.add("is-returning");
       returnTimer = window.setTimeout(() => {
@@ -506,7 +512,7 @@
     const x = rect ? rect.left + rect.width / 2 : window.innerWidth / 2;
     const y = rect ? rect.top + rect.height / 2 : window.innerHeight / 2;
     const copy = transitionCopy(kind);
-    const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    const reduced = prefersReducedMotion();
 
     transitionLock = true;
     setCardsDisabled(true);
@@ -551,6 +557,7 @@
   }
 
   function showLobby() {
+    modeRequestId += 1;
     window.UnlimitedCompanion?.unmount?.();
     setMode("lobby");
     const lobby = createLobby();
@@ -563,9 +570,13 @@
 
   async function enterNovel() {
     if (transitionLock) return;
+    const requestId = ++modeRequestId;
+    transitionLock = true;
+    setCardsDisabled(true);
 
     try {
       await playTransition("novel");
+      if (requestId !== modeRequestId) return;
       stopEffects();
       window.UnlimitedCompanion?.unmount?.();
       setMode("novel");
@@ -574,31 +585,36 @@
       window.setTimeout(() => document.querySelector("#msg")?.focus(), 40);
     } catch (error) {
       console.error("[Unlimited AI] novel transition failed", error);
-      resetTransitionState();
+      if (requestId === modeRequestId) resetTransitionState();
     }
   }
 
   async function enterCompanion() {
     if (transitionLock) return;
-
+    const requestId = ++modeRequestId;
     const button = root?.querySelector("#uaiEnterCompanion");
+
+    transitionLock = true;
+    setCardsDisabled(true);
     if (button) {
-      button.disabled = true;
       button.setAttribute("aria-busy", "true");
       button.classList.add("is-loading");
     }
 
     try {
       await ensureScript(`/companion-mode.js?v=${encodeURIComponent(REVISION)}`, "uaiCompanionScript");
+      if (requestId !== modeRequestId) return;
       if (!window.UnlimitedCompanion?.mount) throw new Error("Companion module did not initialize");
 
       if (button) button.classList.remove("is-loading");
       await playTransition("companion");
+      if (requestId !== modeRequestId) return;
       stopEffects();
       setMode("companion");
       if (root) root.hidden = true;
       window.UnlimitedCompanion.mount({ onExit: showLobby });
     } catch (error) {
+      if (requestId !== modeRequestId) return;
       console.error("[Unlimited AI] companion mode failed to load", error);
 
       const failedScript = document.getElementById("uaiCompanionScript");
@@ -609,7 +625,7 @@
       alert("AI 陪伴模式加载失败，请刷新页面后再试。小说模式不会受到影响。");
       showLobby();
     } finally {
-      if (button && currentMode === "lobby") {
+      if (button && requestId === modeRequestId && currentMode === "lobby") {
         button.disabled = false;
         button.removeAttribute("aria-busy");
         button.classList.remove("is-loading");
