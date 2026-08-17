@@ -32,23 +32,6 @@
   will-change: transform, opacity, filter;
 }
 
-.uai-mode-card::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-  border-radius: inherit;
-  opacity: 0;
-  background: radial-gradient(circle at var(--uai-spot-x, 50%) var(--uai-spot-y, 50%), rgba(255,255,255,.15), transparent 26%);
-  transition: opacity .25s ease;
-}
-
-.uai-mode-card:hover::after,
-.uai-mode-card:focus-visible::after {
-  opacity: .9;
-}
-
 .uai-mode-card .uai-card-copy,
 .uai-mode-card .uai-mode-preview,
 .uai-mode-card .uai-mode-tags,
@@ -340,6 +323,32 @@
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
+/* ---------- Audit fixes ----------
+ * Stage 2 owns the card sweep on ::after. Keep Stage 3 depth effects from
+ * overriding that same pseudo-element and causing the sweep animation to
+ * move/resize a radial spotlight unexpectedly.
+ */
+.uai-mode-card::after {
+  inset: auto;
+  top: -55%;
+  left: -72%;
+  right: auto;
+  bottom: auto;
+  width: 48%;
+  height: 210%;
+  border-radius: 0;
+  opacity: 0;
+  transform: rotate(18deg);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.11), transparent);
+  transition: none;
+}
+
+.uai-mode-card:hover::after,
+.uai-mode-card:focus-visible::after {
+  opacity: 0;
+  animation: uaiCardSweep .92s cubic-bezier(.2,.8,.2,1) both;
+}
+
 @media (max-width: 760px) {
   .uai-mode-brand::after { margin-top: 14px; }
 
@@ -387,5 +396,11 @@
 
   #uaiModeRoot.is-transitioning .uai-mode-transition::before {
     transform: scale(92);
+  }
+
+  .uai-star-canvas {
+    width: 1px !important;
+    height: 1px !important;
+    opacity: 0 !important;
   }
 }
