@@ -53,6 +53,15 @@
     );
   }
 
+  function cardIsFocused() {
+    const grid = state.root?.querySelector("#uaiModeGrid");
+    return Boolean(grid?.dataset.active || state.root?.classList.contains("is-transitioning"));
+  }
+
+  function pointerOverCard(event) {
+    return Boolean(event.target instanceof Element && event.target.closest(".uai-mode-card"));
+  }
+
   function clearPulseTimer() {
     if (!state.pulseTimer) return;
     window.clearTimeout(state.pulseTimer);
@@ -61,6 +70,11 @@
 
   function removeTransientEffects() {
     state.root?.querySelectorAll(".uai-speed-ripple,.uai-space-pulse").forEach((node) => node.remove());
+  }
+
+  function quietTransientEffects() {
+    state.root?.querySelectorAll(".uai-space-pulse,.uai-speed-ripple").forEach((node) => node.remove());
+    state.lastRippleAt = performance.now();
   }
 
   function addBrandSatellites() {
@@ -98,8 +112,15 @@
     });
   }
 
+  function bindCardFocusQuieting() {
+    state.root?.querySelectorAll(".uai-mode-card").forEach((card) => {
+      card.addEventListener("pointerenter", quietTransientEffects, { passive: true });
+      card.addEventListener("focus", quietTransientEffects);
+    });
+  }
+
   function spawnSpeedRipple(x, y, strength = 1) {
-    if (!state.root || reducedMotion() || coarsePointer()) return;
+    if (!state.root || reducedMotion() || coarsePointer() || cardIsFocused()) return;
 
     const normalized = Math.min(1.45, Math.max(.75, strength));
     const ripple = document.createElement("span");
@@ -120,7 +141,7 @@
     const current = { x: event.clientX, y: event.clientY, time: now };
     const last = state.lastPointer;
     state.lastPointer = current;
-    if (!last) return;
+    if (!last || pointerOverCard(event) || cardIsFocused()) return;
 
     const dx = current.x - last.x;
     const dy = current.y - last.y;
@@ -135,7 +156,7 @@
   }
 
   function spawnSpacePulse() {
-    if (!isLobbyVisible() || reducedMotion()) return;
+    if (!isLobbyVisible() || reducedMotion() || cardIsFocused()) return;
 
     const space = state.space || state.root?.querySelector(".uai-luxury-space");
     if (!space) return;
@@ -160,9 +181,9 @@
 
     state.pulseTimer = window.setTimeout(() => {
       state.pulseTimer = 0;
-      if (isLobbyVisible()) spawnSpacePulse();
+      if (isLobbyVisible() && !cardIsFocused()) spawnSpacePulse();
       scheduleSpacePulse();
-    }, 6000 + Math.random() * 7000);
+    }, 6500 + Math.random() * 7500);
   }
 
   function sync() {
@@ -191,6 +212,7 @@
 
     addBrandSatellites();
     addWorldMotes();
+    bindCardFocusQuieting();
 
     state.pointerHandler = onPointerMove;
     state.leaveHandler = () => { state.lastPointer = null; };
