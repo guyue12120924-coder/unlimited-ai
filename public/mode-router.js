@@ -318,7 +318,8 @@
     window.addEventListener("pointermove", effects.pointerHandler, { passive: true });
     document.documentElement.addEventListener("mouseleave", effects.pointerLeaveHandler, { passive: true });
     document.addEventListener("visibilitychange", effects.visibilityHandler);
-    effects.motionQuery?.addEventListener?.("change", effects.motionHandler);
+    if (effects.motionQuery?.addEventListener) effects.motionQuery.addEventListener("change", effects.motionHandler);
+    else effects.motionQuery?.addListener?.(effects.motionHandler);
 
     resizeCanvas();
   }
@@ -460,7 +461,11 @@
   }
 
   function renderEffects(now) {
-    if (!effects.running || !effects.ctx || prefersReducedMotion()) return;
+    if (!effects.running || !effects.ctx) return;
+    if (prefersReducedMotion()) {
+      stopEffects();
+      return;
+    }
     const ctx = effects.ctx;
     const dt = Math.min(40, Math.max(0, now - (effects.lastTime || now)));
     effects.lastTime = now;
