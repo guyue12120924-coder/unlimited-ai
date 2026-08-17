@@ -96,8 +96,6 @@
     if (!chapter || !body || !sessionId) return false;
     if (chapter.sessionId === sessionId) return true;
 
-    // Reuse studio.js's existing change handler so its in-memory state and localStorage
-    // remain the single source of truth. Do not write the workspace object directly here.
     const control = document.createElement("select");
     control.hidden = true;
     control.dataset.chapterField = "sessionId";
@@ -130,7 +128,10 @@
     if (!library || !chapterSection) return null;
 
     let panel = document.getElementById("novelV152WritingNow");
-    if (panel?.parentElement === library) return panel;
+    if (panel?.parentElement === library) {
+      if (panel.nextElementSibling !== chapterSection) chapterSection.before(panel);
+      return panel;
+    }
     panel?.remove();
 
     panel = document.createElement("section");
@@ -151,18 +152,10 @@
   }
 
   function writingActions(data, sessionId) {
-    if (!data.chapter) {
-      return [["choose", data.chapters.length ? "选择章节" : "创建第一章", "primary"]];
-    }
-    if (!sessionId) {
-      return [["draft", "打开正文", "primary"]];
-    }
-    if (!data.chapter.sessionId) {
-      return [["bind", "关联当前对话", "primary"], ["draft", "正文", ""]];
-    }
-    if (data.chapter.sessionId === sessionId) {
-      return [["draft", "打开正文", "primary"]];
-    }
+    if (!data.chapter) return [["choose", data.chapters.length ? "选择章节" : "创建第一章", "primary"]];
+    if (!sessionId) return [["draft", "打开正文", "primary"]];
+    if (!data.chapter.sessionId) return [["bind", "关联当前对话", "primary"], ["draft", "正文", ""]];
+    if (data.chapter.sessionId === sessionId) return [["draft", "打开正文", "primary"]];
     return [["switch-linked", "切到关联对话", "primary"], ["rebind", "改为当前对话", ""]];
   }
 
