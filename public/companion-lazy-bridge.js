@@ -21,16 +21,25 @@
         script = null;
       }
 
+      const isNew = !script;
+      if (!script) {
+        script = document.createElement("script");
+        script.id = "uaiCompanionAssetsLoaderScript";
+        script.async = false;
+        script.src = `/companion-assets-loader.js?v=${encodeURIComponent(REVISION)}`;
+        script.dataset.uaiCompanionLazy = "true";
+      }
+
       let settled = false;
-      const timer = window.setTimeout(() => finish(new Error("Companion asset loader timed out")), 15000);
+      let timer = 0;
       const finish = (error) => {
         if (settled) return;
         settled = true;
-        window.clearTimeout(timer);
-        script?.removeEventListener("load", onLoad);
-        script?.removeEventListener("error", onError);
+        if (timer) window.clearTimeout(timer);
+        script.removeEventListener("load", onLoad);
+        script.removeEventListener("error", onError);
         if (error) {
-          if (script) script.dataset.uaiLoaded = "false";
+          script.dataset.uaiLoaded = "false";
           loaderPromise = null;
           reject(error);
           return;
@@ -40,24 +49,17 @@
           reject(new Error("Companion asset loader did not initialize"));
           return;
         }
-        if (script) script.dataset.uaiLoaded = "true";
+        script.dataset.uaiLoaded = "true";
         resolve(window.UnlimitedCompanionAssets);
       };
       const onLoad = () => requestAnimationFrame(() => finish());
       const onError = () => finish(new Error("Failed to load companion-assets-loader.js"));
 
-      if (!script) {
-        script = document.createElement("script");
-        script.id = "uaiCompanionAssetsLoaderScript";
-        script.async = false;
-        script.src = `/companion-assets-loader.js?v=${encodeURIComponent(REVISION)}`;
-        script.dataset.uaiCompanionLazy = "true";
-        document.body.appendChild(script);
-      }
-
       script.addEventListener("load", onLoad, { once: true });
       script.addEventListener("error", onError, { once: true });
+      timer = window.setTimeout(() => finish(new Error("Companion asset loader timed out")), 15000);
 
+      if (isNew) document.body.appendChild(script);
       if (loaderReady()) finish();
     });
 
