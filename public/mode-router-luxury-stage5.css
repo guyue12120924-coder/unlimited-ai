@@ -1,6 +1,7 @@
 /* public/mode-router-luxury-stage5.css
  * V14.4: premium card micro-interactions, inner parallax, CTA polish,
  * preview progress/typing detail and cursor-following sheen.
+ * V14.8: non-blocking companion loading, inline status and retry recovery.
  */
 
 .uai-mode-card {
@@ -332,10 +333,101 @@
   transform: translateY(2px);
 }
 
+/* V14.8 companion entry feedback ------------------------------------------------ */
+.uai-companion-entry-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 14px;
+  margin-top: 9px;
+  max-width: 100%;
+  color: rgba(231,224,243,.46);
+  font-size: 10px;
+  font-weight: 620;
+  letter-spacing: .015em;
+  line-height: 1.35;
+  pointer-events: none;
+  transition: color .24s ease, opacity .24s ease, transform .24s ease;
+}
+
+.uai-companion-entry-status::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  flex: 0 0 5px;
+  border-radius: 50%;
+  background: rgba(255,180,220,.42);
+  box-shadow: 0 0 9px rgba(255,111,190,.22);
+}
+
+.uai-mode-card.companion[data-uai-companion-entry-state="loading"] {
+  border-color: rgba(255,120,193,.34);
+}
+
+.uai-mode-card.companion[data-uai-companion-entry-state="loading"] .uai-companion-entry-status {
+  color: rgba(246,221,238,.64);
+}
+
+.uai-mode-card.companion[data-uai-companion-entry-state="loading"] .uai-companion-entry-status::before {
+  background: rgba(255,143,203,.90);
+  box-shadow: 0 0 12px rgba(255,102,185,.55);
+  animation: uaiCompanionEntryPulse 1.25s ease-in-out infinite;
+}
+
+#uaiModeRoot[data-companion-assets-loading="true"] .uai-mode-card.novel {
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+#uaiModeRoot[data-companion-assets-loading="true"] .uai-mode-card.novel .uai-mode-enter {
+  border-color: rgba(127,137,255,.15);
+  box-shadow: inset 0 1px rgba(255,255,255,.055), 0 9px 25px rgba(68,67,180,.09);
+}
+
+.uai-mode-card.companion[data-uai-companion-entry-state="error"] {
+  border-color: rgba(255,135,165,.42);
+  box-shadow:
+    0 36px 94px rgba(76,18,48,.28),
+    0 0 34px rgba(255,92,151,.06),
+    inset 0 1px rgba(255,255,255,.055);
+}
+
+.uai-mode-card.companion[data-uai-companion-entry-state="error"] .uai-companion-entry-status {
+  color: rgba(255,210,222,.78);
+}
+
+.uai-mode-card.companion[data-uai-companion-entry-state="error"] .uai-companion-entry-status::before {
+  background: rgba(255,126,155,.92);
+  box-shadow: 0 0 11px rgba(255,94,137,.48);
+}
+
+.uai-mode-card.companion[data-uai-companion-entry-state="error"] .uai-mode-enter {
+  border-color: rgba(255,133,172,.28);
+  background: linear-gradient(90deg, rgba(255,101,165,.11), rgba(170,87,255,.08));
+  box-shadow: inset 0 1px rgba(255,255,255,.06), 0 9px 26px rgba(117,35,75,.14);
+}
+
+.uai-mode-card.companion[data-uai-companion-entry-state="error"] .uai-mode-enter b {
+  background: rgba(255,113,167,.15);
+  animation: uaiRetryNudge 1.8s ease-in-out infinite;
+}
+
+@keyframes uaiCompanionEntryPulse {
+  0%,100% { opacity: .38; transform: scale(.82); }
+  50% { opacity: 1; transform: scale(1.16); }
+}
+
+@keyframes uaiRetryNudge {
+  0%,68%,100% { transform: translateX(0); }
+  78% { transform: translateX(4px); }
+  88% { transform: translateX(1px); }
+}
+
 #uaiModeRoot.is-transitioning .uai-enter-halo,
 #uaiModeRoot.is-transitioning .uai-micro-preview-glass,
 #uaiModeRoot.is-transitioning .uai-novel-progress i,
-#uaiModeRoot.is-transitioning .uai-companion-typing i {
+#uaiModeRoot.is-transitioning .uai-companion-typing i,
+#uaiModeRoot.is-transitioning .uai-companion-entry-status::before {
   animation: none !important;
 }
 
@@ -378,13 +470,22 @@
   .uai-mode-preview,
   .uai-mode-tags,
   .uai-mode-enter { transform: none !important; }
+
+  .uai-companion-entry-status {
+    margin-top: 7px;
+    font-size: 9.5px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .uai-enter-halo,
   .uai-micro-preview-glass,
   .uai-novel-progress i,
-  .uai-companion-typing i { animation: none !important; }
+  .uai-companion-typing i,
+  .uai-companion-entry-status::before,
+  .uai-mode-card.companion[data-uai-companion-entry-state="error"] .uai-mode-enter b {
+    animation: none !important;
+  }
 
   .uai-card-copy,
   .uai-mode-preview,
