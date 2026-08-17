@@ -7,7 +7,6 @@
 
   let observer = null;
   let refreshTimer = 0;
-  let lastSnapshot = "";
 
   function readState() {
     try {
@@ -35,6 +34,12 @@
     return Math.max(min, Math.min(max, value));
   }
 
+  function setText(node, value) {
+    if (!node) return;
+    const next = String(value ?? "");
+    if (node.textContent !== next) node.textContent = next;
+  }
+
   function isNovelMode() {
     return document.body.dataset.uaiMode === "novel";
   }
@@ -42,8 +47,11 @@
   function setComposer(text) {
     const input = document.getElementById("msg");
     if (!input) return;
-    input.value = text;
-    input.dispatchEvent(new Event("input", { bubbles: true }));
+    const next = String(text || "");
+    if (input.value !== next) {
+      input.value = next;
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    }
     try { input.focus({ preventScroll: false }); } catch { input.focus(); }
     try { input.setSelectionRange(input.value.length, input.value.length); } catch {}
   }
@@ -58,7 +66,8 @@
   function ensureChapterCreation() {
     const add = document.getElementById("addChapter");
     if (!add) return;
-    add.click();
+    const row = document.getElementById("chapterCreateRow");
+    if (row?.hidden !== false) add.click();
     window.setTimeout(() => {
       const input = document.getElementById("chapterNameInput");
       if (!input) return;
@@ -66,12 +75,23 @@
     }, 30);
   }
 
+  function activateFirstChapter(after) {
+    const item = document.querySelector("#studioChapterList .chapter-item[data-chapter-id]");
+    if (!item) return false;
+    item.click();
+    window.setTimeout(() => {
+      switchStudioTab("draft");
+      after?.(activeData());
+    }, 40);
+    return true;
+  }
+
   function promptFor(kind, data) {
     const chapterName = data.chapter?.name || "当前章节";
     const base = `围绕《${data.project?.name || "当前作品"}》的${chapterName}`;
     switch (kind) {
       case "continue":
-        return `请紧接当前章节已经写好的正文继续写下去。保持当前叙事视角、语言风格、人物状态、场景位置和剧情连续，不重复已有内容，不解释创作过程，直接输出可接在正文后面的小说正文。`;
+        return "请紧接当前章节已经写好的正文继续写下去。保持当前叙事视角、语言风格、人物状态、场景位置和剧情连续，不重复已有内容，不解释创作过程，直接输出可接在正文后面的小说正文。";
       case "advance":
         return `${base}继续推进剧情。不要突然跳时间或强行制造转折，优先推动当前冲突、人物行动和场景变化，让下一段自然产生新的进展。直接输出正文。`;
       case "dialogue":
@@ -157,7 +177,7 @@
     if (!count || !textarea) return;
     const length = String(textarea.value || "").length;
     count.hidden = length === 0;
-    count.textContent = `${length}`;
+    setText(count, length);
   }
 
   function ensureEmptyActions() {
@@ -186,22 +206,22 @@
     const primary = actions?.querySelector('[data-novel-v15-empty="continue"] span');
 
     if (!data.chapter) {
-      if (kicker) kicker.textContent = "START YOUR STORY";
-      if (title) title.textContent = data.chapters.length ? "选择一个章节，继续写下去" : "先创建第一章";
-      if (text) text.textContent = data.chapters.length
+      setText(kicker, "START YOUR STORY");
+      setText(title, data.chapters.length ? "选择一个章节，继续写下去" : "先创建第一章");
+      setText(text, data.chapters.length
         ? "左侧已有章节。选择其中一章后，AI 会自动关联当前作品、人物和设定。"
-        : "不用先把所有设定填完。创建一个章节，从第一幕开始写，之后再逐步补充人物和世界观。";
-      if (primary) primary.textContent = data.chapters.length ? "选择章节" : "创建第一章";
+        : "不用先把所有设定填完。创建一个章节，从第一幕开始写，之后再逐步补充人物和世界观。");
+      setText(primary, data.chapters.length ? "选择章节" : "创建第一章");
       return;
     }
 
     const words = countChars(data.chapter.manuscript);
-    if (kicker) kicker.textContent = "CURRENT CHAPTER";
-    if (title) title.textContent = words ? `继续写「${data.chapter.name || "当前章节"}」` : `开始写「${data.chapter.name || "当前章节"}」`;
-    if (text) text.textContent = words
+    setText(kicker, "CURRENT CHAPTER");
+    setText(title, words ? `继续写「${data.chapter.name || "当前章节"}」` : `开始写「${data.chapter.name || "当前章节"}」`);
+    setText(text, words
       ? `本章已经写了 ${words.toLocaleString()} 字。可以直接继续正文，也可以先让 AI 帮你推进剧情或整理本章结构。`
-      : "这一章还没有正文。你可以先写第一段，也可以让 AI 根据现有设定给出一个简洁的起笔方案。";
-    if (primary) primary.textContent = words ? "继续当前章节" : "开始这一章";
+      : "这一章还没有正文。你可以先写第一段，也可以让 AI 根据现有设定给出一个简洁的起笔方案。");
+    setText(primary, words ? "继续当前章节" : "开始这一章");
   }
 
   function updateContext(data) {
@@ -219,15 +239,15 @@
     const progress = document.getElementById("novelV15WordProgress");
     const note = document.getElementById("novelV15ContextNote");
 
-    if (project) project.textContent = data.project?.name || "当前作品";
-    if (chapter) chapter.textContent = data.chapter?.name || "尚未选择章节";
+    setText(project, data.project?.name || "当前作品");
+    setText(chapter, data.chapter?.name || "尚未选择章节");
     if (fill) fill.style.width = `${percent.toFixed(1)}%`;
-    if (progress) progress.textContent = data.chapter
+    setText(progress, data.chapter
       ? `${words.toLocaleString()} / ${target.toLocaleString()} 字`
-      : `${data.chapters.length} 个章节`;
-    if (note) note.textContent = data.chapter
+      : `${data.chapters.length} 个章节`);
+    setText(note, data.chapter
       ? "AI 会自动参考作品设定、人物资料和当前章节正文末尾。"
-      : "选择章节后，AI 会自动关联该章节与作品资料。";
+      : "选择章节后，AI 会自动关联该章节与作品资料。");
 
     bar.classList.toggle("has-chapter", Boolean(data.chapter));
   }
@@ -238,23 +258,12 @@
     if (!document.getElementById("creativeWorkspace")) return;
 
     const data = activeData();
-    const snapshot = JSON.stringify({
-      project: data.project?.id || "",
-      projectName: data.project?.name || "",
-      chapter: data.chapter?.id || "",
-      chapterName: data.chapter?.name || "",
-      chapterWords: countChars(data.chapter?.manuscript),
-      target: Number(data.chapter?.targetWords) || 3000,
-      chapterCount: data.chapters.length
-    });
-
     ensureContextBar();
     ensureComposerAssist();
     ensureEmptyActions();
     updateEmptyState(data);
     updateContext(data);
     updateComposerCount();
-    lastSnapshot = snapshot;
   }
 
   function scheduleRefresh(delay = 20) {
@@ -272,8 +281,14 @@
     const prompt = event.target?.closest?.("[data-novel-v15-prompt]")?.dataset.novelV15Prompt;
     if (prompt) {
       const data = activeData();
-      if (!data.chapter && prompt !== "plan") {
-        ensureChapterCreation();
+      if (!data.chapter) {
+        if (prompt === "plan") {
+          switchStudioTab("outline");
+        } else if (data.chapters.length) {
+          activateFirstChapter((next) => setComposer(promptFor(prompt, next)));
+        } else {
+          ensureChapterCreation();
+        }
         return;
       }
       setComposer(promptFor(prompt, data));
@@ -299,11 +314,8 @@
     }
 
     if (!data.chapter) {
-      if (data.chapters.length) {
-        document.querySelector("#studioChapterList .chapter-item")?.querySelector(".studio-item-main")?.click();
-      } else {
-        ensureChapterCreation();
-      }
+      if (data.chapters.length) activateFirstChapter();
+      else ensureChapterCreation();
       return;
     }
 
