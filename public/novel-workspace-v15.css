@@ -1,0 +1,424 @@
+/* public/novel-workspace-v15.css
+ * V15.0: novel workspace hierarchy, current-context bar, empty-state actions
+ * and low-friction composer shortcuts.
+ */
+
+body[data-uai-mode="novel"] #conversationPane #history {
+  padding-top: 66px;
+  padding-bottom: 168px;
+}
+
+/* Current story / chapter ---------------------------------------------------- */
+body[data-uai-mode="novel"] .novel-v15-context {
+  position: absolute;
+  z-index: 28;
+  top: 10px;
+  left: 50%;
+  width: min(760px, calc(100% - 42px));
+  min-height: 46px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 14px;
+  padding: 6px 7px 6px 11px;
+  border: 1px solid color-mix(in srgb, var(--border-default, var(--border)) 78%, transparent);
+  border-radius: 13px;
+  background: color-mix(in srgb, var(--bg-surface, #191c19) 91%, transparent);
+  box-shadow: 0 12px 34px rgba(0,0,0,.18), inset 0 1px rgba(255,255,255,.025);
+  backdrop-filter: blur(18px) saturate(1.08);
+  -webkit-backdrop-filter: blur(18px) saturate(1.08);
+  transform: translateX(-50%);
+  transition: opacity .18s ease, transform .22s ease, border-color .2s ease;
+}
+
+body[data-uai-mode="novel"] #conversationSearchBar:not([hidden]) + .novel-v15-context {
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -5px);
+}
+
+.novel-v15-context-main {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.novel-v15-context-dot {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 7px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--accent) 82%, white);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 9%, transparent), 0 0 12px color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
+.novel-v15-context:not(.has-chapter) .novel-v15-context-dot {
+  background: var(--text-muted, var(--muted));
+  box-shadow: none;
+  opacity: .55;
+}
+
+.novel-v15-context-copy {
+  min-width: 0;
+  display: grid;
+  gap: 1px;
+}
+
+.novel-v15-context-copy > span {
+  overflow: hidden;
+  color: var(--text-muted, var(--muted));
+  font-size: 8px;
+  font-weight: 680;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.novel-v15-context-copy > strong {
+  overflow: hidden;
+  color: var(--text-primary, var(--text));
+  font-size: 11px;
+  font-weight: 720;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.novel-v15-context-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.novel-v15-context-progress > span {
+  width: 82px;
+  height: 3px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255,255,255,.065);
+}
+
+.novel-v15-context-progress i {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 74%, #7894ff), var(--accent));
+  box-shadow: 0 0 9px color-mix(in srgb, var(--accent) 25%, transparent);
+  transition: width .28s cubic-bezier(.2,.8,.2,1);
+}
+
+.novel-v15-context-progress b {
+  color: var(--text-muted, var(--muted));
+  font-size: 8px;
+  font-weight: 580;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.novel-v15-context-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.novel-v15-context-actions button {
+  min-height: 30px;
+  padding: 0 9px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-muted, var(--muted));
+  cursor: pointer;
+  font-size: 9px;
+  font-weight: 680;
+  transition: color .16s ease, border-color .16s ease, background .16s ease;
+}
+
+.novel-v15-context-actions button:hover,
+.novel-v15-context-actions button:focus-visible {
+  border-color: color-mix(in srgb, var(--accent) 22%, var(--border));
+  background: color-mix(in srgb, var(--accent) 7%, var(--surface-soft));
+  color: var(--text-primary, var(--text));
+}
+
+/* Empty state = a useful first step, not a dead screen ----------------------- */
+body[data-uai-mode="novel"] #emptyState {
+  min-height: min(57vh, 560px);
+  padding-top: 52px;
+}
+
+body[data-uai-mode="novel"] #emptyState .empty-kicker {
+  padding: 5px 9px;
+  border: 1px solid color-mix(in srgb, var(--accent) 20%, var(--border));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
+  font-size: 8px;
+  letter-spacing: .16em;
+}
+
+body[data-uai-mode="novel"] #emptyState h1 {
+  max-width: 680px;
+  margin-top: 15px;
+  font-family: inherit;
+  font-size: clamp(29px, 4vw, 44px);
+  font-weight: 760;
+  letter-spacing: -.045em;
+  line-height: 1.08;
+}
+
+body[data-uai-mode="novel"] #emptyState > p {
+  max-width: 590px;
+  color: var(--text-muted, var(--muted));
+  font-size: 12px;
+  line-height: 1.72;
+}
+
+.novel-v15-empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.novel-v15-empty-actions button {
+  min-height: 38px;
+  padding: 0 13px;
+  border: 1px solid var(--border-default, var(--border));
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--bg-surface-raised, var(--surface-raised)) 58%, transparent);
+  color: var(--text-secondary, var(--text-soft));
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 670;
+  transition: transform .16s ease, border-color .16s ease, background .16s ease, color .16s ease;
+}
+
+.novel-v15-empty-actions button:hover,
+.novel-v15-empty-actions button:focus-visible {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
+  background: color-mix(in srgb, var(--accent) 8%, var(--surface-soft));
+  color: var(--text-primary, var(--text));
+}
+
+.novel-v15-empty-actions button.primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  border-color: color-mix(in srgb, var(--accent) 38%, var(--border));
+  background: color-mix(in srgb, var(--accent) 13%, var(--surface-soft));
+  color: color-mix(in srgb, var(--accent) 64%, var(--text-primary, white));
+}
+
+.novel-v15-empty-actions button.primary b {
+  font-size: 15px;
+  font-weight: 500;
+  transition: transform .18s ease;
+}
+
+.novel-v15-empty-actions button.primary:hover b { transform: translateX(3px); }
+
+/* Composer ------------------------------------------------------------------ */
+body[data-uai-mode="novel"] #conversationPane .input-floating {
+  padding-top: 10px;
+  padding-bottom: 12px;
+  background: linear-gradient(180deg, rgba(13,15,13,.68), rgba(13,15,13,.96));
+}
+
+body[data-uai-mode="novel"] #composer {
+  display: block;
+  max-width: 880px;
+  padding: 7px 8px 7px;
+  border-radius: 16px;
+  border-color: color-mix(in srgb, var(--border-default, var(--border)) 88%, transparent);
+  background: color-mix(in srgb, var(--bg-surface, #191c19) 93%, transparent);
+  box-shadow: 0 18px 46px rgba(0,0,0,.24), inset 0 1px rgba(255,255,255,.035);
+  transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+}
+
+body[data-uai-mode="novel"] #composer.novel-v15-focused {
+  border-color: color-mix(in srgb, var(--accent) 50%, var(--border));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 7%, transparent), 0 20px 52px rgba(0,0,0,.28), inset 0 1px rgba(255,255,255,.04);
+}
+
+body[data-uai-mode="novel"] #composer .composer-main {
+  display: flex;
+  align-items: flex-end;
+  gap: 9px;
+  min-width: 0;
+  padding: 1px 2px 0 8px;
+}
+
+body[data-uai-mode="novel"] #composer textarea#msg {
+  min-height: 43px;
+  padding: 10px 3px 8px;
+  color: var(--text-primary, var(--text));
+  caret-color: var(--accent);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+body[data-uai-mode="novel"] #composer textarea#msg::placeholder {
+  color: color-mix(in srgb, var(--text-muted, var(--muted)) 78%, transparent);
+}
+
+body[data-uai-mode="novel"] #composer #sendBtn,
+body[data-uai-mode="novel"] #composer #stopBtn {
+  min-width: 72px;
+  min-height: 40px;
+  border-radius: 10px;
+}
+
+.novel-v15-composer-assist {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 31px;
+  padding: 0 3px 6px;
+  border-bottom: 1px solid color-mix(in srgb, var(--border-subtle, var(--border)) 76%, transparent);
+}
+
+.novel-v15-shortcuts {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.novel-v15-shortcuts::-webkit-scrollbar { display: none; }
+
+.novel-v15-shortcuts button {
+  flex: 0 0 auto;
+  min-height: 26px;
+  padding: 0 8px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text-muted, var(--muted));
+  cursor: pointer;
+  font-size: 9px;
+  font-weight: 640;
+  white-space: nowrap;
+  transition: background .14s ease, color .14s ease, border-color .14s ease;
+}
+
+.novel-v15-shortcuts button:hover,
+.novel-v15-shortcuts button:focus-visible {
+  border-color: color-mix(in srgb, var(--accent) 18%, var(--border));
+  background: color-mix(in srgb, var(--accent) 6%, var(--surface-soft));
+  color: var(--text-primary, var(--text));
+}
+
+.novel-v15-context-note {
+  flex: 0 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  color: var(--text-muted, var(--muted));
+}
+
+.novel-v15-context-note > span {
+  color: var(--accent);
+  font-size: 9px;
+  opacity: .72;
+}
+
+.novel-v15-context-note p {
+  overflow: hidden;
+  margin: 0;
+  max-width: 310px;
+  font-size: 8px;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.novel-v15-context-note b {
+  min-width: 25px;
+  padding-left: 6px;
+  border-left: 1px solid var(--border-subtle, var(--border));
+  color: color-mix(in srgb, var(--text-muted, var(--muted)) 74%, transparent);
+  font-size: 8px;
+  font-weight: 560;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+body[data-uai-mode="novel"] #composer .composer-footer {
+  min-height: 17px;
+  padding: 2px 5px 0 8px;
+  color: color-mix(in srgb, var(--text-muted, var(--muted)) 76%, transparent);
+  font-size: 8px;
+}
+
+/* Keep all added UI inert while another world is active. */
+body:not([data-uai-mode="novel"]) .novel-v15-context,
+body:not([data-uai-mode="novel"]) .novel-v15-composer-assist,
+body:not([data-uai-mode="novel"]) .novel-v15-empty-actions {
+  display: none !important;
+}
+
+@media (max-width: 1120px) {
+  .novel-v15-context {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .novel-v15-context-progress { display: none; }
+  .novel-v15-context-note p { max-width: 210px; }
+}
+
+@media (max-width: 760px) {
+  body[data-uai-mode="novel"] #conversationPane #history {
+    padding-top: 58px;
+    padding-bottom: 158px;
+  }
+
+  body[data-uai-mode="novel"] .novel-v15-context {
+    top: 7px;
+    width: calc(100% - 20px);
+    min-height: 42px;
+    gap: 7px;
+    padding: 5px 6px 5px 9px;
+    border-radius: 11px;
+  }
+
+  .novel-v15-context-actions button { padding: 0 7px; }
+  .novel-v15-context-actions button[data-novel-v15-action="outline"] { display: none; }
+
+  body[data-uai-mode="novel"] #emptyState {
+    align-items: flex-start;
+    min-height: min(52vh, 480px);
+    padding: 50px 17px 28px;
+    text-align: left;
+  }
+
+  body[data-uai-mode="novel"] #emptyState h1 { font-size: clamp(27px, 8vw, 36px); }
+  body[data-uai-mode="novel"] #emptyState > p { font-size: 11px; }
+  .novel-v15-empty-actions { justify-content: flex-start; }
+
+  body[data-uai-mode="novel"] #conversationPane .input-floating {
+    padding: 8px 9px 10px;
+  }
+
+  body[data-uai-mode="novel"] #composer { border-radius: 14px; }
+  .novel-v15-composer-assist { display: block; padding-bottom: 5px; }
+  .novel-v15-shortcuts { padding-bottom: 1px; }
+  .novel-v15-context-note { display: none; }
+  body[data-uai-mode="novel"] #composer .composer-footer { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .novel-v15-context,
+  .novel-v15-context-progress i,
+  .novel-v15-empty-actions button,
+  #composer,
+  .novel-v15-shortcuts button {
+    transition: none !important;
+  }
+}
