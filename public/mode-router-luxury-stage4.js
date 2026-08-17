@@ -1,7 +1,26 @@
 // public/mode-router-luxury-stage4.js
 (() => {
   const REVISION = "2026-08-17-v14.3-card-worlds";
+  const MICRO_REVISION = "2026-08-17-v14.4-micro-polish";
   if (window.UnlimitedModeLuxuryStage4) return;
+
+  function ensureMicroStage5() {
+    if (!document.getElementById("uaiModeRouterLuxuryStage5Css")) {
+      const link = document.createElement("link");
+      link.id = "uaiModeRouterLuxuryStage5Css";
+      link.rel = "stylesheet";
+      link.href = `/mode-router-luxury-stage5.css?v=${encodeURIComponent(MICRO_REVISION)}`;
+      document.head.appendChild(link);
+    }
+
+    if (!document.getElementById("uaiModeRouterLuxuryStage5Script")) {
+      const script = document.createElement("script");
+      script.id = "uaiModeRouterLuxuryStage5Script";
+      script.async = false;
+      script.src = `/mode-router-luxury-stage5.js?v=${encodeURIComponent(MICRO_REVISION)}`;
+      document.body.appendChild(script);
+    }
+  }
 
   function createNovelArt(card) {
     if (!card || card.querySelector(".uai-card-world-art.novel-world")) return;
@@ -51,15 +70,20 @@
   }
 
   function install(root) {
-    if (!root || root.dataset.luxuryStage4Mounted === "1") return false;
+    if (!root) return false;
     const novel = root.querySelector(".uai-mode-card.novel");
     const companion = root.querySelector(".uai-mode-card.companion");
     if (!novel || !companion) return false;
 
-    root.dataset.luxuryStage4Mounted = "1";
-    root.dataset.luxuryStage4Revision = REVISION;
-    createNovelArt(novel);
-    createCompanionArt(companion);
+    if (root.dataset.luxuryStage4Mounted !== "1") {
+      root.dataset.luxuryStage4Mounted = "1";
+      root.dataset.luxuryStage4Revision = REVISION;
+      createNovelArt(novel);
+      createCompanionArt(companion);
+    }
+
+    ensureMicroStage5();
+    window.UnlimitedModeLuxuryStage5?.refresh?.();
     return true;
   }
 
@@ -68,6 +92,7 @@
   }
 
   function init() {
+    ensureMicroStage5();
     if (findAndInstall()) return;
     const observer = new MutationObserver(() => {
       if (findAndInstall()) observer.disconnect();
@@ -77,6 +102,7 @@
 
   window.UnlimitedModeLuxuryStage4 = {
     revision: REVISION,
+    microRevision: MICRO_REVISION,
     refresh: findAndInstall
   };
 
