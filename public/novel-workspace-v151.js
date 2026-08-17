@@ -105,7 +105,7 @@
       return {
         step: "03 · CAST",
         title: "人物 · 让每个人做事都有理由",
-        desc: "优先填写性格、目标和说话方式。只有会影响剧情和对白的信息才值得长期保存。",
+        desc: "优先填写性格、目标和说话方式。相关人物会自动作为隐藏上下文提供给 AI。",
         metric: `${characters.length} 人物 · ${useful} 已补充`,
         tone: characters.length && useful ? "good" : "neutral",
         actions: [["character-check", "AI 检查人物", "primary"], ["character-new", "设计新人物", ""], ["draft", "回到正文", ""]]
@@ -203,6 +203,9 @@
     }
 
     if (tab === "characters") {
+      const emptyText = body.querySelector(".character-grid .studio-empty-state p");
+      setText(emptyText, "添加人物后，相关人物会在创作时自动作为隐藏上下文提供给 AI。");
+
       body.querySelectorAll(".character-card").forEach((card) => {
         let badge = card.querySelector(".novel-v151-character-badge");
         if (!badge) {
