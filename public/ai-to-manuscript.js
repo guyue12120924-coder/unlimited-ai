@@ -281,6 +281,7 @@
   }
 
   function updateHelpText() {
+    if (window.UnlimitedNovelWorkspaceV15 || document.documentElement.dataset.novelWorkspaceRevision) return;
     const empty = document.querySelector("#emptyState p");
     const text = "告诉 AI 你想写什么。整段内容可直接点“加入正文”；只想保留其中一部分时，选中文字，旁边会直接出现“加入正文”。";
     if (empty && empty.textContent !== text) empty.textContent = text;
