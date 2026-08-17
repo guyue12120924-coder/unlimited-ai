@@ -1,6 +1,7 @@
 // public/mode-router-luxury-stage2.js
 (() => {
   const REVISION = "2026-08-17-v14.1-luxury-stage2";
+  const CINEMA_REVISION = "2026-08-17-v14.2-cinematic-depth";
   if (window.UnlimitedModeLuxuryStage2) return;
 
   const state = {
@@ -16,6 +17,24 @@
     leaveHandler: null,
     visibilityHandler: null
   };
+
+  function ensureCinematicStage3() {
+    if (!document.getElementById("uaiModeRouterLuxuryStage3Css")) {
+      const link = document.createElement("link");
+      link.id = "uaiModeRouterLuxuryStage3Css";
+      link.rel = "stylesheet";
+      link.href = `/mode-router-luxury-stage3.css?v=${encodeURIComponent(CINEMA_REVISION)}`;
+      document.head.appendChild(link);
+    }
+
+    if (!document.getElementById("uaiModeRouterLuxuryStage3Script")) {
+      const script = document.createElement("script");
+      script.id = "uaiModeRouterLuxuryStage3Script";
+      script.async = false;
+      script.src = `/mode-router-luxury-stage3.js?v=${encodeURIComponent(CINEMA_REVISION)}`;
+      document.body.appendChild(script);
+    }
+  }
 
   function reducedMotion() {
     return Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)").matches);
@@ -149,12 +168,14 @@
   function sync() {
     if (isLobbyVisible()) {
       scheduleSpacePulse();
+      window.UnlimitedModeLuxuryStage3?.refresh?.();
       return;
     }
 
     clearPulseTimer();
     state.lastPointer = null;
     removeTransientEffects();
+    window.UnlimitedModeLuxuryStage3?.refresh?.();
   }
 
   function install(root) {
@@ -197,6 +218,7 @@
   }
 
   function init() {
+    ensureCinematicStage3();
     if (findAndInstall()) return;
     state.finderObserver = new MutationObserver(findAndInstall);
     state.finderObserver.observe(document.documentElement, { childList: true, subtree: true });
@@ -204,6 +226,7 @@
 
   window.UnlimitedModeLuxuryStage2 = {
     revision: REVISION,
+    cinematicRevision: CINEMA_REVISION,
     refresh: sync,
     pulse: spawnSpacePulse
   };
