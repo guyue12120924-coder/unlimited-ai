@@ -13,7 +13,7 @@ import {
 
 // Compatibility marker: buildCompanionSystemPrompt(payload) remains available in companion.js for preview/testing only.
 const NVIDIA_CHAT_URL = "https://integrate.api.nvidia.com/v1/chat/completions";
-const APP_REVISION = "2026-08-17-v14.5-worker-entry-performance";
+const APP_REVISION = "2026-08-17-v14.6-worker-rendering";
 
 // ============================================================
 // 小说模式默认 System Prompt
@@ -290,11 +290,11 @@ async function inspectAsset(request, env, pathname, markers = []) {
 
 async function handleDiagnostics(request, env) {
   const assets = await Promise.all([
-    inspectAsset(request, env, "/index.html", ["2026-08-17-v14.5-entry-performance", "/boot-diagnostics.js?v=20260817-v14.5-entry-performance"]),
-    inspectAsset(request, env, "/boot-diagnostics.js", ["2026-08-17-v14.5-entry-performance", "companionLazyBridgeReady", "companion-lazy-bridge.js"]),
+    inspectAsset(request, env, "/index.html", ["2026-08-17-v14.6-entry-rendering", "/boot-diagnostics.js?v=20260817-v14.6-entry-rendering"]),
+    inspectAsset(request, env, "/boot-diagnostics.js", ["2026-08-17-v14.6-entry-rendering", "2026-08-17-v13.4-mode-router-performance", "companion-lazy-bridge.js"]),
     inspectAsset(request, env, "/companion-lazy-bridge.js", ["2026-08-17-v14.5-companion-lazy-bridge", "UnlimitedCompanionLazyBridge", "prepareAndEnter"]),
     inspectAsset(request, env, "/companion-assets-loader.js", ["2026-08-17-v14.5-companion-lazy", "UnlimitedCompanionAssets", "SCRIPT_ASSETS"]),
-    inspectAsset(request, env, "/mode-router.js", ["2026-08-17-v13.3-mode-router-audited", "modeRequestId", "uaiEnterCompanion"]),
+    inspectAsset(request, env, "/mode-router.js", ["2026-08-17-v13.4-mode-router-performance", "effectFrameDelay", "prefersReducedMotion"]),
     inspectAsset(request, env, "/mode-router.css", ["uai-mode-lobby", "uai-star-canvas", "data-uai-mode"]),
     inspectAsset(request, env, "/mode-router-stage3.css", ["uaiWorldExpand", "Audit fixes", "uaiCardSweep"]),
     inspectAsset(request, env, "/mode-router-luxury.css", ["uaiLuxuryAuroraBlue", "uai-energy-frame", "uaiLuxuryTrail"]),
@@ -330,13 +330,14 @@ async function handleDiagnostics(request, env) {
     frontendCurrent,
     modes: ["novel", "companion"],
     companionLoading: "deferred until the companion card is selected",
+    lobbyRendering: "adaptive starfield cadence with strict reduced-motion shutdown",
     promptLocation: {
       novel: "src/worker.js -> NOVEL_SYSTEM_PROMPT",
       companion: "src/companion.js -> COMPANION_ROLE_CARD"
     },
     conclusion: frontendCurrent
-      ? "V14.5 frontend assets are current; companion extensions are available for deferred loading."
-      : "This Worker deployment is missing one or more V14.5 frontend assets. Redeploy the current main branch.",
+      ? "V14.6 frontend assets are current; lobby rendering is adaptive and companion extensions remain deferred."
+      : "This Worker deployment is missing one or more V14.6 frontend assets. Redeploy the current main branch.",
     assets
   });
 }
