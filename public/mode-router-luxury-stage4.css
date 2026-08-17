@@ -1,0 +1,355 @@
+/* public/mode-router-luxury-stage4.css
+ * V14.3: distinct card-world atmosphere for novel and companion modes.
+ */
+
+.uai-card-world-art {
+  position: absolute !important;
+  inset: 0;
+  z-index: 0 !important;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: .48;
+  transition: opacity .45s ease, filter .45s ease;
+}
+
+.uai-mode-card:hover .uai-card-world-art,
+.uai-mode-card:focus-visible .uai-card-world-art {
+  opacity: .92;
+}
+
+/* ---------------- Novel world ---------------- */
+.uai-novel-manuscript,
+.uai-novel-glyph,
+.uai-novel-quill,
+.uai-novel-page {
+  position: absolute;
+  pointer-events: none;
+}
+
+.uai-novel-manuscript {
+  color: rgba(196, 208, 255, .16);
+  font: 500 10px/1.25 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: .16em;
+  white-space: nowrap;
+  text-shadow: 0 0 18px rgba(105, 126, 255, .18);
+  opacity: .28;
+  transform: translate3d(0,0,0) rotate(-7deg);
+}
+
+.uai-novel-manuscript.manuscript-a { right: 20px; top: 92px; animation: uaiNovelTextDriftA 10s ease-in-out infinite alternate; }
+.uai-novel-manuscript.manuscript-b { left: 22px; bottom: 100px; animation: uaiNovelTextDriftB 12s ease-in-out infinite alternate; }
+.uai-novel-manuscript.manuscript-c {
+  left: 36px;
+  right: 30px;
+  bottom: 34px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: .08em;
+  color: rgba(209, 218, 255, .11);
+  animation: uaiNovelTextDriftC 14s ease-in-out infinite alternate;
+}
+
+.uai-novel-glyph {
+  font-family: "Songti SC", "Noto Serif CJK SC", Georgia, serif;
+  font-size: 76px;
+  line-height: 1;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(151, 167, 255, .08);
+  text-shadow: 0 0 34px rgba(81, 103, 255, .06);
+  opacity: .36;
+}
+
+.uai-novel-glyph.glyph-a { right: 48px; top: 126px; transform: rotate(8deg); }
+.uai-novel-glyph.glyph-b { left: 42px; top: 178px; transform: rotate(-10deg) scale(.78); opacity: .20; }
+
+.uai-novel-quill {
+  right: 52px;
+  bottom: 78px;
+  width: 94px;
+  height: 94px;
+  opacity: .34;
+  transform: rotate(-21deg);
+  transition: opacity .4s ease, transform .55s cubic-bezier(.2,.8,.2,1);
+}
+
+.uai-novel-quill .quill-core {
+  position: absolute;
+  left: 45px;
+  top: 4px;
+  width: 8px;
+  height: 78px;
+  border-radius: 100% 0 100% 0;
+  border: 1px solid rgba(196, 211, 255, .22);
+  background: linear-gradient(180deg, rgba(198,213,255,.12), rgba(119,117,255,.04));
+  box-shadow: 0 0 18px rgba(103,125,255,.10);
+  transform: skewX(-10deg);
+}
+
+.uai-novel-quill .quill-core::after {
+  content: "";
+  position: absolute;
+  left: 3px;
+  bottom: -18px;
+  width: 1px;
+  height: 28px;
+  background: linear-gradient(rgba(212,221,255,.62), transparent);
+  box-shadow: 0 0 9px rgba(130,153,255,.35);
+}
+
+.uai-novel-quill .quill-stroke {
+  position: absolute;
+  height: 1px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, rgba(126,151,255,.55), rgba(225,229,255,.72), transparent);
+  box-shadow: 0 0 10px rgba(105,126,255,.22);
+  transform-origin: left center;
+  opacity: 0;
+}
+
+.uai-novel-quill .stroke-a { left: 10px; bottom: 14px; width: 92px; transform: rotate(12deg); }
+.uai-novel-quill .stroke-b { left: 2px; bottom: 4px; width: 68px; transform: rotate(-4deg); }
+
+.uai-novel-page {
+  width: 86px;
+  height: 112px;
+  border: 1px solid rgba(172,186,255,.08);
+  border-radius: 8px;
+  background: linear-gradient(145deg, rgba(171,187,255,.04), rgba(56,68,145,.015));
+  box-shadow: 0 0 30px rgba(70,91,210,.04);
+  opacity: .24;
+}
+
+.uai-novel-page::before,
+.uai-novel-page::after {
+  content: "";
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(183,198,255,.06), rgba(183,198,255,.16), transparent);
+  box-shadow: 0 14px rgba(183,198,255,.08), 0 28px rgba(183,198,255,.05);
+}
+
+.uai-novel-page::before { top: 28px; }
+.uai-novel-page::after { top: 70px; }
+.uai-novel-page.page-a { right: -24px; top: 160px; transform: rotate(13deg); }
+.uai-novel-page.page-b { left: -30px; top: 122px; transform: rotate(-16deg) scale(.84); opacity: .15; }
+
+.uai-mode-card.novel:hover .uai-novel-quill,
+.uai-mode-card.novel:focus-visible .uai-novel-quill {
+  opacity: .78;
+  transform: rotate(-12deg) translate3d(-6px,-6px,0) scale(1.04);
+}
+
+.uai-mode-card.novel:hover .uai-novel-quill .stroke-a,
+.uai-mode-card.novel:focus-visible .uai-novel-quill .stroke-a { animation: uaiNovelInkStroke 1.8s ease-in-out infinite; }
+.uai-mode-card.novel:hover .uai-novel-quill .stroke-b,
+.uai-mode-card.novel:focus-visible .uai-novel-quill .stroke-b { animation: uaiNovelInkStroke 2.2s .35s ease-in-out infinite; }
+
+/* ---------------- Companion world ---------------- */
+.uai-companion-silhouette,
+.uai-heartbeat-ring,
+.uai-heartbeat-core,
+.uai-companion-bubble,
+.uai-companion-spark {
+  position: absolute;
+  pointer-events: none;
+}
+
+.uai-companion-silhouette {
+  right: 18px;
+  top: 74px;
+  width: 166px;
+  height: 250px;
+  opacity: .20;
+  filter: blur(.1px) drop-shadow(0 0 22px rgba(255, 91, 183, .10));
+  transform: translate3d(12px, 8px, 0) scale(.96);
+  transition: opacity .45s ease, transform .6s cubic-bezier(.2,.8,.2,1), filter .45s ease;
+}
+
+.uai-companion-silhouette i { position: absolute; display: block; }
+
+.uai-companion-silhouette .silhouette-hair {
+  left: 38px;
+  top: 12px;
+  width: 92px;
+  height: 118px;
+  border-radius: 50% 48% 46% 45%;
+  background: linear-gradient(145deg, rgba(247,205,255,.18), rgba(174,83,255,.05) 56%, rgba(255,83,173,.12));
+  box-shadow: inset -16px -10px 28px rgba(255,83,176,.06), 0 0 30px rgba(176,82,255,.08);
+  transform: rotate(4deg);
+}
+
+.uai-companion-silhouette .silhouette-face {
+  left: 57px;
+  top: 35px;
+  width: 58px;
+  height: 72px;
+  border-radius: 45% 45% 48% 48%;
+  background: radial-gradient(circle at 50% 34%, rgba(255,240,251,.18), rgba(255,170,220,.08) 48%, transparent 72%);
+  border: 1px solid rgba(255,214,239,.10);
+}
+
+.uai-companion-silhouette .silhouette-neck {
+  left: 76px;
+  top: 99px;
+  width: 23px;
+  height: 31px;
+  border-radius: 8px 8px 14px 14px;
+  background: linear-gradient(rgba(255,215,239,.10), rgba(255,120,194,.04));
+}
+
+.uai-companion-silhouette .silhouette-body {
+  left: 28px;
+  top: 118px;
+  width: 118px;
+  height: 118px;
+  border-radius: 48% 48% 20% 20%;
+  background: linear-gradient(145deg, rgba(204,118,255,.12), rgba(255,78,173,.08) 55%, rgba(73,54,149,.02));
+  border-top: 1px solid rgba(255,206,236,.08);
+}
+
+.uai-companion-silhouette .silhouette-highlight {
+  left: 70px;
+  top: 50px;
+  width: 1px;
+  height: 145px;
+  transform: rotate(17deg);
+  background: linear-gradient(transparent, rgba(255,226,244,.34), rgba(255,112,190,.10), transparent);
+  box-shadow: 0 0 8px rgba(255,176,219,.16);
+}
+
+.uai-heartbeat-ring {
+  right: 58px;
+  top: 128px;
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,113,190,.16);
+  opacity: 0;
+  transform: scale(.55);
+  box-shadow: 0 0 28px rgba(255,85,180,.07);
+}
+
+.uai-heartbeat-ring.ring-b { right: 42px; top: 112px; width: 116px; height: 116px; border-color: rgba(181,101,255,.10); }
+
+.uai-heartbeat-core {
+  right: 86px;
+  top: 154px;
+  color: rgba(255,221,241,.40);
+  font-size: 18px;
+  text-shadow: 0 0 14px rgba(255,91,181,.35);
+  opacity: .36;
+}
+
+.uai-companion-bubble {
+  max-width: 112px;
+  padding: 6px 9px;
+  border: 1px solid rgba(255,205,235,.09);
+  border-radius: 12px 12px 12px 4px;
+  background: rgba(255,255,255,.025);
+  color: rgba(255,220,240,.20);
+  font-size: 10px;
+  letter-spacing: .04em;
+  backdrop-filter: blur(6px);
+  opacity: .18;
+  transform: translateY(8px) scale(.96);
+}
+
+.uai-companion-bubble.bubble-a { left: 20px; top: 128px; }
+.uai-companion-bubble.bubble-b { left: 34px; top: 174px; }
+.uai-companion-bubble.bubble-c { left: 18px; bottom: 82px; }
+
+.uai-companion-spark {
+  color: rgba(255,225,244,.30);
+  text-shadow: 0 0 12px rgba(255,105,187,.28);
+  opacity: .20;
+}
+.uai-companion-spark.spark-a { right: 34px; top: 104px; font-size: 14px; }
+.uai-companion-spark.spark-b { right: 164px; top: 206px; font-size: 22px; }
+
+.uai-mode-card.companion:hover .uai-companion-silhouette,
+.uai-mode-card.companion:focus-visible .uai-companion-silhouette {
+  opacity: .52;
+  filter: drop-shadow(0 0 30px rgba(255, 91, 183, .16));
+  transform: translate3d(0,-2px,0) scale(1.01);
+}
+
+.uai-mode-card.companion:hover .uai-heartbeat-ring.ring-a,
+.uai-mode-card.companion:focus-visible .uai-heartbeat-ring.ring-a { animation: uaiCompanionHeartbeat 2.1s ease-out infinite; }
+.uai-mode-card.companion:hover .uai-heartbeat-ring.ring-b,
+.uai-mode-card.companion:focus-visible .uai-heartbeat-ring.ring-b { animation: uaiCompanionHeartbeat 2.1s .5s ease-out infinite; }
+
+.uai-mode-card.companion:hover .uai-heartbeat-core,
+.uai-mode-card.companion:focus-visible .uai-heartbeat-core { animation: uaiCompanionCoreBeat 2.1s ease-in-out infinite; }
+
+.uai-mode-card.companion:hover .uai-companion-bubble,
+.uai-mode-card.companion:focus-visible .uai-companion-bubble {
+  animation: uaiCompanionBubble 4.8s ease-in-out infinite;
+}
+.uai-mode-card.companion:hover .bubble-b,
+.uai-mode-card.companion:focus-visible .bubble-b { animation-delay: .9s; }
+.uai-mode-card.companion:hover .bubble-c,
+.uai-mode-card.companion:focus-visible .bubble-c { animation-delay: 1.8s; }
+
+@keyframes uaiNovelTextDriftA {
+  from { transform: translate3d(8px,4px,0) rotate(-7deg); opacity: .16; }
+  to { transform: translate3d(-12px,-8px,0) rotate(-3deg); opacity: .34; }
+}
+@keyframes uaiNovelTextDriftB {
+  from { transform: translate3d(-6px,8px,0) rotate(4deg); opacity: .10; }
+  to { transform: translate3d(12px,-6px,0) rotate(1deg); opacity: .27; }
+}
+@keyframes uaiNovelTextDriftC {
+  from { transform: translate3d(-4px,3px,0); opacity: .08; }
+  to { transform: translate3d(14px,-4px,0); opacity: .20; }
+}
+@keyframes uaiNovelInkStroke {
+  0%,100% { opacity: 0; transform: scaleX(.12); filter: blur(.5px); }
+  42% { opacity: .72; }
+  75% { opacity: .18; transform: scaleX(1); }
+}
+@keyframes uaiCompanionHeartbeat {
+  0% { opacity: 0; transform: scale(.55); }
+  24% { opacity: .48; }
+  100% { opacity: 0; transform: scale(1.75); }
+}
+@keyframes uaiCompanionCoreBeat {
+  0%,100% { transform: scale(.92); opacity: .30; }
+  12% { transform: scale(1.16); opacity: .82; }
+  22% { transform: scale(.98); opacity: .48; }
+  34% { transform: scale(1.10); opacity: .68; }
+  46% { transform: scale(.96); opacity: .38; }
+}
+@keyframes uaiCompanionBubble {
+  0%,100% { opacity: .08; transform: translateY(8px) scale(.96); }
+  24%,54% { opacity: .50; transform: translateY(0) scale(1); }
+  72% { opacity: .14; transform: translateY(-5px) scale(.98); }
+}
+
+@media (max-width: 900px) {
+  .uai-novel-glyph { opacity: .18; }
+  .uai-companion-silhouette { opacity: .13; }
+}
+
+@media (max-width: 760px), (pointer: coarse) {
+  .uai-card-world-art { opacity: .20; }
+  .uai-novel-manuscript,
+  .uai-novel-quill,
+  .uai-novel-glyph,
+  .uai-companion-bubble,
+  .uai-heartbeat-ring,
+  .uai-heartbeat-core,
+  .uai-companion-spark { display: none !important; }
+  .uai-companion-silhouette { right: -12px; opacity: .10; transform: scale(.82); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .uai-novel-manuscript,
+  .uai-novel-quill .quill-stroke,
+  .uai-heartbeat-ring,
+  .uai-heartbeat-core,
+  .uai-companion-bubble { animation: none !important; }
+  .uai-card-world-art { opacity: .26; }
+}
