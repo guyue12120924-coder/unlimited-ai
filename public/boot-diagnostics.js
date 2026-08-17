@@ -1,7 +1,7 @@
 // public/boot-diagnostics.js
 // Startup guard + dual-mode bootstrap.
 (() => {
-  const REVISION = "2026-08-17-v14.6-entry-rendering";
+  const REVISION = "2026-08-17-v14.7-entry-zero-companion";
   const MODE_ROUTER_REVISION = "2026-08-17-v13.4-mode-router-performance";
   const errors = [];
 
@@ -13,13 +13,26 @@
     startedAt: Date.now(),
     errors,
     companionAssetsDeferred: true,
-    companionAssetsReady: false
+    companionAssetsReady: false,
+    companionAssetsLoaded: 0,
+    companionAssetsProgress: 0
   };
 
   const gateStyle = document.createElement("style");
   gateStyle.id = "uaiModeGateCriticalCss";
   gateStyle.textContent = "html.uai-mode-gate-pending #app{visibility:hidden!important;pointer-events:none!important}html.uai-mode-gate-pending body{background:#080817!important}";
   document.head.appendChild(gateStyle);
+
+  // The stable mode router still asks for companion-mode.css during init. A non-rendering
+  // placeholder keeps that request out of the lobby boot; the real lazy loader replaces it
+  // with a LINK element only when companion assets are actually requested.
+  if (!document.getElementById("uaiCompanionCss")) {
+    const companionStylePlaceholder = document.createElement("meta");
+    companionStylePlaceholder.id = "uaiCompanionCss";
+    companionStylePlaceholder.dataset.uaiDeferredPlaceholder = "true";
+    companionStylePlaceholder.dataset.uaiAsset = "/companion-mode.css";
+    document.head.appendChild(companionStylePlaceholder);
+  }
 
   function ensureStyle(href, id) {
     if (document.getElementById(id)) return;
@@ -100,10 +113,12 @@
   }
 
   function companionSnapshot() {
+    const companionStyle = document.getElementById("uaiCompanionCss");
     return {
       companionAssetsDeferred: !window.UnlimitedCompanionAssets?.ready,
       companionAssetsReady: Boolean(window.UnlimitedCompanionAssets?.ready),
       companionAssetsLoading: Boolean(window.UnlimitedCompanionAssets?.loading),
+      companionBaseStyleDeferred: Boolean(companionStyle?.dataset.uaiDeferredPlaceholder === "true"),
       companionLazyBridgeReady: Boolean(window.UnlimitedCompanionLazyBridge),
       companionModeReady: Boolean(window.UnlimitedCompanion?.mount),
       companionMultiReady: Boolean(window.UnlimitedCompanionMulti),
