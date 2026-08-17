@@ -29,6 +29,14 @@
     return Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)").matches);
   }
 
+  function coarsePointer() {
+    return Boolean(window.matchMedia?.("(pointer: coarse)").matches);
+  }
+
+  function effectsDisabled() {
+    return reducedMotion() || coarsePointer();
+  }
+
   function clamp(value, min, max) {
     return Math.max(min, Math.min(max, value));
   }
@@ -132,7 +140,7 @@
   }
 
   function onPointerMove(event) {
-    if (!isLobbyVisible() || reducedMotion() || event.pointerType === "touch") return;
+    if (!isLobbyVisible() || effectsDisabled() || event.pointerType === "touch") return;
 
     const x = event.clientX;
     const y = event.clientY;
@@ -246,7 +254,7 @@
   }
 
   function start() {
-    if (state.running || !state.ctx || !isLobbyVisible() || reducedMotion()) return;
+    if (state.running || !state.ctx || !isLobbyVisible() || effectsDisabled()) return;
     state.running = true;
     render.lastTime = performance.now();
     state.raf = requestAnimationFrame(render);
@@ -260,11 +268,16 @@
     state.lastPointer = null;
     state.points = [];
     state.particles = [];
+    if (state.root) {
+      delete state.root.dataset.luxuryWorld;
+      state.root.style.setProperty("--uai-lux-x", "50vw");
+      state.root.style.setProperty("--uai-lux-y", "42vh");
+    }
     state.ctx?.clearRect(0, 0, state.width, state.height);
   }
 
   function syncRunning() {
-    if (isLobbyVisible() && !reducedMotion()) start();
+    if (isLobbyVisible() && !effectsDisabled()) start();
     else stop();
   }
 
