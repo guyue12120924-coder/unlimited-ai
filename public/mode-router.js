@@ -1,9 +1,11 @@
 // public/mode-router.js
 (() => {
-  const REVISION = "2026-08-17-v13.1-mode-router-stage2";
+  const REVISION = "2026-08-17-v13.2-mode-router-final";
   let root = null;
   let currentMode = "lobby";
   let companionReadyPromise = null;
+  let transitionLock = false;
+  let returnTimer = 0;
 
   const effects = {
     canvas: null,
@@ -190,6 +192,14 @@
             <p>两个世界分别保存，互不干扰。每次打开 Unlimited AI 都可以重新选择。</p>
           </footer>
         </div>
+
+        <div class="uai-mode-transition" id="uaiModeTransition" aria-hidden="true">
+          <div class="uai-transition-content" role="status" aria-live="polite">
+            <span class="uai-transition-symbol" id="uaiTransitionSymbol">✦</span>
+            <strong id="uaiTransitionTitle">正在进入创作世界</strong>
+            <span id="uaiTransitionHint">灵感正在展开</span>
+          </div>
+        </div>
       </section>`;
 
     document.body.appendChild(root);
@@ -209,11 +219,11 @@
       const kind = card.classList.contains("novel") ? "novel" : "companion";
 
       card.addEventListener("pointerenter", () => {
-        grid.dataset.active = kind;
+        if (!transitionLock) grid.dataset.active = kind;
       });
 
       card.addEventListener("pointermove", (event) => {
-        if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
+        if (transitionLock || window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
         const rect = card.getBoundingClientRect();
         const x = (event.clientX - rect.left) / Math.max(rect.width, 1);
         const y = (event.clientY - rect.top) / Math.max(rect.height, 1);
@@ -226,7 +236,7 @@
       });
 
       card.addEventListener("pointerleave", () => {
-        delete grid.dataset.active;
+        if (!transitionLock) delete grid.dataset.active;
         card.style.setProperty("--uai-card-rx", "0deg");
         card.style.setProperty("--uai-card-ry", "0deg");
         card.style.setProperty("--uai-spot-x", "50%");
@@ -234,11 +244,11 @@
       });
 
       card.addEventListener("focus", () => {
-        grid.dataset.active = kind;
+        if (!transitionLock) grid.dataset.active = kind;
       });
 
       card.addEventListener("blur", () => {
-        delete grid.dataset.active;
+        if (!transitionLock) delete grid.dataset.active;
       });
     });
   }
@@ -252,7 +262,7 @@
 
     effects.resizeHandler = resizeCanvas;
     effects.pointerHandler = (event) => {
-      if (!root || currentMode !== "lobby") return;
+      if (!root || currentMode !== "lobby" || transitionLock) return;
       const x = Math.max(-1, Math.min(1, (event.clientX / Math.max(window.innerWidth, 1) - 0.5) * 2));
       const y = Math.max(-1, Math.min(1, (event.clientY / Math.max(window.innerHeight, 1) - 0.5) * 2));
       root.style.setProperty("--uai-mx", x.toFixed(3));
@@ -407,7 +417,7 @@
   function startPreviewRotation() {
     if (effects.quoteTimer) return;
     effects.quoteTimer = window.setInterval(() => {
-      if (currentMode !== "lobby" || root?.hidden) return;
+      if (currentMode !== "lobby" || root?.hidden || transitionLock) return;
       effects.quoteIndex = (effects.quoteIndex + 1) % novelQuotes.length;
       effects.messageIndex = (effects.messageIndex + 1) % companionMessages.length;
       swapPreviewText(root?.querySelector("#uaiNovelQuote"), novelQuotes[effects.quoteIndex]);
@@ -443,6 +453,83 @@
     effects.quoteTimer = 0;
   }
 
+  function setCardsDisabled(disabled) {
+    root?.querySelectorAll(".uai-mode-card").forEach((card) => {
+      card.disabled = disabled;
+      if (!disabled) card.removeAttribute("aria-busy");
+    });
+  }
+
+  function resetTransitionState({ animateReturn = false } = {}) {
+    transitionLock = false;
+    if (!root) return;
+
+    root.classList.remove("is-transitioning");
+    delete root.dataset.transition;
+    root.style.setProperty("--uai-transition-x", "50%");
+    root.style.setProperty("--uai-transition-y", "55%");
+    root.querySelector("#uaiModeTransition")?.setAttribute("aria-hidden", "true");
+    root.querySelector("#uaiModeGrid")?.removeAttribute("data-active");
+    setCardsDisabled(false);
+
+    root.querySelectorAll(".uai-mode-card").forEach((card) => {
+      card.classList.remove("is-loading");
+      card.style.setProperty("--uai-card-rx", "0deg");
+      card.style.setProperty("--uai-card-ry", "0deg");
+      card.style.setProperty("--uai-spot-x", "50%");
+      card.style.setProperty("--uai-spot-y", "50%");
+    });
+
+    if (returnTimer) window.clearTimeout(returnTimer);
+    root.classList.remove("is-returning");
+    if (animateReturn && !window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
+      void root.offsetWidth;
+      root.classList.add("is-returning");
+      returnTimer = window.setTimeout(() => {
+        root?.classList.remove("is-returning");
+        returnTimer = 0;
+      }, 650);
+    }
+  }
+
+  function transitionCopy(kind) {
+    return kind === "companion"
+      ? { symbol: "♡", title: "正在进入陪伴世界", hint: "她正在等你回来" }
+      : { symbol: "✦", title: "正在进入创作世界", hint: "灵感正在展开" };
+  }
+
+  function playTransition(kind) {
+    if (!root) return Promise.resolve();
+
+    const card = root.querySelector(kind === "companion" ? "#uaiEnterCompanion" : "#uaiEnterNovel");
+    const rect = card?.getBoundingClientRect();
+    const x = rect ? rect.left + rect.width / 2 : window.innerWidth / 2;
+    const y = rect ? rect.top + rect.height / 2 : window.innerHeight / 2;
+    const copy = transitionCopy(kind);
+    const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+
+    transitionLock = true;
+    setCardsDisabled(true);
+    root.dataset.transition = kind;
+    root.style.setProperty("--uai-transition-x", `${x}px`);
+    root.style.setProperty("--uai-transition-y", `${y}px`);
+    root.querySelector("#uaiModeTransition")?.setAttribute("aria-hidden", "false");
+
+    const symbol = root.querySelector("#uaiTransitionSymbol");
+    const title = root.querySelector("#uaiTransitionTitle");
+    const hint = root.querySelector("#uaiTransitionHint");
+    if (symbol) symbol.textContent = copy.symbol;
+    if (title) title.textContent = copy.title;
+    if (hint) hint.textContent = copy.hint;
+
+    void root.offsetWidth;
+    root.classList.add("is-transitioning");
+
+    return new Promise((resolve) => {
+      window.setTimeout(resolve, reduced ? 90 : 560);
+    });
+  }
+
   function installNovelSwitch() {
     if (document.getElementById("uaiNovelModeSwitch")) return;
     const actions = document.querySelector("#topbar .topbar-actions");
@@ -468,21 +555,32 @@
     setMode("lobby");
     const lobby = createLobby();
     lobby.hidden = false;
+    resetTransitionState({ animateReturn: true });
     installNovelSwitch();
     resizeCanvas();
     startEffects();
   }
 
-  function enterNovel() {
-    stopEffects();
-    window.UnlimitedCompanion?.unmount?.();
-    setMode("novel");
-    if (root) root.hidden = true;
-    installNovelSwitch();
-    document.querySelector("#msg")?.focus();
+  async function enterNovel() {
+    if (transitionLock) return;
+
+    try {
+      await playTransition("novel");
+      stopEffects();
+      window.UnlimitedCompanion?.unmount?.();
+      setMode("novel");
+      if (root) root.hidden = true;
+      installNovelSwitch();
+      window.setTimeout(() => document.querySelector("#msg")?.focus(), 40);
+    } catch (error) {
+      console.error("[Unlimited AI] novel transition failed", error);
+      resetTransitionState();
+    }
   }
 
   async function enterCompanion() {
+    if (transitionLock) return;
+
     const button = root?.querySelector("#uaiEnterCompanion");
     if (button) {
       button.disabled = true;
@@ -493,16 +591,25 @@
     try {
       await ensureScript(`/companion-mode.js?v=${encodeURIComponent(REVISION)}`, "uaiCompanionScript");
       if (!window.UnlimitedCompanion?.mount) throw new Error("Companion module did not initialize");
+
+      if (button) button.classList.remove("is-loading");
+      await playTransition("companion");
       stopEffects();
       setMode("companion");
       if (root) root.hidden = true;
       window.UnlimitedCompanion.mount({ onExit: showLobby });
     } catch (error) {
       console.error("[Unlimited AI] companion mode failed to load", error);
+
+      const failedScript = document.getElementById("uaiCompanionScript");
+      if (failedScript && !window.UnlimitedCompanion) failedScript.remove();
+      if (!window.UnlimitedCompanion) companionReadyPromise = null;
+
+      resetTransitionState();
       alert("AI 陪伴模式加载失败，请刷新页面后再试。小说模式不会受到影响。");
       showLobby();
     } finally {
-      if (button) {
+      if (button && currentMode === "lobby") {
         button.disabled = false;
         button.removeAttribute("aria-busy");
         button.classList.remove("is-loading");
@@ -513,6 +620,7 @@
   function init() {
     ensureStyle(`/mode-router.css?v=${encodeURIComponent(REVISION)}`, "uaiModeRouterCss");
     ensureStyle(`/companion-mode.css?v=${encodeURIComponent(REVISION)}`, "uaiCompanionCss");
+    ensureStyle(`/mode-router-stage3.css?v=${encodeURIComponent(REVISION)}`, "uaiModeRouterStage3Css");
     createLobby();
     showLobby();
     installNovelSwitch();
