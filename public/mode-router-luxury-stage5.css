@@ -65,6 +65,17 @@
 .uai-mode-preview,
 .uai-mode-tags,
 .uai-mode-enter {
+  will-change: auto;
+}
+
+.uai-mode-card:hover .uai-card-copy,
+.uai-mode-card:focus-visible .uai-card-copy,
+.uai-mode-card:hover .uai-mode-preview,
+.uai-mode-card:focus-visible .uai-mode-preview,
+.uai-mode-card:hover .uai-mode-tags,
+.uai-mode-card:focus-visible .uai-mode-tags,
+.uai-mode-card:hover .uai-mode-enter,
+.uai-mode-card:focus-visible .uai-mode-enter {
   will-change: transform;
 }
 
@@ -294,6 +305,33 @@
 .uai-mode-card:focus-visible .uai-mode-tags span:nth-child(3) { transition-delay: .05s; }
 .uai-mode-card:hover .uai-mode-tags span:nth-child(4),
 .uai-mode-card:focus-visible .uai-mode-tags span:nth-child(4) { transition-delay: .075s; }
+
+.uai-mode-brand p,
+.uai-mode-footer {
+  transition: opacity .34s ease, transform .34s cubic-bezier(.2,.8,.2,1);
+}
+
+#uaiModeRoot[data-luxury-world] .uai-mode-brand p {
+  opacity: .72;
+  transform: translateY(-1px);
+}
+
+#uaiModeRoot[data-luxury-world] .uai-mode-footer {
+  opacity: .52;
+  transform: translateY(2px);
+}
+
+#uaiModeRoot.is-transitioning .uai-enter-halo,
+#uaiModeRoot.is-transitioning .uai-micro-preview-glass,
+#uaiModeRoot.is-transitioning .uai-novel-progress i,
+#uaiModeRoot.is-transitioning .uai-companion-typing i {
+  animation: none !important;
+}
+
+#uaiModeRoot.is-transitioning .uai-enter-halo,
+#uaiModeRoot.is-transitioning .uai-micro-sheen {
+  opacity: 0 !important;
+}
 
 @keyframes uaiEnterHaloSweep {
   0%,100% { transform: translateX(-34%) scale(.94); opacity: .35; }
