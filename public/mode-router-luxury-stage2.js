@@ -82,12 +82,13 @@
   function spawnSpeedRipple(x, y, strength = 1) {
     if (!state.root || reducedMotion() || coarsePointer()) return;
 
+    const normalized = Math.min(1.45, Math.max(.75, strength));
     const ripple = document.createElement("span");
     ripple.className = "uai-speed-ripple";
     ripple.setAttribute("aria-hidden", "true");
     ripple.style.left = `${x}px`;
     ripple.style.top = `${y}px`;
-    ripple.style.setProperty("--ripple-strength", String(Math.min(1.45, Math.max(.75, strength))));
+    ripple.style.setProperty("--ripple-scale", String((4.6 * normalized).toFixed(2)));
     ripple.dataset.side = x < window.innerWidth / 2 ? "novel" : "companion";
     state.root.appendChild(ripple);
     window.setTimeout(() => ripple.remove(), 920);
@@ -120,13 +121,15 @@
     const space = state.space || state.root?.querySelector(".uai-luxury-space");
     if (!space) return;
 
+    const scale = .8 + Math.random() * .75;
     const pulse = document.createElement("span");
     const leftHalf = Math.random() > .48;
     pulse.className = `uai-space-pulse ${leftHalf ? "blue" : "pink"}`;
     pulse.setAttribute("aria-hidden", "true");
     pulse.style.left = `${8 + Math.random() * 84}%`;
     pulse.style.top = `${9 + Math.random() * 72}%`;
-    pulse.style.setProperty("--pulse-scale", String(.8 + Math.random() * .75));
+    pulse.style.setProperty("--pulse-mid-scale", String((1.2 * scale).toFixed(2)));
+    pulse.style.setProperty("--pulse-final-scale", String((2.1 * scale).toFixed(2)));
     space.appendChild(pulse);
 
     window.setTimeout(() => pulse.remove(), 2300);
