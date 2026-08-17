@@ -22,12 +22,19 @@
     return Boolean(window.matchMedia?.("(pointer: coarse)").matches);
   }
 
+  function recordBootError(message) {
+    const errors = window.__UNLIMITED_BOOT__?.errors;
+    if (Array.isArray(errors) && !errors.includes(message)) errors.push(message);
+    console.error(`[Unlimited AI] ${message}`);
+  }
+
   function ensureTransitionHandoff() {
     if (!document.getElementById("uaiModeTransitionV149Css")) {
       const link = document.createElement("link");
       link.id = "uaiModeTransitionV149Css";
       link.rel = "stylesheet";
       link.href = `/mode-router-transition-v149.css?v=${encodeURIComponent(HANDOFF_REVISION)}`;
+      link.addEventListener("error", () => recordBootError("V14.9 世界切换样式加载失败"), { once: true });
       document.head.appendChild(link);
     }
 
@@ -36,6 +43,7 @@
     script.id = "uaiModeTransitionV149Script";
     script.async = false;
     script.src = `/mode-router-transition-v149.js?v=${encodeURIComponent(HANDOFF_REVISION)}`;
+    script.addEventListener("error", () => recordBootError("V14.9 世界切换脚本加载失败"), { once: true });
     document.body.appendChild(script);
   }
 
