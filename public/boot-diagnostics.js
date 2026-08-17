@@ -1,7 +1,7 @@
 // public/boot-diagnostics.js
 // Startup guard + dual-mode bootstrap.
 (() => {
-  const REVISION = "2026-08-17-v13.3-entry-audit";
+  const REVISION = "2026-08-17-v14.1-entry-effects";
   const MODE_ROUTER_REVISION = "2026-08-17-v13.3-mode-router-audited";
   const errors = [];
 
@@ -56,7 +56,7 @@
 
   function loadModeRouter() {
     for (const [href, id] of [
-      ["/mode-router.css","uaiModeRouterCss"],["/mode-router-stage3.css","uaiModeRouterStage3Css"],["/mode-router-luxury.css","uaiModeRouterLuxuryCss"],["/companion-mode.css","uaiCompanionCss"],["/companion-characters.css","uaiCompanionCharactersCss"],
+      ["/mode-router.css","uaiModeRouterCss"],["/mode-router-stage3.css","uaiModeRouterStage3Css"],["/mode-router-luxury.css","uaiModeRouterLuxuryCss"],["/mode-router-luxury-stage2.css","uaiModeRouterLuxuryStage2Css"],["/companion-mode.css","uaiCompanionCss"],["/companion-characters.css","uaiCompanionCharactersCss"],
       ["/companion-memory.css","uaiCompanionMemoryCss"],["/companion-records.css","uaiCompanionRecordsCss"],["/companion-support.css","uaiCompanionSupportCss"],
       ["/companion-v10.css","uaiCompanionV10Css"],["/companion-v10-vibrant.css","uaiCompanionV10VibrantCss"],["/companion-v10-stage2.css","uaiCompanionV10Stage2Css"],
       ["/companion-v10-stage3.css","uaiCompanionV10Stage3Css"],["/companion-v10-stage4.css","uaiCompanionV10Stage4Css"],["/companion-v10-stage5.css","uaiCompanionV10Stage5Css"],
@@ -71,7 +71,7 @@
     ]) ensureStyle(`${href}?v=${REVISION}`, id);
 
     for (const [src, id] of [
-      ["/mode-router-luxury.js","uaiModeRouterLuxuryScript"],
+      ["/mode-router-luxury.js","uaiModeRouterLuxuryScript"],["/mode-router-luxury-stage2.js","uaiModeRouterLuxuryStage2Script"],
       ["/companion-characters-core.js","uaiCompanionCharactersCoreScript"],["/companion-character-editor.js","uaiCompanionCharacterEditorScript"],
       ["/companion-memory.js","uaiCompanionMemoryScript"],["/companion-records.js","uaiCompanionRecordsScript"],["/companion-settings.js","uaiCompanionSettingsScript"],
       ["/companion-runtime.js","uaiCompanionRuntimeScript"],["/companion-extras.js","uaiCompanionExtrasScript"],["/companion-v10-shell.js","uaiCompanionV10ShellScript"],
@@ -114,6 +114,7 @@
         modeRouterRevision: routerRevision,
         modeRouterStage3Ready: Boolean(document.getElementById("uaiModeRouterStage3Css")),
         modeRouterLuxuryReady: Boolean(window.UnlimitedModeLuxury),
+        modeRouterLuxuryStage2Ready: Boolean(window.UnlimitedModeLuxuryStage2),
         companionMultiReady: Boolean(window.UnlimitedCompanionMulti), companionRuntimeReady: Boolean(window.UnlimitedCompanionRuntime),
         companionMemorySearchReady: Boolean(window.UnlimitedCompanionMemorySearch), companionProfileRestoreReady: Boolean(window.UnlimitedCompanionProfileRestore),
         companionCharacterControlsReady: Boolean(window.UnlimitedCompanionCharacterControls), companionSettingsReady: Boolean(window.UnlimitedCompanionSettings),
