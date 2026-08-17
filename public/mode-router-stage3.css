@@ -1,0 +1,391 @@
+/* public/mode-router-stage3.css
+ * Unlimited AI dual-world lobby - stage 3 final polish
+ */
+
+#uaiModeRoot {
+  --uai-transition-x: 50%;
+  --uai-transition-y: 55%;
+}
+
+/* ---------- Final depth / polish ---------- */
+.uai-mode-shell {
+  transform: translateZ(0);
+  transition: opacity .34s ease, transform .48s cubic-bezier(.2,.8,.2,1), filter .4s ease;
+}
+
+.uai-mode-brand {
+  transition: opacity .3s ease, transform .45s cubic-bezier(.2,.8,.2,1), filter .35s ease;
+}
+
+.uai-mode-brand::after {
+  content: "";
+  width: min(440px, 72vw);
+  height: 1px;
+  margin-top: 20px;
+  background: linear-gradient(90deg, transparent, rgba(143,124,255,.34), rgba(255,255,255,.28), rgba(255,114,185,.32), transparent);
+  opacity: .62;
+}
+
+.uai-mode-card {
+  isolation: isolate;
+  transform-style: preserve-3d;
+  will-change: transform, opacity, filter;
+}
+
+.uai-mode-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  border-radius: inherit;
+  opacity: 0;
+  background: radial-gradient(circle at var(--uai-spot-x, 50%) var(--uai-spot-y, 50%), rgba(255,255,255,.15), transparent 26%);
+  transition: opacity .25s ease;
+}
+
+.uai-mode-card:hover::after,
+.uai-mode-card:focus-visible::after {
+  opacity: .9;
+}
+
+.uai-mode-card .uai-card-copy,
+.uai-mode-card .uai-mode-preview,
+.uai-mode-card .uai-mode-tags,
+.uai-mode-card .uai-mode-enter,
+.uai-mode-card .uai-card-topline {
+  transition: transform .38s cubic-bezier(.2,.8,.2,1), opacity .3s ease, filter .3s ease;
+}
+
+.uai-mode-card:hover .uai-card-copy,
+.uai-mode-card:focus-visible .uai-card-copy {
+  transform: translateZ(18px) translateY(-1px);
+}
+
+.uai-mode-card:hover .uai-mode-preview,
+.uai-mode-card:focus-visible .uai-mode-preview {
+  transform: translateZ(25px) translateY(-2px);
+}
+
+.uai-mode-card:hover .uai-card-topline,
+.uai-mode-card:focus-visible .uai-card-topline {
+  transform: translateZ(20px);
+}
+
+.uai-mode-card:hover .uai-mode-tags,
+.uai-mode-card:focus-visible .uai-mode-tags,
+.uai-mode-card:hover .uai-mode-enter,
+.uai-mode-card:focus-visible .uai-mode-enter {
+  transform: translateZ(15px);
+}
+
+.uai-mode-grid[data-active="novel"] .uai-mode-card.companion,
+.uai-mode-grid[data-active="companion"] .uai-mode-card.novel {
+  opacity: .69;
+  filter: saturate(.74) brightness(.82);
+  transform: perspective(1000px) scale(.982);
+}
+
+.uai-mode-grid[data-active="novel"] .uai-mode-card.novel,
+.uai-mode-grid[data-active="companion"] .uai-mode-card.companion {
+  z-index: 4;
+}
+
+/* More identifiable preview surfaces */
+.novel-preview::after {
+  content: "STORY MEMORY · CONTINUITY ON";
+  position: absolute;
+  right: 12px;
+  bottom: 8px;
+  color: rgba(177,185,255,.28);
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: .16em;
+}
+
+.companion-preview::after {
+  content: "MEMORY LINKED";
+  position: absolute;
+  right: 12px;
+  bottom: 9px;
+  color: rgba(255,176,217,.30);
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: .16em;
+}
+
+.uai-mode-card.novel:hover .uai-writing-caret,
+.uai-mode-card.novel:focus-visible .uai-writing-caret {
+  box-shadow: 0 0 12px rgba(126,151,255,.85);
+}
+
+.uai-mode-card.companion:hover .uai-avatar-halo,
+.uai-mode-card.companion:focus-visible .uai-avatar-halo {
+  transform: scale(1.12);
+  opacity: 1;
+}
+
+/* ---------- Transition overlay ---------- */
+.uai-mode-transition {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .14s ease, visibility 0s linear .5s;
+}
+
+.uai-mode-transition::before {
+  content: "";
+  position: absolute;
+  left: var(--uai-transition-x);
+  top: var(--uai-transition-y);
+  width: 32px;
+  height: 32px;
+  margin: -16px 0 0 -16px;
+  border-radius: 50%;
+  transform: scale(.1);
+  opacity: .96;
+  will-change: transform;
+}
+
+.uai-mode-transition::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background-image:
+    radial-gradient(circle at 24% 22%, rgba(255,255,255,.7) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 73% 37%, rgba(255,255,255,.5) 0 1px, transparent 1.4px),
+    radial-gradient(circle at 42% 71%, rgba(255,255,255,.56) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 84% 76%, rgba(255,255,255,.45) 0 1px, transparent 1.5px);
+  background-size: 130px 130px, 170px 170px, 210px 210px, 250px 250px;
+}
+
+.uai-transition-content {
+  position: relative;
+  z-index: 3;
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  opacity: 0;
+  transform: translateY(12px) scale(.96);
+  text-align: center;
+  transition: opacity .22s ease .12s, transform .36s cubic-bezier(.2,.8,.2,1) .08s;
+}
+
+.uai-transition-symbol {
+  width: 62px;
+  height: 62px;
+  display: grid;
+  place-items: center;
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,.28);
+  background: rgba(255,255,255,.09);
+  box-shadow: inset 0 1px rgba(255,255,255,.11), 0 14px 48px rgba(0,0,0,.18);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  font-size: 27px;
+  color: #fff;
+}
+
+.uai-transition-content strong {
+  font-size: clamp(20px, 3vw, 29px);
+  letter-spacing: -.035em;
+  color: #fff;
+  text-shadow: 0 8px 34px rgba(0,0,0,.28);
+}
+
+.uai-transition-content span:last-child {
+  color: rgba(244,244,255,.66);
+  font-size: 12px;
+  letter-spacing: .08em;
+}
+
+#uaiModeRoot.is-transitioning .uai-mode-transition {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity .14s ease, visibility 0s;
+}
+
+#uaiModeRoot.is-transitioning .uai-mode-transition::before {
+  animation: uaiWorldExpand .62s cubic-bezier(.18,.72,.17,1) forwards;
+}
+
+#uaiModeRoot.is-transitioning .uai-mode-transition::after {
+  animation: uaiTransitionStars .5s ease .08s forwards;
+}
+
+#uaiModeRoot.is-transitioning .uai-transition-content {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+#uaiModeRoot.is-transitioning .uai-mode-shell {
+  opacity: .18;
+  filter: blur(8px) brightness(.8);
+  transform: scale(1.025);
+}
+
+#uaiModeRoot.is-transitioning .uai-mode-brand {
+  transform: translateY(-9px);
+  opacity: .28;
+}
+
+#uaiModeRoot.is-transitioning .uai-mode-card {
+  pointer-events: none;
+}
+
+#uaiModeRoot[data-transition="novel"] .uai-mode-transition::before {
+  background:
+    radial-gradient(circle at 42% 38%, rgba(112,154,255,.93), transparent 21%),
+    radial-gradient(circle at 63% 58%, rgba(126,93,255,.96), transparent 39%),
+    linear-gradient(135deg, #101b50, #311c71 58%, #09142d);
+  box-shadow: 0 0 90px 24px rgba(99,89,255,.48);
+}
+
+#uaiModeRoot[data-transition="companion"] .uai-mode-transition::before {
+  background:
+    radial-gradient(circle at 44% 35%, rgba(255,174,220,.98), transparent 18%),
+    radial-gradient(circle at 61% 58%, rgba(255,91,177,.94), transparent 38%),
+    linear-gradient(135deg, #35134d, #711c66 56%, #17123e);
+  box-shadow: 0 0 90px 24px rgba(255,91,178,.42);
+}
+
+#uaiModeRoot[data-transition="novel"] .uai-transition-symbol {
+  color: #e6e8ff;
+  box-shadow: 0 0 32px rgba(116,136,255,.34), inset 0 1px rgba(255,255,255,.13);
+}
+
+#uaiModeRoot[data-transition="companion"] .uai-transition-symbol {
+  color: #ffe5f3;
+  box-shadow: 0 0 32px rgba(255,103,183,.34), inset 0 1px rgba(255,255,255,.13);
+}
+
+/* ---------- Selected card pre-transition ---------- */
+#uaiModeRoot[data-transition="novel"] .uai-mode-card.novel,
+#uaiModeRoot[data-transition="companion"] .uai-mode-card.companion {
+  opacity: 1;
+  filter: saturate(1.22) brightness(1.08);
+  transform: perspective(1000px) scale(1.025);
+}
+
+#uaiModeRoot[data-transition="novel"] .uai-mode-card.companion,
+#uaiModeRoot[data-transition="companion"] .uai-mode-card.novel {
+  opacity: .22;
+  filter: blur(3px) saturate(.45);
+  transform: perspective(1000px) scale(.96);
+}
+
+/* ---------- Loading feedback ---------- */
+.uai-mode-card.is-loading {
+  cursor: progress;
+}
+
+.uai-mode-card.is-loading .uai-mode-enter b {
+  width: 14px;
+  height: 14px;
+  display: inline-block;
+  border: 1.5px solid rgba(255,255,255,.25);
+  border-top-color: rgba(255,255,255,.88);
+  border-radius: 50%;
+  font-size: 0;
+  animation: uaiFinalSpin .7s linear infinite;
+}
+
+.uai-mode-card:disabled {
+  opacity: .8;
+}
+
+/* ---------- Returning to lobby ---------- */
+#uaiModeRoot.is-returning .uai-mode-shell {
+  animation: uaiLobbyReturn .48s cubic-bezier(.2,.8,.2,1) both;
+}
+
+#uaiModeRoot.is-returning .uai-mode-card.novel {
+  animation: uaiCardReturn .48s cubic-bezier(.2,.8,.2,1) .04s both;
+}
+
+#uaiModeRoot.is-returning .uai-mode-card.companion {
+  animation: uaiCardReturn .48s cubic-bezier(.2,.8,.2,1) .10s both;
+}
+
+@keyframes uaiWorldExpand {
+  0% { transform: scale(.1); }
+  70% { transform: scale(72); }
+  100% { transform: scale(92); }
+}
+
+@keyframes uaiTransitionStars {
+  0% { opacity: 0; transform: scale(1.08); }
+  55% { opacity: .42; }
+  100% { opacity: .12; transform: scale(1); }
+}
+
+@keyframes uaiFinalSpin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes uaiLobbyReturn {
+  from { opacity: 0; transform: scale(.985) translateY(8px); filter: blur(5px); }
+  to { opacity: 1; transform: scale(1) translateY(0); filter: none; }
+}
+
+@keyframes uaiCardReturn {
+  from { opacity: 0; transform: translateY(15px) scale(.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (max-width: 760px) {
+  .uai-mode-brand::after { margin-top: 14px; }
+
+  .uai-mode-grid[data-active="novel"] .uai-mode-card.companion,
+  .uai-mode-grid[data-active="companion"] .uai-mode-card.novel {
+    opacity: .82;
+    filter: none;
+    transform: none;
+  }
+
+  .uai-mode-card:hover .uai-card-copy,
+  .uai-mode-card:hover .uai-mode-preview,
+  .uai-mode-card:hover .uai-card-topline,
+  .uai-mode-card:hover .uai-mode-tags,
+  .uai-mode-card:hover .uai-mode-enter {
+    transform: none;
+  }
+
+  .uai-transition-symbol {
+    width: 54px;
+    height: 54px;
+    border-radius: 17px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .uai-mode-shell,
+  .uai-mode-brand,
+  .uai-mode-card,
+  .uai-mode-card .uai-card-copy,
+  .uai-mode-card .uai-mode-preview,
+  .uai-mode-card .uai-mode-tags,
+  .uai-mode-card .uai-mode-enter,
+  .uai-mode-card .uai-card-topline,
+  .uai-transition-content {
+    transition: none !important;
+  }
+
+  #uaiModeRoot.is-transitioning .uai-mode-transition::before,
+  #uaiModeRoot.is-transitioning .uai-mode-transition::after,
+  #uaiModeRoot.is-returning .uai-mode-shell,
+  #uaiModeRoot.is-returning .uai-mode-card {
+    animation: none !important;
+  }
+
+  #uaiModeRoot.is-transitioning .uai-mode-transition::before {
+    transform: scale(92);
+  }
+}
