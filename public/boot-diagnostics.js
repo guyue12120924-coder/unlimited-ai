@@ -1,8 +1,8 @@
 // public/boot-diagnostics.js
 // Startup guard + dual-mode bootstrap.
 (() => {
-  const REVISION = "2026-08-17-v14.5-entry-performance";
-  const MODE_ROUTER_REVISION = "2026-08-17-v13.3-mode-router-audited";
+  const REVISION = "2026-08-17-v14.6-entry-rendering";
+  const MODE_ROUTER_REVISION = "2026-08-17-v13.4-mode-router-performance";
   const errors = [];
 
   document.documentElement.dataset.frontendRevision = REVISION;
