@@ -1,6 +1,6 @@
 // public/mode-router.js
 (() => {
-  const REVISION = "2026-08-14-v9.6-mode-router-1";
+  const REVISION = "2026-08-17-v13.0-mode-router-stage1";
   let root = null;
   let currentMode = "lobby";
   let companionReadyPromise = null;
@@ -38,39 +38,110 @@
 
   function createLobby() {
     if (root) return root;
+
     root = document.createElement("div");
     root.id = "uaiModeRoot";
     root.dataset.revision = REVISION;
     root.innerHTML = `
       <section class="uai-mode-lobby" aria-label="Unlimited AI 模式选择">
+        <div class="uai-lobby-ambient" aria-hidden="true">
+          <span class="uai-ambient-orb orb-a"></span>
+          <span class="uai-ambient-orb orb-b"></span>
+          <span class="uai-ambient-orb orb-c"></span>
+          <span class="uai-ambient-grid"></span>
+          <span class="uai-ambient-vignette"></span>
+        </div>
+
         <div class="uai-mode-shell">
           <header class="uai-mode-brand">
-            <span class="uai-mode-kicker">Unlimited AI · Dual Mode</span>
-            <h1>今天想做些什么？</h1>
-            <p>创作一个世界，或者和一个懂你的角色聊一会儿。</p>
+            <div class="uai-brand-mark" aria-hidden="true">
+              <span class="uai-brand-core"></span>
+              <span class="uai-brand-ring ring-one"></span>
+              <span class="uai-brand-ring ring-two"></span>
+            </div>
+            <span class="uai-mode-kicker">UNLIMITED AI · DUAL WORLD</span>
+            <h1>今天，想进入哪个世界？</h1>
+            <p>创造一个故事，或者遇见一个真正记得你的角色。</p>
           </header>
 
-          <div class="uai-mode-grid">
-            <button class="uai-mode-card novel" id="uaiEnterNovel" type="button">
-              <span class="uai-mode-icon">✍️</span>
-              <h2>AI 小说创作</h2>
-              <p>保留现有长篇创作工作台。人物、世界观、大纲、正文、记忆与连续性检查都继续使用原来的数据。</p>
-              <div class="uai-mode-tags"><span>人物</span><span>大纲</span><span>正文</span><span>长篇记忆</span></div>
-              <span class="uai-mode-enter">进入创作工作台 <b>→</b></span>
+          <div class="uai-mode-grid" id="uaiModeGrid">
+            <button class="uai-mode-card novel" id="uaiEnterNovel" type="button" aria-describedby="uaiNovelDesc">
+              <span class="uai-card-glow" aria-hidden="true"></span>
+              <span class="uai-card-noise" aria-hidden="true"></span>
+
+              <div class="uai-card-topline">
+                <span class="uai-mode-icon" aria-hidden="true">✦</span>
+                <span class="uai-mode-index">01 / CREATE</span>
+              </div>
+
+              <div class="uai-card-copy">
+                <span class="uai-card-eyebrow">STORY STUDIO</span>
+                <h2>AI 小说创作</h2>
+                <p id="uaiNovelDesc">从人物与世界观出发，把灵感写成长篇故事。大纲、正文、记忆与连续性都在同一个创作空间里。</p>
+              </div>
+
+              <div class="uai-mode-preview novel-preview" aria-hidden="true">
+                <div class="uai-preview-toolbar">
+                  <span></span><span></span><span></span>
+                  <b>CHAPTER 07</b>
+                </div>
+                <div class="uai-preview-paper">
+                  <span class="uai-preview-line line-1"></span>
+                  <span class="uai-preview-line line-2"></span>
+                  <p>“月光越过屋檐，像一封迟到了很多年的信。”</p>
+                  <span class="uai-preview-line line-3"></span>
+                </div>
+              </div>
+
+              <div class="uai-mode-tags" aria-label="小说模式功能">
+                <span>人物</span><span>大纲</span><span>世界观</span><span>长篇记忆</span>
+              </div>
+
+              <span class="uai-mode-enter">进入创作世界 <b>→</b></span>
             </button>
 
-            <button class="uai-mode-card companion" id="uaiEnterCompanion" type="button">
-              <span class="uai-mode-icon">💗</span>
-              <h2>AI 陪伴</h2>
-              <p>创建专属 AI 伙伴，进行自然聊天、长期记忆和稳定的人格互动。陪伴数据与小说数据完全隔离。</p>
-              <div class="uai-mode-tags"><span>角色</span><span>聊天</span><span>长期记忆</span><span>关系</span></div>
-              <span class="uai-mode-enter">开始聊天 <b>→</b></span>
+            <button class="uai-mode-card companion" id="uaiEnterCompanion" type="button" aria-describedby="uaiCompanionDesc">
+              <span class="uai-card-glow" aria-hidden="true"></span>
+              <span class="uai-card-noise" aria-hidden="true"></span>
+
+              <div class="uai-card-topline">
+                <span class="uai-mode-icon" aria-hidden="true">♡</span>
+                <span class="uai-mode-index">02 / MEET</span>
+              </div>
+
+              <div class="uai-card-copy">
+                <span class="uai-card-eyebrow">AI COMPANION</span>
+                <h2>AI 陪伴</h2>
+                <p id="uaiCompanionDesc">创建你的专属角色，让聊天、记忆、关系与情绪慢慢积累。陪伴数据与小说数据彼此独立。</p>
+              </div>
+
+              <div class="uai-mode-preview companion-preview" aria-hidden="true">
+                <div class="uai-companion-avatar">
+                  <span class="uai-avatar-halo"></span>
+                  <span class="uai-avatar-face">✦</span>
+                </div>
+                <div class="uai-chat-preview">
+                  <span class="uai-chat-name">她 · 刚刚</span>
+                  <p>今天也回来啦？我还记得你昨天说的那件事。</p>
+                  <span class="uai-chat-status">● 在线</span>
+                </div>
+              </div>
+
+              <div class="uai-mode-tags" aria-label="陪伴模式功能">
+                <span>角色</span><span>聊天</span><span>长期记忆</span><span>关系</span>
+              </div>
+
+              <span class="uai-mode-enter">去见她 <b>→</b></span>
             </button>
           </div>
 
-          <p class="uai-mode-footnote">每次打开 Unlimited AI 都会先回到这里；两种模式的数据会分别保留。</p>
+          <footer class="uai-mode-footer">
+            <span class="uai-footer-dot" aria-hidden="true"></span>
+            <p>两个世界分别保存，互不干扰。每次打开 Unlimited AI 都可以重新选择。</p>
+          </footer>
         </div>
       </section>`;
+
     document.body.appendChild(root);
     root.querySelector("#uaiEnterNovel")?.addEventListener("click", enterNovel);
     root.querySelector("#uaiEnterCompanion")?.addEventListener("click", enterCompanion);
@@ -118,6 +189,7 @@
       button.disabled = true;
       button.setAttribute("aria-busy", "true");
     }
+
     try {
       await ensureScript(`/companion-mode.js?v=${encodeURIComponent(REVISION)}`, "uaiCompanionScript");
       if (!window.UnlimitedCompanion?.mount) throw new Error("Companion module did not initialize");
