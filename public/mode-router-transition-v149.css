@@ -1,0 +1,204 @@
+/* public/mode-router-transition-v149.css
+ * V14.9: staged world handoff polish for the existing mode transition.
+ */
+
+.uai-transition-content {
+  min-width: min(320px, 76vw);
+}
+
+.uai-transition-orbits-v149 {
+  position: absolute !important;
+  z-index: 2 !important;
+  top: -14px;
+  left: 50%;
+  width: 90px;
+  height: 90px;
+  transform: translateX(-50%);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .18s ease;
+}
+
+.uai-transition-orbits-v149 i {
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgba(255,255,255,.14);
+  border-radius: 50%;
+  transform: rotate(18deg) scaleX(1.1);
+}
+
+.uai-transition-orbits-v149 i:nth-child(2) {
+  inset: 8px -6px;
+  opacity: .64;
+  transform: rotate(-36deg) scaleX(.94);
+}
+
+.uai-transition-orbits-v149 i:nth-child(3) {
+  inset: 16px -11px;
+  opacity: .34;
+  transform: rotate(58deg) scaleX(1.06);
+}
+
+.uai-transition-progress-v149 {
+  position: relative !important;
+  z-index: 4 !important;
+  width: min(186px, 58vw);
+  height: 2px;
+  margin-top: 1px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255,255,255,.09);
+  box-shadow: inset 0 1px rgba(0,0,0,.16);
+  pointer-events: none;
+}
+
+.uai-transition-progress-v149 i {
+  display: block;
+  width: 18%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, rgba(255,255,255,.58), rgba(255,255,255,.96));
+  box-shadow: 0 0 13px rgba(255,255,255,.28);
+  transition: width .19s cubic-bezier(.2,.8,.2,1), opacity .18s ease;
+}
+
+.uai-transition-phase-v149 {
+  position: relative !important;
+  z-index: 4 !important;
+  min-height: 10px;
+  margin-top: -3px;
+  color: rgba(245,245,255,.43);
+  font: 700 8px/1.1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: .17em;
+  white-space: nowrap;
+  pointer-events: none;
+  transition: color .18s ease, opacity .18s ease, transform .18s ease;
+}
+
+#uaiModeRoot.is-transitioning .uai-transition-orbits-v149 {
+  opacity: .82;
+}
+
+#uaiModeRoot.is-transitioning .uai-transition-orbits-v149 i:first-child {
+  animation: uaiV149OrbitA 3.8s linear infinite;
+}
+
+#uaiModeRoot.is-transitioning .uai-transition-orbits-v149 i:nth-child(2) {
+  animation: uaiV149OrbitB 2.9s linear infinite reverse;
+}
+
+#uaiModeRoot.is-transitioning .uai-transition-orbits-v149 i:nth-child(3) {
+  animation: uaiV149OrbitC 4.6s linear infinite;
+}
+
+#uaiModeRoot[data-transition="novel"] .uai-transition-progress-v149 i {
+  background: linear-gradient(90deg, #6f86ff, #b7adff, #f0eeff);
+  box-shadow: 0 0 14px rgba(120,132,255,.42);
+}
+
+#uaiModeRoot[data-transition="companion"] .uai-transition-progress-v149 i {
+  background: linear-gradient(90deg, #ff77bd, #e58cff, #ffe5f3);
+  box-shadow: 0 0 14px rgba(255,107,187,.40);
+}
+
+#uaiModeRoot[data-transition="novel"] .uai-transition-orbits-v149 i {
+  border-color: rgba(164,177,255,.24);
+  box-shadow: 0 0 16px rgba(103,124,255,.08);
+}
+
+#uaiModeRoot[data-transition="companion"] .uai-transition-orbits-v149 i {
+  border-color: rgba(255,169,218,.22);
+  box-shadow: 0 0 16px rgba(255,103,184,.08);
+}
+
+#uaiModeRoot[data-v149-transition-phase="1"] .uai-transition-progress-v149 i {
+  width: 24%;
+}
+
+#uaiModeRoot[data-v149-transition-phase="2"] .uai-transition-progress-v149 i {
+  width: 63%;
+}
+
+#uaiModeRoot[data-v149-transition-phase="3"] .uai-transition-progress-v149 i {
+  width: 100%;
+}
+
+#uaiModeRoot[data-v149-transition-phase="2"] .uai-transition-phase-v149,
+#uaiModeRoot[data-v149-transition-phase="3"] .uai-transition-phase-v149 {
+  color: rgba(249,249,255,.64);
+  transform: translateY(-1px);
+}
+
+#uaiModeRoot[data-v149-transition-phase="3"] .uai-transition-symbol {
+  transform: scale(1.055);
+  border-color: rgba(255,255,255,.38);
+}
+
+#uaiModeRoot[data-v149-transition-phase="3"] .uai-transition-content strong {
+  text-shadow: 0 0 28px rgba(255,255,255,.10), 0 8px 34px rgba(0,0,0,.28);
+}
+
+#uaiModeRoot[data-transition="novel"][data-v149-transition-phase="3"] .uai-transition-symbol {
+  box-shadow: 0 0 42px rgba(111,132,255,.43), inset 0 1px rgba(255,255,255,.16);
+}
+
+#uaiModeRoot[data-transition="companion"][data-v149-transition-phase="3"] .uai-transition-symbol {
+  box-shadow: 0 0 42px rgba(255,101,184,.42), inset 0 1px rgba(255,255,255,.16);
+}
+
+#uaiModeRoot.is-transitioning .uai-transition-symbol {
+  transition: transform .2s cubic-bezier(.2,.8,.2,1), border-color .2s ease, box-shadow .2s ease;
+}
+
+@keyframes uaiV149OrbitA {
+  from { transform: rotate(18deg) scaleX(1.1); }
+  to { transform: rotate(378deg) scaleX(1.1); }
+}
+
+@keyframes uaiV149OrbitB {
+  from { transform: rotate(-36deg) scaleX(.94); }
+  to { transform: rotate(324deg) scaleX(.94); }
+}
+
+@keyframes uaiV149OrbitC {
+  from { transform: rotate(58deg) scaleX(1.06); }
+  to { transform: rotate(418deg) scaleX(1.06); }
+}
+
+@media (max-width: 760px), (pointer: coarse) {
+  .uai-transition-orbits-v149 {
+    width: 82px;
+    height: 82px;
+    top: -10px;
+  }
+
+  .uai-transition-progress-v149 {
+    width: min(164px, 58vw);
+  }
+
+  .uai-transition-phase-v149 {
+    font-size: 7px;
+    letter-spacing: .13em;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .uai-transition-orbits-v149 {
+    opacity: .38 !important;
+  }
+
+  .uai-transition-orbits-v149 i,
+  #uaiModeRoot.is-transitioning .uai-transition-orbits-v149 i {
+    animation: none !important;
+  }
+
+  .uai-transition-progress-v149 i,
+  .uai-transition-phase-v149,
+  #uaiModeRoot.is-transitioning .uai-transition-symbol {
+    transition: none !important;
+  }
+
+  #uaiModeRoot.is-transitioning .uai-transition-progress-v149 i {
+    width: 100%;
+  }
+}
