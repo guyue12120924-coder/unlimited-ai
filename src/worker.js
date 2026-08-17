@@ -13,7 +13,7 @@ import {
 
 // Compatibility marker: buildCompanionSystemPrompt(payload) remains available in companion.js for preview/testing only.
 const NVIDIA_CHAT_URL = "https://integrate.api.nvidia.com/v1/chat/completions";
-const APP_REVISION = "2026-08-14-v10.0-worker-1";
+const APP_REVISION = "2026-08-17-v13.3-worker-entry-audit";
 
 // ============================================================
 // 小说模式默认 System Prompt
@@ -348,10 +348,11 @@ async function inspectAsset(request, env, pathname, markers = []) {
 
 async function handleDiagnostics(request, env) {
   const assets = await Promise.all([
-    inspectAsset(request, env, "/index.html", ["2026-08-14-v10.0-dual-mode-1", "/boot-diagnostics.js?v=20260814-v10.0-1"]),
-    inspectAsset(request, env, "/boot-diagnostics.js", ["2026-08-14-v10.0-dual-mode-1", "companion-v10.css", "companion-v10-shell.js"]),
-    inspectAsset(request, env, "/mode-router.js", ["UnlimitedModeRouter", "uaiEnterCompanion"]),
-    inspectAsset(request, env, "/mode-router.css", ["uai-mode-lobby", "data-uai-mode"]),
+    inspectAsset(request, env, "/index.html", ["2026-08-17-v13.3-entry-audit", "/boot-diagnostics.js?v=20260817-v13.3-entry-audit"]),
+    inspectAsset(request, env, "/boot-diagnostics.js", ["2026-08-17-v13.3-entry-audit", "2026-08-17-v13.3-mode-router-audited", "modeRouterStage3Ready"]),
+    inspectAsset(request, env, "/mode-router.js", ["2026-08-17-v13.3-mode-router-audited", "modeRequestId", "uaiEnterCompanion"]),
+    inspectAsset(request, env, "/mode-router.css", ["uai-mode-lobby", "uai-star-canvas", "data-uai-mode"]),
+    inspectAsset(request, env, "/mode-router-stage3.css", ["uaiWorldExpand", "Audit fixes", "uaiCardSweep"]),
     inspectAsset(request, env, "/companion-mode.js", ["UnlimitedCompanion", "uai_companion_sessions_v1", "mode: \"companion\""]),
     inspectAsset(request, env, "/companion-mode.css", ["uaiCompanionRoot", "uai-c-shell"]),
     inspectAsset(request, env, "/companion-v10.css", ["grid-template-columns:236px", "uai-c-v10-message-avatar", "border-radius:50%!important"]),
@@ -379,8 +380,8 @@ async function handleDiagnostics(request, env) {
       companion: "src/companion.js -> COMPANION_ROLE_CARD"
     },
     conclusion: frontendCurrent
-      ? "V10 frontend assets are current and loaded from this Worker deployment."
-      : "This Worker deployment is missing one or more V10 frontend assets. Redeploy the current main branch.",
+      ? "V13.3 frontend assets are current and loaded from this Worker deployment."
+      : "This Worker deployment is missing one or more V13.3 frontend assets. Redeploy the current main branch.",
     assets
   });
 }
