@@ -1,6 +1,6 @@
 // public/companion-assets-loader.js
 (() => {
-  const REVISION = "2026-08-17-v14.5-companion-lazy";
+  const REVISION = "2026-08-17-v14.7-companion-lazy-progress";
   if (window.UnlimitedCompanionAssets) return;
 
   const STYLE_ASSETS = [
@@ -70,6 +70,7 @@
     ["/companion-v12-ux-hardening.js", "uaiCompanionV123UxHardeningScript"]
   ];
 
+  const TOTAL_ASSETS = STYLE_ASSETS.length + SCRIPT_ASSETS.length;
   const state = {
     loadPromise: null,
     ready: false,
@@ -95,11 +96,47 @@
     });
   }
 
+  function progressDetail(extra = {}) {
+    const loaded = state.loadedStyles + state.loadedScripts;
+    return {
+      revision: REVISION,
+      loaded,
+      total: TOTAL_ASSETS,
+      percent: TOTAL_ASSETS ? Math.round((loaded / TOTAL_ASSETS) * 100) : 100,
+      ready: state.ready,
+      loading: Boolean(state.loadPromise && !state.ready),
+      ...extra
+    };
+  }
+
+  function emitProgress(extra = {}) {
+    const detail = progressDetail(extra);
+    updateBootState({
+      companionAssetsLoaded: detail.loaded,
+      companionAssetsTotal: detail.total,
+      companionAssetsProgress: detail.percent,
+      companionAssetsLoading: detail.loading
+    });
+    window.dispatchEvent(new CustomEvent("uai:companion-assets-progress", { detail }));
+  }
+
+  function markStyleLoaded(path, link) {
+    link.dataset.uaiLoaded = "true";
+    state.loadedStyles += 1;
+    emitProgress({ asset: path, type: "style", phase: "asset" });
+  }
+
   function loadStyle(path, id) {
     return new Promise((resolve, reject) => {
       let link = document.getElementById(id);
+
+      if (link && (link.dataset.uaiDeferredPlaceholder === "true" || link.tagName !== "LINK")) {
+        link.remove();
+        link = null;
+      }
+
       if (link?.dataset.uaiLoaded === "true" || link?.sheet) {
-        state.loadedStyles += 1;
+        markStyleLoaded(path, link);
         resolve();
         return;
       }
@@ -131,8 +168,7 @@
           reject(error);
           return;
         }
-        link.dataset.uaiLoaded = "true";
-        state.loadedStyles += 1;
+        markStyleLoaded(path, link);
         resolve();
       };
       const onLoad = () => finish();
@@ -146,11 +182,17 @@
     });
   }
 
+  function markScriptLoaded(path, script) {
+    script.dataset.uaiLoaded = "true";
+    state.loadedScripts += 1;
+    emitProgress({ asset: path, type: "script", phase: "asset" });
+  }
+
   function loadScript(path, id) {
     return new Promise((resolve, reject) => {
       let script = document.getElementById(id);
       if (script?.dataset.uaiLoaded === "true") {
-        state.loadedScripts += 1;
+        markScriptLoaded(path, script);
         resolve();
         return;
       }
@@ -182,8 +224,7 @@
           reject(error);
           return;
         }
-        script.dataset.uaiLoaded = "true";
-        state.loadedScripts += 1;
+        markScriptLoaded(path, script);
         resolve();
       };
       const onLoad = () => finish();
@@ -198,10 +239,12 @@
 
   async function performLoad() {
     state.lastError = null;
+    state.ready = false;
     state.loadedStyles = 0;
     state.loadedScripts = 0;
     document.documentElement.dataset.companionAssetsRevision = REVISION;
-    updateBootState({ companionAssetsDeferred: false });
+    updateBootState({ companionAssetsDeferred: false, companionAssetsLoading: true });
+    emitProgress({ phase: "start", loading: true });
 
     // Styles download in parallel. Scripts are inserted in the original dependency order
     // with async=false, so browsers may fetch them in parallel while preserving execution order.
@@ -212,6 +255,7 @@
 
     state.ready = true;
     updateBootState({ companionAssetsDeferred: false, companionAssetsReady: true, companionAssetsError: "" });
+    emitProgress({ phase: "ready", ready: true, loading: false });
     return true;
   }
 
@@ -223,27 +267,37 @@
       .catch((error) => {
         state.lastError = error;
         state.ready = false;
-        updateBootState({ companionAssetsReady: false, companionAssetsError: error?.message || String(error) });
+        const message = error?.message || String(error);
+        updateBootState({ companionAssetsReady: false, companionAssetsError: message, companionAssetsLoading: false });
+        emitProgress({ phase: "error", error: message, loading: false });
         throw error;
       })
       .finally(() => {
         state.loadPromise = null;
-        updateBootState();
+        updateBootState({ companionAssetsLoading: false });
       });
 
-    updateBootState({ companionAssetsDeferred: false });
+    updateBootState({ companionAssetsDeferred: false, companionAssetsLoading: true });
     return state.loadPromise;
   }
 
   window.UnlimitedCompanionAssets = {
     revision: REVISION,
     load,
+    total: TOTAL_ASSETS,
     get ready() { return state.ready; },
     get loading() { return Boolean(state.loadPromise); },
     get lastError() { return state.lastError; },
+    get loaded() { return state.loadedStyles + state.loadedScripts; },
+    get progress() { return progressDetail().percent; },
     styles: STYLE_ASSETS.map(([path]) => path),
     scripts: SCRIPT_ASSETS.map(([path]) => path)
   };
 
-  updateBootState({ companionAssetsDeferred: true });
+  updateBootState({
+    companionAssetsDeferred: true,
+    companionAssetsLoaded: 0,
+    companionAssetsTotal: TOTAL_ASSETS,
+    companionAssetsProgress: 0
+  });
 })();
