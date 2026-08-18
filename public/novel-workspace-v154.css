@@ -1,0 +1,277 @@
+/* public/novel-workspace-v154.css
+ * V15.4: lifecycle-aware ambience + final manuscript polish.
+ */
+
+#particle-canvas[hidden] { display:none !important; }
+
+body[data-uai-mode="novel"] #simpleManuscriptPane {
+  position: relative;
+}
+
+.novel-v154-editor-rail {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) auto;
+  align-items: center;
+  gap: 14px;
+  margin: -2px 0 1px;
+  padding: 9px 10px;
+  border: 1px solid color-mix(in srgb,var(--border-default,var(--border)) 74%,transparent);
+  border-radius: 9px;
+  background: linear-gradient(145deg,color-mix(in srgb,var(--accent) 4%,transparent),rgba(255,255,255,.016));
+}
+
+.novel-v154-progress-block {
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.novel-v154-progress-block > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.novel-v154-progress-block span {
+  color: var(--muted);
+  font-size: 8px;
+  font-weight: 620;
+}
+
+.novel-v154-progress-block strong {
+  color: color-mix(in srgb,var(--accent) 62%,var(--text-soft));
+  font-size: 8px;
+  font-weight: 720;
+  font-variant-numeric: tabular-nums;
+}
+
+.novel-v154-progress-track {
+  display: block;
+  height: 3px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255,255,255,.045);
+}
+
+.novel-v154-progress-track > b {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg,color-mix(in srgb,var(--accent) 76%,#8fa3ff),var(--accent));
+  box-shadow: 0 0 9px color-mix(in srgb,var(--accent) 20%,transparent);
+  transition: width .22s ease;
+}
+
+.novel-v154-editor-meta {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+#novelV154SaveState,
+#novelV154WordState {
+  min-height: 25px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--muted);
+  font-size: 7.5px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+#novelV154SaveState i {
+  width: 5px;
+  height: 5px;
+  flex: 0 0 5px;
+  border-radius: 50%;
+  background: #7d8479;
+}
+
+#novelV154SaveState[data-state="saving"] i {
+  background: #c5a76b;
+  box-shadow: 0 0 7px rgba(197,167,107,.22);
+}
+
+#novelV154SaveState[data-state="saved"] {
+  color: color-mix(in srgb,var(--accent) 48%,var(--text-soft));
+}
+
+#novelV154SaveState[data-state="saved"] i {
+  background: color-mix(in srgb,var(--accent) 74%,#98b78f);
+  box-shadow: 0 0 7px color-mix(in srgb,var(--accent) 20%,transparent);
+}
+
+#novelV154SaveState[data-state="pending"] {
+  color: #c7a76b;
+}
+
+.novel-v154-editor-meta button {
+  min-height: 27px;
+  padding: 0 8px;
+  border: 1px solid var(--border-subtle,var(--border));
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text-soft);
+  cursor: pointer;
+  font-size: 7.5px;
+  font-weight: 650;
+}
+
+.novel-v154-editor-meta button:hover,
+.novel-v154-editor-meta button:focus-visible {
+  border-color: color-mix(in srgb,var(--accent) 28%,var(--border));
+  background: color-mix(in srgb,var(--accent) 6%,var(--surface-soft));
+  color: var(--text);
+}
+
+body[data-uai-mode="novel"] #v2FocusWriting[aria-pressed="true"] {
+  border-color: color-mix(in srgb,var(--accent) 38%,var(--v2-line,var(--border))) !important;
+  background: color-mix(in srgb,var(--accent) 10%,var(--surface-soft)) !important;
+  color: color-mix(in srgb,var(--accent) 68%,var(--text)) !important;
+}
+
+body[data-uai-mode="novel"] #simpleManuscriptEditor {
+  scroll-padding-block: 60px;
+}
+
+body[data-uai-mode="novel"] #simpleManuscriptEditor:not(:focus) {
+  transition: border-color .16s ease,background .16s ease,box-shadow .16s ease;
+}
+
+body[data-uai-mode="novel"] #simpleManuscriptEditor:focus {
+  background: color-mix(in srgb,var(--bg-surface,var(--surface-solid)) 94%,#171b17);
+}
+
+/* Focus mode gets one tiny escape hatch instead of bringing the full app chrome back. */
+.novel-v154-focus-hud {
+  position: fixed;
+  z-index: 260;
+  top: 14px;
+  right: 16px;
+  min-height: 34px;
+  display: none;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 6px 5px 10px;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 999px;
+  background: rgba(17,19,17,.88);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 10px 26px rgba(0,0,0,.18);
+}
+
+body.v2-writing-focus[data-uai-mode="novel"] .novel-v154-focus-hud {
+  display: flex;
+}
+
+.novel-v154-focus-hud > span {
+  color: color-mix(in srgb,var(--accent) 62%,#9ba297);
+  font-size: 7px;
+  font-weight: 720;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.novel-v154-focus-hud > strong {
+  max-width: 180px;
+  overflow: hidden;
+  color: #e5e8e1;
+  font-size: 9px;
+  font-weight: 680;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.novel-v154-focus-hud > small {
+  color: #7d847a;
+  font-size: 7.5px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.novel-v154-focus-hud button {
+  min-height: 24px;
+  padding: 0 8px;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 999px;
+  background: rgba(255,255,255,.035);
+  color: #aeb4aa;
+  cursor: pointer;
+  font-size: 7.5px;
+}
+
+.novel-v154-focus-hud button:hover,
+.novel-v154-focus-hud button:focus-visible {
+  border-color: color-mix(in srgb,var(--accent) 28%,rgba(255,255,255,.08));
+  color: #eceee9;
+}
+
+body.v2-writing-focus[data-uai-mode="novel"] .novel-v154-editor-rail {
+  grid-template-columns: 1fr auto;
+  margin-inline: 2px;
+  border-color: rgba(255,255,255,.055);
+  background: rgba(255,255,255,.014);
+}
+
+body.v2-writing-focus[data-uai-mode="novel"] .novel-v154-editor-meta button {
+  display: none;
+}
+
+body.v2-writing-focus[data-uai-mode="novel"] #simpleManuscriptEditor {
+  caret-color: var(--accent);
+}
+
+body:not([data-uai-mode="novel"]) .novel-v154-editor-rail,
+body:not([data-uai-mode="novel"]) .novel-v154-focus-hud {
+  display: none !important;
+}
+
+@media (max-width: 920px) {
+  .novel-v154-editor-rail {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .novel-v154-editor-meta {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 720px) {
+  .novel-v154-editor-rail {
+    padding: 8px 9px;
+  }
+  .novel-v154-editor-meta {
+    width: 100%;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    scrollbar-width: none;
+  }
+  .novel-v154-editor-meta::-webkit-scrollbar { display:none; }
+  .novel-v154-editor-meta button {
+    min-height: 31px;
+    flex: 0 0 auto;
+    padding: 0 10px;
+    font-size: 8px;
+  }
+  .novel-v154-focus-hud {
+    top: 8px;
+    right: 8px;
+    left: 8px;
+    justify-content: center;
+  }
+  .novel-v154-focus-hud > strong {
+    max-width: 120px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .novel-v154-progress-track > b,
+  body[data-uai-mode="novel"] #simpleManuscriptEditor:not(:focus) {
+    transition: none !important;
+  }
+}
