@@ -1,0 +1,112 @@
+/* public/novel-workspace-v153.css
+ * V15.3: secondary writing actions for completed AI replies.
+ */
+
+body[data-uai-mode="novel"] #chat .message-tools {
+  row-gap: 6px;
+}
+
+.novel-v153-reply-actions {
+  flex: 1 1 100%;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding-top: 2px;
+  opacity: .78;
+  transition: opacity .16s ease;
+}
+
+#chat .row.ai:hover .novel-v153-reply-actions,
+#chat .row.ai:focus-within .novel-v153-reply-actions {
+  opacity: 1;
+}
+
+.novel-v153-reply-actions-label {
+  flex: 0 0 auto;
+  margin-right: 2px;
+  color: color-mix(in srgb,var(--muted) 72%,transparent);
+  font-size: 7.5px;
+  font-weight: 620;
+  white-space: nowrap;
+}
+
+.novel-v153-reply-actions button {
+  min-height: 25px;
+  flex: 0 0 auto;
+  padding: 0 7px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  color: color-mix(in srgb,var(--text-soft) 80%,var(--muted));
+  cursor: pointer;
+  font-size: 8px;
+  font-weight: 640;
+  line-height: 1;
+  white-space: nowrap;
+  transition: border-color .14s ease,background .14s ease,color .14s ease,transform .14s ease;
+}
+
+.novel-v153-reply-actions button:hover,
+.novel-v153-reply-actions button:focus-visible {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb,var(--accent) 20%,var(--border));
+  background: color-mix(in srgb,var(--accent) 5%,var(--surface-soft));
+  color: var(--text);
+}
+
+.novel-v153-reply-actions button[data-v153-reply-action="continue"] {
+  border-color: color-mix(in srgb,var(--accent) 20%,transparent);
+  background: color-mix(in srgb,var(--accent) 5%,transparent);
+  color: color-mix(in srgb,var(--accent) 58%,var(--text-soft));
+}
+
+.novel-v153-reply-actions button[data-v153-reply-action="reference"] {
+  margin-left: 2px;
+  border-left-color: color-mix(in srgb,var(--border) 78%,transparent);
+}
+
+.novel-v153-reply-actions button.prepared {
+  border-color: color-mix(in srgb,var(--accent) 34%,var(--border));
+  background: color-mix(in srgb,var(--accent) 9%,var(--surface-soft));
+  color: color-mix(in srgb,var(--accent) 68%,var(--text));
+  transform: none;
+}
+
+body[data-uai-mode="novel"] #composer.novel-v153-prepared {
+  border-color: color-mix(in srgb,var(--accent) 58%,var(--border)) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb,var(--accent) 7%,transparent),0 20px 52px rgba(0,0,0,.28),inset 0 1px rgba(255,255,255,.04) !important;
+}
+
+body:not([data-uai-mode="novel"]) .novel-v153-reply-actions {
+  display: none !important;
+}
+
+@media (max-width: 720px) {
+  .novel-v153-reply-actions {
+    width: 100%;
+    overflow-x: auto;
+    padding: 3px 0 1px;
+    opacity: 1;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .novel-v153-reply-actions::-webkit-scrollbar { display: none; }
+  .novel-v153-reply-actions-label { display: none; }
+  .novel-v153-reply-actions button {
+    min-height: 30px;
+    padding: 0 9px;
+    border-color: color-mix(in srgb,var(--border) 72%,transparent);
+    background: rgba(255,255,255,.018);
+    font-size: 8.5px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .novel-v153-reply-actions,
+  .novel-v153-reply-actions button,
+  body[data-uai-mode="novel"] #composer.novel-v153-prepared {
+    transition: none !important;
+  }
+}
