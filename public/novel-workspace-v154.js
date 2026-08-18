@@ -14,12 +14,10 @@
   let particleFrameId = 0;
   let particleScheduled = false;
   let lastParticlePaint = 0;
-  let wallpaperCallback = null;
   let editorObserver = null;
   let modeObserver = null;
   let editorRefreshTimer = 0;
   let saveVerifyTimer = 0;
-  let lastAmbienceEligible = false;
 
   function readState() {
     try {
@@ -116,7 +114,6 @@
   // novel workspace is hidden, backgrounded, reduced-motion, or in focus writing.
   window.setInterval = function guardedSetInterval(callback, delay, ...args) {
     if (typeof callback === "function" && callback.name === "rotateBackground") {
-      wallpaperCallback = callback;
       return nativeSetInterval(() => {
         if (ambienceEligible()) callback(...args);
       }, delay);
@@ -136,14 +133,6 @@
     const eligible = ambienceEligible();
     if (!eligible) cancelParticleFrame();
     else if (particleCallback && !particleScheduled) scheduleParticle(particleCallback);
-
-    // When returning to the novel after a long pause, advance the wallpaper once instead
-    // of waiting for the next 30-second interval. Never do this on the initial boot.
-    if (eligible && !lastAmbienceEligible && wallpaperCallback && document.documentElement.dataset.v154AmbienceSeen === "1") {
-      try { wallpaperCallback(); } catch {}
-    }
-    if (eligible) document.documentElement.dataset.v154AmbienceSeen = "1";
-    lastAmbienceEligible = eligible;
     syncCanvasVisibility();
     document.documentElement.dataset.novelAmbience = eligible ? "running" : "paused";
   }
@@ -204,36 +193,35 @@
     return rail;
   }
 
+  function setSaveState(state, label) {
+    const status = document.getElementById("novelV154SaveState");
+    if (!status) return;
+    status.dataset.state = state;
+    if (status.dataset.label === label && status.querySelector("i")) return;
+    status.dataset.label = label;
+    status.replaceChildren(document.createElement("i"), document.createTextNode(label));
+  }
+
   function verifySaved(editor, attempt = 0) {
     window.clearTimeout(saveVerifyTimer);
     saveVerifyTimer = window.setTimeout(() => {
       if (!document.contains(editor)) return;
       const { chapter } = activeData();
-      const status = document.getElementById("novelV154SaveState");
       const matches = Boolean(chapter && String(chapter.manuscript || "") === String(editor.value || ""));
       if (matches) {
-        if (status) status.dataset.state = "saved";
-        setText(status, "已保存");
-        // Restore the status dot after textContent replacement.
-        if (status && !status.querySelector("i")) status.prepend(document.createElement("i"));
+        setSaveState("saved", "已保存");
         return;
       }
       if (attempt < 2) {
         verifySaved(editor, attempt + 1);
         return;
       }
-      if (status) status.dataset.state = "pending";
-      setText(status, "等待保存");
-      if (status && !status.querySelector("i")) status.prepend(document.createElement("i"));
+      setSaveState("pending", "等待保存");
     }, attempt ? 260 : 120);
   }
 
   function markSaving() {
-    const status = document.getElementById("novelV154SaveState");
-    if (!status) return;
-    status.dataset.state = "saving";
-    setText(status, "保存中…");
-    if (!status.querySelector("i")) status.prepend(document.createElement("i"));
+    setSaveState("saving", "保存中…");
   }
 
   function updateEditorRail(editor) {
@@ -247,10 +235,8 @@
     const fill = document.getElementById("novelV154ProgressFill");
     if (fill) fill.style.width = `${percent}%`;
 
-    const hudChapter = document.getElementById("novelV154FocusChapter");
-    const hudWords = document.getElementById("novelV154FocusWords");
-    setText(hudChapter, chapter.name || "当前章节");
-    setText(hudWords, `${words.toLocaleString()} 字`);
+    setText(document.getElementById("novelV154FocusChapter"), chapter.name || "当前章节");
+    setText(document.getElementById("novelV154FocusWords"), `${words.toLocaleString()} 字`);
   }
 
   function ensureFocusHud() {
@@ -299,9 +285,9 @@
       editor.addEventListener("blur", () => verifySaved(editor));
     }
 
+    syncFocusUi();
     updateEditorRail(editor);
     verifySaved(editor);
-    syncFocusUi();
     document.documentElement.dataset.novelManuscriptRevision = REVISION;
   }
 
@@ -377,6 +363,10 @@
     // Run after the legacy product layers in the same parser turn have finished.
     window.setTimeout(installEditorObservers, 0);
     document.documentElement.dataset.novelWorkspaceFinalRevision = REVISION;
+    if (window.__UNLIMITED_BOOT__) {
+      window.__UNLIMITED_BOOT__.novelV154Ready = true;
+      window.__UNLIMITED_BOOT__.novelV154Revision = REVISION;
+    }
   }
 
   window.UnlimitedNovelWorkspaceV154 = {
