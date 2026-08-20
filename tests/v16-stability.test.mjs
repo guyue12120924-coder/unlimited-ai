@@ -9,6 +9,7 @@ const loader = read("public/companion-assets-loader.js");
 const migration = read("public/data-migration.js");
 const worker = read("src/worker.js");
 const voiceWorker = read("src/worker-voice.js");
+const wrangler = read("wrangler.toml");
 
 const transportIndex = index.indexOf("/chat-transport-v16.js");
 const appIndex = index.indexOf("/app.js");
@@ -55,8 +56,10 @@ assert.doesNotMatch(
   "HTTP 429 must not fan out across fallback models"
 );
 
+assert.match(wrangler, /main\s*=\s*"src\/worker-voice\.js"/, "wrangler must deploy the voice wrapper as the real Worker entry");
+assert.match(voiceWorker, /import worker from "\.\/worker\.js"/, "voice Worker entry must delegate non-voice requests to worker.js");
 assert.match(voiceWorker, /2026-08-20-v16\.0-call-voice-stability/);
 assert.match(voiceWorker, /function consumeVoiceRate\(/);
 assert.match(voiceWorker, /VOICE_RATE_LIMITED/);
 
-console.log("V16 stability contract passed: request isolation, line-safe SSE, preserved stops, storage errors, bounded fallback, API guards and lazy retry hardening.");
+console.log("V16 stability contract passed: real Worker entry, request isolation, line-safe SSE, preserved stops, storage errors, bounded fallback, API guards and lazy retry hardening.");
