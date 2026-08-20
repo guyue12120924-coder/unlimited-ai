@@ -33,7 +33,21 @@
     return payload;
   }
 
-  function lineBufferedBody(body) {
+  function lineCanFlush(line) {
+    const clean = String(line || "").trim();
+    if (!clean) return true;
+    if (!clean.startsWith("data:")) return true;
+    const data = clean.slice(5).trim();
+    if (!data || data === "[DONE]") return true;
+    try {
+      JSON.parse(data);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  function lineBufferedBody(body, signal = null) {
     if (!body || typeof ReadableStream === "undefined") return body;
     const reader = body.getReader();
     const decoder = new TextDecoder();
@@ -68,6 +82,21 @@
             buffer += decoder.decode(value, { stream: true });
           }
         } catch (error) {
+          // A user-triggered AbortController abort should behave like a clean end of the
+          // novel stream. The legacy sender will then persist the text already received
+          // instead of treating the partial answer as an unsaved exception.
+          if (signal?.aborted) {
+            try {
+              buffer += decoder.decode();
+              if (buffer && lineCanFlush(buffer)) {
+                controller.enqueue(encoder.encode(buffer.endsWith("\n") ? buffer : `${buffer}\n`));
+              }
+            } catch {}
+            buffer = "";
+            closed = true;
+            controller.close();
+            return;
+          }
           closed = true;
           controller.error(error);
         }
@@ -79,11 +108,11 @@
     });
   }
 
-  function wrapNovelSse(response, payload) {
+  function wrapNovelSse(response, payload, signal) {
     if (!response?.body || payload?.mode === "companion") return response;
     const type = response.headers.get("content-type") || "";
     if (!/text\/event-stream/i.test(type)) return response;
-    return new Response(lineBufferedBody(response.body), {
+    return new Response(lineBufferedBody(response.body, signal), {
       status: response.status,
       statusText: response.statusText,
       headers: response.headers
@@ -99,7 +128,7 @@
       ? { ...init, body: JSON.stringify(isolated) }
       : init;
     const response = await nativeFetch(input, nextInit);
-    return wrapNovelSse(response, isolated);
+    return wrapNovelSse(response, isolated, nextInit?.signal || null);
   };
   window.fetch.__uaiV16Transport = REVISION;
 
@@ -160,6 +189,11 @@
     notify("当前回复仍在生成，可先点击“停止”。");
   }
 
+  function noteUserStop(event) {
+    if (!generationActive() || !event.target?.closest?.("#stopBtn")) return;
+    window.setTimeout(() => notify("已停止生成，当前已经收到的内容会保留在本次会话中。"), 0);
+  }
+
   function blockRepeatEnter(event) {
     if (!generationActive() || event.key !== "Enter" || event.shiftKey) return;
     if (event.target?.id !== "msg") return;
@@ -170,6 +204,7 @@
 
   document.addEventListener("click", blockSessionMutation, true);
   document.addEventListener("click", blockRepeatSend, true);
+  document.addEventListener("click", noteUserStop, true);
   document.addEventListener("keydown", blockRepeatEnter, true);
 
   document.documentElement.dataset.chatTransportRevision = REVISION;
