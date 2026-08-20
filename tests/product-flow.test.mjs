@@ -15,16 +15,21 @@ const phase3 = read("public/v2-product-phase3.js");
 
 const runtimeIndex = index.indexOf("/v3-runtime.js");
 const sidebarIndex = index.indexOf("/v3-sidebar.js");
+const transportIndex = index.indexOf("/chat-transport-v16.js");
+const appIndex = index.indexOf("/app.js");
 const order = ["/user-flow.js","/ai-to-manuscript.js","/v2-experience.js","/v2-product.js","/v2-product-phase2.js","/v2-product-phase3.js"].map((item) => index.indexOf(item));
 
+assert(transportIndex >= 0, "V16 chat transport must be loaded");
+assert(appIndex > transportIndex, "V16 chat transport must load before the legacy novel chat core");
 assert(runtimeIndex >= 0, "V3 runtime must be loaded");
 assert(sidebarIndex > runtimeIndex, "stable sidebar must load after V3 runtime");
 assert(order.every((value) => value >= 0), "all product experience scripts must be loaded");
 assert(order.every((value, position) => position === 0 || value > order[position - 1]), "product experience scripts must load in order");
 assert(order.every((value) => value > sidebarIndex), "stable sidebar must load before every product experience adapter");
 assert.match(index, /v3-product\.css/);
-assert.match(index, /2026-08-15-v12\.23-ux-hardening-\d+/);
-assert.match(index, /boot-diagnostics\.js\?v=20260815-v12\.23-ux-hardening-\d+/);
+assert.match(index, /2026-08-20-v16\.0-stability/);
+assert.match(index, /chat-transport-v16\.js\?v=20260820-v16\.0/);
+assert.match(index, /novel-workspace-v154\.js\?v=20260818-v15\.4/);
 assert.match(index, /<span>AI 小说创作<\/span>/, "initial brand subtitle must already match the final V3 copy");
 assert.match(index, /v3-sidebar\.js\?v=20260809-2/, "static label fix must use a fresh browser cache key");
 assert.doesNotMatch(index, /removeAttribute\("data-v2-outline-ready"\)/, "temporary outline inline patch must live in V3 runtime, not index.html");
@@ -80,4 +85,4 @@ assert.match(phase3, /LONG_BOOK_CHARS = 120000/);
 assert.match(phase3, /runDiagnostics/);
 assert.match(phase3, /产品自检/);
 
-console.log("V3 product contract passed: coordinated runtime -> locked labels/sidebar -> first run -> AI -> manuscript -> chapter completion -> mobile/data safety.");
+console.log("V16 product contract passed: stable transport -> coordinated runtime -> locked sidebar -> AI -> manuscript -> data safety.");
