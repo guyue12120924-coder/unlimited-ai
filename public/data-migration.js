@@ -1,10 +1,11 @@
 // public/data-migration.js
 // Backward-compatible data normalization for persistent message IDs, manuscript links,
-// structured character profiles, and structured world-building fields.
+// structured character profiles, structured world-building fields, and storage errors.
 (() => {
   const LS_SESSIONS = "cfw_sessions_v2";
   const LS_STUDIO = "cfw_studio_workspace_v1";
   const originalSetItem = Storage.prototype.setItem;
+  let lastStorageErrorAt = 0;
 
   const CHARACTER_FIELDS = [
     ["personality", "性格"],
@@ -23,6 +24,28 @@
     ["factions", "势力 / 组织"],
     ["importantItems", "重要物品"]
   ];
+
+  function reportStorageError(error, key) {
+    const detail = {
+      key: String(key || ""),
+      name: error?.name || "StorageError",
+      message: error?.message || String(error || "Local storage write failed"),
+      at: Date.now()
+    };
+    window.__UNLIMITED_STORAGE_ERROR__ = detail;
+    if (detail.at - lastStorageErrorAt < 800) return;
+    lastStorageErrorAt = detail.at;
+    try { window.dispatchEvent(new CustomEvent("uai:storage-error", { detail })); } catch {}
+  }
+
+  function writeOriginal(storage, key, value) {
+    try {
+      return originalSetItem.call(storage, key, value);
+    } catch (error) {
+      if (storage === localStorage) reportStorageError(error, key);
+      throw error;
+    }
+  }
 
   function hashText(value) {
     const source = String(value ?? "");
@@ -211,14 +234,14 @@
 
   Storage.prototype.setItem = function patchedSetItem(key, value) {
     if (this !== localStorage || typeof value !== "string") {
-      return originalSetItem.call(this, key, value);
+      return writeOriginal(this, key, value);
     }
 
     if (key === LS_SESSIONS) {
       const parsed = parseJson(value, null);
       if (Array.isArray(parsed)) {
         const normalized = normalizeSessions(parsed).value;
-        return originalSetItem.call(this, key, JSON.stringify(normalized));
+        return writeOriginal(this, key, JSON.stringify(normalized));
       }
     }
 
@@ -227,11 +250,11 @@
       if (parsed && typeof parsed === "object") {
         const sessions = normalizedSessionsFromStorage();
         const normalized = normalizeWorkspace(parsed, sessions).value;
-        return originalSetItem.call(this, key, JSON.stringify(normalized));
+        return writeOriginal(this, key, JSON.stringify(normalized));
       }
     }
 
-    return originalSetItem.call(this, key, value);
+    return writeOriginal(this, key, value);
   };
 
   function migrateExistingData() {
@@ -242,21 +265,22 @@
       const parsed = parseJson(sessionsRaw, []);
       const result = normalizeSessions(parsed);
       sessions = result.value;
-      if (result.changed) originalSetItem.call(localStorage, LS_SESSIONS, JSON.stringify(sessions));
+      if (result.changed) writeOriginal(localStorage, LS_SESSIONS, JSON.stringify(sessions));
     }
 
     const studioRaw = localStorage.getItem(LS_STUDIO);
     if (studioRaw) {
       const parsed = parseJson(studioRaw, {});
       const result = normalizeWorkspace(parsed, sessions);
-      if (result.changed) originalSetItem.call(localStorage, LS_STUDIO, JSON.stringify(result.value));
+      if (result.changed) writeOriginal(localStorage, LS_STUDIO, JSON.stringify(result.value));
     }
   }
 
   window.UnlimitedData = {
     normalizeSessions,
     normalizeWorkspace,
-    stableMessageId
+    stableMessageId,
+    get lastStorageError() { return window.__UNLIMITED_STORAGE_ERROR__ || null; }
   };
 
   migrateExistingData();
