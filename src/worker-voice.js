@@ -27,8 +27,6 @@ function sameSiteRequest(request) {
   const site = String(request.headers.get("sec-fetch-site") || "").toLowerCase();
   if (site) return site === "same-origin" || site === "same-site" || site === "none";
 
-  // Public browser clients send Origin and/or Fetch Metadata on these POST requests.
-  // Requests with neither signal are treated as non-browser API calls and rejected.
   return false;
 }
 
@@ -132,7 +130,7 @@ function statusResponse(env) {
   });
 }
 
-async function assetMarkerStatus(request, env, pathname, expectedMarkers) {
+async function assetMarkerStatus(request, env, pathname, expectedMarkers, forbiddenMarkers = {}) {
   if (!env.ASSETS || typeof env.ASSETS.fetch !== "function") {
     return { available: false, current: false, reason: "ASSETS binding unavailable" };
   }
@@ -147,12 +145,18 @@ async function assetMarkerStatus(request, env, pathname, expectedMarkers) {
     const markers = Object.fromEntries(
       Object.entries(expectedMarkers).map(([name, marker]) => [name, body.includes(marker)])
     );
+    const forbidden = Object.fromEntries(
+      Object.entries(forbiddenMarkers).map(([name, marker]) => [name, !body.includes(marker)])
+    );
     return {
       path: pathname,
       available: response.ok,
-      current: response.ok && Object.values(markers).every(Boolean),
+      current: response.ok
+        && Object.values(markers).every(Boolean)
+        && Object.values(forbidden).every(Boolean),
       status: response.status,
-      markers
+      markers,
+      forbidden
     };
   } catch (error) {
     return { path: pathname, available: false, current: false, error: error?.message || String(error) };
@@ -178,12 +182,39 @@ function storageCoreStatus(request, env) {
 
 function chatContextCoreStatus(request, env) {
   return assetMarkerStatus(request, env, "/chat-context-core-v163.js", {
-    revision: "2026-08-20-v16.3-chat-context-core",
+    revision: "2026-08-21-v16.4-chat-context-core",
+    canonicalCreativeBuilder: "UnlimitedContext?.buildContext",
     creativeContext: "registerNovelEnricher(\"creative-context\"",
     storyMemory: "registerNovelEnricher(\"story-memory\"",
     continuity: "registerNovelEnricher(\"continuity\"",
     singleFetch: "window.fetch = transport.fetch"
   });
+}
+
+function appCoreStatus(request, env) {
+  return assetMarkerStatus(request, env, "/app.js", {
+    requestScopedSession: "const requestSessionId = currentSessionId",
+    requestScopedMessages: "const requestMessages = requestSession.messages",
+    sseBuffer: "let buffer = \"\"",
+    streamDecoder: "decoder.decode(value, { stream: true })",
+    abortOwnership: "currentAbortController === controller",
+    partialPersistence: "requestMessages.push({ role: \"assistant\", content: full })"
+  });
+}
+
+async function bridgeNetworkCleanupStatus(request, env) {
+  const paths = ["/context-bridge.js", "/memory-bridge.js", "/continuity-bridge.js"];
+  const results = await Promise.all(paths.map((pathname) => assetMarkerStatus(
+    request,
+    env,
+    pathname,
+    {},
+    { legacyFetchWrapperRemoved: "window.fetch =" }
+  )));
+  return {
+    current: results.every((item) => item.current),
+    files: results
+  };
 }
 
 async function diagnosticsResponse(request, env, ctx) {
@@ -192,16 +223,20 @@ async function diagnosticsResponse(request, env, ctx) {
   try { data = await inner.clone().json(); }
   catch { return inner; }
 
-  const [historyLifecycle, storageCore, chatContextCore] = await Promise.all([
+  const [historyLifecycle, storageCore, chatContextCore, appCore, bridgeNetworkCleanup] = await Promise.all([
     historyLifecycleStatus(request, env),
     storageCoreStatus(request, env),
-    chatContextCoreStatus(request, env)
+    chatContextCoreStatus(request, env),
+    appCoreStatus(request, env),
+    bridgeNetworkCleanupStatus(request, env)
   ]);
   const frontendCurrent = Boolean(
     data?.frontendCurrent
     && historyLifecycle.current
     && storageCore.current
     && chatContextCore.current
+    && appCore.current
+    && bridgeNetworkCleanup.current
   );
   return json({
     ...data,
@@ -216,17 +251,22 @@ async function diagnosticsResponse(request, env, ctx) {
       protectedPostRoutes: [...PROTECTED_POST_ROUTES]
     },
     runtimeCore: {
-      revision: "2026-08-20-v16.3-runtime-core",
+      revision: "2026-08-21-v16.4-runtime-core",
       singleStorageGateway: storageCore.current,
       singleChatFetchEntry: chatContextCore.current,
+      coreRequestScopedSessions: appCore.current,
+      coreSseParsing: appCore.current,
+      legacyBridgeFetchWrappersRemoved: bridgeNetworkCleanup.current,
       registeredNovelContexts: ["creative-context", "story-memory", "continuity"]
     },
     storageCore,
     chatContextCore,
+    appCore,
+    bridgeNetworkCleanup,
     historyLifecycle,
     conclusion: frontendCurrent
-      ? "V16.3 storage and chat-context cores, V16.2 real Worker gateway, V16.1 history lifecycle and V16.0 stability assets are current."
-      : "The deployment is missing one or more V16.3/V16.2/V16.1/V16.0 stability components; redeploy the current main branch."
+      ? "V16.4 runtime cleanup, V16.3 storage core, V16.2 real Worker gateway, V16.1 history lifecycle and V16.0 stability assets are current."
+      : "The deployment is missing one or more V16.4/V16.3/V16.2/V16.1/V16.0 stability components; redeploy the current main branch."
   }, inner.status);
 }
 
