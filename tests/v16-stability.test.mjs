@@ -84,5 +84,10 @@ assert.match(voiceWorker, /AI_GATEWAY_FORBIDDEN/);
 assert.match(voiceWorker, /BAD_CONTENT_TYPE/);
 assert.match(voiceWorker, /return false;\n}/, "gateway must reject protected requests when both Origin and Fetch Metadata are absent");
 assert.match(voiceWorker, /contentType\.startsWith\("application\/json"\)/);
+assert.match(voiceWorker, /function historyLifecycleStatus\(/);
+assert.match(voiceWorker, /history-lifecycle-v16\.js/);
+assert.match(voiceWorker, /realWorkerEntry: "src\/worker-voice\.js"/);
+assert.match(voiceWorker, /function diagnosticsResponse\(/);
+assert.match(voiceWorker, /V16\.2 real Worker gateway, V16\.1 history lifecycle and V16\.0 core stability assets are current/);
 
-console.log("V16 stability contract passed: real Worker gateway, explicit modes, user-controlled ephemeral history, request isolation, line-safe SSE, preserved stops, storage errors, bounded fallback, API guards and lazy retry hardening.");
+console.log("V16 stability contract passed: real Worker gateway diagnostics, explicit modes, user-controlled ephemeral history, request isolation, line-safe SSE, preserved stops, storage errors, bounded fallback, API guards and lazy retry hardening.");
