@@ -94,9 +94,13 @@
   let useBuiltin = (localStorage.getItem(LS_USE_BUILTIN) ?? "1") === "1";
   personaToggle.textContent = useBuiltin ? "😈" : "😇";
 
-  let historyEnabled = (localStorage.getItem(LS_HISTORY_ENABLED) ?? "0") === "1";
+  // V16: the creative workspace is local-first. Studio, context, manuscript collection
+  // and chat must always read the same browser-local session store.
+  let historyEnabled = true;
+  try { localStorage.setItem(LS_HISTORY_ENABLED, "1"); } catch {}
   let promptEnabled  = (localStorage.getItem(LS_PROMPT_ENABLED) ?? "1") === "1";
-  historyKeepEl.checked = historyEnabled;
+  historyKeepEl.checked = true;
+  historyKeepEl.disabled = true;
   promptKeepEl.checked = promptEnabled;
 
   // ========== 美少女壁纸轮播 ==========
@@ -269,10 +273,14 @@ function rotateBackground() {
     return new Set(saved.filter(index => available.includes(index)));
   }
 
-  function saveReaderSelection(selection) {
-    if (!currentSessionId) return;
-    readerSelections[currentSessionId] = Array.from(selection).sort((a, b) => a - b);
+  function saveReaderSelectionForSession(sessionId, selection) {
+    if (!sessionId) return;
+    readerSelections[sessionId] = Array.from(selection).sort((a, b) => a - b);
     try { localStorage.setItem(LS_READER_SELECTIONS, JSON.stringify(readerSelections)); } catch {}
+  }
+
+  function saveReaderSelection(selection) {
+    saveReaderSelectionForSession(currentSessionId, selection);
   }
 
   function removeReaderSelectionForSession(sessionId) {
@@ -435,7 +443,7 @@ function rotateBackground() {
     updateReaderCount();
   }
 
-  // ========== 多会话管理函数（保持不变） ==========
+  // ========== 多会话管理函数 ==========
   function saveSessionsToStorage() {
     try { localStorage.setItem(LS_SESSIONS, JSON.stringify(sessions)); } catch(e) {}
   }
@@ -455,7 +463,6 @@ function rotateBackground() {
         }
       } catch(e) {}
     }
-    // 迁移旧数据略...
     if (!sessions.length) {
       sessions = [{ id: Date.now().toString(), name: "新会话", messages: [], createdAt: Date.now() }];
       saveSessionsToStorage();
@@ -490,6 +497,7 @@ function rotateBackground() {
       });
       div.querySelector(".delete-session").addEventListener("click", (e) => {
         e.stopPropagation();
+        if (currentAbortController) return;
         if (sessions.length === 1) { alert("至少保留一个会话"); return; }
         if (confirm(`确定删除会话“${s.name}”吗？`)) {
           const idx = sessions.findIndex(ss => ss.id === s.id);
@@ -506,8 +514,9 @@ function rotateBackground() {
     });
   }
   function switchToSession(sessionId) {
+    if (currentAbortController) return false;
     const target = sessions.find(s => s.id === sessionId);
-    if (!target) return;
+    if (!target) return false;
     currentSessionId = sessionId;
     session = target.messages;
     totalPromptTokens = totalCompletionTokens = totalInEstimate = totalOutEstimate = 0;
@@ -522,19 +531,28 @@ function rotateBackground() {
     updateReaderCount();
     scrollToBottom();
     renderSessionList();
-    if (historyEnabled) persistSessionIfEnabled();
+    persistSessionById(currentSessionId, session);
+    return true;
   }
   function createNewSession() {
+    if (currentAbortController) return false;
     const newId = Date.now().toString();
     sessions.push({ id: newId, name: `会话 ${new Date().toLocaleString()}`, messages: [], createdAt: Date.now() });
     saveSessionsToStorage();
     switchToSession(newId);
     closeSessionPanelFunc();
+    return true;
+  }
+  function persistSessionById(sessionId, messages) {
+    if (!sessionId || !Array.isArray(messages)) return false;
+    const cur = sessions.find(s => s.id === sessionId);
+    if (!cur) return false;
+    cur.messages = messages;
+    saveSessionsToStorage();
+    return true;
   }
   function persistSessionIfEnabled() {
-    if (!historyEnabled) return;
-    const cur = sessions.find(s => s.id === currentSessionId);
-    if (cur) { cur.messages = session; saveSessionsToStorage(); }
+    return persistSessionById(currentSessionId, session);
   }
   function restoreSessionIfEnabled() {
     loadSessionsFromStorage();
@@ -626,33 +644,47 @@ function rotateBackground() {
     modelSel.addEventListener("change", () => localStorage.setItem(LS_MODEL, modelSel.value));
   }
 
-  // ========== 发送消息（支持停止生成） ==========
+  function processSseLine(line, onPayload) {
+    const clean = String(line || "").replace(/\r$/, "");
+    if (!clean.startsWith("data:")) return;
+    const jsonStr = clean.slice(5).trim();
+    if (!jsonStr || jsonStr === "[DONE]") return;
+    try { onPayload(JSON.parse(jsonStr)); } catch {}
+  }
+
+  // ========== 发送消息（V16：请求绑定会话 + 跨 chunk SSE 缓冲） ==========
   async function send() {
     updateSpacer();
     const text = inputEl.value.trim();
-    if (!text) return;
-    if (currentAbortController) currentAbortController.abort();
+    if (!text || currentAbortController) return;
+
+    const requestSessionId = currentSessionId;
+    const requestSession = sessions.find(item => item.id === requestSessionId);
+    if (!requestSession || !Array.isArray(requestSession.messages)) return;
+    const requestMessages = requestSession.messages;
 
     const userRow = makeRow("user");
     userRow.bubble.textContent = text;
     const inEst = estimateTokens(text);
     totalInEstimate += inEst;
     userRow.stats.textContent = `Input(估算): ≈${inEst} | Total In: ≈${totalInEstimate}`;
-    session.push({ role: "user", content: text });
-    persistSessionIfEnabled();
+    requestMessages.push({ role: "user", content: text });
+    persistSessionById(requestSessionId, requestMessages);
     inputEl.value = "";
     inputEl.style.height = "auto";
     updateSpacer();
     scrollToBottom();
 
     const aiRow = makeRow("assistant");
+    const rowVisible = () => currentSessionId === requestSessionId && aiRow.row.isConnected;
     let full = "";
     let exactUsage = null;
     let isAborted = false;
     let customPrompt = "";
     if (!useBuiltin && promptEnabled) customPrompt = localStorage.getItem(LS_CUSTOM_PROMPT) || "";
 
-    currentAbortController = new AbortController();
+    const controller = new AbortController();
+    currentAbortController = controller;
     stopBtn.style.display = "inline-flex";
 
     const loadingIndicator = document.createElement("div");
@@ -660,76 +692,100 @@ function rotateBackground() {
     loadingIndicator.innerHTML = "<span></span><span></span><span></span>";
     aiRow.bubble.appendChild(loadingIndicator);
 
+    const consumePayload = (parsed) => {
+      if (parsed?.usage) exactUsage = parsed.usage;
+      const delta = parsed?.choices?.[0]?.delta?.content;
+      if (typeof delta !== "string" || !delta) return;
+      full += delta;
+      if (rowVisible()) {
+        aiRow.bubble.textContent = full;
+        if (isNearBottom()) scrollToBottom();
+      }
+    };
+
     try {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          mode: "novel",
           model: modelSel.value,
           use_builtin_persona: useBuiltin,
           custom_system_prompt: customPrompt,
-          messages: session
+          messages: requestMessages
         }),
-        signal: currentAbortController.signal
+        signal: controller.signal
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.body) throw new Error("模型没有返回可读取的响应流");
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
+      let buffer = "";
       loadingIndicator.remove();
+
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split("\n");
-        for (const line of lines) {
-          if (!line.startsWith("data: ")) continue;
-          const jsonStr = line.slice(6).trim();
-          if (!jsonStr || jsonStr === "[DONE]") continue;
-          try {
-            const parsed = JSON.parse(jsonStr);
-            if (parsed.usage) exactUsage = parsed.usage;
-            const delta = parsed.choices?.[0]?.delta?.content;
-            if (delta) {
-              full += delta;
-              aiRow.bubble.textContent = full;
-              if (isNearBottom()) scrollToBottom();
-            }
-          } catch {}
+        buffer += decoder.decode(value, { stream: true });
+        let newlineIndex = buffer.indexOf("\n");
+        while (newlineIndex >= 0) {
+          const line = buffer.slice(0, newlineIndex);
+          buffer = buffer.slice(newlineIndex + 1);
+          processSseLine(line, consumePayload);
+          newlineIndex = buffer.indexOf("\n");
         }
       }
+      buffer += decoder.decode();
+      if (buffer.trim()) processSseLine(buffer, consumePayload);
     } catch (err) {
-      if (err.name === "AbortError") { isAborted = true; aiRow.bubble.textContent = full + "\n\n[已停止]"; }
-      else { aiRow.bubble.textContent = `错误: ${err.message}`; }
+      if (err?.name === "AbortError") {
+        isAborted = true;
+        if (rowVisible()) aiRow.bubble.textContent = full ? `${full}\n\n[已停止]` : "[已停止]";
+      } else if (rowVisible()) {
+        aiRow.bubble.textContent = `错误: ${err?.message || "请求失败"}`;
+      }
       if (loadingIndicator.parentNode) loadingIndicator.remove();
     } finally {
       if (loadingIndicator.parentNode) loadingIndicator.remove();
-      currentAbortController = null;
-      stopBtn.style.display = "none";
+      if (currentAbortController === controller) {
+        currentAbortController = null;
+        stopBtn.style.display = "none";
+      }
     }
-    if (full && !isAborted) {
-      session.push({ role: "assistant", content: full });
-      const messageIndex = session.length - 1;
-      const savedSelection = readerSelections[currentSessionId];
+
+    // Partial text produced before a user stop is still useful writing material and must
+    // remain part of the originating session. Only transport errors with no output vanish.
+    if (full) {
+      requestMessages.push({ role: "assistant", content: full });
+      const messageIndex = requestMessages.length - 1;
+      const savedSelection = readerSelections[requestSessionId];
       if (Array.isArray(savedSelection) && savedSelection.length > 0) {
         const selection = new Set(savedSelection);
         selection.add(messageIndex);
-        saveReaderSelection(selection);
+        saveReaderSelectionForSession(requestSessionId, selection);
       }
-      attachReaderControl(aiRow, messageIndex);
-      updateReaderCount();
-      persistSessionIfEnabled();
+      persistSessionById(requestSessionId, requestMessages);
+
+      if (rowVisible()) {
+        if (isAborted) aiRow.bubble.textContent = `${full}\n\n[已停止]`;
+        attachReaderControl(aiRow, messageIndex);
+        updateReaderCount();
+      }
     }
-    if (exactUsage) {
-      totalPromptTokens += exactUsage.prompt_tokens || 0;
-      totalCompletionTokens += exactUsage.completion_tokens || 0;
-      aiRow.stats.textContent = `Prompt:${exactUsage.prompt_tokens||0} Comp:${exactUsage.completion_tokens||0} | CumPrompt:${totalPromptTokens} CumComp:${totalCompletionTokens}`;
-    } else {
-      const outEst = estimateTokens(full);
-      totalOutEstimate += outEst;
-      aiRow.stats.textContent = `Output估算:≈${outEst} | Total Out:≈${totalOutEstimate}`;
+
+    if (rowVisible()) {
+      if (exactUsage) {
+        totalPromptTokens += exactUsage.prompt_tokens || 0;
+        totalCompletionTokens += exactUsage.completion_tokens || 0;
+        aiRow.stats.textContent = `Prompt:${exactUsage.prompt_tokens||0} Comp:${exactUsage.completion_tokens||0} | CumPrompt:${totalPromptTokens} CumComp:${totalCompletionTokens}`;
+      } else {
+        const outEst = estimateTokens(full);
+        totalOutEstimate += outEst;
+        aiRow.stats.textContent = `Output估算:≈${outEst} | Total Out:≈${totalOutEstimate}`;
+      }
+      updateSpacer();
+      scrollToBottom();
     }
-    updateSpacer();
-    scrollToBottom();
   }
 
   // 停止按钮
@@ -745,18 +801,23 @@ function rotateBackground() {
   });
   settingsBtn.addEventListener("click", () => {
     settingsMask.style.display = "flex";
-    historyKeepEl.checked = historyEnabled;
+    historyEnabled = true;
+    historyKeepEl.checked = true;
+    historyKeepEl.disabled = true;
     promptKeepEl.checked = promptEnabled;
     customPromptEl.value = localStorage.getItem(LS_CUSTOM_PROMPT) || "";
   });
   closeSettingsBtn.addEventListener("click", () => settingsMask.style.display = "none");
   settingsMask.addEventListener("click", (e) => { if (e.target === settingsMask) settingsMask.style.display = "none"; });
   historyKeepEl.addEventListener("change", () => {
-    historyEnabled = historyKeepEl.checked;
-    localStorage.setItem(LS_HISTORY_ENABLED, historyEnabled ? "1" : "0");
-    if (historyEnabled) persistSessionIfEnabled();
+    historyEnabled = true;
+    historyKeepEl.checked = true;
+    historyKeepEl.disabled = true;
+    try { localStorage.setItem(LS_HISTORY_ENABLED, "1"); } catch {}
+    persistSessionIfEnabled();
   });
   clearHistoryBtn.addEventListener("click", () => {
+    if (currentAbortController) return;
     if (confirm("清除当前会话历史？")) {
       const cur = sessions.find(s => s.id === currentSessionId);
       if (cur) {
