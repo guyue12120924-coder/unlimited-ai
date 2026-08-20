@@ -4,6 +4,7 @@ import fs from "node:fs";
 const read = (path) => fs.readFileSync(path, "utf8");
 
 const index = read("public/index.html");
+const storageCore = read("public/storage-core-v163.js");
 const history = read("public/history-lifecycle-v16.js");
 const transport = read("public/chat-transport-v16.js");
 const loader = read("public/companion-assets-loader.js");
@@ -12,13 +13,28 @@ const worker = read("src/worker.js");
 const voiceWorker = read("src/worker-voice.js");
 const wrangler = read("wrangler.toml");
 
+const storageIndex = index.indexOf("/storage-core-v163.js");
+const migrationIndex = index.indexOf("/data-migration.js");
 const historyIndex = index.indexOf("/history-lifecycle-v16.js");
 const transportIndex = index.indexOf("/chat-transport-v16.js");
 const appIndex = index.indexOf("/app.js");
-assert(historyIndex >= 0, "V16.1 history lifecycle must exist in index.html");
+assert(storageIndex >= 0, "V16.3 storage core must exist in index.html");
+assert(migrationIndex > storageIndex, "V16.3 storage core must load before data migration");
+assert(historyIndex > storageIndex, "V16.3 storage core must load before history lifecycle");
 assert(transportIndex >= 0, "V16 chat transport must exist in index.html");
 assert(appIndex > historyIndex, "V16.1 history lifecycle must load before app.js");
 assert(appIndex > transportIndex, "V16 chat transport must load before app.js");
+assert.match(index, /unlimited-runtime-revision" content="2026-08-20-v16\.3-storage-core/);
+
+assert.match(storageCore, /2026-08-20-v16\.3-storage-core/);
+assert.match(storageCore, /Object\.defineProperties\(Storage\.prototype/);
+assert.match(storageCore, /writable: false/);
+assert.match(storageCore, /function normalizeValue\(/);
+assert.match(storageCore, /window\.UnlimitedData/);
+assert.match(storageCore, /cfw_history_persist_v16/);
+assert.match(storageCore, /uai_v16_ephemeral_novel_sessions/);
+assert.match(storageCore, /uai:storage-error/);
+assert.match(storageCore, /window\.UnlimitedStorageV163/);
 
 assert.match(history, /2026-08-20-v16\.1-history-lifecycle/);
 assert.match(history, /cfw_history_persist_v16/);
@@ -88,6 +104,5 @@ assert.match(voiceWorker, /function historyLifecycleStatus\(/);
 assert.match(voiceWorker, /history-lifecycle-v16\.js/);
 assert.match(voiceWorker, /realWorkerEntry: "src\/worker-voice\.js"/);
 assert.match(voiceWorker, /function diagnosticsResponse\(/);
-assert.match(voiceWorker, /V16\.2 real Worker gateway, V16\.1 history lifecycle and V16\.0 core stability assets are current/);
 
-console.log("V16 stability contract passed: real Worker gateway diagnostics, explicit modes, user-controlled ephemeral history, request isolation, line-safe SSE, preserved stops, storage errors, bounded fallback, API guards and lazy retry hardening.");
+console.log("V16 stability contract passed: V16.3 single storage gateway, real Worker gateway diagnostics, explicit modes, user-controlled ephemeral history, request isolation, line-safe SSE, preserved stops, storage errors, bounded fallback, API guards and lazy retry hardening.");
