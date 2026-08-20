@@ -1,5 +1,5 @@
 // public/context-bridge.js
-// Connects the local-first novel workspace to /api/chat without coupling app.js and studio.js.
+// Local-first creative-context UI and builder. Network injection is owned by V16.3 Chat Context Core.
 (() => {
   const LS_STUDIO = "cfw_studio_workspace_v1";
   const LS_PREFS = "cfw_context_prefs_v1";
@@ -293,21 +293,14 @@
     document.head.appendChild(style);
   }
 
-  const originalFetch = window.fetch.bind(window);
-  window.fetch = async (input, init = {}) => {
-    const url = typeof input === "string" ? input : input?.url || "";
-    if (!url.includes("/api/chat") || typeof init?.body !== "string") {
-      return originalFetch(input, init);
-    }
-
-    try {
-      const payload = JSON.parse(init.body);
-      const snap = refreshSnapshot(payload);
-      if (snap.context) payload.creative_context = snap.context;
-      else delete payload.creative_context;
-      return originalFetch(input, { ...init, body: JSON.stringify(payload) });
-    } catch {
-      return originalFetch(input, init);
+  window.UnlimitedContext = {
+    buildContext,
+    refreshSnapshot,
+    readPrefs,
+    open() {
+      renderInspector();
+      const mask = document.getElementById("contextInspectorMask");
+      if (mask) mask.hidden = false;
     }
   };
 
