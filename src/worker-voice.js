@@ -176,17 +176,33 @@ function storageCoreStatus(request, env) {
   });
 }
 
+function chatContextCoreStatus(request, env) {
+  return assetMarkerStatus(request, env, "/chat-context-core-v163.js", {
+    revision: "2026-08-20-v16.3-chat-context-core",
+    creativeContext: "registerNovelEnricher(\"creative-context\"",
+    storyMemory: "registerNovelEnricher(\"story-memory\"",
+    continuity: "registerNovelEnricher(\"continuity\"",
+    singleFetch: "window.fetch = transport.fetch"
+  });
+}
+
 async function diagnosticsResponse(request, env, ctx) {
   const inner = await worker.fetch(request, env, ctx);
   let data;
   try { data = await inner.clone().json(); }
   catch { return inner; }
 
-  const [historyLifecycle, storageCore] = await Promise.all([
+  const [historyLifecycle, storageCore, chatContextCore] = await Promise.all([
     historyLifecycleStatus(request, env),
-    storageCoreStatus(request, env)
+    storageCoreStatus(request, env),
+    chatContextCoreStatus(request, env)
   ]);
-  const frontendCurrent = Boolean(data?.frontendCurrent && historyLifecycle.current && storageCore.current);
+  const frontendCurrent = Boolean(
+    data?.frontendCurrent
+    && historyLifecycle.current
+    && storageCore.current
+    && chatContextCore.current
+  );
   return json({
     ...data,
     frontendCurrent,
@@ -200,13 +216,16 @@ async function diagnosticsResponse(request, env, ctx) {
       protectedPostRoutes: [...PROTECTED_POST_ROUTES]
     },
     runtimeCore: {
-      revision: "2026-08-20-v16.3-storage-core",
-      singleStorageGateway: storageCore.current
+      revision: "2026-08-20-v16.3-runtime-core",
+      singleStorageGateway: storageCore.current,
+      singleChatFetchEntry: chatContextCore.current,
+      registeredNovelContexts: ["creative-context", "story-memory", "continuity"]
     },
     storageCore,
+    chatContextCore,
     historyLifecycle,
     conclusion: frontendCurrent
-      ? "V16.3 storage core, V16.2 real Worker gateway, V16.1 history lifecycle and V16.0 core stability assets are current."
+      ? "V16.3 storage and chat-context cores, V16.2 real Worker gateway, V16.1 history lifecycle and V16.0 stability assets are current."
       : "The deployment is missing one or more V16.3/V16.2/V16.1/V16.0 stability components; redeploy the current main branch."
   }, inner.status);
 }
