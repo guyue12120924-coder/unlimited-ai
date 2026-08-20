@@ -132,32 +132,48 @@ function statusResponse(env) {
   });
 }
 
-async function historyLifecycleStatus(request, env) {
+async function assetMarkerStatus(request, env, pathname, expectedMarkers) {
   if (!env.ASSETS || typeof env.ASSETS.fetch !== "function") {
     return { available: false, current: false, reason: "ASSETS binding unavailable" };
   }
 
-  const url = new URL("/history-lifecycle-v16.js", request.url);
+  const url = new URL(pathname, request.url);
   url.searchParams.set("__diag", REVISION);
   try {
     const response = await env.ASSETS.fetch(new Request(url.toString(), {
       headers: { "Cache-Control": "no-cache", "Pragma": "no-cache" }
     }));
     const body = await response.text();
-    const markers = {
-      revision: body.includes("2026-08-20-v16.1-history-lifecycle"),
-      persistencePreference: body.includes("cfw_history_persist_v16"),
-      ephemeralSessions: body.includes("uai_v16_ephemeral_novel_sessions")
-    };
+    const markers = Object.fromEntries(
+      Object.entries(expectedMarkers).map(([name, marker]) => [name, body.includes(marker)])
+    );
     return {
+      path: pathname,
       available: response.ok,
       current: response.ok && Object.values(markers).every(Boolean),
       status: response.status,
       markers
     };
   } catch (error) {
-    return { available: false, current: false, error: error?.message || String(error) };
+    return { path: pathname, available: false, current: false, error: error?.message || String(error) };
   }
+}
+
+function historyLifecycleStatus(request, env) {
+  return assetMarkerStatus(request, env, "/history-lifecycle-v16.js", {
+    revision: "2026-08-20-v16.1-history-lifecycle",
+    persistencePreference: "cfw_history_persist_v16",
+    ephemeralSessions: "uai_v16_ephemeral_novel_sessions"
+  });
+}
+
+function storageCoreStatus(request, env) {
+  return assetMarkerStatus(request, env, "/storage-core-v163.js", {
+    revision: "2026-08-20-v16.3-storage-core",
+    singleGateway: "Object.defineProperties(Storage.prototype",
+    dataNormalization: "window.UnlimitedData",
+    storageErrors: "uai:storage-error"
+  });
 }
 
 async function diagnosticsResponse(request, env, ctx) {
@@ -166,8 +182,11 @@ async function diagnosticsResponse(request, env, ctx) {
   try { data = await inner.clone().json(); }
   catch { return inner; }
 
-  const historyLifecycle = await historyLifecycleStatus(request, env);
-  const frontendCurrent = Boolean(data?.frontendCurrent && historyLifecycle.current);
+  const [historyLifecycle, storageCore] = await Promise.all([
+    historyLifecycleStatus(request, env),
+    storageCoreStatus(request, env)
+  ]);
+  const frontendCurrent = Boolean(data?.frontendCurrent && historyLifecycle.current && storageCore.current);
   return json({
     ...data,
     frontendCurrent,
@@ -180,10 +199,15 @@ async function diagnosticsResponse(request, env, ctx) {
       rateWindowMs: RATE_WINDOW_MS,
       protectedPostRoutes: [...PROTECTED_POST_ROUTES]
     },
+    runtimeCore: {
+      revision: "2026-08-20-v16.3-storage-core",
+      singleStorageGateway: storageCore.current
+    },
+    storageCore,
     historyLifecycle,
     conclusion: frontendCurrent
-      ? "V16.2 real Worker gateway, V16.1 history lifecycle and V16.0 core stability assets are current."
-      : "The deployment is missing one or more V16.2/V16.1/V16.0 stability components; redeploy the current main branch."
+      ? "V16.3 storage core, V16.2 real Worker gateway, V16.1 history lifecycle and V16.0 core stability assets are current."
+      : "The deployment is missing one or more V16.3/V16.2/V16.1/V16.0 stability components; redeploy the current main branch."
   }, inner.status);
 }
 
