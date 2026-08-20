@@ -5,7 +5,10 @@ const read = (path) => fs.readFileSync(path, "utf8");
 
 const index = read("public/index.html");
 const transport = read("public/chat-transport-v16.js");
+const loader = read("public/companion-assets-loader.js");
+const migration = read("public/data-migration.js");
 const worker = read("src/worker.js");
+const voiceWorker = read("src/worker-voice.js");
 
 const transportIndex = index.indexOf("/chat-transport-v16.js");
 const appIndex = index.indexOf("/app.js");
@@ -18,10 +21,23 @@ assert.match(transport, /payload\.mode !== "companion"/);
 assert.match(transport, /delete payload\.creative_context/);
 assert.match(transport, /delete payload\.memory_context/);
 assert.match(transport, /delete payload\.continuity_context/);
+assert.match(transport, /signal\?\.aborted/, "user stop must close the normalized stream cleanly");
+assert.match(transport, /当前已经收到的内容会保留/, "user stop must explain that partial output is preserved");
 assert.match(transport, /#sessionList \.session-title/);
 assert.match(transport, /#studioSessionList/);
+assert.match(transport, /#commandResults/);
+assert.match(transport, /#workspaceSearchResults/);
 assert.match(transport, /blockRepeatSend/);
 assert.match(transport, /blockRepeatEnter/);
+assert.match(transport, /uai:storage-error/);
+
+assert.match(migration, /function reportStorageError\(/);
+assert.match(migration, /__UNLIMITED_STORAGE_ERROR__/);
+assert.match(migration, /uai:storage-error/);
+
+assert.match(loader, /2026-08-20-v16\.0-companion-lazy-hardening/);
+assert.match(loader, /if \(link\.dataset\.uaiCompanionLazy === "true"\) link\.remove\(\)/);
+assert.match(loader, /if \(script\.dataset\.uaiCompanionLazy === "true"\) script\.remove\(\)/);
 
 assert.match(worker, /2026-08-20-v16\.0-worker-stability/);
 assert.match(worker, /MAX_MODEL_ATTEMPTS = 3/);
@@ -39,4 +55,8 @@ assert.doesNotMatch(
   "HTTP 429 must not fan out across fallback models"
 );
 
-console.log("V16 stability contract passed: request isolation, line-safe SSE, guarded session mutations, bounded fallback, rate limits and cache policy.");
+assert.match(voiceWorker, /2026-08-20-v16\.0-call-voice-stability/);
+assert.match(voiceWorker, /function consumeVoiceRate\(/);
+assert.match(voiceWorker, /VOICE_RATE_LIMITED/);
+
+console.log("V16 stability contract passed: request isolation, line-safe SSE, preserved stops, storage errors, bounded fallback, API guards and lazy retry hardening.");
