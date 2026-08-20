@@ -1,6 +1,7 @@
 // public/companion-assets-loader.js
+// Compatibility marker: 2026-08-17-v14.7-companion-lazy-progress
 (() => {
-  const REVISION = "2026-08-17-v14.7-companion-lazy-progress";
+  const REVISION = "2026-08-20-v16.0-companion-lazy-hardening";
   if (window.UnlimitedCompanionAssets) return;
 
   const STYLE_ASSETS = [
@@ -165,6 +166,7 @@
         link.removeEventListener("error", onError);
         if (error) {
           link.dataset.uaiLoaded = "false";
+          if (link.dataset.uaiCompanionLazy === "true") link.remove();
           reject(error);
           return;
         }
@@ -221,6 +223,7 @@
         script.removeEventListener("error", onError);
         if (error) {
           script.dataset.uaiLoaded = "false";
+          if (script.dataset.uaiCompanionLazy === "true") script.remove();
           reject(error);
           return;
         }
