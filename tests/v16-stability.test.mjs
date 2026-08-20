@@ -127,9 +127,13 @@ assert.match(voiceWorker, /function historyLifecycleStatus\(/);
 assert.match(voiceWorker, /history-lifecycle-v16\.js/);
 assert.match(voiceWorker, /function storageCoreStatus\(/);
 assert.match(voiceWorker, /storage-core-v163\.js/);
+assert.match(voiceWorker, /function chatContextCoreStatus\(/);
+assert.match(voiceWorker, /chat-context-core-v163\.js/);
 assert.match(voiceWorker, /singleStorageGateway: storageCore\.current/);
+assert.match(voiceWorker, /singleChatFetchEntry: chatContextCore\.current/);
+assert.match(voiceWorker, /registeredNovelContexts: \["creative-context", "story-memory", "continuity"\]/);
 assert.match(voiceWorker, /realWorkerEntry: "src\/worker-voice\.js"/);
 assert.match(voiceWorker, /function diagnosticsResponse\(/);
-assert.match(voiceWorker, /V16\.3 storage core, V16\.2 real Worker gateway/);
+assert.match(voiceWorker, /V16\.3 storage and chat-context cores, V16\.2 real Worker gateway/);
 
-console.log("V16 stability contract passed: V16.3 single storage gateway, unified chat-context registry, real Worker gateway diagnostics, explicit modes, user-controlled ephemeral history, request isolation, line-safe SSE, preserved stops, storage errors, bounded fallback, API guards and lazy retry hardening.");
+console.log("V16 stability contract passed: V16.3 single storage gateway, unified chat-context registry and diagnostics, real Worker gateway, explicit modes, user-controlled ephemeral history, request isolation, line-safe SSE, preserved stops, storage errors, bounded fallback, API guards and lazy retry hardening.");
