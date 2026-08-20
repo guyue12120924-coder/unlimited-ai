@@ -17,10 +17,14 @@ const runtimeIndex = index.indexOf("/v3-runtime.js");
 const sidebarIndex = index.indexOf("/v3-sidebar.js");
 const transportIndex = index.indexOf("/chat-transport-v16.js");
 const appIndex = index.indexOf("/app.js");
+const contextCoreIndex = index.indexOf("/chat-context-core-v163.js");
+const memorySuggestIndex = index.indexOf("/memory-suggest.js");
 const order = ["/user-flow.js","/ai-to-manuscript.js","/v2-experience.js","/v2-product.js","/v2-product-phase2.js","/v2-product-phase3.js"].map((item) => index.indexOf(item));
 
 assert(transportIndex >= 0, "V16 chat transport must be loaded");
-assert(appIndex > transportIndex, "V16 chat transport must load before the legacy novel chat core");
+assert(appIndex > transportIndex, "V16 chat transport must load before the novel chat core");
+assert(contextCoreIndex > appIndex, "V16.4 context providers must register after their workspace APIs initialize");
+assert(memorySuggestIndex > contextCoreIndex, "later AI helpers must see the unified transport entry");
 assert(runtimeIndex >= 0, "V3 runtime must be loaded");
 assert(sidebarIndex > runtimeIndex, "stable sidebar must load after V3 runtime");
 assert(order.every((value) => value >= 0), "all product experience scripts must be loaded");
@@ -28,7 +32,10 @@ assert(order.every((value, position) => position === 0 || value > order[position
 assert(order.every((value) => value > sidebarIndex), "stable sidebar must load before every product experience adapter");
 assert.match(index, /v3-product\.css/);
 assert.match(index, /2026-08-20-v16\.0-stability/);
-assert.match(index, /chat-transport-v16\.js\?v=20260820-v16\.0/);
+assert.match(index, /2026-08-21-v16\.4-runtime-core/);
+assert.match(index, /chat-transport-v16\.js\?v=20260821-v16\.4/);
+assert.match(index, /app\.js\?v=20260821-v16\.4/);
+assert.match(index, /chat-context-core-v163\.js\?v=20260821-v16\.4/);
 assert.match(index, /novel-workspace-v154\.js\?v=20260818-v15\.4/);
 assert.match(index, /<span>AI 小说创作<\/span>/, "initial brand subtitle must already match the final V3 copy");
 assert.match(index, /v3-sidebar\.js\?v=20260809-2/, "static label fix must use a fresh browser cache key");
@@ -85,4 +92,4 @@ assert.match(phase3, /LONG_BOOK_CHARS = 120000/);
 assert.match(phase3, /runDiagnostics/);
 assert.match(phase3, /产品自检/);
 
-console.log("V16 product contract passed: stable transport -> coordinated runtime -> locked sidebar -> AI -> manuscript -> data safety.");
+console.log("V16.4 product contract passed: stable transport -> core chat -> context registry -> coordinated runtime -> sidebar -> AI -> manuscript -> data safety.");
