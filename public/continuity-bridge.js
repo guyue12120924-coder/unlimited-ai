@@ -1,5 +1,6 @@
 // public/continuity-bridge.js
 // Reviewed continuity layer: AI-maintained chapter summaries and character current states.
+// Network injection is owned by V16.3 Chat Context Core.
 (() => {
   const LS_STUDIO = "cfw_studio_workspace_v1";
   const LS_CONTINUITY = "cfw_continuity_v1";
@@ -274,21 +275,6 @@
     style.textContent = `.continuity-top-btn{gap:7px}.continuity-top-btn b{min-width:18px;height:18px;padding:0 5px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;background:var(--accent);color:var(--accent-ink);font-size:10px}.continuity-mask{position:fixed;inset:0;z-index:150;background:rgba(4,5,4,.68);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;padding:18px}.continuity-mask[hidden]{display:none}.continuity-dialog{width:min(760px,100%);max-height:90vh;overflow:auto;border:1px solid var(--border-strong);border-radius:16px;background:var(--surface-solid);box-shadow:var(--shadow)}.continuity-dialog>header{display:flex;justify-content:space-between;gap:16px;padding:18px 20px;border-bottom:1px solid var(--border)}.continuity-dialog>header div{display:flex;flex-direction:column;gap:3px}.continuity-dialog>header span{font-size:10px;letter-spacing:.14em;color:var(--accent)}.continuity-dialog>header strong{font-size:18px}.continuity-dialog>header p{margin:2px 0 0;color:var(--muted);font-size:11px}.continuity-dialog>header button{width:34px;height:34px;border:1px solid var(--border);border-radius:9px;background:var(--surface-soft);color:var(--text);font-size:20px}.continuity-dialog>footer{display:flex;justify-content:flex-end;gap:8px;padding:14px 20px;border-top:1px solid var(--border)}.continuity-dialog>footer button{border:1px solid var(--border);border-radius:9px;padding:8px 12px;background:var(--surface-soft);color:var(--text);cursor:pointer}.continuity-dialog>footer #continuityAnalyze,.continuity-dialog>footer #continuityReviewSave{background:var(--accent);color:var(--accent-ink);border-color:transparent}#continuityCurrent,#continuityReviewBody{padding:16px 20px}.continuity-current-section{padding:13px 0;border-bottom:1px solid var(--border)}.continuity-current-section:last-child{border-bottom:0}.continuity-section-head,.continuity-state>div{display:flex;align-items:center;justify-content:space-between;gap:12px}.continuity-section-head strong,.continuity-state b{font-size:12px}.continuity-section-head span{color:var(--muted);font-size:10px}.continuity-section-head button,.continuity-state button{border:0;background:transparent;color:var(--muted);cursor:pointer;font-size:10px}.continuity-current-section>p,.continuity-state p{margin:8px 0 0;color:var(--text-soft);font-size:12px;line-height:1.65;white-space:pre-wrap}.continuity-state{padding:10px;margin-top:8px;border:1px solid var(--border);border-radius:9px;background:var(--surface-soft)}.continuity-review-item{display:grid;grid-template-columns:auto 1fr;gap:10px;padding:12px;margin-bottom:8px;border:1px solid var(--border);border-radius:10px;background:var(--surface-soft)}.continuity-review-item>input{margin-top:3px}.continuity-review-item b{font-size:11px;color:var(--accent)}.continuity-review-item p{margin:7px 0 0;color:var(--text);font-size:13px;line-height:1.6;white-space:pre-wrap}.continuity-model{margin-bottom:10px;color:var(--muted);font-size:10px}.continuity-empty{padding:44px 20px;text-align:center;color:var(--muted);font-size:12px}`;
     document.head.appendChild(style);
   }
-
-  const previousFetch = window.fetch.bind(window);
-  window.fetch = async (input, init = {}) => {
-    const url = typeof input === "string" ? input : input?.url || "";
-    if (!url.includes("/api/chat") || typeof init?.body !== "string") return previousFetch(input, init);
-    try {
-      const payload = JSON.parse(init.body);
-      const continuity = currentPayload();
-      if (continuity) payload.continuity_context = continuity;
-      else delete payload.continuity_context;
-      return previousFetch(input, { ...init, body: JSON.stringify(payload) });
-    } catch {
-      return previousFetch(input, init);
-    }
-  };
 
   window.UnlimitedContinuity = { readStore, currentPayload, open: openDialog };
 
