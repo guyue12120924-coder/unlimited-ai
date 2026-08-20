@@ -44,6 +44,12 @@ jobs:
           set -euo pipefail
           node tests/product-flow.test.mjs
 
+      - name: Check V16 stability contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          node tests/v16-stability.test.mjs
+
       - name: Check companion mode isolation contract
         shell: bash
         run: |
