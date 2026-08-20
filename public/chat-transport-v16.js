@@ -137,6 +137,9 @@
       "#newSessionBtn",
       "#studioSessionList",
       "#studioNewSession",
+      "#commandResults",
+      "#workspaceSearchResults",
+      ".open-clip-source",
       "#clearHistory"
     ].join(",")));
   }
