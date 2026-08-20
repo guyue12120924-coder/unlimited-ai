@@ -1,12 +1,15 @@
 // public/chat-transport-v16.js
 // V16 stability layer: normalize novel SSE chunks, enforce mode-request isolation,
-// and prevent session mutations while the legacy novel sender is active.
+// prevent session mutations while the legacy novel sender is active, and provide
+// the V16.3 registration point for future novel-context providers.
 (() => {
   const REVISION = "2026-08-20-v16.0-chat-transport";
+  const REGISTRY_REVISION = "2026-08-20-v16.3-chat-registry";
   if (window.UnlimitedChatTransportV16) return;
 
   const nativeFetch = window.fetch.bind(window);
   const encoder = new TextEncoder();
+  const novelEnrichers = new Map();
 
   function chatRequest(input, init = {}) {
     const url = typeof input === "string" ? input : input?.url || "";
@@ -27,6 +30,47 @@
   function normalizePayloadMode(payload) {
     if (!payload || typeof payload !== "object") return payload;
     if (payload.mode !== "companion") payload.mode = "novel";
+    return payload;
+  }
+
+  function registerNovelEnricher(name, enricher) {
+    const key = String(name || "").trim();
+    if (!key) throw new TypeError("Novel enricher name is required");
+    if (typeof enricher !== "function") throw new TypeError(`Novel enricher '${key}' must be a function`);
+    novelEnrichers.set(key, enricher);
+    return () => novelEnrichers.delete(key);
+  }
+
+  function unregisterNovelEnricher(name) {
+    return novelEnrichers.delete(String(name || "").trim());
+  }
+
+  function recordEnricherError(name, error) {
+    const list = Array.isArray(window.__UNLIMITED_CHAT_ENRICHER_ERRORS__)
+      ? window.__UNLIMITED_CHAT_ENRICHER_ERRORS__
+      : [];
+    list.push({
+      name,
+      message: error?.message || String(error),
+      at: Date.now(),
+      revision: REGISTRY_REVISION
+    });
+    if (list.length > 20) list.splice(0, list.length - 20);
+    window.__UNLIMITED_CHAT_ENRICHER_ERRORS__ = list;
+  }
+
+  async function applyNovelEnrichers(payload) {
+    if (!payload || payload.mode !== "novel" || novelEnrichers.size === 0) return payload;
+    for (const [name, enricher] of novelEnrichers) {
+      try {
+        const patch = await enricher(payload);
+        if (patch && typeof patch === "object" && !Array.isArray(patch)) {
+          Object.assign(payload, patch);
+        }
+      } catch (error) {
+        recordEnricherError(name, error);
+      }
+    }
     return payload;
   }
 
@@ -125,18 +169,22 @@
     });
   }
 
-  window.fetch = async function unlimitedStableFetch(input, init = {}) {
+  async function unlimitedStableFetch(input, init = {}) {
     if (!chatRequest(input, init)) return nativeFetch(input, init);
 
-    const payload = normalizePayloadMode(parsePayload(init?.body));
+    let payload = normalizePayloadMode(parsePayload(init?.body));
+    payload = await applyNovelEnrichers(payload);
     const isolated = isolatePayload(payload);
     const nextInit = isolated
       ? { ...init, body: JSON.stringify(isolated) }
       : init;
     const response = await nativeFetch(input, nextInit);
     return wrapNovelSse(response, isolated, nextInit?.signal || null);
-  };
+  }
+
+  window.fetch = unlimitedStableFetch;
   window.fetch.__uaiV16Transport = REVISION;
+  window.fetch.__uaiV16Registry = REGISTRY_REVISION;
 
   function generationActive() {
     if (document.body?.dataset.uaiMode && document.body.dataset.uaiMode !== "novel") return false;
@@ -224,9 +272,16 @@
   }
 
   document.documentElement.dataset.chatTransportRevision = REVISION;
+  document.documentElement.dataset.chatRegistryRevision = REGISTRY_REVISION;
   window.UnlimitedChatTransportV16 = {
     revision: REVISION,
+    registryRevision: REGISTRY_REVISION,
+    fetch: unlimitedStableFetch,
     get generating() { return generationActive(); },
+    get enrichers() { return [...novelEnrichers.keys()]; },
+    registerNovelEnricher,
+    unregisterNovelEnricher,
+    applyNovelEnrichers,
     isolatePayload,
     lineBufferedBody
   };
