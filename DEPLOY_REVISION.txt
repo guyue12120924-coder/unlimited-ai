@@ -1,9 +1,10 @@
 Unlimited AI deployment trigger
 Date: 2026-08-20
-Frontend revision: 2026-08-20-v16.0-stability
+Frontend core revision: 2026-08-20-v16.0-stability
+Frontend history lifecycle: 2026-08-20-v16.1-history-lifecycle
 Worker revision: 2026-08-20-v16.0-worker-stability
-Voice worker revision: 2026-08-20-v16.0-call-voice-stability
-Reason: harden novel SSE delivery, isolate novel and companion request payloads, prevent session mutation races during generation, bound model fallback, add request/rate limits, add stream idle protection, and restore versioned static caching.
+AI gateway revision: 2026-08-20-v16.2-ai-gateway
+Reason: harden novel SSE delivery, isolate novel and companion request payloads, keep disabled chat history ephemeral but internally consistent, prevent session mutation races during generation, bound model fallback, add request/rate limits and stream idle protection, restore versioned static caching, and require same-site browser metadata plus correct JSON content types at the real Worker entry.
 Companion prompt source: src/companion.js -> COMPANION_ROLE_CARD
 Novel prompt source: src/worker.js -> NOVEL_SYSTEM_PROMPT
-Current architecture: V16 stability transport in front of the legacy novel chat core, V15.4 novel workspace UX/lifecycle polish, V14.7 deferred companion bundle loading, bounded Worker model fallback, recent-message request windowing, and per-isolate abuse guards for chat/TTS/STT.
+Current architecture: V16 stability transport and V16.1 history lifecycle in front of the legacy novel chat core, V15.4 novel workspace UX/lifecycle polish, V14.7 deferred companion bundle loading, a V16.2 real-entry AI gateway in src/worker-voice.js, bounded Worker model fallback, recent-message request windowing, and layered per-isolate abuse guards for chat/analysis/TTS/STT.
