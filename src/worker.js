@@ -372,7 +372,7 @@ function staticCachePolicy(url, response) {
   }
   if (/\.(?:js|css)$/i.test(pathname) || /javascript|text\/css/i.test(contentType)) {
     return url.searchParams.has("v")
-      ? "public, max-age=31536000, immutable"
+      ? "public, max-age=86400, stale-while-revalidate=604800"
       : "public, max-age=300, must-revalidate";
   }
   return "";
@@ -478,7 +478,7 @@ async function handleDiagnostics(request, env) {
       maxChatBodyBytes: MAX_CHAT_BODY_BYTES,
       chatRateWindowMs: RATE_WINDOW_MS,
       conversationWindowing: true,
-      versionedJsCssImmutableCache: true
+      versionedJsCssCacheSeconds: 86400
     },
     companionLoading: "deferred until the companion card is selected; loader script may prewarm on clear hover/focus intent",
     companionInitialStyle: "deferred via a non-rendering boot placeholder until companion assets are requested",
