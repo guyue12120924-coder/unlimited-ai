@@ -33,7 +33,7 @@ function sameSiteRequest(request) {
 }
 
 function json(value, status = 200, headers = {}) {
-  return new Response(JSON.stringify(value), {
+  return new Response(JSON.stringify(value, null, 2), {
     status,
     headers: {
       "Content-Type": "application/json; charset=utf-8",
@@ -132,6 +132,61 @@ function statusResponse(env) {
   });
 }
 
+async function historyLifecycleStatus(request, env) {
+  if (!env.ASSETS || typeof env.ASSETS.fetch !== "function") {
+    return { available: false, current: false, reason: "ASSETS binding unavailable" };
+  }
+
+  const url = new URL("/history-lifecycle-v16.js", request.url);
+  url.searchParams.set("__diag", REVISION);
+  try {
+    const response = await env.ASSETS.fetch(new Request(url.toString(), {
+      headers: { "Cache-Control": "no-cache", "Pragma": "no-cache" }
+    }));
+    const body = await response.text();
+    const markers = {
+      revision: body.includes("2026-08-20-v16.1-history-lifecycle"),
+      persistencePreference: body.includes("cfw_history_persist_v16"),
+      ephemeralSessions: body.includes("uai_v16_ephemeral_novel_sessions")
+    };
+    return {
+      available: response.ok,
+      current: response.ok && Object.values(markers).every(Boolean),
+      status: response.status,
+      markers
+    };
+  } catch (error) {
+    return { available: false, current: false, error: error?.message || String(error) };
+  }
+}
+
+async function diagnosticsResponse(request, env, ctx) {
+  const inner = await worker.fetch(request, env, ctx);
+  let data;
+  try { data = await inner.clone().json(); }
+  catch { return inner; }
+
+  const historyLifecycle = await historyLifecycleStatus(request, env);
+  const frontendCurrent = Boolean(data?.frontendCurrent && historyLifecycle.current);
+  return json({
+    ...data,
+    frontendCurrent,
+    realWorkerEntry: "src/worker-voice.js",
+    gateway: {
+      revision: REVISION,
+      sameSiteRequired: true,
+      rejectsMissingBrowserMetadata: true,
+      jsonContentTypeRequired: true,
+      rateWindowMs: RATE_WINDOW_MS,
+      protectedPostRoutes: [...PROTECTED_POST_ROUTES]
+    },
+    historyLifecycle,
+    conclusion: frontendCurrent
+      ? "V16.2 real Worker gateway, V16.1 history lifecycle and V16.0 core stability assets are current."
+      : "The deployment is missing one or more V16.2/V16.1/V16.0 stability components; redeploy the current main branch."
+  }, inner.status);
+}
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
@@ -160,6 +215,10 @@ export default {
       && (pathname === "/api/companion/tts/status" || pathname === "/api/companion/stt/status")
     ) {
       return statusResponse(env);
+    }
+
+    if (request.method === "GET" && pathname === "/api/diagnostics") {
+      return diagnosticsResponse(request, env, ctx);
     }
 
     return worker.fetch(request, env, ctx);
