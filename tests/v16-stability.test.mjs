@@ -48,7 +48,7 @@ assert.match(worker, /slice\(0, MAX_MODEL_ATTEMPTS\)/);
 assert.match(worker, /function streamWithIdleTimeout\(/);
 assert.match(worker, /function consumeRateLimit\(/);
 assert.match(worker, /Cross-site API request blocked/);
-assert.match(worker, /public, max-age=31536000, immutable/);
+assert.match(worker, /public, max-age=86400, stale-while-revalidate=604800/);
 assert.doesNotMatch(
   worker.match(/function shouldFallback\(status\) \{[\s\S]*?\n\}/)?.[0] || "",
   /429/,
