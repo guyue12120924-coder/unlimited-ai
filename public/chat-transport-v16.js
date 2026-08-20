@@ -1,14 +1,12 @@
 // public/chat-transport-v16.js
-// V16 stability layer: normalize novel SSE chunks, enforce mode-request isolation,
-// prevent session mutations while the legacy novel sender is active, and provide
-// the V16.3 registration point for future novel-context providers.
+// V16.4 stability layer: one chat request entry for mode isolation, context enrichment
+// and generation lifecycle guards. SSE parsing is owned by the novel/companion clients.
 (() => {
-  const REVISION = "2026-08-20-v16.0-chat-transport";
-  const REGISTRY_REVISION = "2026-08-20-v16.3-chat-registry";
+  const REVISION = "2026-08-21-v16.4-chat-transport";
+  const REGISTRY_REVISION = "2026-08-21-v16.4-chat-registry";
   if (window.UnlimitedChatTransportV16) return;
 
   const nativeFetch = window.fetch.bind(window);
-  const encoder = new TextEncoder();
   const novelEnrichers = new Map();
 
   function chatRequest(input, init = {}) {
@@ -76,97 +74,10 @@
 
   function isolatePayload(payload) {
     if (!payload || payload.mode !== "companion") return payload;
-    // Novel-only context must never leave the browser on companion requests.
     delete payload.creative_context;
     delete payload.memory_context;
     delete payload.continuity_context;
     return payload;
-  }
-
-  function lineCanFlush(line) {
-    const clean = String(line || "").trim();
-    if (!clean) return true;
-    if (!clean.startsWith("data:")) return true;
-    const data = clean.slice(5).trim();
-    if (!data || data === "[DONE]") return true;
-    try {
-      JSON.parse(data);
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
-  function lineBufferedBody(body, signal = null) {
-    if (!body || typeof ReadableStream === "undefined") return body;
-    const reader = body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = "";
-    let closed = false;
-
-    return new ReadableStream({
-      async pull(controller) {
-        if (closed) return;
-        try {
-          while (true) {
-            const newline = buffer.indexOf("\n");
-            if (newline >= 0) {
-              const line = buffer.slice(0, newline + 1);
-              buffer = buffer.slice(newline + 1);
-              controller.enqueue(encoder.encode(line));
-              return;
-            }
-
-            const { done, value } = await reader.read();
-            if (done) {
-              buffer += decoder.decode();
-              if (buffer) {
-                controller.enqueue(encoder.encode(buffer));
-                buffer = "";
-                return;
-              }
-              closed = true;
-              controller.close();
-              return;
-            }
-            buffer += decoder.decode(value, { stream: true });
-          }
-        } catch (error) {
-          // A user-triggered AbortController abort should behave like a clean end of the
-          // novel stream. The legacy sender will then persist the text already received
-          // instead of treating the partial answer as an unsaved exception.
-          if (signal?.aborted) {
-            try {
-              buffer += decoder.decode();
-              if (buffer && lineCanFlush(buffer)) {
-                controller.enqueue(encoder.encode(buffer.endsWith("\n") ? buffer : `${buffer}\n`));
-              }
-            } catch {}
-            buffer = "";
-            closed = true;
-            controller.close();
-            return;
-          }
-          closed = true;
-          controller.error(error);
-        }
-      },
-      cancel(reason) {
-        closed = true;
-        return reader.cancel(reason).catch(() => {});
-      }
-    });
-  }
-
-  function wrapNovelSse(response, payload, signal) {
-    if (!response?.body || payload?.mode === "companion") return response;
-    const type = response.headers.get("content-type") || "";
-    if (!/text\/event-stream/i.test(type)) return response;
-    return new Response(lineBufferedBody(response.body, signal), {
-      status: response.status,
-      statusText: response.statusText,
-      headers: response.headers
-    });
   }
 
   async function unlimitedStableFetch(input, init = {}) {
@@ -178,8 +89,7 @@
     const nextInit = isolated
       ? { ...init, body: JSON.stringify(isolated) }
       : init;
-    const response = await nativeFetch(input, nextInit);
-    return wrapNovelSse(response, isolated, nextInit?.signal || null);
+    return nativeFetch(input, nextInit);
   }
 
   window.fetch = unlimitedStableFetch;
@@ -282,7 +192,6 @@
     registerNovelEnricher,
     unregisterNovelEnricher,
     applyNovelEnrichers,
-    isolatePayload,
-    lineBufferedBody
+    isolatePayload
   };
 })();
