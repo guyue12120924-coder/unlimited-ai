@@ -17,6 +17,11 @@ assert(transportIndex >= 0, "V16 chat transport must exist in index.html");
 assert(appIndex > transportIndex, "V16 chat transport must load before app.js");
 
 assert.match(transport, /2026-08-20-v16\.0-chat-transport/);
+assert.match(transport, /function normalizePayloadMode\(/);
+assert.match(transport, /payload\.mode = "novel"/, "legacy novel requests must leave the browser with an explicit mode");
+assert.match(transport, /function enforceLocalFirstHistory\(/);
+assert.match(transport, /cfw_history_enabled/);
+assert.match(transport, /自动保存/);
 assert.match(transport, /function lineBufferedBody\(/, "novel SSE must be normalized across network chunks");
 assert.match(transport, /payload\.mode !== "companion"/);
 assert.match(transport, /delete payload\.creative_context/);
@@ -62,4 +67,4 @@ assert.match(voiceWorker, /2026-08-20-v16\.0-call-voice-stability/);
 assert.match(voiceWorker, /function consumeVoiceRate\(/);
 assert.match(voiceWorker, /VOICE_RATE_LIMITED/);
 
-console.log("V16 stability contract passed: real Worker entry, request isolation, line-safe SSE, preserved stops, storage errors, bounded fallback, API guards and lazy retry hardening.");
+console.log("V16 stability contract passed: real Worker entry, explicit modes, local-first sessions, request isolation, line-safe SSE, preserved stops, storage errors, bounded fallback, API guards and lazy retry hardening.");
