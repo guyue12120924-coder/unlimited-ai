@@ -73,10 +73,16 @@ assert.doesNotMatch(
   "HTTP 429 must not fan out across fallback models"
 );
 
-assert.match(wrangler, /main\s*=\s*"src\/worker-voice\.js"/, "wrangler must deploy the voice wrapper as the real Worker entry");
-assert.match(voiceWorker, /import worker from "\.\/worker\.js"/, "voice Worker entry must delegate non-voice requests to worker.js");
-assert.match(voiceWorker, /2026-08-20-v16\.0-call-voice-stability/);
-assert.match(voiceWorker, /function consumeVoiceRate\(/);
-assert.match(voiceWorker, /VOICE_RATE_LIMITED/);
+assert.match(wrangler, /main\s*=\s*"src\/worker-voice\.js"/, "wrangler must deploy the gateway wrapper as the real Worker entry");
+assert.match(voiceWorker, /import worker from "\.\/worker\.js"/, "real Worker entry must delegate non-voice requests to worker.js");
+assert.match(voiceWorker, /2026-08-20-v16\.2-ai-gateway/);
+assert.match(voiceWorker, /PROTECTED_POST_ROUTES/);
+assert.match(voiceWorker, /JSON_POST_ROUTES/);
+assert.match(voiceWorker, /function consumeApiRate\(/);
+assert.match(voiceWorker, /AI_GATEWAY_RATE_LIMITED/);
+assert.match(voiceWorker, /AI_GATEWAY_FORBIDDEN/);
+assert.match(voiceWorker, /BAD_CONTENT_TYPE/);
+assert.match(voiceWorker, /return false;\n}/, "gateway must reject protected requests when both Origin and Fetch Metadata are absent");
+assert.match(voiceWorker, /contentType\.startsWith\("application\/json"\)/);
 
-console.log("V16 stability contract passed: real Worker entry, explicit modes, user-controlled ephemeral history, request isolation, line-safe SSE, preserved stops, storage errors, bounded fallback, API guards and lazy retry hardening.");
+console.log("V16 stability contract passed: real Worker gateway, explicit modes, user-controlled ephemeral history, request isolation, line-safe SSE, preserved stops, storage errors, bounded fallback, API guards and lazy retry hardening.");
