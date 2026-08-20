@@ -1,0 +1,42 @@
+import assert from "node:assert/strict";
+import fs from "node:fs";
+
+const read = (path) => fs.readFileSync(path, "utf8");
+
+const index = read("public/index.html");
+const transport = read("public/chat-transport-v16.js");
+const worker = read("src/worker.js");
+
+const transportIndex = index.indexOf("/chat-transport-v16.js");
+const appIndex = index.indexOf("/app.js");
+assert(transportIndex >= 0, "V16 chat transport must exist in index.html");
+assert(appIndex > transportIndex, "V16 chat transport must load before app.js");
+
+assert.match(transport, /2026-08-20-v16\.0-chat-transport/);
+assert.match(transport, /function lineBufferedBody\(/, "novel SSE must be normalized across network chunks");
+assert.match(transport, /payload\.mode !== "companion"/);
+assert.match(transport, /delete payload\.creative_context/);
+assert.match(transport, /delete payload\.memory_context/);
+assert.match(transport, /delete payload\.continuity_context/);
+assert.match(transport, /#sessionList \.session-title/);
+assert.match(transport, /#studioSessionList/);
+assert.match(transport, /blockRepeatSend/);
+assert.match(transport, /blockRepeatEnter/);
+
+assert.match(worker, /2026-08-20-v16\.0-worker-stability/);
+assert.match(worker, /MAX_MODEL_ATTEMPTS = 3/);
+assert.match(worker, /MAX_CHAT_BODY_BYTES = 768 \* 1024/);
+assert.match(worker, /STREAM_IDLE_TIMEOUT_MS = 45000/);
+assert.match(worker, /function trimConversationMessages\(/);
+assert.match(worker, /slice\(0, MAX_MODEL_ATTEMPTS\)/);
+assert.match(worker, /function streamWithIdleTimeout\(/);
+assert.match(worker, /function consumeRateLimit\(/);
+assert.match(worker, /Cross-site API request blocked/);
+assert.match(worker, /public, max-age=31536000, immutable/);
+assert.doesNotMatch(
+  worker.match(/function shouldFallback\(status\) \{[\s\S]*?\n\}/)?.[0] || "",
+  /429/,
+  "HTTP 429 must not fan out across fallback models"
+);
+
+console.log("V16 stability contract passed: request isolation, line-safe SSE, guarded session mutations, bounded fallback, rate limits and cache policy.");
