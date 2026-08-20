@@ -5,6 +5,7 @@ const read = (path) => fs.readFileSync(path, "utf8");
 
 const index = read("public/index.html");
 const storageCore = read("public/storage-core-v163.js");
+const contextCore = read("public/chat-context-core-v163.js");
 const history = read("public/history-lifecycle-v16.js");
 const transport = read("public/chat-transport-v16.js");
 const loader = read("public/companion-assets-loader.js");
@@ -18,12 +19,22 @@ const migrationIndex = index.indexOf("/data-migration.js");
 const historyIndex = index.indexOf("/history-lifecycle-v16.js");
 const transportIndex = index.indexOf("/chat-transport-v16.js");
 const appIndex = index.indexOf("/app.js");
+const contextBridgeIndex = index.indexOf("/context-bridge.js");
+const continuityBridgeIndex = index.indexOf("/continuity-bridge.js");
+const memoryBridgeIndex = index.indexOf("/memory-bridge.js");
+const contextCoreIndex = index.indexOf("/chat-context-core-v163.js");
+const memorySuggestIndex = index.indexOf("/memory-suggest.js");
+
 assert(storageIndex >= 0, "V16.3 storage core must exist in index.html");
 assert(migrationIndex > storageIndex, "V16.3 storage core must load before data migration");
 assert(historyIndex > storageIndex, "V16.3 storage core must load before history lifecycle");
 assert(transportIndex >= 0, "V16 chat transport must exist in index.html");
 assert(appIndex > historyIndex, "V16.1 history lifecycle must load before app.js");
 assert(appIndex > transportIndex, "V16 chat transport must load before app.js");
+assert(contextCoreIndex > contextBridgeIndex, "V16.3 context core must run after the creative-context bridge initializes");
+assert(contextCoreIndex > continuityBridgeIndex, "V16.3 context core must run after the continuity bridge initializes");
+assert(contextCoreIndex > memoryBridgeIndex, "V16.3 context core must run after the memory bridge initializes");
+assert(memorySuggestIndex > contextCoreIndex, "later AI helpers must see the restored single fetch entry");
 assert.match(index, /unlimited-runtime-revision" content="2026-08-20-v16\.3-storage-core/);
 
 assert.match(storageCore, /2026-08-20-v16\.3-storage-core/);
@@ -48,6 +59,10 @@ assert.doesNotMatch(transport, /function enforceLocalFirstHistory\(/, "transport
 assert.doesNotMatch(transport, /自动保存/, "transport must not disable the user's history preference");
 
 assert.match(transport, /2026-08-20-v16\.0-chat-transport/);
+assert.match(transport, /2026-08-20-v16\.3-chat-registry/);
+assert.match(transport, /function registerNovelEnricher\(/);
+assert.match(transport, /function applyNovelEnrichers\(/);
+assert.match(transport, /fetch: unlimitedStableFetch/);
 assert.match(transport, /function normalizePayloadMode\(/);
 assert.match(transport, /payload\.mode = "novel"/, "legacy novel requests must leave the browser with an explicit mode");
 assert.match(transport, /function lineBufferedBody\(/, "novel SSE must be normalized across network chunks");
@@ -64,6 +79,14 @@ assert.match(transport, /#workspaceSearchResults/);
 assert.match(transport, /blockRepeatSend/);
 assert.match(transport, /blockRepeatEnter/);
 assert.match(transport, /uai:storage-error/);
+
+assert.match(contextCore, /2026-08-20-v16\.3-chat-context-core/);
+assert.match(contextCore, /registerNovelEnricher\("creative-context"/);
+assert.match(contextCore, /registerNovelEnricher\("story-memory"/);
+assert.match(contextCore, /registerNovelEnricher\("continuity"/);
+assert.match(contextCore, /window\.fetch = transport\.fetch/);
+assert.match(contextCore, /UnlimitedMemory\?\.selectRelevantMemories/);
+assert.match(contextCore, /UnlimitedContinuity\?\.currentPayload/);
 
 assert.match(migration, /function reportStorageError\(/);
 assert.match(migration, /__UNLIMITED_STORAGE_ERROR__/);
@@ -109,4 +132,4 @@ assert.match(voiceWorker, /realWorkerEntry: "src\/worker-voice\.js"/);
 assert.match(voiceWorker, /function diagnosticsResponse\(/);
 assert.match(voiceWorker, /V16\.3 storage core, V16\.2 real Worker gateway/);
 
-console.log("V16 stability contract passed: V16.3 single storage gateway and diagnostics, real Worker gateway, explicit modes, user-controlled ephemeral history, request isolation, line-safe SSE, preserved stops, storage errors, bounded fallback, API guards and lazy retry hardening.");
+console.log("V16 stability contract passed: V16.3 single storage gateway, unified chat-context registry, real Worker gateway diagnostics, explicit modes, user-controlled ephemeral history, request isolation, line-safe SSE, preserved stops, storage errors, bounded fallback, API guards and lazy retry hardening.");
