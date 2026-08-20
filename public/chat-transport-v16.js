@@ -1,12 +1,42 @@
 // public/chat-transport-v16.js
 // V16 stability layer: normalize novel SSE chunks, enforce mode-request isolation,
-// and prevent session mutations while the legacy novel sender is active.
+// keep the local-first workspace on one session source, and prevent session mutations
+// while the legacy novel sender is active.
 (() => {
   const REVISION = "2026-08-20-v16.0-chat-transport";
+  const LS_HISTORY_ENABLED = "cfw_history_enabled";
   if (window.UnlimitedChatTransportV16) return;
 
   const nativeFetch = window.fetch.bind(window);
   const encoder = new TextEncoder();
+
+  function enforceLocalFirstHistory() {
+    // The novel workspace, manuscript collector and context bridges all read the same
+    // local session store. Keeping chat persistence optional caused those views to drift
+    // apart, so V16 makes browser-local persistence a fixed workspace invariant.
+    try {
+      if (localStorage.getItem(LS_HISTORY_ENABLED) !== "1") {
+        localStorage.setItem(LS_HISTORY_ENABLED, "1");
+      }
+    } catch {}
+
+    const input = document.getElementById("historyKeep");
+    if (input) {
+      input.checked = true;
+      input.disabled = true;
+      input.setAttribute("aria-label", "小说对话在当前浏览器中自动保存");
+      const row = input.closest(".switch-row");
+      row?.classList.add("uai-v16-local-save");
+      const label = row?.querySelector("span:last-child");
+      if (label) label.textContent = "自动保存";
+    }
+
+    const section = input?.closest(".settings-section");
+    const description = section?.querySelector(".section-heading p");
+    if (description) {
+      description.textContent = "小说对话会自动保存在当前浏览器，保证书架、章节收录和创作上下文始终一致。";
+    }
+  }
 
   function chatRequest(input, init = {}) {
     const url = typeof input === "string" ? input : input?.url || "";
@@ -208,6 +238,7 @@
     notify("当前回复仍在生成，可先点击“停止”。");
   }
 
+  enforceLocalFirstHistory();
   document.addEventListener("click", blockSessionMutation, true);
   document.addEventListener("click", blockRepeatSend, true);
   document.addEventListener("click", noteUserStop, true);
@@ -222,6 +253,7 @@
     revision: REVISION,
     get generating() { return generationActive(); },
     isolatePayload,
-    lineBufferedBody
+    lineBufferedBody,
+    enforceLocalFirstHistory
   };
 })();
