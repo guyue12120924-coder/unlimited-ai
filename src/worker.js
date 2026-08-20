@@ -13,7 +13,8 @@ import {
 
 // Compatibility marker: buildCompanionSystemPrompt(payload) remains available in companion.js for preview/testing only.
 const NVIDIA_CHAT_URL = "https://integrate.api.nvidia.com/v1/chat/completions";
-const APP_REVISION = "2026-08-20-v16.0-worker-stability";
+const APP_REVISION = "2026-08-21-v16.4-worker-runtime-cleanup";
+// Compatibility marker for the original V16 worker stability rollout: 2026-08-20-v16.0-worker-stability
 const MAX_CHAT_BODY_BYTES = 768 * 1024;
 const MAX_AUX_BODY_BYTES = 384 * 1024;
 const MAX_MODEL_ATTEMPTS = 3;
@@ -21,10 +22,6 @@ const STREAM_IDLE_TIMEOUT_MS = 45000;
 const RATE_WINDOW_MS = 60000;
 const RATE_BUCKETS = new Map();
 
-// ============================================================
-// 小说模式默认 System Prompt
-// 以后如果要直接从代码里修改小说默认提示词，就改这里。
-// ============================================================
 const NOVEL_SYSTEM_PROMPT = `
 你是 Unlimited AI 的长篇小说创作助手。
 
@@ -403,13 +400,14 @@ async function serveAsset(request, env) {
   });
 }
 
-async function inspectAsset(request, env, pathname, markers = []) {
+async function inspectAsset(request, env, pathname, markers = [], forbiddenMarkers = []) {
   if (!env.ASSETS || typeof env.ASSETS.fetch !== "function") {
     return {
       path: pathname,
       available: false,
       status: null,
-      markers: Object.fromEntries(markers.map((marker) => [marker, false]))
+      markers: Object.fromEntries(markers.map((marker) => [marker, false])),
+      forbidden: Object.fromEntries(forbiddenMarkers.map((marker) => [marker, false]))
     };
   }
 
@@ -431,7 +429,8 @@ async function inspectAsset(request, env, pathname, markers = []) {
       contentType: response.headers.get("content-type") || "",
       etag: response.headers.get("etag") || "",
       cacheControl: response.headers.get("cache-control") || "",
-      markers: Object.fromEntries(markers.map((marker) => [marker, body.includes(marker)]))
+      markers: Object.fromEntries(markers.map((marker) => [marker, body.includes(marker)])),
+      forbidden: Object.fromEntries(forbiddenMarkers.map((marker) => [marker, !body.includes(marker)]))
     };
   } catch (error) {
     return {
@@ -439,15 +438,66 @@ async function inspectAsset(request, env, pathname, markers = []) {
       available: false,
       status: null,
       error: error?.message || String(error),
-      markers: Object.fromEntries(markers.map((marker) => [marker, false]))
+      markers: Object.fromEntries(markers.map((marker) => [marker, false])),
+      forbidden: Object.fromEntries(forbiddenMarkers.map((marker) => [marker, false]))
     };
   }
 }
 
 async function handleDiagnostics(request, env) {
   const assets = await Promise.all([
-    inspectAsset(request, env, "/index.html", ["2026-08-20-v16.0-stability", "/chat-transport-v16.js?v=20260820-v16.0"]),
-    inspectAsset(request, env, "/chat-transport-v16.js", ["2026-08-20-v16.0-chat-transport", "lineBufferedBody", "isolatePayload"]),
+    inspectAsset(request, env, "/index.html", [
+      "2026-08-20-v16.0-stability",
+      "2026-08-21-v16.4-runtime-core",
+      "/chat-transport-v16.js?v=20260821-v16.4",
+      "/app.js?v=20260821-v16.4"
+    ]),
+    inspectAsset(request, env, "/app.js", [
+      "const requestSessionId = currentSessionId",
+      "const requestMessages = requestSession.messages",
+      "let buffer = \"\"",
+      "decoder.decode(value, { stream: true })",
+      "currentAbortController === controller",
+      "requestMessages.push({ role: \"assistant\", content: full })"
+    ]),
+    inspectAsset(request, env, "/chat-transport-v16.js", [
+      "2026-08-21-v16.4-chat-transport",
+      "2026-08-21-v16.4-chat-registry",
+      "registerNovelEnricher",
+      "isolatePayload"
+    ], ["lineBufferedBody", "wrapNovelSse"]),
+    inspectAsset(request, env, "/storage-core-v163.js", [
+      "2026-08-20-v16.3-storage-core",
+      "Object.defineProperties(Storage.prototype",
+      "uai:storage-error"
+    ]),
+    inspectAsset(request, env, "/history-lifecycle-v16.js", [
+      "2026-08-20-v16.1-history-lifecycle",
+      "cfw_history_persist_v16"
+    ]),
+    inspectAsset(request, env, "/context-bridge.js", [
+      "contextInspectorBtn",
+      "window.UnlimitedContext",
+      "buildContext"
+    ], ["window.fetch ="]),
+    inspectAsset(request, env, "/continuity-bridge.js", [
+      "continuityBtn",
+      "currentPayload",
+      "window.UnlimitedContinuity"
+    ], ["window.fetch ="]),
+    inspectAsset(request, env, "/memory-bridge.js", [
+      "storyMemoryBtn",
+      "selectRelevantMemories",
+      "window.UnlimitedMemory"
+    ], ["window.fetch ="]),
+    inspectAsset(request, env, "/chat-context-core-v163.js", [
+      "2026-08-21-v16.4-chat-context-core",
+      "UnlimitedContext?.buildContext",
+      "registerNovelEnricher(\"creative-context\"",
+      "registerNovelEnricher(\"story-memory\"",
+      "registerNovelEnricher(\"continuity\"",
+      "window.fetch = transport.fetch"
+    ]),
     inspectAsset(request, env, "/novel-workspace-v154.js", ["2026-08-18-v15.4-novel-final", "ambienceEligible", "novelV154Ready"]),
     inspectAsset(request, env, "/boot-diagnostics.js", ["2026-08-17-v14.7-entry-zero-companion", "uaiDeferredPlaceholder", "companion-lazy-bridge.js"]),
     inspectAsset(request, env, "/companion-lazy-bridge.js", ["2026-08-17-v14.7-companion-lazy-bridge", "uai:companion-assets-progress", "warm: ensureLoader"]),
@@ -455,16 +505,15 @@ async function handleDiagnostics(request, env) {
     inspectAsset(request, env, "/mode-router.js", ["2026-08-17-v13.4-mode-router-performance", "effectFrameDelay", "prefersReducedMotion"]),
     inspectAsset(request, env, "/mode-router-luxury-stage5.js", ["2026-08-17-v14.4-micro-polish", "UnlimitedModeLuxuryStage5", "uai-companion-typing"]),
     inspectAsset(request, env, "/companion-mode.js", ["UnlimitedCompanion", "uai_companion_sessions_v1", "mode: \"companion\""]),
-    inspectAsset(request, env, "/companion-runtime.js", ["v9.6-runtime", "chars: 5000", "patchCompanionBody"]),
-    inspectAsset(request, env, "/context-bridge.js", ["contextInspectorBtn", "creative_context"]),
-    inspectAsset(request, env, "/continuity-bridge.js", ["continuityBtn", "continuity_context"]),
-    inspectAsset(request, env, "/memory-bridge.js", ["storyMemoryBtn", "memory_context"])
+    inspectAsset(request, env, "/companion-runtime.js", ["v9.6-runtime", "chars: 5000", "patchCompanionBody"])
   ]);
 
   const frontendCurrent = assets.every((asset) => {
     if (!asset.available) return false;
     const markerValues = Object.values(asset.markers || {});
-    return markerValues.length === 0 || markerValues.every(Boolean);
+    const forbiddenValues = Object.values(asset.forbidden || {});
+    return (markerValues.length === 0 || markerValues.every(Boolean))
+      && (forbiddenValues.length === 0 || forbiddenValues.every(Boolean));
   });
 
   return jsonResp({
@@ -478,7 +527,11 @@ async function handleDiagnostics(request, env) {
       maxChatBodyBytes: MAX_CHAT_BODY_BYTES,
       chatRateWindowMs: RATE_WINDOW_MS,
       conversationWindowing: true,
-      versionedJsCssCacheSeconds: 86400
+      versionedJsCssCacheSeconds: 86400,
+      requestScopedNovelSessions: true,
+      coreSseParsing: true,
+      singleChatTransport: true,
+      legacyBridgeFetchWrappersRemoved: true
     },
     companionLoading: "deferred until the companion card is selected; loader script may prewarm on clear hover/focus intent",
     companionInitialStyle: "deferred via a non-rendering boot placeholder until companion assets are requested",
@@ -488,8 +541,8 @@ async function handleDiagnostics(request, env) {
       companion: "src/companion.js -> COMPANION_ROLE_CARD"
     },
     conclusion: frontendCurrent
-      ? "V16 stability assets are current; chat transport isolation, bounded fallback and stream guards are present."
-      : "This Worker deployment is missing one or more V16 stability assets. Redeploy the current main branch.",
+      ? "V16.4 runtime assets are current: app core owns request-scoped sessions/SSE parsing, one transport owns enrichment/isolation, and legacy Bridge fetch wrappers are absent."
+      : "This Worker deployment is missing one or more V16.4 runtime assets. Redeploy the current main branch.",
     assets
   });
 }
