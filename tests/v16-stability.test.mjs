@@ -4,6 +4,7 @@ import fs from "node:fs";
 const read = (path) => fs.readFileSync(path, "utf8");
 
 const index = read("public/index.html");
+const history = read("public/history-lifecycle-v16.js");
 const transport = read("public/chat-transport-v16.js");
 const loader = read("public/companion-assets-loader.js");
 const migration = read("public/data-migration.js");
@@ -11,17 +12,28 @@ const worker = read("src/worker.js");
 const voiceWorker = read("src/worker-voice.js");
 const wrangler = read("wrangler.toml");
 
+const historyIndex = index.indexOf("/history-lifecycle-v16.js");
 const transportIndex = index.indexOf("/chat-transport-v16.js");
 const appIndex = index.indexOf("/app.js");
+assert(historyIndex >= 0, "V16.1 history lifecycle must exist in index.html");
 assert(transportIndex >= 0, "V16 chat transport must exist in index.html");
+assert(appIndex > historyIndex, "V16.1 history lifecycle must load before app.js");
 assert(appIndex > transportIndex, "V16 chat transport must load before app.js");
+
+assert.match(history, /2026-08-20-v16\.1-history-lifecycle/);
+assert.match(history, /cfw_history_persist_v16/);
+assert.match(history, /uai_v16_ephemeral_novel_sessions/);
+assert.match(history, /sessionStorage/);
+assert.match(history, /persistAcrossReloads/);
+assert.match(history, /event\.stopImmediatePropagation\(\)/, "V16.1 must own the legacy history toggle event");
+assert.match(history, /applyPreference/);
+assert.match(history, /刷新后不会恢复这些对话/);
+assert.doesNotMatch(transport, /function enforceLocalFirstHistory\(/, "transport must not force history persistence back on");
+assert.doesNotMatch(transport, /自动保存/, "transport must not disable the user's history preference");
 
 assert.match(transport, /2026-08-20-v16\.0-chat-transport/);
 assert.match(transport, /function normalizePayloadMode\(/);
 assert.match(transport, /payload\.mode = "novel"/, "legacy novel requests must leave the browser with an explicit mode");
-assert.match(transport, /function enforceLocalFirstHistory\(/);
-assert.match(transport, /cfw_history_enabled/);
-assert.match(transport, /自动保存/);
 assert.match(transport, /function lineBufferedBody\(/, "novel SSE must be normalized across network chunks");
 assert.match(transport, /payload\.mode !== "companion"/);
 assert.match(transport, /delete payload\.creative_context/);
@@ -67,4 +79,4 @@ assert.match(voiceWorker, /2026-08-20-v16\.0-call-voice-stability/);
 assert.match(voiceWorker, /function consumeVoiceRate\(/);
 assert.match(voiceWorker, /VOICE_RATE_LIMITED/);
 
-console.log("V16 stability contract passed: real Worker entry, explicit modes, local-first sessions, request isolation, line-safe SSE, preserved stops, storage errors, bounded fallback, API guards and lazy retry hardening.");
+console.log("V16 stability contract passed: real Worker entry, explicit modes, user-controlled ephemeral history, request isolation, line-safe SSE, preserved stops, storage errors, bounded fallback, API guards and lazy retry hardening.");
