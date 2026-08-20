@@ -159,6 +159,12 @@
     status.dataset.timer = String(timer);
   }
 
+  function storageFailureMessage(detail = {}) {
+    const key = String(detail.key || "");
+    const scope = key.startsWith("uai_companion_") ? "陪伴数据" : "小说与工作台数据";
+    return `${scope}保存失败：浏览器本地存储空间可能已满。请先导出备份并清理旧数据。`;
+  }
+
   function isUnsafeSessionAction(target) {
     return Boolean(target?.closest?.([
       "#sessionList .session-title",
@@ -206,6 +212,10 @@
   document.addEventListener("click", blockRepeatSend, true);
   document.addEventListener("click", noteUserStop, true);
   document.addEventListener("keydown", blockRepeatEnter, true);
+  window.addEventListener("uai:storage-error", (event) => notify(storageFailureMessage(event?.detail)));
+  if (window.__UNLIMITED_STORAGE_ERROR__) {
+    window.setTimeout(() => notify(storageFailureMessage(window.__UNLIMITED_STORAGE_ERROR__)), 0);
+  }
 
   document.documentElement.dataset.chatTransportRevision = REVISION;
   window.UnlimitedChatTransportV16 = {
