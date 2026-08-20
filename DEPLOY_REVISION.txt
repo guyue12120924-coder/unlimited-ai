@@ -1,8 +1,9 @@
 Unlimited AI deployment trigger
-Date: 2026-08-14
-Frontend revision: 2026-08-14-v10.2-dual-mode-1
-Worker revision: 2026-08-14-v10.0-worker-1
-Reason: refine the V10.2 companion visual hierarchy, tighten the reading column, improve starter prompts, soften the sidebar, and polish the floating composer.
+Date: 2026-08-20
+Frontend revision: 2026-08-20-v16.0-stability
+Worker revision: 2026-08-20-v16.0-worker-stability
+Voice worker revision: 2026-08-20-v16.0-call-voice-stability
+Reason: harden novel SSE delivery, isolate novel and companion request payloads, prevent session mutation races during generation, bound model fallback, add request/rate limits, add stream idle protection, and restore versioned static caching.
 Companion prompt source: src/companion.js -> COMPANION_ROLE_CARD
 Novel prompt source: src/worker.js -> NOVEL_SYSTEM_PROMPT
-Current architecture: V10.2 conversation-first companion UI with stable deduplicated message actions, warmer layered surfaces, focused 900px reading/composer column, compact role menu, and responsive mobile layout.
+Current architecture: V16 stability transport in front of the legacy novel chat core, V15.4 novel workspace UX/lifecycle polish, V14.7 deferred companion bundle loading, bounded Worker model fallback, recent-message request windowing, and per-isolate abuse guards for chat/TTS/STT.
