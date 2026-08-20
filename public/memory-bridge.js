@@ -1,5 +1,6 @@
 // public/memory-bridge.js
-// Local-first Story Memory: structured long-term facts, retrieval, and prompt injection.
+// Local-first Story Memory: structured long-term facts, retrieval and memory UI.
+// Network injection is owned by V16.3 Chat Context Core.
 (() => {
   const LS_STUDIO = "cfw_studio_workspace_v1";
   const LS_MEMORY = "cfw_story_memory_v1";
@@ -404,22 +405,6 @@
     `;
     document.head.appendChild(style);
   }
-
-  const previousFetch = window.fetch.bind(window);
-  window.fetch = async (input, init = {}) => {
-    const url = typeof input === "string" ? input : input?.url || "";
-    if (!url.includes("/api/chat") || typeof init?.body !== "string") return previousFetch(input, init);
-
-    try {
-      const payload = JSON.parse(init.body);
-      const memories = selectRelevantMemories(payload);
-      if (memories.length) payload.memory_context = { version: 1, items: memories };
-      else delete payload.memory_context;
-      return previousFetch(input, { ...init, body: JSON.stringify(payload) });
-    } catch {
-      return previousFetch(input, init);
-    }
-  };
 
   window.UnlimitedMemory = {
     readStore,
