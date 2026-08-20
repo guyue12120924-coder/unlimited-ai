@@ -1,14 +1,15 @@
 Unlimited AI deployment trigger
-Date: 2026-08-20
+Date: 2026-08-21
 Frontend core revision: 2026-08-20-v16.0-stability
 Frontend history lifecycle: 2026-08-20-v16.1-history-lifecycle
-Frontend runtime core: 2026-08-20-v16.3-runtime-core
+Frontend runtime core: 2026-08-21-v16.4-runtime-core
 Storage core: 2026-08-20-v16.3-storage-core
-Chat context core: 2026-08-20-v16.3-chat-context-core
-Chat registry: 2026-08-20-v16.3-chat-registry
+Chat transport: 2026-08-21-v16.4-chat-transport
+Chat context core: 2026-08-21-v16.4-chat-context-core
+Chat registry: 2026-08-21-v16.4-chat-registry
 Worker revision: 2026-08-20-v16.0-worker-stability
 AI gateway revision: 2026-08-20-v16.2-ai-gateway
-Reason: consolidate browser storage into one runtime gateway, keep disabled chat history ephemeral but internally consistent, move novel creative/memory/continuity injection onto one Chat Transport registry, remove the three legacy fetch wrappers from the active network path, and preserve the existing V16 request isolation, bounded fallback, API limits, stream guards and companion lazy-loading protections.
+Reason: physically remove the old creative-context, story-memory and continuity fetch wrappers; make context-bridge.js the single creative-context builder; keep one Chat Transport registry; move SSE framing and request-session correctness into app.js core; bump cached runtime asset URLs; and extend deployment diagnostics to verify the core request/session/SSE invariants and absence of legacy fetch wrappers.
 Companion prompt source: src/companion.js -> COMPANION_ROLE_CARD
 Novel prompt source: src/worker.js -> NOVEL_SYSTEM_PROMPT
-Current architecture: V16.3 Storage Core owns Storage routing/normalization/error reporting; V16.3 Chat Context Core registers creative context, story memory and continuity on the V16 Transport then restores one active window.fetch entry; V16.1 history lifecycle owns the user-facing persistence preference; V16.2 src/worker-voice.js remains the real AI gateway; V15.4 novel workspace UX and V14.7 deferred companion loading remain intact.
+Current architecture: V16.3 Storage Core owns Storage routing/normalization/error reporting; V16.4 Chat Transport owns only request enrichment, mode isolation and generation guards; app.js owns request-scoped session state and SSE parsing; context-bridge.js, memory-bridge.js and continuity-bridge.js are data/UI providers only; V16.4 Chat Context Core registers those providers onto the one transport entry; V16.1 history lifecycle owns the user-facing persistence preference; V16.2 src/worker-voice.js remains the real AI gateway; V15.4 novel workspace UX and V14.7 deferred companion loading remain intact.
