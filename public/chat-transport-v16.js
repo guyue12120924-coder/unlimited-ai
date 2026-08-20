@@ -54,6 +54,12 @@
     }
   }
 
+  function normalizePayloadMode(payload) {
+    if (!payload || typeof payload !== "object") return payload;
+    if (payload.mode !== "companion") payload.mode = "novel";
+    return payload;
+  }
+
   function isolatePayload(payload) {
     if (!payload || payload.mode !== "companion") return payload;
     // Novel-only context must never leave the browser on companion requests.
@@ -152,7 +158,7 @@
   window.fetch = async function unlimitedStableFetch(input, init = {}) {
     if (!chatRequest(input, init)) return nativeFetch(input, init);
 
-    const payload = parsePayload(init?.body);
+    const payload = normalizePayloadMode(parsePayload(init?.body));
     const isolated = isolatePayload(payload);
     const nextInit = isolated
       ? { ...init, body: JSON.stringify(isolated) }
