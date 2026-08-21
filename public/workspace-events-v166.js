@@ -51,7 +51,8 @@
   function chatMutation(records) {
     metrics.nativeObserverCallbacks += 1;
     if (!records?.length) return;
-    queue("chat", "chat-dom");
+    const reason = records.some((record) => record.type === "attributes") ? "chat-state" : "chat-dom";
+    queue("chat", reason);
   }
 
   function modeMutation(records) {
@@ -75,7 +76,13 @@
     const chat = document.getElementById("chat");
     if (chat) {
       const observer = new Observer(chatMutation);
-      observer.observe(chat, { childList: true, subtree: true, characterData: true });
+      observer.observe(chat, {
+        childList: true,
+        subtree: true,
+        characterData: true,
+        attributes: true,
+        attributeFilter: ["class", "data-added-chapter-id"]
+      });
       window.UnlimitedWorkspaceEventsV166.chatObserver = observer;
     }
 
