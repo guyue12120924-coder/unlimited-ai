@@ -1,14 +1,11 @@
 // public/novel-workspace-v152.js
-// V15.2: make chapter/session relationships and AI -> manuscript destination obvious.
+// V16.6: chapter/session relationships and AI -> manuscript flow on shared events.
 (() => {
-  const REVISION = "2026-08-17-v15.2-manuscript-flow";
+  const REVISION = "2026-08-21-v16.6-manuscript-flow-events";
   const LS_STUDIO = "cfw_studio_workspace_v1";
   const LS_SESSIONS = "cfw_sessions_v2";
   if (window.UnlimitedNovelWorkspaceV152) return;
 
-  let libraryObserver = null;
-  let chatObserver = null;
-  let modeObserver = null;
   let refreshTimer = 0;
 
   function readJson(key, fallback) {
@@ -347,6 +344,10 @@
   }
 
   function scheduleRefresh(delay = 30) {
+    if (window.UnlimitedV3?.schedule && delay <= 30) {
+      window.UnlimitedV3.schedule("v166-manuscript-flow", refresh);
+      return;
+    }
     if (refreshTimer) window.clearTimeout(refreshTimer);
     refreshTimer = window.setTimeout(refresh, delay);
   }
@@ -363,15 +364,9 @@
     window.addEventListener("storage", (event) => {
       if (event.key === LS_STUDIO || event.key === LS_SESSIONS) scheduleRefresh(20);
     });
-
-    libraryObserver = new MutationObserver(() => scheduleRefresh(45));
-    libraryObserver.observe(library, { childList: true, subtree: true });
-
-    chatObserver = new MutationObserver(() => scheduleRefresh(40));
-    chatObserver.observe(chat, { childList: true, subtree: true, attributes: true, attributeFilter: ["class", "data-added-chapter-id"] });
-
-    modeObserver = new MutationObserver(() => scheduleRefresh(10));
-    modeObserver.observe(document.body, { attributes: true, attributeFilter: ["data-uai-mode"] });
+    window.addEventListener("uai:workspace-refresh", () => scheduleRefresh(0));
+    window.addEventListener("uai:chat-refresh", () => scheduleRefresh(0));
+    window.addEventListener("uai:mode-refresh", () => scheduleRefresh(0));
 
     scheduleRefresh(0);
   }
