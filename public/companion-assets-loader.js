@@ -1,7 +1,7 @@
 // public/companion-assets-loader.js
 // Compatibility marker: 2026-08-17-v14.7-companion-lazy-progress
 (() => {
-  const REVISION = "2026-08-20-v16.0-companion-lazy-hardening";
+  const REVISION = "2026-08-21-v17.1-companion-entry-recovery";
   if (window.UnlimitedCompanionAssets) return;
 
   const STYLE_ASSETS = [
@@ -33,12 +33,16 @@
     ["/companion-voice-input.css", "uaiCompanionVoiceInputCss"],
     ["/companion-call-mode.css", "uaiCompanionCallModeCss"],
     ["/companion-live2d-model-pool.css", "uaiCompanionLive2dModelPoolCss"],
-    ["/companion-live2d-polish.css", "uaiCompanionLive2dPolishCss"],
+    ["/companion-live2d-polish.css", "uaiCompanionLive2DPolishCss"],
     ["/companion-live2d-emotion-engine.css", "uaiCompanionLive2dEmotionEngineCss"],
     ["/companion-v12-ux-hardening.css", "uaiCompanionV123UxHardeningCss"]
   ];
 
+  // The companion core must exist before any enhancement layer executes. Previously all
+  // extension scripts ran first and companion-mode.js was loaded later by the mode router,
+  // which left extensions booting against a missing core and could stall the handoff.
   const SCRIPT_ASSETS = [
+    ["/companion-mode.js", "uaiCompanionScript"],
     ["/companion-characters-core.js", "uaiCompanionCharactersCoreScript"],
     ["/companion-character-editor.js", "uaiCompanionCharacterEditorScript"],
     ["/companion-memory.js", "uaiCompanionMemoryScript"],
@@ -122,7 +126,9 @@
   }
 
   function markStyleLoaded(path, link) {
+    if (link.dataset.uaiCountedRevision === REVISION) return;
     link.dataset.uaiLoaded = "true";
+    link.dataset.uaiCountedRevision = REVISION;
     state.loadedStyles += 1;
     emitProgress({ asset: path, type: "style", phase: "asset" });
   }
@@ -185,14 +191,33 @@
   }
 
   function markScriptLoaded(path, script) {
+    if (script.dataset.uaiCountedRevision === REVISION) return;
     script.dataset.uaiLoaded = "true";
+    script.dataset.uaiCountedRevision = REVISION;
     state.loadedScripts += 1;
     emitProgress({ asset: path, type: "script", phase: "asset" });
+  }
+
+  function scriptApiReady(id) {
+    if (id === "uaiCompanionScript") return Boolean(window.UnlimitedCompanion?.mount);
+    return false;
   }
 
   function loadScript(path, id) {
     return new Promise((resolve, reject) => {
       let script = document.getElementById(id);
+      if (scriptApiReady(id)) {
+        if (!script) {
+          script = document.createElement("script");
+          script.id = id;
+          script.dataset.uaiLoaded = "true";
+          script.dataset.uaiCompanionExistingCore = "true";
+        }
+        markScriptLoaded(path, script);
+        resolve();
+        return;
+      }
+
       if (script?.dataset.uaiLoaded === "true") {
         markScriptLoaded(path, script);
         resolve();
@@ -237,6 +262,7 @@
       script.addEventListener("error", onError, { once: true });
       timer = window.setTimeout(() => finish(new Error(`Timed out loading ${path}`)), 20000);
       if (isNew) document.body.appendChild(script);
+      else if (scriptApiReady(id)) finish();
     });
   }
 
@@ -249,16 +275,27 @@
     updateBootState({ companionAssetsDeferred: false, companionAssetsLoading: true });
     emitProgress({ phase: "start", loading: true });
 
-    // Styles download in parallel. Scripts are inserted in the original dependency order
-    // with async=false, so browsers may fetch them in parallel while preserving execution order.
+    const [coreAsset, ...extensionAssets] = SCRIPT_ASSETS;
+    const stylesPromise = Promise.all(STYLE_ASSETS.map(([path, id]) => loadStyle(path, id)));
+
+    // Load and execute the companion core first. No extension is inserted before mount()
+    // exists, so enhancement modules always attach to a valid base implementation.
+    await loadScript(coreAsset[0], coreAsset[1]);
+    if (!window.UnlimitedCompanion?.mount) {
+      throw new Error("Companion core loaded without a mount API");
+    }
+    emitProgress({ phase: "core-ready", coreReady: true, loading: true });
+
+    // After the core is ready, enhancement scripts can fetch in parallel. async=false keeps
+    // their insertion/execution order while avoiding the old core-after-extensions race.
     await Promise.all([
-      Promise.all(STYLE_ASSETS.map(([path, id]) => loadStyle(path, id))),
-      Promise.all(SCRIPT_ASSETS.map(([path, id]) => loadScript(path, id)))
+      stylesPromise,
+      Promise.all(extensionAssets.map(([path, id]) => loadScript(path, id)))
     ]);
 
     state.ready = true;
     updateBootState({ companionAssetsDeferred: false, companionAssetsReady: true, companionAssetsError: "" });
-    emitProgress({ phase: "ready", ready: true, loading: false });
+    emitProgress({ phase: "ready", ready: true, loading: false, coreReady: true });
     return true;
   }
 
