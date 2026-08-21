@@ -1,5 +1,6 @@
 // public/companion-assets-loader.js
 // Compatibility marker: 2026-08-17-v14.7-companion-lazy-progress
+// Compatibility marker: 2026-08-20-v16.0-companion-lazy-hardening
 (() => {
   const REVISION = "2026-08-21-v17.1-companion-entry-recovery";
   if (window.UnlimitedCompanionAssets) return;
@@ -136,18 +137,15 @@
   function loadStyle(path, id) {
     return new Promise((resolve, reject) => {
       let link = document.getElementById(id);
-
       if (link && (link.dataset.uaiDeferredPlaceholder === "true" || link.tagName !== "LINK")) {
         link.remove();
         link = null;
       }
-
       if (link?.dataset.uaiLoaded === "true" || link?.sheet) {
         markStyleLoaded(path, link);
         resolve();
         return;
       }
-
       if (link?.dataset.uaiLoaded === "false") {
         link.remove();
         link = null;
@@ -217,13 +215,11 @@
         resolve();
         return;
       }
-
       if (script?.dataset.uaiLoaded === "true") {
         markScriptLoaded(path, script);
         resolve();
         return;
       }
-
       if (script?.dataset.uaiLoaded === "false") {
         script.remove();
         script = null;
