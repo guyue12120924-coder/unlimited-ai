@@ -74,6 +74,12 @@ jobs:
           set -euo pipefail
           node tests/v165-runtime-cleanup.test.mjs
 
+      - name: Check V16.6 shared event runtime contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          node tests/v166-event-runtime.test.mjs
+
       - name: Check companion mode isolation contract
         shell: bash
         run: |
