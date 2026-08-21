@@ -241,16 +241,32 @@ function aiCollaborationV17Status(request, env) {
   }, { noPrivateObserver: "new MutationObserver" });
 }
 
+function workspaceStyleV17Status(request, env) {
+  return assetMarkerStatus(request, env, "/workspace-v17.css", {
+    revision: "V17.0 consolidated compatibility stylesheet",
+    contextBar: ".novel-v15-context",
+    storyDesk: ".novel-v151-guide",
+    manuscriptFlow: ".novel-v152-writing-now",
+    replyActions: ".novel-v153-reply-actions",
+    reducedMotion: "prefers-reduced-motion"
+  });
+}
+
 function v17IndexDeliveryStatus(request, env) {
   return assetMarkerStatus(request, env, "/index.html", {
     runtimeRevision: "2026-08-21-v17.0-workspace-consolidation",
     workspaceBundle: "/workspace-ui-v17.js?v=20260821-v17.0",
-    collaborationBundle: "/ai-collaboration-v17.js?v=20260821-v17.0"
+    collaborationBundle: "/ai-collaboration-v17.js?v=20260821-v17.0",
+    workspaceStyleBundle: "/workspace-v17.css?v=20260821-v17.0"
   }, {
     noLegacyV150Script: "<script src=\"/novel-workspace-v15.js",
     noLegacyV151Script: "<script src=\"/novel-workspace-v151.js",
     noLegacyV152Script: "<script src=\"/novel-workspace-v152.js",
-    noLegacyV153Script: "<script src=\"/novel-workspace-v153.js"
+    noLegacyV153Script: "<script src=\"/novel-workspace-v153.js",
+    noLegacyV150Style: "<link rel=\"stylesheet\" href=\"/novel-workspace-v15.css",
+    noLegacyV151Style: "<link rel=\"stylesheet\" href=\"/novel-workspace-v151.css",
+    noLegacyV152Style: "<link rel=\"stylesheet\" href=\"/novel-workspace-v152.css",
+    noLegacyV153Style: "<link rel=\"stylesheet\" href=\"/novel-workspace-v153.css"
   });
 }
 
@@ -276,6 +292,7 @@ async function diagnosticsResponse(request, env, ctx) {
     v2Experience,
     workspaceUiV17,
     aiCollaborationV17,
+    workspaceStyleV17,
     v17IndexDelivery,
     bridgeNetworkCleanup
   ] = await Promise.all([
@@ -288,6 +305,7 @@ async function diagnosticsResponse(request, env, ctx) {
     v2ExperienceStatus(request, env),
     workspaceUiV17Status(request, env),
     aiCollaborationV17Status(request, env),
+    workspaceStyleV17Status(request, env),
     v17IndexDeliveryStatus(request, env),
     bridgeNetworkCleanupStatus(request, env)
   ]);
@@ -303,6 +321,7 @@ async function diagnosticsResponse(request, env, ctx) {
     && v2Experience.current
     && workspaceUiV17.current
     && aiCollaborationV17.current
+    && workspaceStyleV17.current
     && v17IndexDelivery.current
     && bridgeNetworkCleanup.current
   );
@@ -331,7 +350,8 @@ async function diagnosticsResponse(request, env, ctx) {
       v2ExperienceUsesSharedEvents: v2Experience.current,
       workspaceUiConsolidated: workspaceUiV17.current,
       aiCollaborationConsolidated: aiCollaborationV17.current,
-      legacyV15ScriptsUnloaded: v17IndexDelivery.current,
+      workspaceStylesConsolidated: workspaceStyleV17.current,
+      legacyV15ResourcesUnloaded: v17IndexDelivery.current,
       coreRequestScopedSessions: appCore.current,
       coreSseParsing: appCore.current,
       legacyBridgeFetchWrappersRemoved: bridgeNetworkCleanup.current,
@@ -344,12 +364,13 @@ async function diagnosticsResponse(request, env, ctx) {
     v2Experience,
     workspaceUiV17,
     aiCollaborationV17,
+    workspaceStyleV17,
     v17IndexDelivery,
     chatContextCore,
     appCore,
     bridgeNetworkCleanup,
     conclusion: frontendCurrent
-      ? "V17.0 workspace consolidation is current: four V15 JavaScript delivery layers are replaced by two canonical modules while V16 stability guarantees remain intact."
+      ? "V17.0 workspace consolidation is current: V15.0-V15.3 delivery is reduced to one CSS bundle and two canonical JavaScript modules while V16 stability guarantees remain intact."
       : "The deployment is missing one or more V17/V16 stability components; redeploy the current main branch."
   }, inner.status);
 }
