@@ -1,7 +1,8 @@
 // public/boot-diagnostics.js
 // Startup guard + dual-mode bootstrap.
+// Compatibility marker: 2026-08-17-v14.7-entry-zero-companion
 (() => {
-  const REVISION = "2026-08-17-v14.7-entry-zero-companion";
+  const REVISION = "2026-08-21-v17.1-companion-entry-recovery";
   const MODE_ROUTER_REVISION = "2026-08-17-v13.4-mode-router-performance";
   const errors = [];
 
