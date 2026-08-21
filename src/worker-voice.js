@@ -2,7 +2,8 @@ import worker from "./worker.js";
 import { handleCompanionTts } from "./tts.js";
 import { handleCompanionStt } from "./stt.js";
 
-const REVISION = "2026-08-21-v16.5-ai-gateway-runtime";
+const REVISION = "2026-08-21-v16.6-event-runtime-gateway";
+// Compatibility marker for V16.5 diagnostics: 2026-08-21-v16.5-ai-gateway-runtime
 // Compatibility marker for the V16.2 gateway rollout: 2026-08-20-v16.2-ai-gateway
 // Compatibility marker for the V16.0 stability contract: 2026-08-20-v16.0-call-voice-stability
 const RATE_WINDOW_MS = 60000;
@@ -204,7 +205,13 @@ function appCoreStatus(request, env) {
     sseBuffer: "let buffer = \"\"",
     streamDecoder: "decoder.decode(value, { stream: true })",
     abortOwnership: "currentAbortController === controller",
-    partialPersistence: "requestMessages.push({ role: \"assistant\", content: full })"
+    partialPersistence: "requestMessages.push({ role: \"assistant\", content: full })",
+    historyUiDelegation: "syncHistoryPreferenceUi"
+  }, {
+    noLegacyHistoryFlag: "cfw_history_enabled",
+    noForcedHistoryState: "historyEnabled = true",
+    noForcedHistoryDisable: "historyKeepEl.disabled = true",
+    noLegacyHistoryChangeHandler: "historyKeepEl.addEventListener(\"change\""
   });
 }
 
@@ -216,6 +223,36 @@ function observerRuntimeStatus(request, env) {
     schedulerApi: "schedule,"
   }, {
     noGlobalObserverReplacement: "window.MutationObserver ="
+  });
+}
+
+function workspaceEventsStatus(request, env) {
+  return assetMarkerStatus(request, env, "/workspace-events-v166.js", {
+    revision: "2026-08-21-v16.6-workspace-events",
+    scheduler: "UnlimitedV3?.schedule",
+    workspaceMutation: "function workspaceMutation",
+    chatMutation: "function chatMutation",
+    modeMutation: "function modeMutation",
+    eventRevision: "workspaceEventsRevision"
+  });
+}
+
+function v2ExperienceStatus(request, env) {
+  return assetMarkerStatus(request, env, "/v2-experience.js", {
+    revision: "2026-08-21-v16.6-v2-experience-events",
+    sharedWorkspaceEvent: "uai:workspace-refresh"
+  }, {
+    noPrivateObserver: "new MutationObserver"
+  });
+}
+
+function novelWorkspaceStatus(request, env) {
+  return assetMarkerStatus(request, env, "/novel-workspace-v15.js", {
+    revision: "2026-08-21-v16.6-novel-workspace-events",
+    sharedWorkspaceEvent: "uai:workspace-refresh"
+  }, {
+    noPrivateObserver: "new MutationObserver",
+    noBodyWideObserver: "observe(document.body"
   });
 }
 
@@ -240,14 +277,28 @@ async function diagnosticsResponse(request, env, ctx) {
   try { data = await inner.clone().json(); }
   catch { return inner; }
 
-  const [historyLifecycle, storageCore, chatContextCore, appCore, observerRuntime, bridgeNetworkCleanup] = await Promise.all([
+  const [
+    historyLifecycle,
+    storageCore,
+    chatContextCore,
+    appCore,
+    observerRuntime,
+    workspaceEvents,
+    v2Experience,
+    novelWorkspace,
+    bridgeNetworkCleanup
+  ] = await Promise.all([
     historyLifecycleStatus(request, env),
     storageCoreStatus(request, env),
     chatContextCoreStatus(request, env),
     appCoreStatus(request, env),
     observerRuntimeStatus(request, env),
+    workspaceEventsStatus(request, env),
+    v2ExperienceStatus(request, env),
+    novelWorkspaceStatus(request, env),
     bridgeNetworkCleanupStatus(request, env)
   ]);
+
   const frontendCurrent = Boolean(
     data?.frontendCurrent
     && historyLifecycle.current
@@ -255,8 +306,12 @@ async function diagnosticsResponse(request, env, ctx) {
     && chatContextCore.current
     && appCore.current
     && observerRuntime.current
+    && workspaceEvents.current
+    && v2Experience.current
+    && novelWorkspace.current
     && bridgeNetworkCleanup.current
   );
+
   return json({
     ...data,
     frontendCurrent,
@@ -270,12 +325,16 @@ async function diagnosticsResponse(request, env, ctx) {
       protectedPostRoutes: [...PROTECTED_POST_ROUTES]
     },
     runtimeCore: {
-      revision: "2026-08-21-v16.5-runtime-cleanup",
+      revision: "2026-08-21-v16.6-event-runtime",
       singleStorageGateway: storageCore.current,
       historyUsesStorageCoreOnly: historyLifecycle.current,
+      appHistoryNeutral: appCore.current,
       singleChatFetchEntry: chatContextCore.current,
       globalMutationObserverUntouched: observerRuntime.current,
       explicitObserverScheduler: observerRuntime.current,
+      sharedWorkspaceEventHub: workspaceEvents.current,
+      v2ExperienceUsesSharedEvents: v2Experience.current,
+      novelWorkspaceUsesSharedEvents: novelWorkspace.current,
       coreRequestScopedSessions: appCore.current,
       coreSseParsing: appCore.current,
       legacyBridgeFetchWrappersRemoved: bridgeNetworkCleanup.current,
@@ -284,12 +343,15 @@ async function diagnosticsResponse(request, env, ctx) {
     storageCore,
     historyLifecycle,
     observerRuntime,
+    workspaceEvents,
+    v2Experience,
+    novelWorkspace,
     chatContextCore,
     appCore,
     bridgeNetworkCleanup,
     conclusion: frontendCurrent
-      ? "V16.5 runtime cleanup is current: Storage Core is the only storage gateway, MutationObserver remains native, and V16.4 chat/runtime protections remain intact."
-      : "The deployment is missing one or more V16.5/V16.4/V16.3/V16.2 stability components; redeploy the current main branch."
+      ? "V16.6 event runtime is current: app history is Storage-Core-owned, shared workspace events replace duplicate observers, and V16.4 chat protections remain intact."
+      : "The deployment is missing one or more V16.6/V16.5/V16.4/V16.3/V16.2 stability components; redeploy the current main branch."
   }, inner.status);
 }
 
