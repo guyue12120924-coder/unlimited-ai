@@ -1,6 +1,7 @@
 // public/history-lifecycle-v16.js
 // V16.5: user-facing history persistence controller. Storage routing itself is owned
 // exclusively by V16.3 Storage Core; this file no longer rewrites Storage.prototype.
+// Compatibility marker for inner V16.4 diagnostics: 2026-08-20-v16.1-history-lifecycle
 (() => {
   const REVISION = "2026-08-21-v16.5-history-ui";
   if (window.UnlimitedHistoryLifecycleV16) return;
