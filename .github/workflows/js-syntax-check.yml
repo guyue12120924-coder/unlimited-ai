@@ -98,6 +98,12 @@ jobs:
           set -euo pipefail
           node tests/companion-direct-entry-v172.test.mjs
 
+      - name: Check V17.3 atomic companion enhancement contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          node tests/companion-atomic-enhancements.test.mjs
+
       - name: Check companion mode isolation contract
         shell: bash
         run: |
