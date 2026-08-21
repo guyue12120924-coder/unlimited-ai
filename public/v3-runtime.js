@@ -1,21 +1,24 @@
 // public/v3-runtime.js
-// V3 coordination layer. It is intentionally loaded before the V2 product adapters
-// so their MutationObserver callbacks are frame-batched instead of firing independently.
+// V16.5 coordination layer: keep the browser's native MutationObserver untouched and
+// provide an explicit frame-batched observer/scheduler for product modules that want it.
 (() => {
+  const REVISION = "2026-08-21-v16.5-observer-scheduler";
   if (window.__UNLIMITED_V3_RUNTIME__) return;
   window.__UNLIMITED_V3_RUNTIME__ = true;
 
   const NativeMutationObserver = window.MutationObserver;
   const pendingObservers = new Set();
+  const pendingTasks = new Map();
   let animationFrame = 0;
   let safetyTimer = 0;
 
   const metrics = {
-    observerInstances: 0,
+    explicitObserverInstances: 0,
     observeCalls: 0,
     nativeDeliveries: 0,
     coordinatedFlushes: 0,
     coordinatedCallbacks: 0,
+    scheduledTasks: 0,
     refreshAllCalls: 0,
     startedAt: Date.now()
   };
@@ -24,25 +27,36 @@
     queueMicrotask(() => { throw error; });
   }
 
-  function flushObservers() {
+  function flushCoordinator() {
     if (animationFrame) cancelAnimationFrame(animationFrame);
     if (safetyTimer) clearTimeout(safetyTimer);
     animationFrame = 0;
     safetyTimer = 0;
-    if (!pendingObservers.size) return;
+
+    if (pendingObservers.size) {
+      const current = Array.from(pendingObservers);
+      pendingObservers.clear();
+      current.forEach((observer) => observer.__flush());
+    }
+
+    if (pendingTasks.size) {
+      const tasks = Array.from(pendingTasks.values());
+      pendingTasks.clear();
+      tasks.forEach((task) => {
+        try { task(); }
+        catch (error) { reportAsyncError(error); }
+      });
+    }
 
     metrics.coordinatedFlushes += 1;
-    const current = Array.from(pendingObservers);
-    pendingObservers.clear();
-    current.forEach((observer) => observer.__flush());
   }
 
-  function scheduleObserverFlush() {
-    if (!animationFrame) animationFrame = requestAnimationFrame(flushObservers);
-    if (!safetyTimer) safetyTimer = setTimeout(flushObservers, 72);
+  function ensureFlush() {
+    if (!animationFrame) animationFrame = requestAnimationFrame(flushCoordinator);
+    if (!safetyTimer) safetyTimer = setTimeout(flushCoordinator, 72);
   }
 
-  class CoordinatedMutationObserver {
+  class ExplicitCoordinatedObserver {
     constructor(callback) {
       if (typeof callback !== "function") throw new TypeError("MutationObserver callback must be a function");
       this.__callback = callback;
@@ -53,9 +67,9 @@
         if (!this.__connected || !records.length) return;
         this.__records.push(...records);
         pendingObservers.add(this);
-        scheduleObserverFlush();
+        ensureFlush();
       });
-      metrics.observerInstances += 1;
+      metrics.explicitObserverInstances += 1;
     }
 
     observe(target, options) {
@@ -80,17 +94,26 @@
       if (!this.__connected || !this.__records.length) return;
       const records = this.__records.splice(0);
       metrics.coordinatedCallbacks += 1;
-      try {
-        this.__callback(records, this);
-      } catch (error) {
-        reportAsyncError(error);
-      }
+      try { this.__callback(records, this); }
+      catch (error) { reportAsyncError(error); }
     }
   }
 
-  // Only product adapters loaded after this file use the coordinated observer.
-  // Core storage/editor modules loaded earlier keep their original native behavior.
-  window.MutationObserver = CoordinatedMutationObserver;
+  function createObserver(callback) {
+    return new ExplicitCoordinatedObserver(callback);
+  }
+
+  function schedule(key, task) {
+    if (typeof task !== "function") return false;
+    const taskKey = String(key || "default");
+    pendingTasks.set(taskKey, task);
+    metrics.scheduledTasks += 1;
+    ensureFlush();
+    return true;
+  }
+
+  // Compatibility handle for modules that intentionally need the native observer.
+  // V16.5 deliberately does NOT assign window.MutationObserver.
   window.__UNLIMITED_NATIVE_MUTATION_OBSERVER__ = NativeMutationObserver;
 
   function refreshAll() {
@@ -103,35 +126,42 @@
   function handleOutlineRefresh(event) {
     if (!event.target.closest?.('.studio-tabs [data-studio-tab="outline"]')) return;
     document.getElementById("studioPanelBody")?.removeAttribute("data-v2-outline-ready");
-    setTimeout(refreshAll, 12);
+    schedule("outline-refresh", refreshAll);
   }
 
   function runtimeDiagnostics() {
     const product = window.UnlimitedProductDiagnostics?.run?.() || null;
     return {
-      runtime: "v3.0",
-      coordinatedObserver: window.MutationObserver === CoordinatedMutationObserver,
+      runtime: "v16.5",
+      revision: REVISION,
+      globalObserverUntouched: window.MutationObserver === NativeMutationObserver,
+      explicitObserverScheduler: true,
       metrics: { ...metrics, uptimeMs: Date.now() - metrics.startedAt },
       product
     };
   }
 
   function bindPostLoadCoordinator() {
-    document.documentElement.dataset.unlimitedRuntime = "v3";
+    document.documentElement.dataset.unlimitedRuntime = "v16.5";
+    document.documentElement.dataset.observerSchedulerRevision = REVISION;
     document.querySelector(".studio-tabs")?.addEventListener("click", handleOutlineRefresh);
 
-    window.addEventListener("pageshow", () => setTimeout(refreshAll, 30));
+    window.addEventListener("pageshow", () => schedule("pageshow-refresh", refreshAll));
     document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === "visible") setTimeout(refreshAll, 40);
+      if (document.visibilityState === "visible") schedule("visibility-refresh", refreshAll);
     });
 
-    setTimeout(refreshAll, 120);
+    setTimeout(() => schedule("initial-refresh", refreshAll), 120);
   }
 
   window.UnlimitedV3 = {
+    revision: REVISION,
     refresh: refreshAll,
     diagnostics: runtimeDiagnostics,
-    metrics
+    metrics,
+    createObserver,
+    schedule,
+    NativeMutationObserver
   };
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", bindPostLoadCoordinator, { once: true });
