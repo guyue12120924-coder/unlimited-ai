@@ -2,7 +2,8 @@ import worker from "./worker.js";
 import { handleCompanionTts } from "./tts.js";
 import { handleCompanionStt } from "./stt.js";
 
-const REVISION = "2026-08-21-v16.6-event-runtime-gateway";
+const REVISION = "2026-08-21-v17.0-workspace-gateway";
+// Compatibility marker for V16.6 diagnostics: 2026-08-21-v16.6-event-runtime-gateway
 // Compatibility marker for V16.5 diagnostics: 2026-08-21-v16.5-ai-gateway-runtime
 // Compatibility marker for the V16.2 gateway rollout: 2026-08-20-v16.2-ai-gateway
 // Compatibility marker for the V16.0 stability contract: 2026-08-20-v16.0-call-voice-stability
@@ -25,10 +26,8 @@ function sameSiteRequest(request) {
   const url = new URL(request.url);
   const origin = request.headers.get("origin");
   if (origin) return origin === url.origin;
-
   const site = String(request.headers.get("sec-fetch-site") || "").toLowerCase();
   if (site) return site === "same-origin" || site === "same-site" || site === "none";
-
   return false;
 }
 
@@ -44,17 +43,11 @@ function json(value, status = 200, headers = {}) {
 }
 
 function forbidden() {
-  return json({
-    error: "This AI endpoint only accepts same-site browser requests.",
-    code: "AI_GATEWAY_FORBIDDEN"
-  }, 403);
+  return json({ error: "This AI endpoint only accepts same-site browser requests.", code: "AI_GATEWAY_FORBIDDEN" }, 403);
 }
 
 function badContentType() {
-  return json({
-    error: "This endpoint requires application/json.",
-    code: "BAD_CONTENT_TYPE"
-  }, 415);
+  return json({ error: "This endpoint requires application/json.", code: "BAD_CONTENT_TYPE" }, 415);
 }
 
 function clientKey(request) {
@@ -67,7 +60,6 @@ function consumeApiRate(request, route, limit) {
   const now = Date.now();
   const key = `${route}:${clientKey(request)}`;
   const current = RATE_BUCKETS.get(key);
-
   if (!current || now - current.startedAt >= RATE_WINDOW_MS) {
     RATE_BUCKETS.set(key, { startedAt: now, count: 1 });
   } else {
@@ -79,7 +71,6 @@ function consumeApiRate(request, route, limit) {
       };
     }
   }
-
   if (RATE_BUCKETS.size > 1000) {
     for (const [bucketKey, value] of RATE_BUCKETS) {
       if (now - value.startedAt > RATE_WINDOW_MS * 2) RATE_BUCKETS.delete(bucketKey);
@@ -90,19 +81,14 @@ function consumeApiRate(request, route, limit) {
 
 function routeLimit(pathname) {
   if (pathname === "/api/chat") return { route: "chat", limit: 30 };
-  if (pathname === "/api/memory/extract" || pathname === "/api/continuity/review") {
-    return { route: "analysis", limit: 14 };
-  }
+  if (pathname === "/api/memory/extract" || pathname === "/api/continuity/review") return { route: "analysis", limit: 14 };
   if (pathname === "/api/companion/tts") return { route: "tts", limit: 30 };
   if (pathname === "/api/companion/stt") return { route: "stt", limit: 12 };
   return { route: "ai", limit: 20 };
 }
 
 function rateLimited(retryAfter) {
-  return json({
-    error: "Too many AI requests. Please wait a moment and try again.",
-    code: "AI_GATEWAY_RATE_LIMITED"
-  }, 429, {
+  return json({ error: "Too many AI requests. Please wait a moment and try again.", code: "AI_GATEWAY_RATE_LIMITED" }, 429, {
     "Retry-After": String(retryAfter),
     "X-RateLimit-Scope": "gateway-worker-isolate"
   });
@@ -123,11 +109,7 @@ function statusResponse(env) {
       { id: "melo", model: "@cf/myshell-ai/melotts", voices: [] }
     ],
     sttModel: "@cf/openai/whisper-large-v3-turbo",
-    gateway: {
-      sameSiteRequired: true,
-      jsonContentTypeRequired: true,
-      rateWindowMs: RATE_WINDOW_MS
-    },
+    gateway: { sameSiteRequired: true, jsonContentTypeRequired: true, rateWindowMs: RATE_WINDOW_MS },
     revision: REVISION
   });
 }
@@ -136,7 +118,6 @@ async function assetMarkerStatus(request, env, pathname, expectedMarkers, forbid
   if (!env.ASSETS || typeof env.ASSETS.fetch !== "function") {
     return { available: false, current: false, reason: "ASSETS binding unavailable" };
   }
-
   const url = new URL(pathname, request.url);
   url.searchParams.set("__diag", REVISION);
   try {
@@ -144,18 +125,12 @@ async function assetMarkerStatus(request, env, pathname, expectedMarkers, forbid
       headers: { "Cache-Control": "no-cache", "Pragma": "no-cache" }
     }));
     const body = await response.text();
-    const markers = Object.fromEntries(
-      Object.entries(expectedMarkers).map(([name, marker]) => [name, body.includes(marker)])
-    );
-    const forbidden = Object.fromEntries(
-      Object.entries(forbiddenMarkers).map(([name, marker]) => [name, !body.includes(marker)])
-    );
+    const markers = Object.fromEntries(Object.entries(expectedMarkers).map(([name, marker]) => [name, body.includes(marker)]));
+    const forbidden = Object.fromEntries(Object.entries(forbiddenMarkers).map(([name, marker]) => [name, !body.includes(marker)]));
     return {
       path: pathname,
       available: response.ok,
-      current: response.ok
-        && Object.values(markers).every(Boolean)
-        && Object.values(forbidden).every(Boolean),
+      current: response.ok && Object.values(markers).every(Boolean) && Object.values(forbidden).every(Boolean),
       status: response.status,
       markers,
       forbidden
@@ -221,9 +196,7 @@ function observerRuntimeStatus(request, env) {
     explicitScheduler: "function createObserver(callback)",
     globalObserverDiagnostic: "globalObserverUntouched",
     schedulerApi: "schedule,"
-  }, {
-    noGlobalObserverReplacement: "window.MutationObserver ="
-  });
+  }, { noGlobalObserverReplacement: "window.MutationObserver =" });
 }
 
 function workspaceEventsStatus(request, env) {
@@ -241,34 +214,50 @@ function v2ExperienceStatus(request, env) {
   return assetMarkerStatus(request, env, "/v2-experience.js", {
     revision: "2026-08-21-v16.6-v2-experience-events",
     sharedWorkspaceEvent: "uai:workspace-refresh"
-  }, {
-    noPrivateObserver: "new MutationObserver"
-  });
+  }, { noPrivateObserver: "new MutationObserver" });
 }
 
-function novelWorkspaceStatus(request, env) {
-  return assetMarkerStatus(request, env, "/novel-workspace-v15.js", {
-    revision: "2026-08-21-v16.6-novel-workspace-events",
+function workspaceUiV17Status(request, env) {
+  return assetMarkerStatus(request, env, "/workspace-ui-v17.js", {
+    revision: "2026-08-21-v17.0-workspace-ui",
+    canonicalApi: "UnlimitedWorkspaceUIV17",
+    legacyV150Api: "UnlimitedNovelWorkspaceV15 =",
+    legacyV151Api: "UnlimitedNovelWorkspaceV151 =",
+    contextBar: "novelV15ContextBar",
+    storyDesk: "novelV151PanelGuide",
     sharedWorkspaceEvent: "uai:workspace-refresh"
+  }, { noPrivateObserver: "new MutationObserver" });
+}
+
+function aiCollaborationV17Status(request, env) {
+  return assetMarkerStatus(request, env, "/ai-collaboration-v17.js", {
+    revision: "2026-08-21-v17.0-ai-collaboration",
+    canonicalApi: "UnlimitedAICollaborationV17",
+    legacyV152Api: "UnlimitedNovelWorkspaceV152 =",
+    legacyV153Api: "UnlimitedNovelWorkspaceV153 =",
+    writingNow: "novelV152WritingNow",
+    replyActions: "novel-v153-reply-actions",
+    sharedChatEvent: "uai:chat-refresh"
+  }, { noPrivateObserver: "new MutationObserver" });
+}
+
+function v17IndexDeliveryStatus(request, env) {
+  return assetMarkerStatus(request, env, "/index.html", {
+    runtimeRevision: "2026-08-21-v17.0-workspace-consolidation",
+    workspaceBundle: "/workspace-ui-v17.js?v=20260821-v17.0",
+    collaborationBundle: "/ai-collaboration-v17.js?v=20260821-v17.0"
   }, {
-    noPrivateObserver: "new MutationObserver",
-    noBodyWideObserver: "observe(document.body"
+    noLegacyV150Script: "<script src=\"/novel-workspace-v15.js",
+    noLegacyV151Script: "<script src=\"/novel-workspace-v151.js",
+    noLegacyV152Script: "<script src=\"/novel-workspace-v152.js",
+    noLegacyV153Script: "<script src=\"/novel-workspace-v153.js"
   });
 }
 
 async function bridgeNetworkCleanupStatus(request, env) {
   const paths = ["/context-bridge.js", "/memory-bridge.js", "/continuity-bridge.js"];
-  const results = await Promise.all(paths.map((pathname) => assetMarkerStatus(
-    request,
-    env,
-    pathname,
-    {},
-    { legacyFetchWrapperRemoved: "window.fetch =" }
-  )));
-  return {
-    current: results.every((item) => item.current),
-    files: results
-  };
+  const results = await Promise.all(paths.map((pathname) => assetMarkerStatus(request, env, pathname, {}, { legacyFetchWrapperRemoved: "window.fetch =" })));
+  return { current: results.every((item) => item.current), files: results };
 }
 
 async function diagnosticsResponse(request, env, ctx) {
@@ -285,7 +274,9 @@ async function diagnosticsResponse(request, env, ctx) {
     observerRuntime,
     workspaceEvents,
     v2Experience,
-    novelWorkspace,
+    workspaceUiV17,
+    aiCollaborationV17,
+    v17IndexDelivery,
     bridgeNetworkCleanup
   ] = await Promise.all([
     historyLifecycleStatus(request, env),
@@ -295,7 +286,9 @@ async function diagnosticsResponse(request, env, ctx) {
     observerRuntimeStatus(request, env),
     workspaceEventsStatus(request, env),
     v2ExperienceStatus(request, env),
-    novelWorkspaceStatus(request, env),
+    workspaceUiV17Status(request, env),
+    aiCollaborationV17Status(request, env),
+    v17IndexDeliveryStatus(request, env),
     bridgeNetworkCleanupStatus(request, env)
   ]);
 
@@ -308,7 +301,9 @@ async function diagnosticsResponse(request, env, ctx) {
     && observerRuntime.current
     && workspaceEvents.current
     && v2Experience.current
-    && novelWorkspace.current
+    && workspaceUiV17.current
+    && aiCollaborationV17.current
+    && v17IndexDelivery.current
     && bridgeNetworkCleanup.current
   );
 
@@ -325,7 +320,7 @@ async function diagnosticsResponse(request, env, ctx) {
       protectedPostRoutes: [...PROTECTED_POST_ROUTES]
     },
     runtimeCore: {
-      revision: "2026-08-21-v16.6-event-runtime",
+      revision: "2026-08-21-v17.0-workspace-consolidation",
       singleStorageGateway: storageCore.current,
       historyUsesStorageCoreOnly: historyLifecycle.current,
       appHistoryNeutral: appCore.current,
@@ -334,7 +329,9 @@ async function diagnosticsResponse(request, env, ctx) {
       explicitObserverScheduler: observerRuntime.current,
       sharedWorkspaceEventHub: workspaceEvents.current,
       v2ExperienceUsesSharedEvents: v2Experience.current,
-      novelWorkspaceUsesSharedEvents: novelWorkspace.current,
+      workspaceUiConsolidated: workspaceUiV17.current,
+      aiCollaborationConsolidated: aiCollaborationV17.current,
+      legacyV15ScriptsUnloaded: v17IndexDelivery.current,
       coreRequestScopedSessions: appCore.current,
       coreSseParsing: appCore.current,
       legacyBridgeFetchWrappersRemoved: bridgeNetworkCleanup.current,
@@ -345,13 +342,15 @@ async function diagnosticsResponse(request, env, ctx) {
     observerRuntime,
     workspaceEvents,
     v2Experience,
-    novelWorkspace,
+    workspaceUiV17,
+    aiCollaborationV17,
+    v17IndexDelivery,
     chatContextCore,
     appCore,
     bridgeNetworkCleanup,
     conclusion: frontendCurrent
-      ? "V16.6 event runtime is current: app history is Storage-Core-owned, shared workspace events replace duplicate observers, and V16.4 chat protections remain intact."
-      : "The deployment is missing one or more V16.6/V16.5/V16.4/V16.3/V16.2 stability components; redeploy the current main branch."
+      ? "V17.0 workspace consolidation is current: four V15 JavaScript delivery layers are replaced by two canonical modules while V16 stability guarantees remain intact."
+      : "The deployment is missing one or more V17/V16 stability components; redeploy the current main branch."
   }, inner.status);
 }
 
@@ -364,31 +363,15 @@ export default {
     if (isProtectedPost) {
       if (!sameSiteRequest(request)) return forbidden();
       if (!validateJsonContentType(request, pathname)) return badContentType();
-
       const { route, limit } = routeLimit(pathname);
       const rate = consumeApiRate(request, route, limit);
       if (!rate.allowed) return rateLimited(rate.retryAfter);
     }
 
-    if (request.method === "POST" && pathname === "/api/companion/tts") {
-      return handleCompanionTts(request, env);
-    }
-
-    if (request.method === "POST" && pathname === "/api/companion/stt") {
-      return handleCompanionStt(request, env);
-    }
-
-    if (
-      request.method === "GET"
-      && (pathname === "/api/companion/tts/status" || pathname === "/api/companion/stt/status")
-    ) {
-      return statusResponse(env);
-    }
-
-    if (request.method === "GET" && pathname === "/api/diagnostics") {
-      return diagnosticsResponse(request, env, ctx);
-    }
-
+    if (request.method === "POST" && pathname === "/api/companion/tts") return handleCompanionTts(request, env);
+    if (request.method === "POST" && pathname === "/api/companion/stt") return handleCompanionStt(request, env);
+    if (request.method === "GET" && (pathname === "/api/companion/tts/status" || pathname === "/api/companion/stt/status")) return statusResponse(env);
+    if (request.method === "GET" && pathname === "/api/diagnostics") return diagnosticsResponse(request, env, ctx);
     return worker.fetch(request, env, ctx);
   }
 };
