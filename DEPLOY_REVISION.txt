@@ -1,17 +1,19 @@
 Unlimited AI deployment trigger
 Date: 2026-08-21
-Frontend core revision: 2026-08-21-v16.6-event-runtime
+Frontend core revision: 2026-08-21-v17.0-workspace-consolidation
 Frontend history lifecycle: 2026-08-21-v16.5-history-ui
-Frontend runtime core: 2026-08-21-v16.6-event-runtime
+Frontend runtime core: 2026-08-21-v17.0-workspace-consolidation
 Workspace event hub: 2026-08-21-v16.6-workspace-events
+Workspace UI module: 2026-08-21-v17.0-workspace-ui
+AI collaboration module: 2026-08-21-v17.0-ai-collaboration
 Observer scheduler: 2026-08-21-v16.5-observer-scheduler
 Storage core: 2026-08-20-v16.3-storage-core
 Chat transport: 2026-08-21-v16.4-chat-transport
 Chat context core: 2026-08-21-v16.4-chat-context-core
 Chat registry: 2026-08-21-v16.4-chat-registry
 Worker revision: 2026-08-21-v16.4-worker-runtime-cleanup
-AI gateway revision: 2026-08-21-v16.6-event-runtime-gateway
-Reason: remove the legacy forced-history ownership from app.js; keep persistence routing exclusively in Storage Core/History Lifecycle; centralize high-frequency studio/chat/mode DOM observation into one V16.6 workspace event hub; migrate V2 Experience and V15.0-V15.3 novel workspace layers off their private MutationObservers; preserve request-scoped chat sessions, SSE framing, context isolation, Worker limits and companion lazy-loading protections.
+AI gateway revision: 2026-08-21-v17.0-workspace-gateway
+Reason: consolidate the four V15.0-V15.3 novel workspace JavaScript delivery layers into two canonical V17 modules. workspace-ui-v17.js owns context/empty-state/story-desk UI; ai-collaboration-v17.js owns chapter-session relationships, AI-to-manuscript destination feedback and reply-level writing actions. Preserve the old V15 global APIs as compatibility aliases, keep V15.4 pre-app lifecycle protection separate, retain V16.6 shared workspace events, and leave the old V15 source files in the repository only as rollback references rather than loading them in index.html.
 Companion prompt source: src/companion.js -> COMPANION_ROLE_CARD
 Novel prompt source: src/worker.js -> NOVEL_SYSTEM_PROMPT
-Current architecture: V16.3 Storage Core is the only Storage prototype gateway; V16.5 History UI owns only the user's durable-vs-ephemeral preference; app.js is history-neutral and always reads/writes one session source; browser MutationObserver remains native; V16.5 provides explicit batching; V16.6 provides one shared panel/chat/mode event hub; V2 Experience and V15.0-V15.3 subscribe to shared workspace/chat/mode events instead of creating duplicate observers; V16.4 Chat Transport/context registry and app-owned SSE/session correctness remain intact; src/worker-voice.js is the real protected AI gateway and deployment diagnostic layer.
+Current architecture: V16.3 Storage Core remains the only Storage prototype gateway; V16.5 History UI controls durable-vs-ephemeral preference; app.js owns request-scoped sessions and SSE parsing; V16.4 Chat Transport owns request enrichment and mode isolation; V16.6 owns the single panel/chat/mode event hub; V17.0 delivers novel workspace UI through workspace-ui-v17.js and AI result/manuscript collaboration through ai-collaboration-v17.js while preserving UnlimitedNovelWorkspaceV15/V151/V152/V153 compatibility APIs; novel-workspace-v154.js remains pre-app for ambience lifecycle guarding; src/worker-voice.js is the real protected AI gateway and V17 deployment diagnostic layer.
