@@ -1,12 +1,10 @@
 // public/novel-workspace-v151.js
-// V15.1: unified guidance and task hierarchy for Draft / Outline / Characters / World.
+// V16.6: unified Draft / Outline / Characters / World guidance on shared workspace events.
 (() => {
-  const REVISION = "2026-08-17-v15.1-story-desk";
+  const REVISION = "2026-08-21-v16.6-story-desk-events";
   const LS_STUDIO = "cfw_studio_workspace_v1";
   if (window.UnlimitedNovelWorkspaceV151) return;
 
-  let panelObserver = null;
-  let modeObserver = null;
   let refreshTimer = 0;
 
   function readState() {
@@ -268,9 +266,7 @@
       return;
     }
     if (action === "continue" || action === "advance") {
-      if (window.UnlimitedNovelWorkspaceV15?.fill) {
-        window.UnlimitedNovelWorkspaceV15.fill(action);
-      }
+      window.UnlimitedNovelWorkspaceV15?.fill?.(action);
       return;
     }
     const prompt = promptFor(action);
@@ -287,6 +283,10 @@
   }
 
   function scheduleRefresh(delay = 25) {
+    if (window.UnlimitedV3?.schedule && delay <= 25) {
+      window.UnlimitedV3.schedule("v166-story-desk", refresh);
+      return;
+    }
     if (refreshTimer) window.clearTimeout(refreshTimer);
     refreshTimer = window.setTimeout(refresh, delay);
   }
@@ -301,19 +301,13 @@
     document.addEventListener("click", (event) => {
       const action = event.target?.closest?.("[data-v151-action]")?.dataset.v151Action;
       if (action) handleAction(action);
-      if (event.target?.closest?.(".studio-tabs [data-studio-tab]")) scheduleRefresh(35);
     });
 
-    body.addEventListener("input", () => scheduleRefresh(90));
     window.addEventListener("storage", (event) => {
       if (event.key === LS_STUDIO) scheduleRefresh(20);
     });
-
-    panelObserver = new MutationObserver(() => scheduleRefresh(35));
-    panelObserver.observe(body, { childList: true, subtree: true });
-
-    modeObserver = new MutationObserver(() => scheduleRefresh(10));
-    modeObserver.observe(document.body, { attributes: true, attributeFilter: ["data-uai-mode"] });
+    window.addEventListener("uai:workspace-refresh", () => scheduleRefresh(0));
+    window.addEventListener("uai:mode-refresh", () => scheduleRefresh(0));
 
     scheduleRefresh(0);
   }
