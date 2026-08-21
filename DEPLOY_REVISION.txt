@@ -7,9 +7,13 @@ Workspace event hub: 2026-08-21-v16.6-workspace-events
 Workspace UI module: 2026-08-21-v17.0-workspace-ui
 AI collaboration module: 2026-08-21-v17.0-ai-collaboration
 Workspace style bundle: workspace-v17.css?v=20260821-v17.0
-Companion entry bootstrap: 2026-08-21-v17.1-companion-entry-recovery
-Companion lazy loader: 2026-08-21-v17.1-companion-entry-recovery
-Companion entry watchdog: 2200ms with automatic lobby recovery
+Companion entry bootstrap: 2026-08-21-v17.2-companion-direct-core-entry
+Companion direct entry module: public/companion-entry-v172.js
+Companion core entry dependency: companion-mode.css + companion-mode.js only
+Companion optional enhancements: loaded asynchronously after the core companion UI is visible
+Companion router watchdog: 2200ms; router failure falls back to direct core mount instead of trapping the user in OPEN HEART
+Companion legacy lazy bridge: retained in repository as rollback/reference code but no longer loaded by boot
+Companion enhancement loader: public/companion-assets-loader.js, invoked only after core entry
 Observer scheduler: 2026-08-21-v16.5-observer-scheduler
 Storage core: 2026-08-20-v16.3-storage-core
 Chat transport: 2026-08-21-v16.4-chat-transport
@@ -17,7 +21,7 @@ Chat context core: 2026-08-21-v16.4-chat-context-core
 Chat registry: 2026-08-21-v16.4-chat-registry
 Worker revision: 2026-08-21-v16.4-worker-runtime-cleanup
 AI gateway revision: 2026-08-21-v17.0-workspace-gateway
-Reason: keep the V17.0 novel-workspace consolidation and fix a companion-mode entry stall observed at the final OPEN HEART transition. The companion lazy bundle now loads and verifies companion-mode.js before inserting enhancement scripts, so character/memory/Live2D/voice layers never initialize against a missing core. companion-lazy-bridge.js now owns every companion-card click, including warm-cache re-entry, and wraps the router handoff in a 2200ms watchdog. If the router does not reach companion mode, it calls the router's showLobby() recovery boundary and exposes an inline retry state instead of leaving the user trapped in the full-screen transition. The index boot cache key and boot router-resource revision are bumped to V17.1 so browsers/CDN receive the fix immediately. V16.0 and V14.7 companion stability markers remain as compatibility markers for older contracts.
+Reason: replace the companion entry dependency chain after repeated failures to enter the AI companion. V17.2 no longer waits for the full character/memory/Live2D/voice enhancement bundle before routing. The new companion-entry-v172.js warms only companion-mode.css and companion-mode.js, enters the base companion chat immediately, and starts optional enhancements afterwards in the background. If the legacy router transition fails or returns without a visible #uaiCompanionRoot, the entry module clears the transition overlay and directly mounts the verified core companion UI. Optional enhancement failures are downgraded and recorded without taking the core chat offline. Boot and index cache keys are bumped to V17.2, and the previous companion-lazy-bridge.js is removed from the active boot chain.
 Companion prompt source: src/companion.js -> COMPANION_ROLE_CARD
 Novel prompt source: src/worker.js -> NOVEL_SYSTEM_PROMPT
-Current architecture: V16.3 Storage Core remains the only Storage prototype gateway; V16.5 History UI controls durable-vs-ephemeral preference; app.js owns request-scoped sessions and SSE parsing; V16.4 Chat Transport owns request enrichment and mode isolation; V16.6 owns the single panel/chat/mode event hub; V17.0 delivers workspace UI through workspace-ui-v17.js, AI result/manuscript collaboration through ai-collaboration-v17.js and their shared visual layer through workspace-v17.css; V17.1 makes companion loading core-first and adds a recoverable entry watchdog; novel-workspace-v154.js and novel-workspace-v154.css remain separate for pre-app ambience/focus lifecycle guarding; src/worker-voice.js remains the protected AI gateway and deployment diagnostic layer.
+Current architecture: V16.3 Storage Core remains the only Storage prototype gateway; V16.5 History UI controls durable-vs-ephemeral preference; app.js owns request-scoped sessions and SSE parsing; V16.4 Chat Transport owns request enrichment and mode isolation; V16.6 owns the single panel/chat/mode event hub; V17.0 delivers the consolidated novel workspace; V17.2 makes the base companion core the only blocking dependency for AI companion entry and treats all character/Live2D/voice enhancements as non-blocking post-entry upgrades; src/worker-voice.js remains the protected AI gateway and deployment diagnostic layer.
