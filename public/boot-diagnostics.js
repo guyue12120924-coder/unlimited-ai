@@ -1,9 +1,8 @@
 // public/boot-diagnostics.js
 // Startup guard + dual-mode bootstrap.
 // Compatibility marker: 2026-08-17-v14.7-entry-zero-companion
-// Compatibility marker: 2026-08-21-v17.1-companion-entry-recovery
 (() => {
-  const REVISION = "2026-08-21-v17.2-companion-direct-core-entry";
+  const REVISION = "2026-08-21-v17.3-companion-atomic-enhancements";
   const MODE_ROUTER_REVISION = "2026-08-17-v13.4-mode-router-performance";
   const errors = [];
 
@@ -25,8 +24,6 @@
   gateStyle.textContent = "html.uai-mode-gate-pending #app{visibility:hidden!important;pointer-events:none!important}html.uai-mode-gate-pending body{background:#080817!important}";
   document.head.appendChild(gateStyle);
 
-  // Keep the companion base stylesheet out of the lobby boot. V17.2 replaces this
-  // placeholder with the real LINK only when the user warms or enters companion mode.
   if (!document.getElementById("uaiCompanionCss")) {
     const companionStylePlaceholder = document.createElement("meta");
     companionStylePlaceholder.id = "uaiCompanionCss";
@@ -94,7 +91,7 @@
       ["/mode-router-luxury-stage3.js", "uaiModeRouterLuxuryStage3Script"],
       ["/mode-router-luxury-stage4.js", "uaiModeRouterLuxuryStage4Script"],
       ["/mode-router-luxury-stage5.js", "uaiModeRouterLuxuryStage5Script"],
-      ["/companion-entry-v172.js", "uaiCompanionEntryV172Script"]
+      ["/companion-entry-v173.js", "uaiCompanionEntryV173Script"]
     ];
 
     routerStyles.forEach(([href, id]) => ensureStyle(`${href}?v=${encodeURIComponent(REVISION)}`, id));
@@ -115,14 +112,16 @@
 
   function companionSnapshot() {
     const companionStyle = document.getElementById("uaiCompanionCss");
-    const directEntryReady = Boolean(window.UnlimitedCompanionEntryV172);
+    const directEntryReady = Boolean(window.UnlimitedCompanionEntryV173);
     return {
       companionAssetsDeferred: !window.UnlimitedCompanionAssets?.ready,
       companionAssetsReady: Boolean(window.UnlimitedCompanionAssets?.ready),
       companionAssetsLoading: Boolean(window.UnlimitedCompanionAssets?.loading),
+      companionCoreReady: Boolean(window.UnlimitedCompanionAssets?.coreReady || window.UnlimitedCompanion?.mount),
+      companionEnhancementsReady: Boolean(window.UnlimitedCompanionAssets?.enhancementsReady),
       companionBaseStyleDeferred: Boolean(companionStyle?.dataset.uaiDeferredPlaceholder === "true"),
       companionEntryReady: directEntryReady,
-      companionLazyBridgeReady: directEntryReady || Boolean(window.UnlimitedCompanionLazyBridge),
+      companionLazyBridgeReady: directEntryReady,
       companionModeReady: Boolean(window.UnlimitedCompanion?.mount),
       companionMultiReady: Boolean(window.UnlimitedCompanionMulti),
       companionRuntimeReady: Boolean(window.UnlimitedCompanionRuntime),
