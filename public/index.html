@@ -19,10 +19,7 @@
   <link rel="stylesheet" href="/v2-product-phase2.css?v=20260809-1" />
   <link rel="stylesheet" href="/v2-product-phase3.css?v=20260809-1" />
   <link rel="stylesheet" href="/v3-product.css?v=20260809-2" />
-  <link rel="stylesheet" href="/novel-workspace-v15.css?v=20260817-v15.0" />
-  <link rel="stylesheet" href="/novel-workspace-v151.css?v=20260817-v15.1" />
-  <link rel="stylesheet" href="/novel-workspace-v152.css?v=20260817-v15.2" />
-  <link rel="stylesheet" href="/novel-workspace-v153.css?v=20260818-v15.3" />
+  <link rel="stylesheet" href="/workspace-v17.css?v=20260821-v17.0" />
   <link rel="stylesheet" href="/novel-workspace-v154.css?v=20260818-v15.4" />
 </head>
 <body>
@@ -34,17 +31,9 @@
       <div class="topbar-shell">
         <div class="brand-cluster">
           <button class="iconbtn" id="sessionBtn" type="button" title="会话管理" aria-label="打开会话管理">☰</button>
-          <div class="brand-copy">
-            <strong>Unlimited AI</strong>
-            <span>AI 小说创作</span>
-          </div>
+          <div class="brand-copy"><strong>Unlimited AI</strong><span>AI 小说创作</span></div>
         </div>
-
-        <div class="pill model-pill">
-          <label for="modelSel" class="model-label"><span class="model-status-dot" aria-hidden="true"></span>模型</label>
-          <select id="modelSel" aria-label="选择模型"></select>
-        </div>
-
+        <div class="pill model-pill"><label for="modelSel" class="model-label"><span class="model-status-dot" aria-hidden="true"></span>模型</label><select id="modelSel" aria-label="选择模型"></select></div>
         <div class="topbar-actions">
           <button class="reader-entry" id="readerBtn" type="button" title="整理 AI 回复并进入阅读模式"><span>阅读</span><span class="reader-count" id="readerCount">0</span></button>
           <button class="iconbtn" id="personaToggle" type="button" title="切换人物模式" aria-label="切换人物模式">😈</button>
@@ -56,7 +45,6 @@
     </header>
 
     <main id="history"><div class="chat" id="chat"><div class="empty-state" id="emptyState"><div class="empty-kicker">NEW CHAPTER</div><h1>让故事从这里发生</h1><p>开始构思、续写或打磨一段文字。生成的片段可以收录进章节，再进入沉浸阅读。</p></div><div id="bottom-spacer"></div></div></main>
-
     <div class="input-floating"><div class="input-inner" id="composer"><div class="composer-main"><textarea id="msg" rows="1" placeholder="写下你的想法、剧情或续写要求…" aria-label="消息内容"></textarea><div class="composer-actions"><button id="sendBtn" type="button" aria-label="发送消息"><span>发送</span><b aria-hidden="true">↑</b></button><button id="stopBtn" type="button" aria-label="停止生成"><span>停止</span><b aria-hidden="true">■</b></button></div></div><div class="composer-footer"><span>内容仅保存在当前浏览器</span><span><kbd>Enter</kbd> 发送&nbsp;&nbsp;<kbd>Shift</kbd> + <kbd>Enter</kbd> 换行</span></div></div></div>
 
     <div class="modal-mask" id="settingsMask" role="dialog" aria-modal="true" aria-labelledby="settingsTitle"><section id="settings" class="modal-panel"><div class="modal-header" id="settingsHeader"><div><div class="eyebrow">PREFERENCES</div><h2 id="settingsTitle">设置</h2></div><button class="close-btn" id="closeSettings" type="button" aria-label="关闭设置">×</button></div><p class="privacy-note">所有设置与内容仅保存在当前浏览器的 localStorage 中。</p><div class="settings-section"><div class="section-heading"><div><h3>阅读与外观</h3><p>调整界面主题和聊天字号。</p></div></div><div class="appearance-controls" id="controlsPanel"><button id="themeToggle" class="control-btn" type="button">切换浅色主题</button><div class="font-stepper" aria-label="聊天字号"><button id="fontDecrease" type="button" title="减小字体">A−</button><span>聊天字号</span><button id="fontIncrease" type="button" title="增大字体">A＋</button></div></div></div><div class="settings-section"><div class="section-heading"><div><h3>本地对话记忆</h3><p>开启后，刷新或重开浏览器仍会恢复对话。</p></div><label class="switch-row" for="historyKeep"><input type="checkbox" id="historyKeep" /><span class="switch-ui" aria-hidden="true"></span><span>保留</span></label></div><button class="text-btn danger" id="clearHistory" type="button">清除当前会话历史</button></div><div class="settings-section"><div class="section-heading"><div><h3>网页自定义人物模板</h3><p>仅在右上角显示 😇 时生效；😈 模式会忽略这里。</p></div><label class="switch-row" for="promptKeep"><input type="checkbox" id="promptKeep" /><span class="switch-ui" aria-hidden="true"></span><span>保留</span></label></div><textarea id="customPrompt" placeholder="在这里填写网页端自定义 system prompt"></textarea><div class="modal-actions"><button class="text-btn danger" id="clearPrompt" type="button">清除模板</button><button class="primary-btn" id="savePrompt" type="button">保存设置</button></div></div></section></div>
