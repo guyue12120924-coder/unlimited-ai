@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 
 const read = (path) => fs.readFileSync(path, "utf8");
-
 const index = read("public/index.html");
 const app = read("public/app.js");
 const transport = read("public/chat-transport-v16.js");
@@ -12,7 +11,7 @@ const memoryBridge = read("public/memory-bridge.js");
 const continuityBridge = read("public/continuity-bridge.js");
 const voiceWorker = read("src/worker-voice.js");
 
-assert.match(index, /unlimited-runtime-revision" content="2026-08-21-v16\.6-event-runtime/);
+assert.match(index, /unlimited-runtime-revision" content="2026-08-21-v17\.0-workspace-consolidation/);
 assert.match(index, /chat-transport-v16\.js\?v=20260821-v16\.4/);
 assert.match(index, /app\.js\?v=20260821-v16\.6/);
 assert.match(index, /context-bridge\.js\?v=20260821-v16\.4/);
@@ -55,5 +54,6 @@ assert.match(voiceWorker, /function bridgeNetworkCleanupStatus\(/);
 assert.match(voiceWorker, /legacyBridgeFetchWrappersRemoved: bridgeNetworkCleanup\.current/);
 assert.match(voiceWorker, /coreRequestScopedSessions: appCore\.current/);
 assert.match(voiceWorker, /coreSseParsing: appCore\.current/);
+assert.match(voiceWorker, /2026-08-21-v17\.0-workspace-consolidation/);
 
-console.log("V16.4 cleanup contract passed under V16.6: dead fetch wrappers stay removed, canonical context builder and core-owned SSE/session state remain intact.");
+console.log("V16.4 cleanup guarantees remain intact under V17 consolidated workspace delivery.");
