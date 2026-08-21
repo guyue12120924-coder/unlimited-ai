@@ -12,7 +12,7 @@ const memoryBridge = read("public/memory-bridge.js");
 const continuityBridge = read("public/continuity-bridge.js");
 const voiceWorker = read("src/worker-voice.js");
 
-assert.match(index, /unlimited-runtime-revision" content="2026-08-21-v16\.4-runtime-core/);
+assert.match(index, /unlimited-runtime-revision" content="2026-08-21-v16\.5-runtime-cleanup/);
 for (const path of [
   "chat-transport-v16.js",
   "app.js",
@@ -21,7 +21,7 @@ for (const path of [
   "continuity-bridge.js",
   "chat-context-core-v163.js"
 ]) {
-  assert.match(index, new RegExp(`${path.replaceAll(".", "\\.")}\\?v=20260821-v16\\.4`), `${path} must use the V16.4 cache revision`);
+  assert.match(index, new RegExp(`${path.replaceAll(".", "\\.")}\\?v=20260821-v16\\.4`), `${path} must keep the V16.4 cache revision until its source changes`);
 }
 
 assert.match(transport, /2026-08-21-v16\.4-chat-transport/);
@@ -58,7 +58,7 @@ assert.match(voiceWorker, /function bridgeNetworkCleanupStatus\(/);
 assert.match(voiceWorker, /legacyBridgeFetchWrappersRemoved: bridgeNetworkCleanup\.current/);
 assert.match(voiceWorker, /coreRequestScopedSessions: appCore\.current/);
 assert.match(voiceWorker, /coreSseParsing: appCore\.current/);
-assert.match(voiceWorker, /revision: "2026-08-21-v16\.4-runtime-core"/);
-assert.match(voiceWorker, /V16\.4 runtime cleanup/);
+assert.match(voiceWorker, /revision: "2026-08-21-v16\.5-runtime-cleanup"/);
+assert.match(voiceWorker, /V16\.5 runtime cleanup/);
 
-console.log("V16.4 runtime cleanup contract passed: dead fetch wrappers removed, canonical context builder, core-owned SSE/session state, cache revisions and diagnostics aligned.");
+console.log("V16.4 cleanup contract passed under V16.5: dead fetch wrappers stay removed, canonical context builder and core-owned SSE/session state remain intact.");
