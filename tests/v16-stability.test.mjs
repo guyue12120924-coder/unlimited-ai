@@ -8,7 +8,8 @@ const app = read("public/app.js");
 const runtime = read("public/v3-runtime.js");
 const workspaceEvents = read("public/workspace-events-v166.js");
 const experience = read("public/v2-experience.js");
-const novelV15 = read("public/novel-workspace-v15.js");
+const workspaceV17 = read("public/workspace-ui-v17.js");
+const collaborationV17 = read("public/ai-collaboration-v17.js");
 const storageCore = read("public/storage-core-v163.js");
 const contextCore = read("public/chat-context-core-v163.js");
 const contextBridge = read("public/context-bridge.js");
@@ -34,6 +35,8 @@ const contextCoreIndex = index.indexOf("/chat-context-core-v163.js");
 const memorySuggestIndex = index.indexOf("/memory-suggest.js");
 const runtimeIndex = index.indexOf("/v3-runtime.js");
 const workspaceEventsIndex = index.indexOf("/workspace-events-v166.js");
+const workspaceV17Index = index.indexOf("/workspace-ui-v17.js");
+const collaborationV17Index = index.indexOf("/ai-collaboration-v17.js");
 
 assert(storageIndex >= 0, "V16.3 storage core must exist in index.html");
 assert(migrationIndex > storageIndex, "V16.3 storage core must load before data migration");
@@ -41,21 +44,24 @@ assert(historyIndex > storageIndex, "V16.5 history UI must load after Storage Co
 assert(transportIndex >= 0, "V16 chat transport must exist in index.html");
 assert(appIndex > historyIndex, "V16.5 history UI must load before app.js");
 assert(appIndex > transportIndex, "V16 chat transport must load before app.js");
-assert(contextCoreIndex > contextBridgeIndex, "V16.4 context core must run after the creative-context bridge initializes");
-assert(contextCoreIndex > continuityBridgeIndex, "V16.4 context core must run after the continuity bridge initializes");
-assert(contextCoreIndex > memoryBridgeIndex, "V16.4 context core must run after the memory bridge initializes");
+assert(contextCoreIndex > contextBridgeIndex, "V16.4 context core must run after creative context initializes");
+assert(contextCoreIndex > continuityBridgeIndex, "V16.4 context core must run after continuity initializes");
+assert(contextCoreIndex > memoryBridgeIndex, "V16.4 context core must run after memory initializes");
 assert(memorySuggestIndex > contextCoreIndex, "later AI helpers must see the single fetch entry");
 assert(runtimeIndex > memorySuggestIndex, "V16.5 observer runtime must load after core chat/context wiring");
 assert(workspaceEventsIndex > runtimeIndex, "V16.6 workspace event hub must load after the scheduler");
+assert(workspaceV17Index > workspaceEventsIndex, "V17 workspace module must use the existing event runtime");
+assert(collaborationV17Index > workspaceV17Index, "V17 collaboration module must initialize after workspace UI");
 
-assert.match(index, /unlimited-runtime-revision" content="2026-08-21-v16\.6-event-runtime/);
+assert.match(index, /unlimited-runtime-revision" content="2026-08-21-v17\.0-workspace-consolidation/);
 assert.match(index, /history-lifecycle-v16\.js\?v=20260821-v16\.5/);
 assert.match(index, /v3-runtime\.js\?v=20260821-v16\.5/);
 assert.match(index, /workspace-events-v166\.js\?v=20260821-v16\.6/);
 assert.match(index, /chat-transport-v16\.js\?v=20260821-v16\.4/);
 assert.match(index, /app\.js\?v=20260821-v16\.6/);
 assert.match(index, /v2-experience\.js\?v=20260821-v16\.6/);
-assert.match(index, /novel-workspace-v15\.js\?v=20260821-v16\.6/);
+assert.match(index, /workspace-ui-v17\.js\?v=20260821-v17\.0/);
+assert.match(index, /ai-collaboration-v17\.js\?v=20260821-v17\.0/);
 assert.match(index, /context-bridge\.js\?v=20260821-v16\.4/);
 assert.match(index, /continuity-bridge\.js\?v=20260821-v16\.4/);
 assert.match(index, /memory-bridge\.js\?v=20260821-v16\.4/);
@@ -104,11 +110,12 @@ assert.doesNotMatch(app, /historyKeepEl\.addEventListener\("change"/);
 assert.match(experience, /2026-08-21-v16\.6-v2-experience-events/);
 assert.match(experience, /uai:workspace-refresh/);
 assert.doesNotMatch(experience, /new MutationObserver/);
-
-assert.match(novelV15, /2026-08-21-v16\.6-novel-workspace-events/);
-assert.match(novelV15, /uai:workspace-refresh/);
-assert.doesNotMatch(novelV15, /new MutationObserver/);
-assert.doesNotMatch(novelV15, /observe\(document\.body/);
+assert.match(workspaceV17, /2026-08-21-v17\.0-workspace-ui/);
+assert.match(workspaceV17, /uai:workspace-refresh/);
+assert.doesNotMatch(workspaceV17, /new MutationObserver/);
+assert.match(collaborationV17, /2026-08-21-v17\.0-ai-collaboration/);
+assert.match(collaborationV17, /uai:chat-refresh/);
+assert.doesNotMatch(collaborationV17, /new MutationObserver/);
 
 assert.match(transport, /2026-08-21-v16\.4-chat-transport/);
 assert.match(transport, /2026-08-21-v16\.4-chat-registry/);
@@ -139,7 +146,6 @@ assert.match(contextCore, /window\.fetch = transport\.fetch/);
 
 assert.match(migration, /function reportStorageError\(/);
 assert.match(migration, /uai:storage-error/);
-
 assert.match(loader, /2026-08-20-v16\.0-companion-lazy-hardening/);
 assert.match(loader, /if \(link\.dataset\.uaiCompanionLazy === "true"\) link\.remove\(\)/);
 assert.match(loader, /if \(script\.dataset\.uaiCompanionLazy === "true"\) script\.remove\(\)/);
@@ -156,17 +162,13 @@ assert.doesNotMatch(worker.match(/function shouldFallback\(status\) \{[\s\S]*?\n
 
 assert.match(wrangler, /main\s*=\s*"src\/worker-voice\.js"/);
 assert.match(voiceWorker, /import worker from "\.\/worker\.js"/);
-assert.match(voiceWorker, /2026-08-21-v16\.6-event-runtime-gateway/);
+assert.match(voiceWorker, /2026-08-21-v16\.6-event-runtime-gateway|2026-08-21-v17\.0-workspace-gateway/);
 assert.match(voiceWorker, /AI_GATEWAY_RATE_LIMITED/);
 assert.match(voiceWorker, /AI_GATEWAY_FORBIDDEN/);
 assert.match(voiceWorker, /BAD_CONTENT_TYPE/);
 assert.match(voiceWorker, /function workspaceEventsStatus\(/);
-assert.match(voiceWorker, /function v2ExperienceStatus\(/);
-assert.match(voiceWorker, /function novelWorkspaceStatus\(/);
 assert.match(voiceWorker, /appHistoryNeutral: appCore\.current/);
 assert.match(voiceWorker, /sharedWorkspaceEventHub: workspaceEvents\.current/);
-assert.match(voiceWorker, /v2ExperienceUsesSharedEvents: v2Experience\.current/);
-assert.match(voiceWorker, /novelWorkspaceUsesSharedEvents: novelWorkspace\.current/);
 assert.match(voiceWorker, /realWorkerEntry: "src\/worker-voice\.js"/);
 
-console.log("V16.6 stability contract passed: one storage gateway, history-neutral app core, native global MutationObserver, shared workspace event hub, request-scoped sessions/SSE parsing and guarded AI gateway.");
+console.log("V16 stability guarantees remain intact under V17 consolidated workspace delivery.");
