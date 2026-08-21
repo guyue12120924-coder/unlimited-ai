@@ -25,7 +25,6 @@
   const donateMask = document.getElementById("donateMask");
   const donateClose = document.getElementById("donateClose");
 
-  // 会话管理相关元素
   const sessionBtn = document.getElementById("sessionBtn");
   const sessionPanel = document.getElementById("sessionPanel");
   const sessionOverlay = document.getElementById("sessionOverlay");
@@ -33,11 +32,9 @@
   const sessionListEl = document.getElementById("sessionList");
   const newSessionBtn = document.getElementById("newSessionBtn");
 
-  // 字体缩放按钮
   const fontDecrease = document.getElementById("fontDecrease");
   const fontIncrease = document.getElementById("fontIncrease");
 
-  // 阅读模式相关元素
   const emptyState = document.getElementById("emptyState");
   const readerBtn = document.getElementById("readerBtn");
   const readerCount = document.getElementById("readerCount");
@@ -61,7 +58,6 @@
     { id: "openai/gpt-oss-120b", label: "gpt-oss-120b" },
   ]);
 
-  // 当前活跃会话的ID和消息数组
   let currentSessionId = null;
   let sessions = [];
   let session = [];
@@ -70,13 +66,10 @@
   let totalCompletionTokens = 0;
   let totalInEstimate = 0;
   let totalOutEstimate = 0;
-
   let currentAbortController = null;
 
-  // ====== 本地存储 Key ======
   const LS_MODEL = "cfw_model";
   const LS_USE_BUILTIN = "cfw_use_builtin";
-  const LS_HISTORY_ENABLED = "cfw_history_enabled";
   const LS_PROMPT_ENABLED = "cfw_prompt_enabled";
   const LS_CUSTOM_PROMPT = "cfw_custom_prompt_v1";
   const LS_SESSIONS = "cfw_sessions_v2";
@@ -94,17 +87,14 @@
   let useBuiltin = (localStorage.getItem(LS_USE_BUILTIN) ?? "1") === "1";
   personaToggle.textContent = useBuiltin ? "😈" : "😇";
 
-  // V16: the creative workspace is local-first. Studio, context, manuscript collection
-  // and chat must always read the same browser-local session store.
-  let historyEnabled = true;
-  try { localStorage.setItem(LS_HISTORY_ENABLED, "1"); } catch {}
-  let promptEnabled  = (localStorage.getItem(LS_PROMPT_ENABLED) ?? "1") === "1";
-  historyKeepEl.checked = true;
-  historyKeepEl.disabled = true;
+  let promptEnabled = (localStorage.getItem(LS_PROMPT_ENABLED) ?? "1") === "1";
+  historyKeepEl.disabled = false;
   promptKeepEl.checked = promptEnabled;
 
-  // ========== 美少女壁纸轮播 ==========
-  // 🔽 在这里放置你的美少女图片（可替换为本地路径或在线URL）
+  function syncHistoryPreferenceUi() {
+    window.UnlimitedHistoryLifecycleV16?.syncUi?.();
+  }
+
   const GIRL_WALLPAPERS = [
     "/1.webp",
     "/2.jpg",
@@ -115,48 +105,40 @@
   ];
   let bgIndex = 0;
   let bgInterval = null;
+  let preloadIndex = 0;
+  let isPreloading = false;
 
-let preloadIndex = 0;      // 这两行变量建议放在文件顶部（靠近其他 let 变量）
-let isPreloading = false;
+  function rotateBackground() {
+    if (isPreloading) return;
+    const nextIndex = (bgIndex + 1) % GIRL_WALLPAPERS.length;
+    const nextUrl = GIRL_WALLPAPERS[nextIndex];
+    isPreloading = true;
 
-function rotateBackground() {
-  if (isPreloading) return;  // 正在预加载时，不重复触发
+    const img = new Image();
+    img.onload = function() {
+      const blurDiv = document.getElementById("blur-bg");
+      if (blurDiv) {
+        blurDiv.style.backgroundImage = `url(${nextUrl})`;
+        blurDiv.style.backgroundSize = "cover";
+        blurDiv.style.backgroundPosition = "center";
+      }
+      const clearDiv = document.getElementById("clear-img");
+      if (clearDiv) {
+        clearDiv.style.backgroundImage = `url(${nextUrl})`;
+        clearDiv.style.backgroundSize = "contain";
+        clearDiv.style.backgroundPosition = "center";
+      }
+      document.body.style.backgroundImage = "none";
+      bgIndex = nextIndex;
+      isPreloading = false;
+    };
+    img.onerror = function() { isPreloading = false; };
+    img.src = nextUrl;
+  }
 
-  const nextIndex = (bgIndex + 1) % GIRL_WALLPAPERS.length;
-  const nextUrl = GIRL_WALLPAPERS[nextIndex];
-
-  isPreloading = true;
-
-  const img = new Image();
-  img.onload = function() {
-    // 更新模糊层
-    const blurDiv = document.getElementById("blur-bg");
-    if (blurDiv) {
-      blurDiv.style.backgroundImage = `url(${nextUrl})`;
-      blurDiv.style.backgroundSize = "cover";
-      blurDiv.style.backgroundPosition = "center";
-    }
-    // 更新清晰层
-    const clearDiv = document.getElementById("clear-img");
-    if (clearDiv) {
-      clearDiv.style.backgroundImage = `url(${nextUrl})`;
-      clearDiv.style.backgroundSize = "contain";
-      clearDiv.style.backgroundPosition = "center";
-    }
-    document.body.style.backgroundImage = "none";
-    bgIndex = nextIndex;
-    isPreloading = false;
-  };
-  img.onerror = function() {
-    isPreloading = false;   // 加载失败也要释放锁
-  };
-  img.src = nextUrl;
-}
-
-  // ========== 动态粒子效果 ==========
   let particleCanvas, ctx, particles = [], particleAnimationId;
   function initParticleBackground() {
-    particleCanvas = document.createElement('canvas');
+    particleCanvas = document.createElement("canvas");
     particleCanvas.id = "particle-canvas";
     document.body.appendChild(particleCanvas);
     ctx = particleCanvas.getContext("2d");
@@ -165,7 +147,7 @@ function rotateBackground() {
       particleCanvas.width = window.innerWidth;
       particleCanvas.height = window.innerHeight;
     }
-    window.addEventListener('resize', () => {
+    window.addEventListener("resize", () => {
       resizeCanvas();
       initParticles();
     });
@@ -208,7 +190,7 @@ function rotateBackground() {
       if (!ctx) return;
       ctx.clearRect(0, 0, particleCanvas.width, particleCanvas.height);
       ctx.shadowBlur = 6;
-      for (let p of particles) {
+      for (const p of particles) {
         p.update();
         p.draw();
       }
@@ -219,7 +201,6 @@ function rotateBackground() {
     animateParticles();
   }
 
-  // ========== 主题切换（只保留黑夜/白天） ==========
   function initTheme() {
     const themeToggle = document.getElementById("themeToggle");
     const savedTheme = localStorage.getItem(LS_THEME);
@@ -237,16 +218,15 @@ function rotateBackground() {
     });
   }
 
-  // ========== 字体缩放 ==========
   function initFontScale() {
-    let currentFontSize = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--chat-font-size')) || 15;
+    let currentFontSize = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--chat-font-size")) || 15;
     const updateFont = (delta) => {
       let newSize = currentFontSize + delta;
       if (newSize < 12) newSize = 12;
       if (newSize > 20) newSize = 20;
       if (newSize !== currentFontSize) {
         currentFontSize = newSize;
-        document.documentElement.style.setProperty('--chat-font-size', currentFontSize + 'px');
+        document.documentElement.style.setProperty("--chat-font-size", currentFontSize + "px");
         localStorage.setItem("cfw_font_size", currentFontSize);
       }
     };
@@ -255,11 +235,10 @@ function rotateBackground() {
     const savedFont = localStorage.getItem("cfw_font_size");
     if (savedFont) {
       currentFontSize = parseFloat(savedFont);
-      document.documentElement.style.setProperty('--chat-font-size', currentFontSize + 'px');
+      document.documentElement.style.setProperty("--chat-font-size", currentFontSize + "px");
     }
   }
 
-  // ========== 小说阅读模式（仅使用当前浏览器中的会话内容） ==========
   function getAssistantSegments() {
     return session
       .map((message, index) => ({ message, index }))
@@ -342,7 +321,6 @@ function rotateBackground() {
     segments.forEach(({ message, index }, position) => {
       const label = document.createElement("label");
       label.className = "reader-segment-item" + (selection.has(index) ? " selected" : "");
-
       const checkbox = document.createElement("input");
       checkbox.type = "checkbox";
       checkbox.checked = selection.has(index);
@@ -350,7 +328,6 @@ function rotateBackground() {
         setReaderSegmentSelected(index, checkbox.checked);
         renderReader();
       });
-
       const copy = document.createElement("span");
       copy.className = "reader-segment-copy";
       const title = document.createElement("strong");
@@ -401,9 +378,7 @@ function rotateBackground() {
   }
 
   function setAllReaderSegments(selected) {
-    const selection = selected
-      ? new Set(getAssistantSegments().map(({ index }) => index))
-      : new Set();
+    const selection = selected ? new Set(getAssistantSegments().map(({ index }) => index)) : new Set();
     saveReaderSelection(selection);
     renderReader();
   }
@@ -443,10 +418,10 @@ function rotateBackground() {
     updateReaderCount();
   }
 
-  // ========== 多会话管理函数 ==========
   function saveSessionsToStorage() {
-    try { localStorage.setItem(LS_SESSIONS, JSON.stringify(sessions)); } catch(e) {}
+    try { localStorage.setItem(LS_SESSIONS, JSON.stringify(sessions)); } catch {}
   }
+
   function loadSessionsFromStorage() {
     const raw = localStorage.getItem(LS_SESSIONS);
     if (raw) {
@@ -461,13 +436,14 @@ function rotateBackground() {
           });
           return;
         }
-      } catch(e) {}
+      } catch {}
     }
     if (!sessions.length) {
       sessions = [{ id: Date.now().toString(), name: "新会话", messages: [], createdAt: Date.now() }];
       saveSessionsToStorage();
     }
   }
+
   function renderSessionList() {
     if (!sessionListEl) return;
     sessionListEl.innerHTML = "";
@@ -513,6 +489,7 @@ function rotateBackground() {
       sessionListEl.appendChild(div);
     });
   }
+
   function switchToSession(sessionId) {
     if (currentAbortController) return false;
     const target = sessions.find(s => s.id === sessionId);
@@ -534,6 +511,7 @@ function rotateBackground() {
     persistSessionById(currentSessionId, session);
     return true;
   }
+
   function createNewSession() {
     if (currentAbortController) return false;
     const newId = Date.now().toString();
@@ -543,6 +521,7 @@ function rotateBackground() {
     closeSessionPanelFunc();
     return true;
   }
+
   function persistSessionById(sessionId, messages) {
     if (!sessionId || !Array.isArray(messages)) return false;
     const cur = sessions.find(s => s.id === sessionId);
@@ -551,19 +530,23 @@ function rotateBackground() {
     saveSessionsToStorage();
     return true;
   }
+
   function persistSessionIfEnabled() {
     return persistSessionById(currentSessionId, session);
   }
+
   function restoreSessionIfEnabled() {
     loadSessionsFromStorage();
     if (sessions.length === 0) createNewSession();
     else switchToSession(sessions[0].id);
   }
-  function escapeHtml(str) { return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m])); }
+
+  function escapeHtml(str) {
+    return str.replace(/[&<>]/g, m => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;" }[m]));
+  }
   function openSessionPanel() { sessionPanel.classList.add("open"); sessionOverlay.style.display = "block"; renderSessionList(); }
   function closeSessionPanelFunc() { sessionPanel.classList.remove("open"); sessionOverlay.style.display = "none"; }
 
-  // ========== 辅助函数 ==========
   function estimateTokens(text) {
     if (!text) return 0;
     let cjk = 0, ascii = 0;
@@ -575,6 +558,7 @@ function rotateBackground() {
     }
     return cjk + Math.ceil(ascii / 4);
   }
+
   function updateSpacer() {
     if (!composerEl || !spacerEl) return;
     const rect = composerEl.getBoundingClientRect();
@@ -583,16 +567,20 @@ function rotateBackground() {
     spacerEl.style.height = Math.ceil(rect.height + gap + extra) + "px";
     historyWrap.style.scrollPaddingBottom = spacerEl.style.height;
   }
+
   function isNearBottom() {
     return (historyWrap.scrollHeight - historyWrap.scrollTop - historyWrap.clientHeight) < 120;
   }
+
   function scrollToBottom() {
     historyWrap.scrollTo({ top: historyWrap.scrollHeight, behavior: "auto" });
   }
+
   function updateEmptyState() {
     if (!emptyState) return;
     emptyState.classList.toggle("hidden", chatEl.querySelector(".row") !== null);
   }
+
   function makeRow(role, messageIndex = null) {
     const row = document.createElement("div");
     row.className = "row " + (role === "user" ? "user" : "ai");
@@ -626,11 +614,13 @@ function rotateBackground() {
     if (isNearBottom()) scrollToBottom();
     return rowParts;
   }
+
   function clearUIRows() {
     const nodes = Array.from(chatEl.children);
     for (const n of nodes) if (n !== spacerEl && n !== emptyState) chatEl.removeChild(n);
     updateEmptyState();
   }
+
   function initModels() {
     modelSel.innerHTML = "";
     for (const m of MODELS) {
@@ -652,7 +642,6 @@ function rotateBackground() {
     try { onPayload(JSON.parse(jsonStr)); } catch {}
   }
 
-  // ========== 发送消息（V16：请求绑定会话 + 跨 chunk SSE 缓冲） ==========
   async function send() {
     updateSpacer();
     const text = inputEl.value.trim();
@@ -753,8 +742,6 @@ function rotateBackground() {
       }
     }
 
-    // Partial text produced before a user stop is still useful writing material and must
-    // remain part of the originating session. Only transport errors with no output vanish.
     if (full) {
       requestMessages.push({ role: "assistant", content: full });
       const messageIndex = requestMessages.length - 1;
@@ -788,34 +775,31 @@ function rotateBackground() {
     }
   }
 
-  // 停止按钮
   stopBtn.addEventListener("click", () => { if (currentAbortController) currentAbortController.abort(); });
   sendBtn.addEventListener("click", send);
-  inputEl.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } });
+  inputEl.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      send();
+    }
+  });
 
-  // 事件绑定
   personaToggle.addEventListener("click", () => {
     useBuiltin = !useBuiltin;
     personaToggle.textContent = useBuiltin ? "😈" : "😇";
     localStorage.setItem(LS_USE_BUILTIN, useBuiltin ? "1" : "0");
   });
+
   settingsBtn.addEventListener("click", () => {
     settingsMask.style.display = "flex";
-    historyEnabled = true;
-    historyKeepEl.checked = true;
-    historyKeepEl.disabled = true;
+    syncHistoryPreferenceUi();
     promptKeepEl.checked = promptEnabled;
     customPromptEl.value = localStorage.getItem(LS_CUSTOM_PROMPT) || "";
   });
+
   closeSettingsBtn.addEventListener("click", () => settingsMask.style.display = "none");
   settingsMask.addEventListener("click", (e) => { if (e.target === settingsMask) settingsMask.style.display = "none"; });
-  historyKeepEl.addEventListener("change", () => {
-    historyEnabled = true;
-    historyKeepEl.checked = true;
-    historyKeepEl.disabled = true;
-    try { localStorage.setItem(LS_HISTORY_ENABLED, "1"); } catch {}
-    persistSessionIfEnabled();
-  });
+
   clearHistoryBtn.addEventListener("click", () => {
     if (currentAbortController) return;
     if (confirm("清除当前会话历史？")) {
@@ -833,6 +817,7 @@ function rotateBackground() {
       }
     }
   });
+
   promptKeepEl.addEventListener("change", () => {
     promptEnabled = promptKeepEl.checked;
     localStorage.setItem(LS_PROMPT_ENABLED, promptEnabled ? "1" : "0");
@@ -843,13 +828,16 @@ function rotateBackground() {
     settingsMask.style.display = "none";
   });
   clearPromptBtn.addEventListener("click", () => {
-    if (confirm("清除自定义模板？")) { localStorage.removeItem(LS_CUSTOM_PROMPT); customPromptEl.value = ""; }
+    if (confirm("清除自定义模板？")) {
+      localStorage.removeItem(LS_CUSTOM_PROMPT);
+      customPromptEl.value = "";
+    }
   });
+
   donateBtn.addEventListener("click", () => donateMask.style.display = "flex");
   donateClose.addEventListener("click", () => donateMask.style.display = "none");
   donateMask.addEventListener("click", (e) => { if (e.target === donateMask) donateMask.style.display = "none"; });
 
-  // 会话面板
   sessionBtn.addEventListener("click", openSessionPanel);
   closeSessionPanel.addEventListener("click", closeSessionPanelFunc);
   sessionOverlay.addEventListener("click", closeSessionPanelFunc);
@@ -863,7 +851,6 @@ function rotateBackground() {
     else closeSessionPanelFunc();
   });
 
-  // 输入框自适应
   inputEl.addEventListener("input", () => {
     inputEl.style.height = "auto";
     inputEl.style.height = inputEl.scrollHeight + "px";
@@ -871,14 +858,23 @@ function rotateBackground() {
     updateSpacer();
     if (stick) scrollToBottom();
   });
+
   function setupResizeObserver() {
     if (!composerEl || typeof ResizeObserver === "undefined") return;
-    const ro = new ResizeObserver(() => { const stick = isNearBottom(); updateSpacer(); if (stick) scrollToBottom(); });
+    const ro = new ResizeObserver(() => {
+      const stick = isNearBottom();
+      updateSpacer();
+      if (stick) scrollToBottom();
+    });
     ro.observe(composerEl);
   }
-  window.addEventListener("resize", () => { const stick = isNearBottom(); updateSpacer(); if (stick) scrollToBottom(); });
 
-  // 初始化
+  window.addEventListener("resize", () => {
+    const stick = isNearBottom();
+    updateSpacer();
+    if (stick) scrollToBottom();
+  });
+
   function init() {
     initModels();
     setupResizeObserver();
@@ -888,9 +884,11 @@ function rotateBackground() {
     initTheme();
     initFontScale();
     initReaderMode();
+    syncHistoryPreferenceUi();
     rotateBackground();
     bgInterval = setInterval(rotateBackground, 30000);
     initParticleBackground();
   }
+
   init();
 })();
