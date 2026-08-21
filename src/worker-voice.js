@@ -2,7 +2,8 @@ import worker from "./worker.js";
 import { handleCompanionTts } from "./tts.js";
 import { handleCompanionStt } from "./stt.js";
 
-const REVISION = "2026-08-20-v16.2-ai-gateway";
+const REVISION = "2026-08-21-v16.5-ai-gateway-runtime";
+// Compatibility marker for the V16.2 gateway rollout: 2026-08-20-v16.2-ai-gateway
 // Compatibility marker for the V16.0 stability contract: 2026-08-20-v16.0-call-voice-stability
 const RATE_WINDOW_MS = 60000;
 const RATE_BUCKETS = new Map();
@@ -165,9 +166,14 @@ async function assetMarkerStatus(request, env, pathname, expectedMarkers, forbid
 
 function historyLifecycleStatus(request, env) {
   return assetMarkerStatus(request, env, "/history-lifecycle-v16.js", {
-    revision: "2026-08-20-v16.1-history-lifecycle",
+    revision: "2026-08-21-v16.5-history-ui",
     persistencePreference: "cfw_history_persist_v16",
-    ephemeralSessions: "uai_v16_ephemeral_novel_sessions"
+    storageCoreOwnership: "Storage routing itself is owned",
+    storageCoreApi: "core.setPersistence"
+  }, {
+    noStoragePrototypeSetPatch: "Storage.prototype.setItem =",
+    noStoragePrototypeGetPatch: "Storage.prototype.getItem =",
+    noStoragePrototypeRemovePatch: "Storage.prototype.removeItem ="
   });
 }
 
@@ -202,6 +208,17 @@ function appCoreStatus(request, env) {
   });
 }
 
+function observerRuntimeStatus(request, env) {
+  return assetMarkerStatus(request, env, "/v3-runtime.js", {
+    revision: "2026-08-21-v16.5-observer-scheduler",
+    explicitScheduler: "function createObserver(callback)",
+    globalObserverDiagnostic: "globalObserverUntouched",
+    schedulerApi: "schedule,"
+  }, {
+    noGlobalObserverReplacement: "window.MutationObserver ="
+  });
+}
+
 async function bridgeNetworkCleanupStatus(request, env) {
   const paths = ["/context-bridge.js", "/memory-bridge.js", "/continuity-bridge.js"];
   const results = await Promise.all(paths.map((pathname) => assetMarkerStatus(
@@ -223,11 +240,12 @@ async function diagnosticsResponse(request, env, ctx) {
   try { data = await inner.clone().json(); }
   catch { return inner; }
 
-  const [historyLifecycle, storageCore, chatContextCore, appCore, bridgeNetworkCleanup] = await Promise.all([
+  const [historyLifecycle, storageCore, chatContextCore, appCore, observerRuntime, bridgeNetworkCleanup] = await Promise.all([
     historyLifecycleStatus(request, env),
     storageCoreStatus(request, env),
     chatContextCoreStatus(request, env),
     appCoreStatus(request, env),
+    observerRuntimeStatus(request, env),
     bridgeNetworkCleanupStatus(request, env)
   ]);
   const frontendCurrent = Boolean(
@@ -236,6 +254,7 @@ async function diagnosticsResponse(request, env, ctx) {
     && storageCore.current
     && chatContextCore.current
     && appCore.current
+    && observerRuntime.current
     && bridgeNetworkCleanup.current
   );
   return json({
@@ -251,22 +270,26 @@ async function diagnosticsResponse(request, env, ctx) {
       protectedPostRoutes: [...PROTECTED_POST_ROUTES]
     },
     runtimeCore: {
-      revision: "2026-08-21-v16.4-runtime-core",
+      revision: "2026-08-21-v16.5-runtime-cleanup",
       singleStorageGateway: storageCore.current,
+      historyUsesStorageCoreOnly: historyLifecycle.current,
       singleChatFetchEntry: chatContextCore.current,
+      globalMutationObserverUntouched: observerRuntime.current,
+      explicitObserverScheduler: observerRuntime.current,
       coreRequestScopedSessions: appCore.current,
       coreSseParsing: appCore.current,
       legacyBridgeFetchWrappersRemoved: bridgeNetworkCleanup.current,
       registeredNovelContexts: ["creative-context", "story-memory", "continuity"]
     },
     storageCore,
+    historyLifecycle,
+    observerRuntime,
     chatContextCore,
     appCore,
     bridgeNetworkCleanup,
-    historyLifecycle,
     conclusion: frontendCurrent
-      ? "V16.4 runtime cleanup, V16.3 storage core, V16.2 real Worker gateway, V16.1 history lifecycle and V16.0 stability assets are current."
-      : "The deployment is missing one or more V16.4/V16.3/V16.2/V16.1/V16.0 stability components; redeploy the current main branch."
+      ? "V16.5 runtime cleanup is current: Storage Core is the only storage gateway, MutationObserver remains native, and V16.4 chat/runtime protections remain intact."
+      : "The deployment is missing one or more V16.5/V16.4/V16.3/V16.2 stability components; redeploy the current main branch."
   }, inner.status);
 }
 
