@@ -1,11 +1,9 @@
 // public/novel-workspace-v153.js
-// V15.3: reply-level writing actions without bypassing the user's final send decision.
+// V16.6: reply-level writing actions driven by the shared chat/mode event hub.
 (() => {
-  const REVISION = "2026-08-18-v15.3-reply-actions";
+  const REVISION = "2026-08-21-v16.6-reply-actions-events";
   if (window.UnlimitedNovelWorkspaceV153) return;
 
-  let chatObserver = null;
-  let modeObserver = null;
   let enhanceTimer = 0;
 
   const ACTIONS = [
@@ -163,6 +161,10 @@
   }
 
   function scheduleEnhance(delay = 35) {
+    if (window.UnlimitedV3?.schedule && delay <= 35) {
+      window.UnlimitedV3.schedule("v166-reply-actions", enhanceReplies);
+      return;
+    }
     if (enhanceTimer) window.clearTimeout(enhanceTimer);
     enhanceTimer = window.setTimeout(enhanceReplies, delay);
   }
@@ -174,14 +176,9 @@
       return;
     }
 
-    chatObserver = new MutationObserver(() => scheduleEnhance(35));
-    chatObserver.observe(chat, { childList: true, subtree: true });
-
-    modeObserver = new MutationObserver(() => scheduleEnhance(10));
-    modeObserver.observe(document.body, { attributes: true, attributeFilter: ["data-uai-mode"] });
-
-    document.getElementById("studioLibrary")?.addEventListener("click", () => scheduleEnhance(80));
-    document.getElementById("sessionList")?.addEventListener("click", () => scheduleEnhance(80));
+    window.addEventListener("uai:chat-refresh", () => scheduleEnhance(0));
+    window.addEventListener("uai:mode-refresh", () => scheduleEnhance(0));
+    window.addEventListener("uai:workspace-refresh", () => scheduleEnhance(0));
     scheduleEnhance(0);
   }
 
