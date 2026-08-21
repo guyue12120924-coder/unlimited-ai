@@ -80,6 +80,12 @@ jobs:
           set -euo pipefail
           node tests/v166-event-runtime.test.mjs
 
+      - name: Check V17 workspace consolidation contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          node tests/v17-workspace-consolidation.test.mjs
+
       - name: Check companion mode isolation contract
         shell: bash
         run: |
