@@ -5,6 +5,7 @@ const read = (path) => fs.readFileSync(path, "utf8");
 
 const index = read("public/index.html");
 const app = read("public/app.js");
+const runtime = read("public/v3-runtime.js");
 const storageCore = read("public/storage-core-v163.js");
 const contextCore = read("public/chat-context-core-v163.js");
 const contextBridge = read("public/context-bridge.js");
@@ -28,18 +29,22 @@ const continuityBridgeIndex = index.indexOf("/continuity-bridge.js");
 const memoryBridgeIndex = index.indexOf("/memory-bridge.js");
 const contextCoreIndex = index.indexOf("/chat-context-core-v163.js");
 const memorySuggestIndex = index.indexOf("/memory-suggest.js");
+const runtimeIndex = index.indexOf("/v3-runtime.js");
 
 assert(storageIndex >= 0, "V16.3 storage core must exist in index.html");
 assert(migrationIndex > storageIndex, "V16.3 storage core must load before data migration");
-assert(historyIndex > storageIndex, "V16.3 storage core must load before history lifecycle");
+assert(historyIndex > storageIndex, "V16.5 history UI must load after Storage Core");
 assert(transportIndex >= 0, "V16 chat transport must exist in index.html");
-assert(appIndex > historyIndex, "V16.1 history lifecycle must load before app.js");
+assert(appIndex > historyIndex, "V16.5 history UI must load before app.js");
 assert(appIndex > transportIndex, "V16 chat transport must load before app.js");
 assert(contextCoreIndex > contextBridgeIndex, "V16.4 context core must run after the creative-context bridge initializes");
 assert(contextCoreIndex > continuityBridgeIndex, "V16.4 context core must run after the continuity bridge initializes");
 assert(contextCoreIndex > memoryBridgeIndex, "V16.4 context core must run after the memory bridge initializes");
 assert(memorySuggestIndex > contextCoreIndex, "later AI helpers must see the single fetch entry");
-assert.match(index, /unlimited-runtime-revision" content="2026-08-21-v16\.4-runtime-core/);
+assert(runtimeIndex > memorySuggestIndex, "V16.5 observer runtime must load after core chat/context wiring");
+assert.match(index, /unlimited-runtime-revision" content="2026-08-21-v16\.5-runtime-cleanup/);
+assert.match(index, /history-lifecycle-v16\.js\?v=20260821-v16\.5/);
+assert.match(index, /v3-runtime\.js\?v=20260821-v16\.5/);
 assert.match(index, /chat-transport-v16\.js\?v=20260821-v16\.4/);
 assert.match(index, /app\.js\?v=20260821-v16\.4/);
 assert.match(index, /context-bridge\.js\?v=20260821-v16\.4/);
@@ -57,14 +62,21 @@ assert.match(storageCore, /uai_v16_ephemeral_novel_sessions/);
 assert.match(storageCore, /uai:storage-error/);
 assert.match(storageCore, /window\.UnlimitedStorageV163/);
 
-assert.match(history, /2026-08-20-v16\.1-history-lifecycle/);
+assert.match(history, /2026-08-21-v16\.5-history-ui/);
 assert.match(history, /cfw_history_persist_v16/);
 assert.match(history, /uai_v16_ephemeral_novel_sessions/);
-assert.match(history, /sessionStorage/);
-assert.match(history, /persistAcrossReloads/);
-assert.match(history, /event\.stopImmediatePropagation\(\)/, "V16.1 must own the legacy history toggle event");
+assert.match(history, /core\.setPersistence/);
+assert.match(history, /event\.stopImmediatePropagation\(\)/, "V16.5 history UI must own the user-facing toggle event");
 assert.match(history, /applyPreference/);
 assert.match(history, /刷新后不会恢复这些对话/);
+assert.doesNotMatch(history, /Storage\.prototype\.(?:getItem|setItem|removeItem)\s*=/, "history UI must not patch Storage.prototype");
+
+assert.match(runtime, /2026-08-21-v16\.5-observer-scheduler/);
+assert.match(runtime, /class ExplicitCoordinatedObserver/);
+assert.match(runtime, /function createObserver\(callback\)/);
+assert.match(runtime, /function schedule\(key, task\)/);
+assert.match(runtime, /globalObserverUntouched/);
+assert.doesNotMatch(runtime, /window\.MutationObserver\s*=/, "runtime must not replace global MutationObserver");
 
 assert.match(app, /const requestSessionId = currentSessionId/);
 assert.match(app, /const requestMessages = requestSession\.messages/);
@@ -121,7 +133,7 @@ assert.match(loader, /2026-08-20-v16\.0-companion-lazy-hardening/);
 assert.match(loader, /if \(link\.dataset\.uaiCompanionLazy === "true"\) link\.remove\(\)/);
 assert.match(loader, /if \(script\.dataset\.uaiCompanionLazy === "true"\) script\.remove\(\)/);
 
-assert.match(worker, /2026-08-20-v16\.0-worker-stability/);
+assert.match(worker, /2026-08-21-v16\.4-worker-runtime-cleanup/);
 assert.match(worker, /MAX_MODEL_ATTEMPTS = 3/);
 assert.match(worker, /MAX_CHAT_BODY_BYTES = 768 \* 1024/);
 assert.match(worker, /STREAM_IDLE_TIMEOUT_MS = 45000/);
@@ -139,7 +151,7 @@ assert.doesNotMatch(
 
 assert.match(wrangler, /main\s*=\s*"src\/worker-voice\.js"/, "wrangler must deploy the gateway wrapper as the real Worker entry");
 assert.match(voiceWorker, /import worker from "\.\/worker\.js"/, "real Worker entry must delegate non-voice requests to worker.js");
-assert.match(voiceWorker, /2026-08-20-v16\.2-ai-gateway/);
+assert.match(voiceWorker, /2026-08-21-v16\.5-ai-gateway-runtime/);
 assert.match(voiceWorker, /PROTECTED_POST_ROUTES/);
 assert.match(voiceWorker, /JSON_POST_ROUTES/);
 assert.match(voiceWorker, /function consumeApiRate\(/);
@@ -149,15 +161,14 @@ assert.match(voiceWorker, /BAD_CONTENT_TYPE/);
 assert.match(voiceWorker, /return false;\n}/, "gateway must reject protected requests when both Origin and Fetch Metadata are absent");
 assert.match(voiceWorker, /contentType\.startsWith\("application\/json"\)/);
 assert.match(voiceWorker, /function historyLifecycleStatus\(/);
-assert.match(voiceWorker, /history-lifecycle-v16\.js/);
-assert.match(voiceWorker, /function storageCoreStatus\(/);
-assert.match(voiceWorker, /storage-core-v163\.js/);
-assert.match(voiceWorker, /function chatContextCoreStatus\(/);
-assert.match(voiceWorker, /chat-context-core-v163\.js/);
+assert.match(voiceWorker, /function observerRuntimeStatus\(/);
+assert.match(voiceWorker, /historyUsesStorageCoreOnly: historyLifecycle\.current/);
+assert.match(voiceWorker, /globalMutationObserverUntouched: observerRuntime\.current/);
+assert.match(voiceWorker, /explicitObserverScheduler: observerRuntime\.current/);
 assert.match(voiceWorker, /singleStorageGateway: storageCore\.current/);
 assert.match(voiceWorker, /singleChatFetchEntry: chatContextCore\.current/);
 assert.match(voiceWorker, /registeredNovelContexts: \["creative-context", "story-memory", "continuity"\]/);
 assert.match(voiceWorker, /realWorkerEntry: "src\/worker-voice\.js"/);
 assert.match(voiceWorker, /function diagnosticsResponse\(/);
 
-console.log("V16.4 stability contract passed: core request-scoped sessions and SSE parsing, dead fetch wrappers removed, one context registry, storage gateway, real Worker gateway and API guards.");
+console.log("V16.5 stability contract passed: one storage gateway, native global MutationObserver, explicit scheduler, request-scoped sessions/SSE parsing, one context registry, real Worker gateway and API guards.");
