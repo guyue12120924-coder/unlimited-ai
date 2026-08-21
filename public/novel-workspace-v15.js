@@ -1,11 +1,10 @@
 // public/novel-workspace-v15.js
-// V15.0: clearer novel-writing context, next-step guidance and composer shortcuts.
+// V16.6: clearer novel-writing context and guidance driven by the unified workspace event hub.
 (() => {
-  const REVISION = "2026-08-17-v15.0-novel-workspace";
+  const REVISION = "2026-08-21-v16.6-novel-workspace-events";
   const LS_STUDIO = "cfw_studio_workspace_v1";
   if (window.UnlimitedNovelWorkspaceV15) return;
 
-  let observer = null;
   let refreshTimer = 0;
 
   function readState() {
@@ -267,6 +266,10 @@
   }
 
   function scheduleRefresh(delay = 20) {
+    if (window.UnlimitedV3?.schedule && delay <= 20) {
+      window.UnlimitedV3.schedule("v166-novel-workspace", refresh);
+      return;
+    }
     if (refreshTimer) window.clearTimeout(refreshTimer);
     refreshTimer = window.setTimeout(refresh, delay);
   }
@@ -328,15 +331,8 @@
     window.addEventListener("storage", (event) => {
       if (event.key === LS_STUDIO) scheduleRefresh(10);
     });
-
-    observer = new MutationObserver(() => scheduleRefresh(25));
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true,
-      attributes: true,
-      attributeFilter: ["data-uai-mode"]
-    });
-
+    window.addEventListener("uai:workspace-refresh", () => scheduleRefresh(0));
+    window.addEventListener("uai:mode-refresh", () => scheduleRefresh(0));
     scheduleRefresh(0);
   }
 
