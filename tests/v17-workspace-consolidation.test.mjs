@@ -5,17 +5,28 @@ const read = (path) => fs.readFileSync(path, "utf8");
 const index = read("public/index.html");
 const workspace = read("public/workspace-ui-v17.js");
 const collaboration = read("public/ai-collaboration-v17.js");
+const styles = read("public/workspace-v17.css");
 
 assert.match(index, /unlimited-runtime-revision" content="2026-08-21-v17\.0-workspace-consolidation/);
 assert.match(index, /workspace-ui-v17\.js\?v=20260821-v17\.0/);
 assert.match(index, /ai-collaboration-v17\.js\?v=20260821-v17\.0/);
+assert.match(index, /workspace-v17\.css\?v=20260821-v17\.0/);
 assert(index.indexOf("/workspace-ui-v17.js") < index.indexOf("/ai-collaboration-v17.js"), "workspace UI must initialize before collaboration adapters");
+
 for (const legacy of ["novel-workspace-v15.js", "novel-workspace-v151.js", "novel-workspace-v152.js", "novel-workspace-v153.js"]) {
   assert.doesNotMatch(index, new RegExp(`<script[^>]+${legacy.replaceAll(".", "\\.")}`), `${legacy} must not be loaded after V17 consolidation`);
 }
-for (const css of ["novel-workspace-v15.css", "novel-workspace-v151.css", "novel-workspace-v152.css", "novel-workspace-v153.css"]) {
-  assert.match(index, new RegExp(css.replaceAll(".", "\\.")), `${css} remains the compatibility style source during V17.0`);
+for (const legacyCss of ["novel-workspace-v15.css", "novel-workspace-v151.css", "novel-workspace-v152.css", "novel-workspace-v153.css"]) {
+  assert.doesNotMatch(index, new RegExp(`<link[^>]+${legacyCss.replaceAll(".", "\\.")}`), `${legacyCss} must not be loaded after V17 style consolidation`);
 }
+assert.match(index, /novel-workspace-v154\.css\?v=20260818-v15\.4/, "V15.4 lifecycle/focus styles must remain separate");
+
+assert.match(styles, /V17\.0 consolidated compatibility stylesheet/);
+assert.match(styles, /\.novel-v15-context/);
+assert.match(styles, /\.novel-v151-guide/);
+assert.match(styles, /\.novel-v152-writing-now/);
+assert.match(styles, /\.novel-v153-reply-actions/);
+assert.match(styles, /prefers-reduced-motion/);
 
 assert.match(workspace, /2026-08-21-v17\.0-workspace-ui/);
 assert.match(workspace, /window\.UnlimitedWorkspaceUIV17 = api/);
@@ -45,4 +56,4 @@ assert.match(collaboration, /UnlimitedV3\?\.schedule/);
 assert.doesNotMatch(collaboration, /new MutationObserver/);
 assert.doesNotMatch(collaboration, /sendBtn\.click|\.click\(\).*sendBtn/, "reply actions must still prepare prompts without auto-sending them");
 
-console.log("V17.0 consolidation contract passed: four V15 JS layers are delivered as two canonical modules with compatibility APIs and shared events.");
+console.log("V17.0 consolidation contract passed: V15.0-V15.3 delivery is reduced to one CSS bundle and two canonical JS modules with compatibility APIs.");
