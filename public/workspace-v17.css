@@ -1,0 +1,197 @@
+/* public/workspace-v17.css
+ * V17.0 consolidated compatibility stylesheet.
+ * Order is preserved: V15.0 -> V15.1 -> V15.2 -> V15.3.
+ */
+
+/* ===== V15.0 workspace context / composer ================================= */
+body[data-uai-mode="novel"] #conversationPane #history {
+  padding-top: 66px;
+  padding-bottom: 168px;
+}
+body[data-uai-mode="novel"] .novel-v15-context {
+  position: absolute; z-index: 28; top: 10px; left: 50%; width: min(760px, calc(100% - 42px)); min-height: 46px;
+  display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 14px; padding: 6px 7px 6px 11px;
+  border: 1px solid color-mix(in srgb, var(--border-default, var(--border)) 78%, transparent); border-radius: 13px;
+  background: color-mix(in srgb, var(--bg-surface, #191c19) 91%, transparent);
+  box-shadow: 0 12px 34px rgba(0,0,0,.18), inset 0 1px rgba(255,255,255,.025);
+  backdrop-filter: blur(18px) saturate(1.08); -webkit-backdrop-filter: blur(18px) saturate(1.08);
+  transform: translateX(-50%); transition: opacity .18s ease, transform .22s ease, border-color .2s ease;
+}
+body[data-uai-mode="novel"] #conversationSearchBar:not([hidden]) + .novel-v15-context { opacity: 0; pointer-events: none; transform: translate(-50%, -5px); }
+.novel-v15-context-main { min-width: 0; display: flex; align-items: center; gap: 9px; }
+.novel-v15-context-dot { width: 7px; height: 7px; flex: 0 0 7px; border-radius: 50%; background: color-mix(in srgb, var(--accent) 82%, white); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 9%, transparent), 0 0 12px color-mix(in srgb, var(--accent) 20%, transparent); }
+.novel-v15-context:not(.has-chapter) .novel-v15-context-dot { background: var(--text-muted, var(--muted)); box-shadow: none; opacity: .55; }
+.novel-v15-context-copy { min-width: 0; display: grid; gap: 1px; }
+.novel-v15-context-copy > span { overflow: hidden; color: var(--text-muted, var(--muted)); font-size: 8px; font-weight: 680; line-height: 1.25; text-overflow: ellipsis; white-space: nowrap; }
+.novel-v15-context-copy > strong { overflow: hidden; color: var(--text-primary, var(--text)); font-size: 11px; font-weight: 720; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
+.novel-v15-context-progress { display: flex; align-items: center; gap: 8px; }
+.novel-v15-context-progress > span { width: 82px; height: 3px; overflow: hidden; border-radius: 999px; background: rgba(255,255,255,.065); }
+.novel-v15-context-progress i { display: block; width: 0; height: 100%; border-radius: inherit; background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 74%, #7894ff), var(--accent)); box-shadow: 0 0 9px color-mix(in srgb, var(--accent) 25%, transparent); transition: width .28s cubic-bezier(.2,.8,.2,1); }
+.novel-v15-context-progress b { color: var(--text-muted, var(--muted)); font-size: 8px; font-weight: 580; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.novel-v15-context-actions { display: flex; gap: 4px; }
+.novel-v15-context-actions button { min-height: 30px; padding: 0 9px; border: 1px solid transparent; border-radius: 8px; background: transparent; color: var(--text-muted, var(--muted)); cursor: pointer; font-size: 9px; font-weight: 680; transition: color .16s ease, border-color .16s ease, background .16s ease; }
+.novel-v15-context-actions button:hover, .novel-v15-context-actions button:focus-visible { border-color: color-mix(in srgb, var(--accent) 22%, var(--border)); background: color-mix(in srgb, var(--accent) 7%, var(--surface-soft)); color: var(--text-primary, var(--text)); }
+body[data-uai-mode="novel"] #emptyState { min-height: min(57vh, 560px); padding-top: 52px; }
+body[data-uai-mode="novel"] #emptyState .empty-kicker { padding: 5px 9px; border: 1px solid color-mix(in srgb, var(--accent) 20%, var(--border)); border-radius: 999px; background: color-mix(in srgb, var(--accent) 6%, transparent); font-size: 8px; letter-spacing: .16em; }
+body[data-uai-mode="novel"] #emptyState h1 { max-width: 680px; margin-top: 15px; font-family: inherit; font-size: clamp(29px, 4vw, 44px); font-weight: 760; letter-spacing: -.045em; line-height: 1.08; }
+body[data-uai-mode="novel"] #emptyState > p { max-width: 590px; color: var(--text-muted, var(--muted)); font-size: 12px; line-height: 1.72; }
+.novel-v15-empty-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 20px; }
+.novel-v15-empty-actions button { min-height: 38px; padding: 0 13px; border: 1px solid var(--border-default, var(--border)); border-radius: 10px; background: color-mix(in srgb, var(--bg-surface-raised, var(--surface-raised)) 58%, transparent); color: var(--text-secondary, var(--text-soft)); cursor: pointer; font-size: 10px; font-weight: 670; transition: transform .16s ease, border-color .16s ease, background .16s ease, color .16s ease; }
+.novel-v15-empty-actions button:hover, .novel-v15-empty-actions button:focus-visible { transform: translateY(-1px); border-color: color-mix(in srgb, var(--accent) 35%, var(--border)); background: color-mix(in srgb, var(--accent) 8%, var(--surface-soft)); color: var(--text-primary, var(--text)); }
+.novel-v15-empty-actions button.primary { display: inline-flex; align-items: center; gap: 12px; border-color: color-mix(in srgb, var(--accent) 38%, var(--border)); background: color-mix(in srgb, var(--accent) 13%, var(--surface-soft)); color: color-mix(in srgb, var(--accent) 64%, var(--text-primary, white)); }
+.novel-v15-empty-actions button.primary b { font-size: 15px; font-weight: 500; transition: transform .18s ease; }
+.novel-v15-empty-actions button.primary:hover b { transform: translateX(3px); }
+body[data-uai-mode="novel"] #conversationPane .input-floating { padding-top: 10px; padding-bottom: 12px; background: linear-gradient(180deg, rgba(13,15,13,.68), rgba(13,15,13,.96)); }
+body[data-uai-mode="novel"] #composer { display: block; max-width: 880px; padding: 7px 8px 7px; border-radius: 16px; border-color: color-mix(in srgb, var(--border-default, var(--border)) 88%, transparent); background: color-mix(in srgb, var(--bg-surface, #191c19) 93%, transparent); box-shadow: 0 18px 46px rgba(0,0,0,.24), inset 0 1px rgba(255,255,255,.035); transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease; }
+body[data-uai-mode="novel"] #composer.novel-v15-focused { border-color: color-mix(in srgb, var(--accent) 50%, var(--border)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 7%, transparent), 0 20px 52px rgba(0,0,0,.28), inset 0 1px rgba(255,255,255,.04); }
+body[data-uai-mode="novel"] #composer .composer-main { display: flex; align-items: flex-end; gap: 9px; min-width: 0; padding: 1px 2px 0 8px; }
+body[data-uai-mode="novel"] #composer textarea#msg { min-height: 43px; padding: 10px 3px 8px; color: var(--text-primary, var(--text)); caret-color: var(--accent); font-size: 14px; line-height: 1.55; }
+body[data-uai-mode="novel"] #composer textarea#msg::placeholder { color: color-mix(in srgb, var(--text-muted, var(--muted)) 78%, transparent); }
+body[data-uai-mode="novel"] #composer #sendBtn, body[data-uai-mode="novel"] #composer #stopBtn { min-width: 72px; min-height: 40px; border-radius: 10px; }
+.novel-v15-composer-assist { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 31px; padding: 0 3px 6px; border-bottom: 1px solid color-mix(in srgb, var(--border-subtle, var(--border)) 76%, transparent); }
+.novel-v15-shortcuts { min-width: 0; display: flex; align-items: center; gap: 4px; overflow-x: auto; scrollbar-width: none; }
+.novel-v15-shortcuts::-webkit-scrollbar { display: none; }
+.novel-v15-shortcuts button { flex: 0 0 auto; min-height: 26px; padding: 0 8px; border: 1px solid transparent; border-radius: 7px; background: transparent; color: var(--text-muted, var(--muted)); cursor: pointer; font-size: 9px; font-weight: 640; white-space: nowrap; transition: background .14s ease, color .14s ease, border-color .14s ease; }
+.novel-v15-shortcuts button:hover, .novel-v15-shortcuts button:focus-visible { border-color: color-mix(in srgb, var(--accent) 18%, var(--border)); background: color-mix(in srgb, var(--accent) 6%, var(--surface-soft)); color: var(--text-primary, var(--text)); }
+.novel-v15-context-note { flex: 0 1 auto; min-width: 0; display: flex; align-items: center; justify-content: flex-end; gap: 6px; color: var(--text-muted, var(--muted)); }
+.novel-v15-context-note > span { color: var(--accent); font-size: 9px; opacity: .72; }
+.novel-v15-context-note p { overflow: hidden; margin: 0; max-width: 310px; font-size: 8px; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
+.novel-v15-context-note b { min-width: 25px; padding-left: 6px; border-left: 1px solid var(--border-subtle, var(--border)); color: color-mix(in srgb, var(--text-muted, var(--muted)) 74%, transparent); font-size: 8px; font-weight: 560; font-variant-numeric: tabular-nums; text-align: right; }
+body[data-uai-mode="novel"] #composer .composer-footer { min-height: 17px; padding: 2px 5px 0 8px; color: color-mix(in srgb, var(--text-muted, var(--muted)) 76%, transparent); font-size: 8px; }
+body:not([data-uai-mode="novel"]) .novel-v15-context, body:not([data-uai-mode="novel"]) .novel-v15-composer-assist, body:not([data-uai-mode="novel"]) .novel-v15-empty-actions { display: none !important; }
+@media (max-width: 1120px) {
+  .novel-v15-context { grid-template-columns: minmax(0, 1fr) auto; }
+  .novel-v15-context-progress { display: none; }
+  .novel-v15-context-note p { max-width: 210px; }
+}
+@media (max-width: 760px) {
+  body[data-uai-mode="novel"] #conversationPane #history { padding-top: 58px; padding-bottom: 158px; }
+  body[data-uai-mode="novel"] .novel-v15-context { top: 7px; width: calc(100% - 20px); min-height: 42px; gap: 7px; padding: 5px 6px 5px 9px; border-radius: 11px; }
+  .novel-v15-context-actions button { padding: 0 7px; }
+  .novel-v15-context-actions button[data-novel-v15-action="outline"] { display: none; }
+  body[data-uai-mode="novel"] #emptyState { align-items: flex-start; min-height: min(52vh, 480px); padding: 50px 17px 28px; text-align: left; }
+  body[data-uai-mode="novel"] #emptyState h1 { font-size: clamp(27px, 8vw, 36px); }
+  body[data-uai-mode="novel"] #emptyState > p { font-size: 11px; }
+  .novel-v15-empty-actions { justify-content: flex-start; }
+  body[data-uai-mode="novel"] #conversationPane .input-floating { padding: 8px 9px 10px; }
+  body[data-uai-mode="novel"] #composer { border-radius: 14px; }
+  .novel-v15-composer-assist { display: block; padding-bottom: 5px; }
+  .novel-v15-shortcuts { padding-bottom: 1px; }
+  .novel-v15-context-note { display: none; }
+  body[data-uai-mode="novel"] #composer .composer-footer { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .novel-v15-context, .novel-v15-context-progress i, .novel-v15-empty-actions button, #composer, .novel-v15-shortcuts button { transition: none !important; }
+}
+
+/* ===== V15.1 story desk ==================================================== */
+body[data-uai-mode="novel"] #studioPanelBody { position: relative; }
+body[data-uai-mode="novel"] .novel-v151-guide { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 14px; margin: 12px 12px 14px; padding: 13px 13px 12px; border: 1px solid color-mix(in srgb, var(--border-default, var(--border)) 76%, transparent); border-radius: 12px; background: linear-gradient(145deg, color-mix(in srgb, var(--accent) 5%, transparent), transparent 46%), color-mix(in srgb, var(--bg-surface-raised, var(--surface-raised)) 66%, transparent); box-shadow: inset 0 1px rgba(255,255,255,.025), 0 10px 26px rgba(0,0,0,.10); }
+.novel-v151-guide[hidden] { display: none !important; }
+.novel-v151-guide-copy { min-width: 0; display: grid; gap: 4px; }
+.novel-v151-guide-copy > span { color: color-mix(in srgb, var(--accent) 72%, var(--text-muted, var(--muted))); font: 760 8px/1.15 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: .14em; }
+.novel-v151-guide-copy > strong { color: var(--text-primary, var(--text)); font-size: 14px; font-weight: 760; letter-spacing: -.018em; line-height: 1.3; }
+.novel-v151-guide-copy > p { max-width: 520px; margin: 0; color: var(--text-muted, var(--muted)); font-size: 9.5px; line-height: 1.6; }
+.novel-v151-guide-side { display: grid; justify-items: end; gap: 9px; }
+.novel-v151-metric { min-height: 24px; display: inline-flex; align-items: center; padding: 0 8px; border: 1px solid var(--border-subtle, var(--border)); border-radius: 999px; background: rgba(255,255,255,.025); color: var(--text-muted, var(--muted)); font-size: 8px; font-weight: 650; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.novel-v151-metric[data-tone="good"] { border-color: color-mix(in srgb, var(--accent) 26%, var(--border)); background: color-mix(in srgb, var(--accent) 6%, transparent); color: color-mix(in srgb, var(--accent) 62%, var(--text-secondary, var(--text-soft))); }
+.novel-v151-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 5px; }
+.novel-v151-actions button { min-height: 29px; padding: 0 9px; border: 1px solid var(--border-subtle, var(--border)); border-radius: 8px; background: rgba(255,255,255,.025); color: var(--text-secondary, var(--text-soft)); cursor: pointer; font-size: 8.5px; font-weight: 670; transition: border-color .15s ease, background .15s ease, color .15s ease, transform .15s ease; }
+.novel-v151-actions button:hover, .novel-v151-actions button:focus-visible { transform: translateY(-1px); border-color: color-mix(in srgb, var(--accent) 30%, var(--border)); background: color-mix(in srgb, var(--accent) 7%, var(--surface-soft)); color: var(--text-primary, var(--text)); }
+.novel-v151-actions button.primary { border-color: color-mix(in srgb, var(--accent) 34%, var(--border)); background: color-mix(in srgb, var(--accent) 10%, var(--surface-soft)); color: color-mix(in srgb, var(--accent) 66%, var(--text-primary, white)); }
+body[data-uai-mode="novel"] #studioPanel .studio-tabs { position: relative; gap: 4px; padding: 7px 8px; }
+body[data-uai-mode="novel"] #studioPanel .studio-tabs button { position: relative; min-width: 0; }
+body[data-uai-mode="novel"] #studioPanel .studio-tabs button.active::after { content: ""; position: absolute; left: 9px; right: 9px; bottom: 2px; height: 2px; border-radius: 999px; background: var(--accent); box-shadow: 0 0 8px color-mix(in srgb, var(--accent) 24%, transparent); }
+body[data-uai-mode="novel"] #studioPanelBody label { position: relative; }
+body[data-uai-mode="novel"] #studioPanelBody label.novel-v151-filled > span:first-child::after { content: ""; display: inline-block; width: 4px; height: 4px; margin-left: 6px; border-radius: 50%; vertical-align: 2px; background: color-mix(in srgb, var(--accent) 78%, white); box-shadow: 0 0 7px color-mix(in srgb, var(--accent) 20%, transparent); }
+body[data-uai-mode="novel"] #studioPanelBody label[data-v151-priority="core"] { padding: 11px !important; border-color: color-mix(in srgb, var(--accent) 18%, var(--border-default, var(--border))) !important; background: color-mix(in srgb, var(--accent) 3%, var(--bg-surface, var(--surface-solid))) !important; }
+body[data-uai-mode="novel"] #studioPanelBody label[data-v151-priority="support"] { opacity: .88; }
+body[data-uai-mode="novel"] #studioPanelBody [data-v151-priority="chapter"] { border-color: color-mix(in srgb, var(--accent) 18%, var(--border-default, var(--border))); box-shadow: inset 0 1px rgba(255,255,255,.02); }
+body[data-uai-mode="novel"] .character-card { position: relative; }
+.novel-v151-character-badge { position: absolute; z-index: 4; top: 8px; right: 38px; min-height: 21px; display: inline-flex; align-items: center; padding: 0 7px; border: 1px solid var(--border-subtle, var(--border)); border-radius: 999px; background: color-mix(in srgb, var(--bg-surface-raised, var(--surface-raised)) 88%, transparent); color: var(--text-muted, var(--muted)); font-size: 7.5px; font-weight: 650; pointer-events: none; }
+.novel-v151-character-badge[data-tone="good"] { border-color: color-mix(in srgb, var(--accent) 25%, var(--border)); color: color-mix(in srgb, var(--accent) 58%, var(--text-secondary, var(--text-soft))); }
+.novel-v151-guide[data-tab="draft"] { border-left: 2px solid color-mix(in srgb, var(--accent) 50%, transparent); }
+.novel-v151-guide[data-tab="outline"] { border-left: 2px solid color-mix(in srgb, #8ea4ff 48%, transparent); }
+.novel-v151-guide[data-tab="characters"] { border-left: 2px solid color-mix(in srgb, #d49aaa 46%, transparent); }
+.novel-v151-guide[data-tab="world"] { border-left: 2px solid color-mix(in srgb, #d4bb79 46%, transparent); }
+body:not([data-uai-mode="novel"]) .novel-v151-guide, body:not([data-uai-mode="novel"]) .novel-v151-character-badge { display: none !important; }
+@media (max-width: 1120px) {
+  body[data-uai-mode="novel"] .novel-v151-guide { grid-template-columns: 1fr; }
+  .novel-v151-guide-side { justify-items: start; }
+  .novel-v151-actions { justify-content: flex-start; }
+}
+@media (max-width: 720px) {
+  body[data-uai-mode="novel"] .novel-v151-guide { margin: 9px 9px 11px; padding: 11px; border-radius: 10px; }
+  .novel-v151-guide-copy > strong { font-size: 13px; }
+  .novel-v151-guide-copy > p { font-size: 9px; }
+  .novel-v151-actions { width: 100%; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  .novel-v151-actions::-webkit-scrollbar { display: none; }
+  .novel-v151-actions button { flex: 0 0 auto; min-height: 31px; }
+  .novel-v151-character-badge { top: 7px; right: 37px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .novel-v151-actions button, body[data-uai-mode="novel"] #studioPanel .studio-tabs button.active::after { transition: none !important; }
+}
+
+/* ===== V15.2 manuscript flow ============================================== */
+body[data-uai-mode="novel"] .novel-v152-writing-now { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 10px; margin: 7px 9px 9px; padding: 10px 10px 9px; border: 1px solid color-mix(in srgb,var(--border-default,var(--border)) 72%,transparent); border-radius: 10px; background: linear-gradient(145deg,color-mix(in srgb,var(--accent) 5%,transparent),transparent 48%), rgba(255,255,255,.022); }
+.novel-v152-writing-copy { min-width: 0; display: grid; gap: 2px; }
+.novel-v152-writing-copy > span { color: color-mix(in srgb,var(--accent) 66%,var(--muted)); font: 740 7.5px/1.2 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; letter-spacing: .12em; }
+.novel-v152-writing-copy > strong { overflow: hidden; color: var(--text); font-size: 11px; font-weight: 720; line-height: 1.3; text-overflow: ellipsis; white-space: nowrap; }
+.novel-v152-writing-copy > p { overflow: hidden; margin: 0; color: var(--muted); font-size: 8px; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
+.novel-v152-writing-state { display: grid; justify-items: end; gap: 6px; }
+#novelV152LinkState { min-height: 19px; display: inline-flex; align-items: center; padding: 0 6px; border: 1px solid var(--border-subtle,var(--border)); border-radius: 999px; color: var(--muted); background: rgba(255,255,255,.018); font-size: 7px; white-space: nowrap; }
+#novelV152LinkState[data-tone="good"] { border-color: color-mix(in srgb,var(--accent) 26%,var(--border)); color: color-mix(in srgb,var(--accent) 62%,var(--text-soft)); background: color-mix(in srgb,var(--accent) 6%,transparent); }
+#novelV152LinkState[data-tone="warn"] { border-color: color-mix(in srgb,#d8b66f 30%,var(--border)); color: #c9ad72; background: rgba(216,182,111,.055); }
+#novelV152WritingActions { display: flex; justify-content: flex-end; gap: 4px; }
+#novelV152WritingActions button { min-height: 26px; padding: 0 7px; border: 1px solid var(--border-subtle,var(--border)); border-radius: 7px; background: transparent; color: var(--text-soft); cursor: pointer; font-size: 7.5px; font-weight: 660; }
+#novelV152WritingActions button:hover, #novelV152WritingActions button:focus-visible { border-color: color-mix(in srgb,var(--accent) 28%,var(--border)); background: color-mix(in srgb,var(--accent) 6%,var(--surface-soft)); color: var(--text); }
+#novelV152WritingActions button.primary { border-color: color-mix(in srgb,var(--accent) 32%,var(--border)); background: color-mix(in srgb,var(--accent) 8%,var(--surface-soft)); color: color-mix(in srgb,var(--accent) 62%,var(--text)); }
+body[data-uai-mode="novel"] #studioChapterList .chapter-item { position: relative; padding-bottom: 3px; }
+.novel-v152-chapter-progress { position: absolute; z-index: 2; left: 8px; right: 8px; bottom: 2px; height: 2px; overflow: hidden; border-radius: 999px; background: rgba(255,255,255,.035); pointer-events: none; }
+.novel-v152-chapter-progress > i { display: block; width: 0; height: 100%; border-radius: inherit; background: color-mix(in srgb,var(--accent) 60%,#7d94ff); opacity: .56; transition: width .24s ease,opacity .15s ease; }
+#studioChapterList .chapter-item[data-v152-session="current"] .novel-v152-chapter-progress > i { opacity: .95; box-shadow: 0 0 7px color-mix(in srgb,var(--accent) 22%,transparent); }
+#studioChapterList .chapter-item[data-v152-session="other"] .novel-v152-chapter-progress > i { background: color-mix(in srgb,#d8b66f 52%,var(--accent)); }
+body[data-uai-mode="novel"] #studioSessionList .studio-list-item { position: relative; }
+.novel-v152-session-badge { position: absolute; z-index: 3; top: 6px; right: 31px; min-height: 17px; display: inline-flex; align-items: center; padding: 0 5px; border: 1px solid color-mix(in srgb,var(--accent) 22%,var(--border)); border-radius: 999px; background: color-mix(in srgb,var(--accent) 6%,var(--bg-surface)); color: color-mix(in srgb,var(--accent) 58%,var(--text-soft)); font-size: 6.5px; font-weight: 700; pointer-events: none; }
+body[data-uai-mode="novel"] #chat .message-tools { flex-wrap: wrap; }
+.novel-v152-result-flow { display: inline-flex; align-items: center; gap: 5px; min-height: 28px; }
+.novel-v152-result-destination { color: color-mix(in srgb,var(--muted) 88%,transparent); font-size: 8px; font-weight: 560; white-space: nowrap; }
+.novel-v152-result-flow.added .novel-v152-result-destination { color: color-mix(in srgb,var(--accent) 58%,var(--text-soft)); }
+.novel-v152-open-manuscript { min-height: 27px; padding: 0 8px; border: 1px solid color-mix(in srgb,var(--accent) 22%,var(--border)); border-radius: 7px; background: transparent; color: var(--text-soft); cursor: pointer; font-size: 8px; font-weight: 650; }
+.novel-v152-open-manuscript:hover, .novel-v152-open-manuscript:focus-visible { border-color: color-mix(in srgb,var(--accent) 38%,var(--border)); background: color-mix(in srgb,var(--accent) 7%,var(--surface-soft)); color: var(--text); }
+body:not([data-uai-mode="novel"]) .novel-v152-writing-now, body:not([data-uai-mode="novel"]) .novel-v152-chapter-progress, body:not([data-uai-mode="novel"]) .novel-v152-session-badge, body:not([data-uai-mode="novel"]) .novel-v152-result-flow { display: none !important; }
+@media (max-width: 980px) {
+  body[data-uai-mode="novel"] .novel-v152-writing-now { grid-template-columns: 1fr; }
+  .novel-v152-writing-state { justify-items: start; }
+  #novelV152WritingActions { justify-content: flex-start; }
+}
+@media (max-width: 720px) {
+  body[data-uai-mode="novel"] .novel-v152-writing-now { margin: 7px 8px 8px; padding: 9px; }
+  #novelV152WritingActions button { min-height: 30px; font-size: 8px; }
+  .novel-v152-session-badge { right: 29px; }
+  .novel-v152-result-flow { width: 100%; justify-content: flex-start; }
+}
+@media (prefers-reduced-motion: reduce) { .novel-v152-chapter-progress > i { transition: none !important; } }
+
+/* ===== V15.3 reply actions ================================================= */
+body[data-uai-mode="novel"] #chat .message-tools { row-gap: 6px; }
+.novel-v153-reply-actions { flex: 1 1 100%; min-width: 0; display: flex; align-items: center; gap: 4px; padding-top: 2px; opacity: .78; transition: opacity .16s ease; }
+#chat .row.ai:hover .novel-v153-reply-actions, #chat .row.ai:focus-within .novel-v153-reply-actions { opacity: 1; }
+.novel-v153-reply-actions-label { flex: 0 0 auto; margin-right: 2px; color: color-mix(in srgb,var(--muted) 72%,transparent); font-size: 7.5px; font-weight: 620; white-space: nowrap; }
+.novel-v153-reply-actions button { min-height: 25px; flex: 0 0 auto; padding: 0 7px; border: 1px solid transparent; border-radius: 7px; background: transparent; color: color-mix(in srgb,var(--text-soft) 80%,var(--muted)); cursor: pointer; font-size: 8px; font-weight: 640; line-height: 1; white-space: nowrap; transition: border-color .14s ease,background .14s ease,color .14s ease,transform .14s ease; }
+.novel-v153-reply-actions button:hover, .novel-v153-reply-actions button:focus-visible { transform: translateY(-1px); border-color: color-mix(in srgb,var(--accent) 20%,var(--border)); background: color-mix(in srgb,var(--accent) 5%,var(--surface-soft)); color: var(--text); }
+.novel-v153-reply-actions button[data-v153-reply-action="continue"] { border-color: color-mix(in srgb,var(--accent) 20%,transparent); background: color-mix(in srgb,var(--accent) 5%,transparent); color: color-mix(in srgb,var(--accent) 58%,var(--text-soft)); }
+.novel-v153-reply-actions button[data-v153-reply-action="reference"] { margin-left: 2px; border-left-color: color-mix(in srgb,var(--border) 78%,transparent); }
+.novel-v153-reply-actions button.prepared { border-color: color-mix(in srgb,var(--accent) 34%,var(--border)); background: color-mix(in srgb,var(--accent) 9%,var(--surface-soft)); color: color-mix(in srgb,var(--accent) 68%,var(--text)); transform: none; }
+body[data-uai-mode="novel"] #composer.novel-v153-prepared { border-color: color-mix(in srgb,var(--accent) 58%,var(--border)) !important; box-shadow: 0 0 0 3px color-mix(in srgb,var(--accent) 7%,transparent),0 20px 52px rgba(0,0,0,.28),inset 0 1px rgba(255,255,255,.04) !important; }
+body:not([data-uai-mode="novel"]) .novel-v153-reply-actions { display: none !important; }
+@media (max-width: 720px) {
+  .novel-v153-reply-actions { width: 100%; overflow-x: auto; padding: 3px 0 1px; opacity: 1; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .novel-v153-reply-actions::-webkit-scrollbar { display: none; }
+  .novel-v153-reply-actions-label { display: none; }
+  .novel-v153-reply-actions button { min-height: 30px; padding: 0 9px; border-color: color-mix(in srgb,var(--border) 72%,transparent); background: rgba(255,255,255,.018); font-size: 8.5px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .novel-v153-reply-actions, .novel-v153-reply-actions button, body[data-uai-mode="novel"] #composer.novel-v153-prepared { transition: none !important; }
+}
