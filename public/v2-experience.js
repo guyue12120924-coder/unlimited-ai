@@ -1,7 +1,8 @@
 // public/v2-experience.js
-// V2 user-first experience: ready-to-write first run, light prompt shortcuts,
-// contextual guidance, and quiet save/backup feedback.
+// V16.6 user-first experience: event-driven workspace hints, prompt shortcuts,
+// save state and backup feedback without a private MutationObserver.
 (() => {
+  const REVISION = "2026-08-21-v16.6-v2-experience-events";
   const LS_STUDIO = "cfw_studio_workspace_v1";
   const LS_BACKUPS = "cfw_auto_backups_v1";
   const LS_FIRST_RUN = "cfw_v2_first_run_prepared";
@@ -28,7 +29,6 @@
     }
   ];
 
-  let panelObserver = null;
   let saveTimer = null;
   let backupTimer = null;
   let lastBackupId = "";
@@ -116,8 +116,6 @@
       return;
     }
 
-    // Existing work is never rewritten. Automatic preparation is only for the
-    // untouched default project created by the app.
     if (isPristineProject(project)) {
       createFirstChapter();
       openDraftQuietly();
@@ -278,33 +276,36 @@
     syncSaveStatus();
   }
 
+  function scheduleExperienceRefresh() {
+    if (window.UnlimitedV3?.schedule) {
+      window.UnlimitedV3.schedule("v166-v2-experience", refreshExperience);
+      return;
+    }
+    setTimeout(refreshExperience, 0);
+  }
+
   function bindEvents() {
     document.addEventListener("input", (event) => {
       if (event.target?.id === "simpleManuscriptEditor") onManuscriptInput(event.target);
     }, true);
 
-    document.querySelector(".studio-tabs")?.addEventListener("click", () => setTimeout(refreshExperience, 30));
-    document.getElementById("studioLibrary")?.addEventListener("click", () => setTimeout(refreshExperience, 70));
+    window.addEventListener("uai:workspace-refresh", scheduleExperienceRefresh);
+    window.addEventListener("uai:mode-refresh", scheduleExperienceRefresh);
   }
 
   function init() {
     bindEvents();
     ensurePromptShortcuts();
     prepareFirstRun();
-
-    const body = document.getElementById("studioPanelBody");
-    if (body) {
-      panelObserver = new MutationObserver(() => setTimeout(refreshExperience, 0));
-      panelObserver.observe(body, { childList: true, subtree: false });
-    }
-
     lastBackupId = currentBackupId();
     setInterval(monitorBackups, 1400);
-    setTimeout(refreshExperience, 80);
+    scheduleExperienceRefresh();
+    document.documentElement.dataset.v2ExperienceRevision = REVISION;
   }
 
   window.UnlimitedV2Experience = {
-    refresh: refreshExperience,
+    revision: REVISION,
+    refresh: scheduleExperienceRefresh,
     prepareFirstRun
   };
 
