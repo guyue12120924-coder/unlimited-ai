@@ -77,6 +77,12 @@
     window.UnlimitedCompanionExtras?.refresh?.();
   }
 
+  function announceReady() {
+    window.dispatchEvent(new CustomEvent("uai:companion-functions-ready", {
+      detail: { revision: REVISION }
+    }));
+  }
+
   async function load() {
     if (loadPromise) return loadPromise;
     loadPromise = (async () => {
@@ -86,6 +92,7 @@
         for (const [src, id] of SCRIPT_ASSETS) await loadScript(src, id);
         document.documentElement.dataset.companionFunctionPack = "ready";
         if (document.body.dataset.uaiMode === "companion") requestAnimationFrame(refreshFeatures);
+        announceReady();
         return true;
       } catch (error) {
         lastError = error;
@@ -112,8 +119,10 @@
   window.addEventListener("uai:companion-core-entered", scheduleLoad);
   window.addEventListener("uai:mode-refresh", () => {
     if (document.body.dataset.uaiMode === "companion") {
-      if (document.documentElement.dataset.companionFunctionPack === "ready") requestAnimationFrame(refreshFeatures);
-      else scheduleLoad();
+      if (document.documentElement.dataset.companionFunctionPack === "ready") {
+        requestAnimationFrame(refreshFeatures);
+        announceReady();
+      } else scheduleLoad();
     }
   });
 
