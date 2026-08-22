@@ -213,8 +213,8 @@
 .uai-c-message-row {
   position: relative;
   margin: 19px 0;
-  animation: uai-c-polish-message-in .24s ease both;
 }
+.uai-c-message-row:last-child { animation: uai-c-polish-message-in .24s ease both; }
 .uai-c-message-row > div { max-width: 100%; }
 .uai-c-message-row.assistant > div { position: relative; }
 .uai-c-message-row.assistant > div::before {
@@ -365,7 +365,7 @@
 @media (prefers-reduced-motion: reduce) {
   #uaiCompanionRoot::before,
   #uaiCompanionRoot::after,
-  .uai-c-message-row { animation: none !important; }
+  .uai-c-message-row:last-child { animation: none !important; }
   .uai-c-new-chat,
   .uai-c-session,
   .uai-c-composer,
