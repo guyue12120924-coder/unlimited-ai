@@ -1,39 +1,72 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 
-const index = fs.readFileSync("public/index.html", "utf8");
-const boot = fs.readFileSync("public/boot-diagnostics.js", "utf8");
-const entry = fs.readFileSync("public/companion-entry-v173.js", "utf8");
-const loader = fs.readFileSync("public/companion-assets-loader.js", "utf8");
-const v12Css = fs.readFileSync("public/companion-v12-final.css", "utf8");
-const v12Js = fs.readFileSync("public/companion-v12-final.js", "utf8");
+const read = (path) => fs.readFileSync(path, "utf8");
+const index = read("public/index.html");
+const boot = read("public/boot-diagnostics.js");
+const entry = read("public/companion-entry-v174.js");
+const loader = read("public/companion-assets-loader-v174.js");
+const phase1 = read("public/companion-v12-phase1.js");
+const phase4 = read("public/companion-v12-phase4-themes.js");
+const v12Css = read("public/companion-v12-final.css");
+const v12Js = read("public/companion-v12-final.js");
 
-assert.match(index, /boot-diagnostics\.js\?v=20260821-v17\.3-companion-atomic-enhancements/);
-assert.match(boot, /2026-08-21-v17\.3-companion-atomic-enhancements/);
-assert.match(boot, /companion-entry-v173\.js/);
-assert.doesNotMatch(boot, /companion-entry-v172\.js/);
+assert.match(index, /boot-diagnostics\.js\?v=20260822-v17\.4-companion-verified-commit/);
+assert.match(boot, /2026-08-22-v17\.4-companion-verified-commit/);
+assert.match(boot, /companion-entry-v174\.js/);
+assert.doesNotMatch(boot, /companion-entry-v17[123]\.js/,
+  "only the V17.4 verified entry may own companion clicks");
 assert.doesNotMatch(boot, /companion-lazy-bridge\.js/);
 
+assert.match(entry, /companion-assets-loader-v174\.js/);
 assert.match(entry, /function suppressEnhancementStyles\(/);
-assert.match(entry, /link\.media = "not all"/);
-assert.match(entry, /function stabilizeMessages\(/);
-assert.match(entry, /container\.children\.length \|\| !expectedMessages/);
-assert.match(entry, /UnlimitedCompanion\?\.mount/);
-assert.match(entry, /setTimeout\(startEnhancements, 180\)/);
+assert.match(entry, /uaiCompanionLive2dNeuralVoiceCss/,
+  "entry suppression IDs must match the loader exactly");
+assert.match(entry, /async function hardReloadCore\(/);
+assert.match(entry, /function expectedMessages\(/);
+assert.match(entry, /async function stabilizeCore\(/);
+assert.match(entry, /querySelectorAll\("\.uai-c-message-row"\)/);
+assert.match(entry, /rendered < expected/);
+assert.match(entry, /await stabilizeCore\(\)/);
+assert.match(entry, /window\.setTimeout\(startEnhancements, 180\)/);
 
-assert.match(loader, /2026-08-21-v17\.3-companion-atomic-enhancements/);
-assert.match(loader, /inactive = false/);
+assert.match(loader, /2026-08-22-v17\.4-companion-verified-commit/);
+for (const asset of [
+  "companion-v12-phase2-background.css", "companion-v12-phase2-background.js",
+  "companion-v12-phase3-character.css", "companion-v12-phase3-character.js",
+  "companion-v12-phase4-themes.css", "companion-v12-phase4-themes.js",
+  "companion-v12-phase5-scene-state.css", "companion-v12-phase5-scene-state.js",
+  "companion-live2d-interaction.css", "companion-live2d-interaction.js"
+]) {
+  assert(loader.includes(asset), `${asset} must be owned by the V17.4 central loader`);
+}
+assert.match(loader, /function predeclareScripts\(/);
+assert.match(loader, /uaiCompanionScriptPlaceholder/);
 assert.match(loader, /link\.media = "not all"/);
-assert.match(loader, /function activateEnhancementStyles\(/);
+assert.match(loader, /function structureReady\(/);
+assert.match(loader, /\.uai-c-v12-sidepanel/);
+assert.match(loader, /\.uai-c-v122-scene/);
+assert.match(loader, /\.uai-c-v125-scene/);
+assert.match(loader, /\.uai-c-v127-theme-layer/);
+assert.match(loader, /await waitForVerifiedDom\(\)/);
+assert.match(loader, /function activateStyles\(/);
 assert.match(loader, /link\.media = "all"/);
-assert.match(loader, /for \(const \[path, id\] of SCRIPT_ASSETS\)/);
-assert.match(loader, /await stylePromise;\s*activateEnhancementStyles\(\)/s);
-assert.match(loader, /deactivateEnhancementStyles\(\);[\s\S]*throw error/);
+assert(loader.indexOf("await waitForVerifiedDom()") < loader.indexOf("activateStyles();"),
+  "enhancement CSS must activate only after required DOM is verified");
+assert.match(loader, /companionEnhancementCommit = "degraded"/);
+assert.match(loader, /suppressStyles\(\)/);
 
-// V12.2 is the concrete regression case: its CSS adds a fourth grid row and its JS inserts
-// the matching scene DOM. These must never be allowed to become active independently again.
+assert.doesNotMatch(phase1, /function ensureStyle\(|function ensureScript\(|loadPhaseEnhancements\(/,
+  "phase 1 must never start a secondary resource loader again");
+assert.match(phase1, /uai:companion-enhancements-commit/);
+assert.match(phase1, /commitStyles/);
+assert.doesNotMatch(phase4, /function ensureStyle\(|function ensureScript\(|loadPhase5SceneState\(/,
+  "phase 4 must never start a secondary resource loader again");
+assert.match(phase4, /companion-assets-loader-v174\.js/);
+
+// Concrete regression: this CSS changes the shell/main grid, while JS supplies the matching DOM.
 assert.match(v12Css, /grid-template-rows:72px 292px minmax\(0,1fr\) auto!important/);
 assert.match(v12Js, /className = "uai-c-v122-scene"/);
 assert.match(v12Js, /main\.insertBefore\(scene,messages\)/);
 
-console.log("Companion V17.3 atomic enhancement contract passed: structural theme CSS cannot activate before its matching JavaScript DOM is ready.");
+console.log("Companion V17.4 verified-commit contract passed: one loader owns all structural enhancements, CSS activates only after DOM verification, and core messages have a recovery path.");
