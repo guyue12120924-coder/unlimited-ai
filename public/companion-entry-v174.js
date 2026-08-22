@@ -27,6 +27,14 @@
   let warmTimer = 0;
   let lastError = null;
 
+  function companionActive() {
+    const root = document.getElementById("uaiCompanionRoot");
+    return Boolean(
+      document.body.dataset.uaiMode === "companion" &&
+      root && !root.hidden && root.isConnected
+    );
+  }
+
   function suppressEnhancementStyles() {
     for (const id of ENHANCEMENT_STYLE_IDS) {
       const link = document.getElementById(id);
@@ -35,6 +43,7 @@
         link.dataset.uaiDeferredActivation = "true";
       }
     }
+    window.UnlimitedCompanionAssetsV174?.suppressStyles?.();
     document.documentElement.dataset.companionEnhancementStyles = "deferred";
   }
 
@@ -126,19 +135,20 @@
         document.head.appendChild(link);
       }
       let settled = false;
+      let timer = 0;
       const finish = (error) => {
         if (settled) return;
         settled = true;
-        window.clearTimeout(timer);
+        if (timer) window.clearTimeout(timer);
         link.removeEventListener("load", onLoad);
         link.removeEventListener("error", onError);
         error ? reject(error) : resolve(link);
       };
       const onLoad = () => finish();
       const onError = () => finish(new Error("Failed to load companion-mode.css"));
-      const timer = window.setTimeout(() => finish(new Error("Timed out loading companion-mode.css")), CORE_TIMEOUT_MS);
       link.addEventListener("load", onLoad, { once: true });
       link.addEventListener("error", onError, { once: true });
+      timer = window.setTimeout(() => finish(new Error("Timed out loading companion-mode.css")), CORE_TIMEOUT_MS);
       if (link.sheet) finish();
     });
   }
@@ -163,10 +173,11 @@
         document.body.appendChild(script);
       }
       let settled = false;
+      let timer = 0;
       const finish = (error) => {
         if (settled) return;
         settled = true;
-        window.clearTimeout(timer);
+        if (timer) window.clearTimeout(timer);
         script.removeEventListener("load", onLoad);
         script.removeEventListener("error", onError);
         if (error) return reject(error);
@@ -176,9 +187,9 @@
       };
       const onLoad = () => requestAnimationFrame(() => finish());
       const onError = () => finish(new Error("Failed to load companion-mode.js"));
-      const timer = window.setTimeout(() => finish(new Error("Timed out loading companion-mode.js")), CORE_TIMEOUT_MS);
       script.addEventListener("load", onLoad, { once: true });
       script.addEventListener("error", onError, { once: true });
+      timer = window.setTimeout(() => finish(new Error("Timed out loading companion-mode.js")), CORE_TIMEOUT_MS);
       if (window.UnlimitedCompanion?.mount) finish();
     });
   }
@@ -195,7 +206,7 @@
   function visibleCore() {
     const root = document.getElementById("uaiCompanionRoot");
     return Boolean(
-      document.body.dataset.uaiMode === "companion" && root && !root.hidden && root.isConnected &&
+      companionActive() &&
       root.querySelector(".uai-c-shell") && root.querySelector(".uai-c-main") &&
       root.querySelector("#uaiCompanionMessages") && root.querySelector("#uaiCompanionInput")
     );
@@ -210,6 +221,11 @@
     lobby.querySelector("#uaiModeTransition")?.setAttribute("aria-hidden", "true");
   }
 
+  function exitToLobby() {
+    suppressEnhancementStyles();
+    window.UnlimitedModeRouter?.showLobby?.();
+  }
+
   function directMount() {
     suppressEnhancementStyles();
     clearTransition();
@@ -217,18 +233,20 @@
     document.body.dataset.uaiMode = "companion";
     const lobby = document.getElementById("uaiModeRoot");
     if (lobby) lobby.hidden = true;
-    window.UnlimitedCompanion.mount({ onExit: () => window.UnlimitedModeRouter?.showLobby?.() });
+    window.UnlimitedCompanion.mount({ onExit: exitToLobby });
     if (!visibleCore()) throw new Error("Companion core mount did not create a complete shell");
     return true;
   }
 
   async function hardReloadCore() {
+    if (document.body.dataset.uaiMode !== "companion") return false;
     suppressEnhancementStyles();
     try { window.UnlimitedCompanion?.unmount?.(); } catch {}
     document.getElementById("uaiCompanionRoot")?.remove();
     document.getElementById("uaiCompanionScript")?.remove();
     try { delete window.UnlimitedCompanion; } catch { window.UnlimitedCompanion = undefined; }
     await ensureCoreScript(true);
+    if (document.body.dataset.uaiMode !== "companion") return false;
     return directMount();
   }
 
@@ -253,22 +271,26 @@
   }
 
   async function stabilizeCore() {
+    if (document.body.dataset.uaiMode !== "companion") return false;
     let root = document.getElementById("uaiCompanionRoot");
     let container = root?.querySelector("#uaiCompanionMessages");
     if (!root || !container || !root.querySelector("#uaiCompanionInput") || !root.querySelector(".uai-c-main")) {
-      await hardReloadCore();
+      const restored = await hardReloadCore();
+      if (!restored || document.body.dataset.uaiMode !== "companion") return false;
       root = document.getElementById("uaiCompanionRoot");
       container = root?.querySelector("#uaiCompanionMessages");
     } else {
-      try { window.UnlimitedCompanion?.mount?.({ onExit: () => window.UnlimitedModeRouter?.showLobby?.() }); } catch {}
+      try { window.UnlimitedCompanion?.mount?.({ onExit: exitToLobby }); } catch {}
     }
 
+    if (document.body.dataset.uaiMode !== "companion") return false;
     if (!root || !container) throw new Error("Companion core could not restore its message shell");
     const expected = expectedMessages();
     let rendered = container.querySelectorAll(".uai-c-message-row").length;
     if (expected > 0 && rendered < expected) {
-      window.UnlimitedCompanion?.mount?.({ onExit: () => window.UnlimitedModeRouter?.showLobby?.() });
+      window.UnlimitedCompanion?.mount?.({ onExit: exitToLobby });
       await new Promise((resolve) => requestAnimationFrame(resolve));
+      if (document.body.dataset.uaiMode !== "companion") return false;
       container = document.querySelector("#uaiCompanionRoot #uaiCompanionMessages");
       rendered = container?.querySelectorAll(".uai-c-message-row").length || 0;
     }
@@ -281,6 +303,10 @@
     if (loaderPromise) return loaderPromise;
     loaderPromise = new Promise((resolve, reject) => {
       let script = document.getElementById("uaiCompanionAssetsLoaderV174Script");
+      if (script?.dataset.uaiLoaded === "false") {
+        script.remove();
+        script = null;
+      }
       if (!script) {
         script = document.createElement("script");
         script.id = "uaiCompanionAssetsLoaderV174Script";
@@ -289,43 +315,71 @@
         document.body.appendChild(script);
       }
       let settled = false;
+      let timer = 0;
       const finish = (error) => {
         if (settled) return;
         settled = true;
-        window.clearTimeout(timer);
+        if (timer) window.clearTimeout(timer);
         script.removeEventListener("load", onLoad);
         script.removeEventListener("error", onError);
-        if (error) reject(error);
-        else if (!window.UnlimitedCompanionAssetsV174?.load) reject(new Error("V17.4 enhancement loader did not initialize"));
-        else resolve(window.UnlimitedCompanionAssetsV174);
+        if (error) {
+          script.dataset.uaiLoaded = "false";
+          reject(error);
+        } else if (!window.UnlimitedCompanionAssetsV174?.load) {
+          reject(new Error("V17.4 enhancement loader did not initialize"));
+        } else {
+          script.dataset.uaiLoaded = "true";
+          resolve(window.UnlimitedCompanionAssetsV174);
+        }
       };
       const onLoad = () => finish();
       const onError = () => finish(new Error("Failed to load V17.4 enhancement loader"));
-      const timer = window.setTimeout(() => finish(new Error("V17.4 enhancement loader timed out")), 12000);
       script.addEventListener("load", onLoad, { once: true });
       script.addEventListener("error", onError, { once: true });
+      timer = window.setTimeout(() => finish(new Error("V17.4 enhancement loader timed out")), 12000);
       if (window.UnlimitedCompanionAssetsV174?.load) finish();
     }).finally(() => { loaderPromise = null; });
     return loaderPromise;
   }
 
   async function startEnhancements() {
+    if (document.body.dataset.uaiMode !== "companion") {
+      suppressEnhancementStyles();
+      return false;
+    }
     document.documentElement.dataset.companionEnhancements = "loading";
     try {
       const loader = await ensureLoader();
-      await loader.load();
-      await stabilizeCore();
+      if (document.body.dataset.uaiMode !== "companion") {
+        loader.suppressStyles?.();
+        return false;
+      }
+      const committed = await loader.load();
+      if (!committed || document.body.dataset.uaiMode !== "companion") {
+        loader.suppressStyles?.();
+        document.documentElement.dataset.companionEnhancements = "deferred";
+        return false;
+      }
+      const stable = await stabilizeCore();
+      if (!stable || document.body.dataset.uaiMode !== "companion") {
+        loader.suppressStyles?.();
+        return false;
+      }
       loader.refresh?.();
       document.documentElement.dataset.companionEnhancements = "ready";
+      return true;
     } catch (error) {
       console.warn("[Unlimited AI] companion enhancements degraded; preserving core chat", error);
       suppressEnhancementStyles();
       window.UnlimitedCompanionAssetsV174?.suppressStyles?.();
       document.documentElement.dataset.companionEnhancements = "degraded";
-      try { await stabilizeCore(); } catch (repairError) {
-        console.error("[Unlimited AI] companion core recovery failed", repairError);
+      if (document.body.dataset.uaiMode === "companion") {
+        try { await stabilizeCore(); } catch (repairError) {
+          console.error("[Unlimited AI] companion core recovery failed", repairError);
+        }
       }
       if (window.__UNLIMITED_BOOT__) window.__UNLIMITED_BOOT__.companionEnhancementsError = error?.message || String(error);
+      return false;
     }
   }
 
@@ -338,17 +392,21 @@
         await warmCore();
         if (document.body.dataset.uaiMode !== "lobby") return false;
         await enterCore();
-        await stabilizeCore();
-        if (!visibleCore()) throw new Error("Companion core is not visibly ready");
+        if (document.body.dataset.uaiMode !== "companion") return false;
+        const stable = await stabilizeCore();
+        if (!stable || !visibleCore()) throw new Error("Companion core is not visibly ready");
         setCardState("", "", "去见她");
         document.documentElement.dataset.companionEntryRevision = REVISION;
         window.dispatchEvent(new CustomEvent("uai:companion-core-entered", { detail: { revision: REVISION } }));
-        window.setTimeout(startEnhancements, 180);
+        window.setTimeout(() => {
+          if (document.body.dataset.uaiMode === "companion") startEnhancements();
+          else suppressEnhancementStyles();
+        }, 180);
         return true;
       } catch (error) {
         lastError = error;
         console.error("[Unlimited AI] V17.4 companion entry failed", error);
-        try { window.UnlimitedModeRouter?.showLobby?.(); } catch {}
+        try { exitToLobby(); } catch {}
         window.setTimeout(() => setCardState("error", "基础聊天没有正确打开，点击重试", "重试进入"), 0);
         return false;
       } finally {
@@ -376,11 +434,16 @@
     }, 120);
   }
 
+  function handleModeRefresh() {
+    if (document.body.dataset.uaiMode !== "companion") suppressEnhancementStyles();
+  }
+
   document.addEventListener("click", intercept, true);
   document.addEventListener("pointerover", warmOnPointer, { passive: true });
   document.addEventListener("focusin", (event) => {
     if (event.target?.closest?.("#uaiEnterCompanion") && document.body.dataset.uaiMode === "lobby") warmCore().catch(() => {});
   });
+  window.addEventListener("uai:mode-refresh", handleModeRefresh);
 
   window.UnlimitedCompanionEntryV174 = {
     revision: REVISION,
