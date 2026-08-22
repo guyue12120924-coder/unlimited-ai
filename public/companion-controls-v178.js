@@ -34,6 +34,18 @@
 
   function root() { return document.getElementById("uaiCompanionRoot"); }
 
+  function requiredApisReady() {
+    return Boolean(
+      window.UnlimitedCompanionCharacterControls?.openManager &&
+      window.UnlimitedCompanionMemorySearch?.showSearch &&
+      window.UnlimitedCompanionMemorySearch?.showMoments &&
+      window.UnlimitedCompanionMemorySearch?.showMemoryOrganizer &&
+      window.UnlimitedCompanionProfileRestore?.showCharacterProfile &&
+      window.UnlimitedCompanionProfileRestore?.chooseBackupFile &&
+      window.UnlimitedCompanionProfileRestore?.restoreRollback
+    );
+  }
+
   function showToast(message) {
     const host = root();
     if (!host) return;
@@ -51,11 +63,11 @@
   }
 
   async function ensureFunctions() {
-    if (functionsReady && window.UnlimitedCompanionMemorySearch && window.UnlimitedCompanionProfileRestore) return true;
+    if (functionsReady && requiredApisReady()) return true;
     const pack = window.UnlimitedCompanionFunctionPackV177;
     if (!pack?.load) return false;
     const ok = await pack.load();
-    functionsReady = Boolean(ok && window.UnlimitedCompanionMemorySearch && window.UnlimitedCompanionProfileRestore);
+    functionsReady = Boolean(ok && requiredApisReady());
     if (functionsReady) activateToolbar();
     return functionsReady;
   }
@@ -107,10 +119,10 @@
         const button = event.target.closest("[data-v178-action]");
         if (!button) return;
         const action = button.dataset.v178Action;
-        if (action === "companions") runFeature(() => window.UnlimitedCompanionCharacterControls?.openManager?.());
-        if (action === "search") runFeature(() => window.UnlimitedCompanionMemorySearch?.showSearch?.());
-        if (action === "relationship") runFeature(() => window.UnlimitedCompanionProfileRestore?.showCharacterProfile?.());
-        if (action === "moments") runFeature(() => window.UnlimitedCompanionMemorySearch?.showMoments?.());
+        if (action === "companions") runFeature(() => window.UnlimitedCompanionCharacterControls.openManager());
+        if (action === "search") runFeature(() => window.UnlimitedCompanionMemorySearch.showSearch());
+        if (action === "relationship") runFeature(() => window.UnlimitedCompanionProfileRestore.showCharacterProfile());
+        if (action === "moments") runFeature(() => window.UnlimitedCompanionMemorySearch.showMoments());
       });
     }
     activateToolbar();
@@ -119,7 +131,7 @@
   function activateToolbar() {
     const toolbar = root()?.querySelector("#uaiCompanionV178Tools");
     if (!toolbar) return;
-    const ready = functionsReady || document.documentElement.dataset.companionFunctionPack === "ready";
+    const ready = Boolean(functionsReady && requiredApisReady());
     toolbar.classList.toggle("is-ready", ready);
     toolbar.querySelectorAll("button").forEach((button) => { button.disabled = !ready; });
   }
@@ -246,10 +258,10 @@
       if (!button) return;
       const action = button.dataset.v178Data;
       if (action === "export-all") exportAllCharacters();
-      if (action === "import") runFeature(() => window.UnlimitedCompanionProfileRestore?.chooseBackupFile?.());
-      if (action === "rollback") runFeature(() => window.UnlimitedCompanionProfileRestore?.restoreRollback?.());
-      if (action === "companions") runFeature(() => window.UnlimitedCompanionCharacterControls?.openManager?.());
-      if (action === "memories") runFeature(() => window.UnlimitedCompanionMemorySearch?.showMemoryOrganizer?.());
+      if (action === "import") runFeature(() => window.UnlimitedCompanionProfileRestore.chooseBackupFile());
+      if (action === "rollback") runFeature(() => window.UnlimitedCompanionProfileRestore.restoreRollback());
+      if (action === "companions") runFeature(() => window.UnlimitedCompanionCharacterControls.openManager());
+      if (action === "memories") runFeature(() => window.UnlimitedCompanionMemorySearch.showMemoryOrganizer());
     });
 
     saveActions.insertAdjacentElement("beforebegin", panel);
@@ -272,24 +284,24 @@
     if (document.body.dataset.uaiMode !== "companion") return;
     if (event.target.closest("#uaiCompanionSettingsBtn")) requestAnimationFrame(enhanceSettings);
     if (event.target.closest(".uai-c-profile-card") && !event.target.closest("button, input, textarea, select, a")) {
-      runFeature(() => window.UnlimitedCompanionCharacterControls?.openManager?.());
+      runFeature(() => window.UnlimitedCompanionCharacterControls.openManager());
     }
   }
 
   function refresh() {
     if (document.body.dataset.uaiMode !== "companion") return;
-    functionsReady = document.documentElement.dataset.companionFunctionPack === "ready";
+    functionsReady = Boolean(document.documentElement.dataset.companionFunctionPack === "ready" && requiredApisReady());
     ensureToolbar();
     activateToolbar();
     enhanceSettings();
   }
 
   window.addEventListener("uai:companion-core-entered", () => {
-    functionsReady = document.documentElement.dataset.companionFunctionPack === "ready";
+    functionsReady = Boolean(document.documentElement.dataset.companionFunctionPack === "ready" && requiredApisReady());
     ensureToolbar();
   });
   window.addEventListener("uai:companion-functions-ready", () => {
-    functionsReady = true;
+    functionsReady = requiredApisReady();
     refresh();
   });
   window.addEventListener("uai:mode-refresh", refresh);
