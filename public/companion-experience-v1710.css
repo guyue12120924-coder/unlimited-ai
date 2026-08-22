@@ -1,0 +1,131 @@
+/* V17.10 safe companion experience. Additive only: no shell/main grid changes. */
+#uaiCompanionRoot .uai-c-v1710-relationship {
+  width: calc(100% - 20px);
+  margin: 8px 10px 2px;
+  min-height: 48px;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 10px;
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(255,92,177,.08), rgba(145,97,255,.045));
+  color: rgba(255,255,255,.82);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color .18s ease, background .18s ease, transform .18s ease;
+}
+#uaiCompanionRoot .uai-c-v1710-relationship:hover {
+  border-color: rgba(255,111,190,.2);
+  background: linear-gradient(135deg, rgba(255,92,177,.12), rgba(145,97,255,.07));
+  transform: translateY(-1px);
+}
+#uaiCompanionRoot .uai-c-v1710-heart {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: rgba(255,92,177,.09);
+  color: #ff7cbd;
+  font-size: 15px;
+}
+#uaiCompanionRoot .uai-c-v1710-relation-copy { min-width: 0; display: grid; gap: 2px; }
+#uaiCompanionRoot .uai-c-v1710-relation-copy strong { font-size: 12px; font-weight: 700; color: rgba(255,255,255,.9); }
+#uaiCompanionRoot .uai-c-v1710-relation-copy small { font-size: 10px; color: rgba(255,255,255,.37); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#uaiCompanionRoot .uai-c-v1710-memory { font-size: 9px; color: rgba(255,255,255,.42); white-space: nowrap; }
+#uaiCompanionRoot .uai-c-v1710-presence {
+  display: block;
+  margin-top: 2px;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: .02em;
+  color: rgba(255,255,255,.3);
+}
+#uaiCompanionRoot[data-v1710-daypart="late"] .uai-c-v1710-presence { color: rgba(185,153,255,.56); }
+#uaiCompanionRoot[data-v1710-daypart="evening"] .uai-c-v1710-presence { color: rgba(255,139,197,.5); }
+
+#uaiCompanionRoot .uai-c-v1710-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 5px;
+  opacity: .48;
+  transition: opacity .16s ease;
+}
+#uaiCompanionRoot .uai-c-message-row.assistant:hover .uai-c-v1710-actions,
+#uaiCompanionRoot .uai-c-v1710-actions:focus-within { opacity: 1; }
+#uaiCompanionRoot .uai-c-v1710-actions button {
+  appearance: none;
+  border: 1px solid rgba(255,255,255,.055);
+  border-radius: 999px;
+  background: rgba(255,255,255,.025);
+  color: rgba(255,255,255,.34);
+  padding: 4px 8px;
+  font: inherit;
+  font-size: 9px;
+  line-height: 1;
+  cursor: pointer;
+  transition: color .16s ease, border-color .16s ease, background .16s ease;
+}
+#uaiCompanionRoot .uai-c-v1710-actions button:hover {
+  color: rgba(255,255,255,.78);
+  border-color: rgba(255,105,184,.18);
+  background: rgba(255,93,178,.065);
+}
+#uaiCompanionRoot .uai-c-v1710-actions .uai-c-v1710-speak.is-speaking {
+  color: #ff9dcc;
+  border-color: rgba(255,100,184,.25);
+  background: rgba(255,89,170,.09);
+}
+
+#uaiCompanionRoot .uai-c-v1710-mic {
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255,255,255,.065);
+  border-radius: 12px;
+  background: rgba(255,255,255,.035);
+  color: rgba(255,255,255,.55);
+  cursor: pointer;
+  font-size: 14px;
+  transition: border-color .18s ease, background .18s ease, color .18s ease, transform .18s ease;
+}
+#uaiCompanionRoot .uai-c-v1710-mic:hover:not(:disabled) {
+  color: #ff9dce;
+  border-color: rgba(255,103,183,.22);
+  background: rgba(255,92,177,.07);
+  transform: translateY(-1px);
+}
+#uaiCompanionRoot .uai-c-v1710-mic.is-recording {
+  color: #fff;
+  border-color: rgba(255,85,143,.45);
+  background: rgba(255,64,121,.18);
+  box-shadow: 0 0 0 4px rgba(255,67,130,.06);
+}
+#uaiCompanionRoot .uai-c-v1710-mic.is-loading { opacity: .58; cursor: wait; }
+#uaiCompanionRoot .uai-c-v1710-mic:disabled { opacity: .35; cursor: not-allowed; }
+#uaiCompanionRoot .uai-c-v1710-mic-note {
+  margin: 5px 12px 0;
+  font-size: 9px;
+  line-height: 1.4;
+  color: rgba(255,255,255,.38);
+  text-align: right;
+}
+
+@media (max-width: 760px) {
+  #uaiCompanionRoot .uai-c-v1710-relationship { width: calc(100% - 16px); margin-left: 8px; margin-right: 8px; }
+  #uaiCompanionRoot .uai-c-v1710-actions { opacity: .82; overflow-x: auto; flex-wrap: nowrap; padding-bottom: 2px; scrollbar-width: none; }
+  #uaiCompanionRoot .uai-c-v1710-actions::-webkit-scrollbar { display: none; }
+  #uaiCompanionRoot .uai-c-v1710-actions button { min-height: 30px; padding-inline: 10px; white-space: nowrap; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #uaiCompanionRoot .uai-c-v1710-relationship,
+  #uaiCompanionRoot .uai-c-v1710-actions,
+  #uaiCompanionRoot .uai-c-v1710-actions button,
+  #uaiCompanionRoot .uai-c-v1710-mic { transition: none !important; transform: none !important; }
+}
