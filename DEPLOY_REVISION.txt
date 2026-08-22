@@ -1,5 +1,5 @@
 Unlimited AI deployment trigger
-Date: 2026-08-21
+Date: 2026-08-22
 Frontend core revision: 2026-08-21-v17.0-workspace-consolidation
 Frontend history lifecycle: 2026-08-21-v16.5-history-ui
 Frontend runtime core: 2026-08-21-v17.0-workspace-consolidation
@@ -7,15 +7,20 @@ Workspace event hub: 2026-08-21-v16.6-workspace-events
 Workspace UI module: 2026-08-21-v17.0-workspace-ui
 AI collaboration module: 2026-08-21-v17.0-ai-collaboration
 Workspace style bundle: workspace-v17.css?v=20260821-v17.0
-Companion entry bootstrap: 2026-08-21-v17.3-companion-atomic-enhancements
-Companion direct entry module: public/companion-entry-v173.js
+Companion entry bootstrap: 2026-08-22-v17.4-companion-verified-commit
+Companion direct entry module: public/companion-entry-v174.js
+Companion enhancement loader: public/companion-assets-loader-v174.js
 Companion core entry dependency: companion-mode.css + companion-mode.js only
-Companion enhancement loader: 2026-08-21-v17.3-companion-atomic-enhancements
-Companion enhancement activation: optional CSS downloads inactive with media="not all"; enhancement JavaScript executes in dependency order; optional CSS switches to media="all" only after all enhancement JavaScript is ready
-Companion enhancement failure behavior: keep the base companion UI active, re-disable all optional theme CSS, record degraded state, and preserve chat access
-Companion message recovery: if saved sessions contain messages but #uaiCompanionMessages is empty after enhancement, remount the core and refresh V12 layers
-Companion router watchdog: 2200ms; router failure falls back to direct core mount instead of trapping the user in OPEN HEART
-Companion legacy entry files: V17.1/V17.2 files remain only as rollback/reference sources and are not loaded by boot
+Companion enhancement ownership: one central loader owns V10/V11/V12, Phase2/3/4/5, Live2D interaction, voice and visual enhancement resources
+Companion nested loaders: removed from companion-v12-phase1.js and companion-v12-phase4-themes.js
+Companion enhancement activation: every optional stylesheet stays media="not all" until all enhancement scripts are loaded, required V12 structural DOM exists, and companion mode is still active
+Companion structural verification: .uai-c-v12-sidepanel + .uai-c-v122-scene + .uai-c-v125-scene + .uai-c-v127-theme-layer + core messages/input must exist before optional CSS commit
+Companion retry behavior: failed optional link/script nodes are removed so retries create a fresh network request instead of waiting on a dead element
+Companion repeat-entry behavior: cached enhancement assets are re-verified/recommitted on every companion re-entry; suppressing CSS no longer leaves the second entry permanently in a mixed base/enhanced state
+Companion exit-during-load behavior: leaving companion while optional assets are loading keeps assets warm but prevents CSS commit and prevents stale async callbacks from remounting companion over the lobby
+Companion message recovery: saved-session message count is compared with rendered .uai-c-message-row count; the core is rerendered and, if the shell is structurally damaged, companion-mode.js is hard reloaded without deleting local companion data
+Companion router watchdog: 2400ms; router failure falls back to direct verified core mount instead of trapping the user in OPEN HEART
+Companion legacy entry/loaders: V17.1/V17.2/V17.3 files remain only as rollback/reference sources and are not loaded by boot
 Observer scheduler: 2026-08-21-v16.5-observer-scheduler
 Storage core: 2026-08-20-v16.3-storage-core
 Chat transport: 2026-08-21-v16.4-chat-transport
@@ -23,7 +28,7 @@ Chat context core: 2026-08-21-v16.4-chat-context-core
 Chat registry: 2026-08-21-v16.4-chat-registry
 Worker revision: 2026-08-21-v16.4-worker-runtime-cleanup
 AI gateway revision: 2026-08-21-v17.0-workspace-gateway
-Reason: fix the partially loaded AI companion screen where the sidebar/header/composer appeared but the center conversation area was blank. V12 theme CSS changes .uai-c-main to a four-row grid while companion-v12-final.js inserts the matching scene DOM. Previous post-entry loading allowed structural CSS to activate before its JavaScript DOM existed, leaving the base three-child core layout in an invalid grid and producing a persistent black center when an enhancement failed. V17.3 separates core and optional assets, downloads optional styles inactive, executes enhancement JavaScript in dependency order, activates the optional styles atomically only after JavaScript succeeds, and automatically disables them again on any failure. The V17.3 entry also verifies/restores the message DOM after enhancement completion.
+Reason: complete a full companion-entry regression audit after two user-visible failures: an OPEN HEART transition lock and a later partially loaded companion shell with a blank center. The audit found that V12 structural CSS can change the shell/main grid before matching JavaScript creates the required scene/panel DOM, and that old Phase1/Phase4 files contained hidden second- and third-level resource loaders. V17.4 makes companion enhancement delivery single-owner and transactional: the base chat opens first; all structural enhancement CSS is suppressed; the complete enhancement dependency chain is loaded centrally; required DOM is explicitly verified; only then is the visual theme committed. Failed resources are retryable, leaving companion cancels the commit without discarding warm assets, repeat entry re-verifies the DOM, and the core message shell has a hard self-recovery path that preserves local companion data.
 Companion prompt source: src/companion.js -> COMPANION_ROLE_CARD
 Novel prompt source: src/worker.js -> NOVEL_SYSTEM_PROMPT
-Current architecture: V16.3 Storage Core remains the only Storage prototype gateway; V16.5 History UI controls durable-vs-ephemeral preference; app.js owns request-scoped sessions and SSE parsing; V16.4 Chat Transport owns request enrichment and mode isolation; V16.6 owns the single panel/chat/mode event hub; V17.0 delivers the consolidated novel workspace; V17.3 makes the companion core the only blocking entry dependency and applies all structural companion enhancements atomically after their JavaScript DOM is ready; src/worker-voice.js remains the protected AI gateway and deployment diagnostic layer.
+Current architecture: V16.3 Storage Core remains the only Storage prototype gateway; V16.5 History UI controls durable-vs-ephemeral preference; app.js owns request-scoped novel sessions and SSE parsing; V16.4 Chat Transport owns request enrichment and mode isolation; V16.6 owns the shared novel workspace event hub; V17.0 delivers the consolidated novel workspace; V17.4 makes the companion core independently usable and applies optional companion enhancements only through one verified transactional loader; src/worker-voice.js remains the protected AI gateway and deployment diagnostic layer.
