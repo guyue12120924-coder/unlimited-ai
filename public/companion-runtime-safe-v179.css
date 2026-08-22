@@ -1,0 +1,56 @@
+/* V17.9 safe companion runtime UI. Non-structural only. */
+#uaiCompanionRoot .uai-c-v179-status {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 30px;
+  padding: 0 11px;
+  border: 1px solid rgba(255, 255, 255, .08);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .035);
+  color: rgba(255, 255, 255, .52);
+  font-size: 11px;
+  line-height: 1;
+  white-space: nowrap;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .025);
+  pointer-events: none;
+}
+
+#uaiCompanionRoot .uai-c-v179-dot {
+  width: 6px;
+  height: 6px;
+  flex: 0 0 6px;
+  border-radius: 50%;
+  background: #67dfa4;
+  box-shadow: 0 0 9px rgba(103, 223, 164, .48);
+}
+
+#uaiCompanionRoot .uai-c-v179-status.is-generating {
+  color: rgba(255, 255, 255, .74);
+  border-color: rgba(238, 94, 178, .18);
+  background: rgba(236, 73, 161, .07);
+}
+
+#uaiCompanionRoot .uai-c-v179-dot.busy {
+  background: #ef66b8;
+  box-shadow: 0 0 12px rgba(239, 102, 184, .68);
+  animation: uaiV179Pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes uaiV179Pulse {
+  0%, 100% { opacity: .52; transform: scale(.82); }
+  50% { opacity: 1; transform: scale(1); }
+}
+
+@media (max-width: 760px) {
+  #uaiCompanionRoot .uai-c-v179-status {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #uaiCompanionRoot .uai-c-v179-dot.busy {
+    animation: none;
+  }
+}
