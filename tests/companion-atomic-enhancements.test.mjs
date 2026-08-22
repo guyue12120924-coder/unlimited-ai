@@ -24,11 +24,14 @@ assert.match(entry, /uaiCompanionLive2dNeuralVoiceCss/,
   "entry suppression IDs must match the loader exactly");
 assert.match(entry, /async function hardReloadCore\(/);
 assert.match(entry, /function expectedMessages\(/);
-assert.match(entry, /async function stabilizeCore\(/);
+assert.match(entry, /async function stabilizeCore\(\)[\s\S]*document\.body\.dataset\.uaiMode !== "companion"/);
 assert.match(entry, /querySelectorAll\("\.uai-c-message-row"\)/);
 assert.match(entry, /rendered < expected/);
-assert.match(entry, /await stabilizeCore\(\)/);
-assert.match(entry, /window\.setTimeout\(startEnhancements, 180\)/);
+assert.match(entry, /async function startEnhancements\(\)[\s\S]*document\.body\.dataset\.uaiMode !== "companion"/);
+assert.match(entry, /if \(!committed \|\| document\.body\.dataset\.uaiMode !== "companion"\)/);
+assert.match(entry, /function handleModeRefresh\(/);
+assert.match(entry, /uai:mode-refresh/);
+assert.match(entry, /window\.setTimeout\(\(\) => \{[\s\S]*startEnhancements\(\)/);
 
 assert.match(loader, /2026-08-22-v17\.4-companion-verified-commit/);
 for (const asset of [
@@ -42,17 +45,21 @@ for (const asset of [
 }
 assert.match(loader, /function predeclareScripts\(/);
 assert.match(loader, /uaiCompanionScriptPlaceholder/);
+assert.match(loader, /link\?\.dataset\.uaiLoaded === "false"/);
+assert.match(loader, /script\?\.dataset\.uaiLoaded === "false"/);
+assert.match(loader, /if \(link\.dataset\.uaiCompanionEnhancement === "true"\) link\.remove\(\)/);
+assert.match(loader, /if \(script\.dataset\.uaiCompanionEnhancement === "true"\) script\.remove\(\)/);
 assert.match(loader, /link\.media = "not all"/);
-assert.match(loader, /function structureReady\(/);
-assert.match(loader, /\.uai-c-v12-sidepanel/);
-assert.match(loader, /\.uai-c-v122-scene/);
-assert.match(loader, /\.uai-c-v125-scene/);
-assert.match(loader, /\.uai-c-v127-theme-layer/);
+assert.match(loader, /function structureReady\(\)[\s\S]*if \(!companionActive\(\)\) return false/);
+assert.match(loader, /function waitForVerifiedDom\([\s\S]*if \(!companionActive\(\)\) \{\s*resolve\(false\)/);
+assert.match(loader, /function recommit\(/);
+assert.match(loader, /if \(state\.assetsReady\) return recommit\(\)/);
 assert.match(loader, /await waitForVerifiedDom\(\)/);
 assert.match(loader, /function activateStyles\(/);
 assert.match(loader, /link\.media = "all"/);
-assert(loader.indexOf("await waitForVerifiedDom()") < loader.indexOf("activateStyles();"),
+assert(loader.indexOf("const verified = await waitForVerifiedDom()") < loader.indexOf("activateStyles();"),
   "enhancement CSS must activate only after required DOM is verified");
+assert.match(loader, /companionEnhancementCommit = "deferred"/);
 assert.match(loader, /companionEnhancementCommit = "degraded"/);
 assert.match(loader, /suppressStyles\(\)/);
 
@@ -69,4 +76,4 @@ assert.match(v12Css, /grid-template-rows:72px 292px minmax\(0,1fr\) auto!importa
 assert.match(v12Js, /className = "uai-c-v122-scene"/);
 assert.match(v12Js, /main\.insertBefore\(scene,messages\)/);
 
-console.log("Companion V17.4 verified-commit contract passed: one loader owns all structural enhancements, CSS activates only after DOM verification, and core messages have a recovery path.");
+console.log("Companion V17.4 verified-commit contract passed: one loader owns all structural enhancements, retry/exit lifecycle is guarded, CSS activates only after DOM verification, and core messages have a recovery path.");
