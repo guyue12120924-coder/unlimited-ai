@@ -1,21 +1,26 @@
 Unlimited AI deployment trigger
 Date: 2026-08-22
-Frontend core revision: 2026-08-22-v17.5-companion-core-only-rollback
+Frontend core revision: 2026-08-22-v17.7-safe-function-restore
 Frontend runtime core: 2026-08-21-v17.0-workspace-consolidation
 Workspace UI module: 2026-08-21-v17.0-workspace-ui
 AI collaboration module: 2026-08-21-v17.0-ai-collaboration
 Companion entry bootstrap: 2026-08-22-v17.5-companion-core-only-rollback
 Companion active entry module: public/companion-entry-v175.js
-Companion active dependencies: public/companion-mode.css + public/companion-mode.js only
+Companion active core dependencies: public/companion-mode.css + public/companion-mode.js
 Companion visual polish: public/companion-core-polish-v176.css?v=20260822-v17.6-safe-polish
 Companion visual polish policy: CSS-only, scoped to #uaiCompanionRoot, no shell column changes, no main row changes, no injected DOM, no JavaScript dependency, reduced-motion aware
+Companion safe function pack: public/companion-function-pack-v177.js?v=20260822-v17.7-safe-function-restore
+Companion safe function styles: public/companion-support.css + public/companion-functional-v177.css
+Companion restored functions: multi-character switching, character editor, memory organizer/search tools, relationship records/validated restore, message copy/favorite/long-reply utilities
+Companion function loading policy: only after uai:companion-core-entered, deferred with requestIdleCallback/setTimeout, failure is non-blocking and leaves core chat usable
+Companion runtime/settings fetch wrapper: NOT restored in V17.7 because companion-runtime.js rewrites window.fetch and would conflict with the consolidated chat transport
 Companion enhancement loader: DISABLED FROM ACTIVE BOOT
-Companion V10/V11/V12: source retained, not loaded
+Companion V10/V11/V12 structural themes: source retained, not loaded
 Companion Live2D/scene/voice enhancement layers: source retained, not loaded
-Companion residue cleanup: V17.5 removes known enhancement link/script/style IDs and enhancement DOM nodes before core mount
+Companion residue cleanup: V17.5 removes known structural enhancement link/script/style IDs and enhancement DOM nodes before core mount
 Companion recovery: if the core shell is incomplete, V17.5 reloads only companion-mode.js and remounts the base UI; localStorage companion data is preserved
 Companion mode isolation: uai_companion_profile_v1 / sessions / memories / settings remain separate from novel storage
-Reason: the structural V10/V11/V12/Live2D enhancement stack remains disabled after it caused blank/white companion main areas. V17.6 restores visual quality only through a separate CSS skin layered over the proven V8.3 core. It enhances background depth, glass surfaces, session states, bubbles, composer focus, send controls, modal styling, scrollbars, and restrained ambient motion without changing the stable chat DOM or grid. Only the newest message animates so long histories do not create a large animation burst.
+Reason: after the stable V17.5 core-only rollback and V17.6 CSS-only polish, V17.7 restores useful non-structural companion functions in an optional idle-loaded pack. Structural V10/V11/V12/Live2D enhancements remain disabled until rebuilt against the stable core without hidden loaders or grid overrides.
 Novel prompt source: src/worker.js -> NOVEL_SYSTEM_PROMPT
 Companion prompt source: src/companion.js -> COMPANION_ROLE_CARD
 AI gateway: src/worker-voice.js
