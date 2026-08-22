@@ -104,6 +104,12 @@ jobs:
           set -euo pipefail
           node tests/companion-atomic-enhancements.test.mjs
 
+      - name: Check V17.6 safe companion polish contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          node tests/companion-core-polish-v176.test.mjs
+
       - name: Check companion mode isolation contract
         shell: bash
         run: |
