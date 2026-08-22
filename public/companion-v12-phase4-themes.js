@@ -1,7 +1,7 @@
-// Companion V12.7/12.22 phase 4 — lightweight scene themes + Live2D voice/model loaders.
+// Companion V12.7/12.22 phase 4 — lightweight scene themes.
 // Compatibility marker: v12.21-phase4-model-pool
 (() => {
-  const REVISION = "2026-08-15-v12.22-phase4-curated-pool-1";
+  const REVISION = "2026-08-22-v17.4-phase4-no-self-load";
   const THEMES = ["galaxy", "sakura", "moonlight", "neon"];
   const LABELS = {
     galaxy: "星河梦境",
@@ -12,48 +12,6 @@
   let currentTheme = "galaxy";
   let scheduled = false;
   let particleHost = null;
-
-  function ensureStyle(href, id) {
-    if (document.getElementById(id)) return;
-    const link = document.createElement("link");
-    link.id = id;
-    link.rel = "stylesheet";
-    link.href = href;
-    document.head.appendChild(link);
-  }
-
-  function ensureScript(src, id) {
-    if (document.getElementById(id)) return;
-    const script = document.createElement("script");
-    script.id = id;
-    script.src = src;
-    script.async = false;
-    document.body.appendChild(script);
-  }
-
-  function loadPhase5SceneState() {
-    ensureStyle(`/companion-v12-phase5-scene-state.css?v=${encodeURIComponent(REVISION)}`, "uaiCompanionV12Phase5SceneStateCss");
-    ensureScript(`/companion-v12-phase5-scene-state.js?v=${encodeURIComponent(REVISION)}`, "uaiCompanionV12Phase5SceneStateScript");
-    ensureStyle(`/companion-live2d-interaction.css?v=${encodeURIComponent(REVISION)}`, "uaiCompanionLive2dInteractionCss");
-    ensureScript(`/companion-live2d-interaction.js?v=${encodeURIComponent(REVISION)}`, "uaiCompanionLive2dInteractionScript");
-    ensureStyle(`/companion-live2d-voice.css?v=${encodeURIComponent(REVISION)}`, "uaiCompanionLive2dVoiceCss");
-    ensureScript(`/companion-live2d-voice.js?v=${encodeURIComponent(REVISION)}`, "uaiCompanionLive2dVoiceScript");
-    ensureStyle(`/companion-live2d-neural-voice.css?v=${encodeURIComponent(REVISION)}`, "uaiCompanionLive2dNeuralVoiceCss");
-    ensureScript(`/companion-live2d-neural-voice.js?v=${encodeURIComponent(REVISION)}`, "uaiCompanionLive2dNeuralVoiceScript");
-    ensureStyle(`/companion-voice-input.css?v=${encodeURIComponent(REVISION)}`, "uaiCompanionVoiceInputCss");
-    ensureScript(`/companion-voice-input.js?v=${encodeURIComponent(REVISION)}`, "uaiCompanionVoiceInputScript");
-    ensureStyle(`/companion-call-mode.css?v=${encodeURIComponent(REVISION)}`, "uaiCompanionCallModeCss");
-    ensureScript(`/companion-call-mode.js?v=${encodeURIComponent(REVISION)}`, "uaiCompanionCallModeScript");
-    // V12.22: curated role -> Live2D model assignments and manual selector.
-    ensureStyle(`/companion-live2d-model-pool.css?v=${encodeURIComponent(REVISION)}`, "uaiCompanionLive2dModelPoolCss");
-    ensureScript(`/companion-live2d-model-pool.js?v=${encodeURIComponent(REVISION)}`, "uaiCompanionLive2dModelPoolScript");
-    // V12.19: model diagnostics, per-role lip-sync tuning and one-tap barge-in.
-    ensureStyle(`/companion-live2d-polish.css?v=${encodeURIComponent(REVISION)}`, "uaiCompanionLive2dPolishCss");
-    ensureScript(`/companion-live2d-polish.js?v=${encodeURIComponent(REVISION)}`, "uaiCompanionLive2dPolishScript");
-    // V12.20: scan model capabilities and map AI emotions to the model's own expressions/motions.
-    ensureStyle(`/companion-live2d-emotion-engine.css?v=${encodeURIComponent(REVISION)}`, "uaiCompanionLive2dEmotionEngineCss");
-    ensureScript(`/companion-live2d-emotion-engine.js?v=${encodeURIComponent(REVISION)}`, "uaiCompanionLive2dEmotionEngineScript");
-  }
 
   function getRoot() {
     if (document.body.dataset.uaiMode !== "companion") return null;
@@ -185,7 +143,8 @@
       cycleTheme,
       refresh: schedule
     };
-    loadPhase5SceneState();
+    // V17.4: phase 5, Live2D and voice resources are loaded exclusively by
+    // companion-assets-loader-v174.js. This module no longer inserts link/script tags.
     new MutationObserver(schedule).observe(document.body, {
       subtree: true,
       childList: true,
