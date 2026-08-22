@@ -1,38 +1,9 @@
-// Companion V12.4/12.7 — composer polish + animated backdrop + living character + scene themes.
+// Companion V12.4/12.7 — composer polish + animated backdrop.
 (() => {
-  const REVISION = "2026-08-14-v12.7-scene-themes-1";
+  const REVISION = "2026-08-22-v17.4-phase1-no-self-load";
   let boundInput = null;
   let scheduled = false;
-
-  function ensureStyle(href, id) {
-    if (document.getElementById(id)) return;
-    const link = document.createElement("link");
-    link.id = id;
-    link.rel = "stylesheet";
-    link.href = href;
-    document.head.appendChild(link);
-  }
-
-  function ensureScript(src, id) {
-    if (document.getElementById(id)) return;
-    const script = document.createElement("script");
-    script.id = id;
-    script.src = src;
-    script.async = false;
-    document.body.appendChild(script);
-  }
-
-  function loadPhaseEnhancements() {
-    // Phase 2: visible multi-layer galaxy motion.
-    ensureStyle(`/companion-v12-phase2-background.css?v=${encodeURIComponent(REVISION)}`, "uaiCompanionV12Phase2BackgroundCss");
-    ensureScript(`/companion-v12-phase2-background.js?v=${encodeURIComponent(REVISION)}`, "uaiCompanionV12Phase2BackgroundScript");
-    // Phase 3: living central character.
-    ensureStyle(`/companion-v12-phase3-character.css?v=${encodeURIComponent(REVISION)}`, "uaiCompanionV12Phase3CharacterCss");
-    ensureScript(`/companion-v12-phase3-character.js?v=${encodeURIComponent(REVISION)}`, "uaiCompanionV12Phase3CharacterScript");
-    // Phase 4: four lightweight anime scene themes. Persistence/random selection belongs to phase 5.
-    ensureStyle(`/companion-v12-phase4-themes.css?v=${encodeURIComponent(REVISION)}`, "uaiCompanionV12Phase4ThemesCss");
-    ensureScript(`/companion-v12-phase4-themes.js?v=${encodeURIComponent(REVISION)}`, "uaiCompanionV12Phase4ThemesScript");
-  }
+  let committed = false;
 
   function installGuaranteedMotionCss() {
     if (document.getElementById("uaiCompanionV125GuaranteedMotionCss")) return;
@@ -202,17 +173,26 @@
     requestAnimationFrame(enhance);
   }
 
+  function commitStyles() {
+    if (committed) return;
+    committed = true;
+    installGuaranteedMotionCss();
+    schedule();
+  }
+
   function init() {
     document.documentElement.dataset.companionV124Phase1Revision = REVISION;
-    installGuaranteedMotionCss();
-    loadPhaseEnhancements();
+    // V17.4: Phase 2/3/4 resources are owned exclusively by the central verified loader.
+    // The inline motion CSS is also held until that loader commits the verified DOM.
+    if (document.documentElement.dataset.companionEnhancementCommit === "active") commitStyles();
+    else window.addEventListener("uai:companion-enhancements-commit", commitStyles, { once: true });
     new MutationObserver(schedule).observe(document.body, {
       subtree: true,
       childList: true,
       attributes: true,
       attributeFilter: ["hidden", "data-uai-mode", "class"]
     });
-    window.UnlimitedCompanionV124Phase1 = { revision: REVISION, refresh: schedule };
+    window.UnlimitedCompanionV124Phase1 = { revision: REVISION, refresh: schedule, commit: commitStyles };
     schedule();
   }
 
