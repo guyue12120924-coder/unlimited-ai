@@ -122,6 +122,10 @@
   function fillComposer(text) {
     const input = composerInput();
     if (!input) return;
+    if (input.disabled) {
+      showToast("当前回复还在生成，请先停止再使用快捷操作");
+      return;
+    }
     input.value = String(text || "");
     input.dispatchEvent(new Event("input", { bubbles: true }));
     input.focus();
