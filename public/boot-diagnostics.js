@@ -2,7 +2,7 @@
 // Startup guard + dual-mode bootstrap.
 // Compatibility marker: 2026-08-17-v14.7-entry-zero-companion
 (() => {
-  const REVISION = "2026-08-21-v17.3-companion-atomic-enhancements";
+  const REVISION = "2026-08-22-v17.4-companion-verified-commit";
   const MODE_ROUTER_REVISION = "2026-08-17-v13.4-mode-router-performance";
   const errors = [];
 
@@ -91,7 +91,7 @@
       ["/mode-router-luxury-stage3.js", "uaiModeRouterLuxuryStage3Script"],
       ["/mode-router-luxury-stage4.js", "uaiModeRouterLuxuryStage4Script"],
       ["/mode-router-luxury-stage5.js", "uaiModeRouterLuxuryStage5Script"],
-      ["/companion-entry-v173.js", "uaiCompanionEntryV173Script"]
+      ["/companion-entry-v174.js", "uaiCompanionEntryV174Script"]
     ];
 
     routerStyles.forEach(([href, id]) => ensureStyle(`${href}?v=${encodeURIComponent(REVISION)}`, id));
@@ -112,13 +112,15 @@
 
   function companionSnapshot() {
     const companionStyle = document.getElementById("uaiCompanionCss");
-    const directEntryReady = Boolean(window.UnlimitedCompanionEntryV173);
+    const directEntryReady = Boolean(window.UnlimitedCompanionEntryV174);
+    const verifiedLoader = window.UnlimitedCompanionAssetsV174;
     return {
-      companionAssetsDeferred: !window.UnlimitedCompanionAssets?.ready,
-      companionAssetsReady: Boolean(window.UnlimitedCompanionAssets?.ready),
-      companionAssetsLoading: Boolean(window.UnlimitedCompanionAssets?.loading),
-      companionCoreReady: Boolean(window.UnlimitedCompanionAssets?.coreReady || window.UnlimitedCompanion?.mount),
-      companionEnhancementsReady: Boolean(window.UnlimitedCompanionAssets?.enhancementsReady),
+      companionAssetsDeferred: !verifiedLoader?.ready,
+      companionAssetsReady: Boolean(verifiedLoader?.ready),
+      companionAssetsLoading: Boolean(verifiedLoader?.loading),
+      companionCoreReady: Boolean(window.UnlimitedCompanion?.mount),
+      companionEnhancementsReady: Boolean(verifiedLoader?.ready),
+      companionVerifiedLoaderReady: Boolean(verifiedLoader?.load),
       companionBaseStyleDeferred: Boolean(companionStyle?.dataset.uaiDeferredPlaceholder === "true"),
       companionEntryReady: directEntryReady,
       companionLazyBridgeReady: directEntryReady,
@@ -144,6 +146,10 @@
       companionV12FinalReady: Boolean(window.UnlimitedCompanionV122),
       companionV12PolishReady: Boolean(window.UnlimitedCompanionV123),
       companionV12Phase1Ready: Boolean(window.UnlimitedCompanionV124Phase1),
+      companionV12Phase2Ready: Boolean(window.UnlimitedCompanionV125Phase2),
+      companionV12Phase3Ready: Boolean(window.UnlimitedCompanionV126Phase3),
+      companionV12Phase4Ready: Boolean(window.UnlimitedCompanionV127Themes),
+      companionV12Phase5Ready: Boolean(window.UnlimitedCompanionV128Scenes),
       companionLive2dReady: Boolean(window.UnlimitedCompanionLive2D),
       companionVoiceReady: Boolean(window.UnlimitedCompanionVoice),
       companionNeuralVoiceReady: Boolean(window.UnlimitedCompanionNeuralVoice),
