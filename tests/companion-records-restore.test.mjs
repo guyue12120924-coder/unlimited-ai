@@ -3,12 +3,14 @@ import fs from "node:fs";
 import vm from "node:vm";
 
 const boot = fs.readFileSync("public/boot-diagnostics.js", "utf8");
+const loader = fs.readFileSync("public/companion-assets-loader-v174.js", "utf8");
 const restoreCore = fs.readFileSync("public/companion-records.js", "utf8");
 const settings = fs.readFileSync("public/companion-settings.js", "utf8");
 const sceneBackup = fs.readFileSync("public/companion-scene-backup.js", "utf8");
 
+assert.match(boot, /2026-08-22-v17\.4-companion-verified-commit/);
 assert.doesNotMatch(boot, /ensureScript\(`\/companion-v5-guard\.js/);
-assert.match(boot, /companion-records\.js/);
+assert.match(loader, /companion-records\.js/);
 
 assert.match(restoreCore, /uai_companion_characters_v1/);
 assert.match(restoreCore, /uai_companion_settings_v1/);
@@ -43,8 +45,6 @@ assert.doesNotMatch(sceneBackup, /cfw_sessions_v2/);
 assert.doesNotMatch(sceneBackup, /creative_context/);
 assert.doesNotMatch(sceneBackup, /continuity_context/);
 
-// Execute the browser bridge in a small fake browser environment so the
-// contract covers real localStorage writes, scene rollback and ID remapping.
 const store = new Map();
 const localStorage = {
   getItem(key) { return store.has(key) ? store.get(key) : null; },
@@ -154,4 +154,4 @@ const importedCharacter = mergedCharacters.find((item) => item.id !== "char-a");
 assert.ok(importedCharacter, "ID collision should create a new character id");
 assert.equal(read("uai_companion_scene_assignments_v1", {})[importedCharacter.id].theme, "moonlight");
 
-console.log("Companion records/restore contract passed: core restore + executable per-character scene backup flows + novel isolation.");
+console.log("Companion records/restore contract passed under the V17.4 loader.");
