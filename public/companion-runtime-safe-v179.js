@@ -7,6 +7,8 @@
     characters: "uai_companion_characters_v1",
     activeCharacter: "uai_companion_active_character_v1",
     profile: "uai_companion_profile_v1",
+    sessions: "uai_companion_sessions_v1",
+    memories: "uai_companion_memories_v1",
     settings: "uai_companion_settings_v1",
     moments: "uai_companion_moments_v1",
     archive: "uai_companion_memory_archive_v1",
@@ -20,9 +22,15 @@
   };
 
   let statusTimer = 0;
+  let generationObserver = null;
+  let observedInput = null;
 
   function safeParse(value, fallback) {
     try { return JSON.parse(value) ?? fallback; } catch { return fallback; }
+  }
+
+  function writeJson(key, value) {
+    localStorage.setItem(key, JSON.stringify(value));
   }
 
   function root() { return document.getElementById("uaiCompanionRoot"); }
@@ -44,10 +52,13 @@
     showToast.timer = setTimeout(() => toast.classList.remove("show"), 1800);
   }
 
+  function characters() {
+    const list = safeParse(localStorage.getItem(KEYS.characters), []);
+    return Array.isArray(list) ? list : [];
+  }
+
   function activeCharacterIds() {
-    const characters = safeParse(localStorage.getItem(KEYS.characters), []);
-    if (!Array.isArray(characters)) return new Set();
-    return new Set(characters.map((item) => item?.id).filter(Boolean));
+    return new Set(characters().map((item) => item?.id).filter(Boolean));
   }
 
   function pruneRoleMap(key, ids) {
@@ -59,7 +70,7 @@
       delete map[id];
       changed = true;
     });
-    if (changed) localStorage.setItem(key, JSON.stringify(map));
+    if (changed) writeJson(key, map);
     return changed;
   }
 
@@ -71,10 +82,24 @@
     return a || b;
   }
 
+  function restoreActiveCharacterSlots() {
+    const list = characters();
+    if (!list.length) return false;
+    const preferredId = localStorage.getItem(KEYS.activeCharacter) || "";
+    const active = list.find((item) => item?.id === preferredId) || list[0];
+    if (!active?.profile) return false;
+    localStorage.setItem(KEYS.activeCharacter, active.id || preferredId);
+    writeJson(KEYS.profile, active.profile || {});
+    writeJson(KEYS.sessions, Array.isArray(active.sessions) ? active.sessions : []);
+    writeJson(KEYS.memories, Array.isArray(active.memories) ? active.memories : []);
+    writeJson(KEYS.settings, active.settings && typeof active.settings === "object" ? active.settings : {});
+    return true;
+  }
+
   function reconcileReset() {
-    const characters = safeParse(localStorage.getItem(KEYS.characters), []);
+    const list = characters();
     const profile = safeParse(localStorage.getItem(KEYS.profile), null);
-    const hasCharacters = Array.isArray(characters) && characters.length > 0;
+    const hasCharacters = list.length > 0;
     const hasProfile = Boolean(profile && typeof profile === "object");
 
     if (!hasCharacters && !hasProfile) {
@@ -86,11 +111,9 @@
     }
 
     if (hasCharacters && !hasProfile) {
-      localStorage.removeItem(KEYS.characters);
-      localStorage.removeItem(KEYS.activeCharacter);
-      localStorage.removeItem(KEYS.moments);
-      localStorage.removeItem(KEYS.archive);
-      localStorage.removeItem(KEYS.rollback);
+      if (!restoreActiveCharacterSlots()) {
+        console.warn("[Unlimited AI] V17.9 could not restore an active companion slot; keeping character data intact");
+      }
     }
   }
 
@@ -169,36 +192,41 @@
     statusTimer = setTimeout(refreshStatus, delay);
   }
 
-  function onClick(event) {
-    if (document.body.dataset.uaiMode !== "companion") return;
-    if (event.target?.closest?.("#uaiCompanionSend, #uaiCompanionStop, #uaiCompanionSettingsSave, #uaiCompanionSettingsBtn")) {
-      scheduleStatus(event.target.closest("#uaiCompanionSend") ? 40 : 0);
-      scheduleStatus(240);
+  function bindGenerationObserver() {
+    if (document.body.dataset.uaiMode !== "companion") {
+      generationObserver?.disconnect();
+      generationObserver = null;
+      observedInput = null;
+      return;
     }
+    const input = root()?.querySelector("#uaiCompanionInput");
+    if (!input || input === observedInput) return;
+    generationObserver?.disconnect();
+    observedInput = input;
+    generationObserver = new MutationObserver(() => refreshStatus());
+    generationObserver.observe(input, { attributes: true, attributeFilter: ["disabled"] });
   }
 
-  function onKeydown(event) {
+  function onClick(event) {
     if (document.body.dataset.uaiMode !== "companion") return;
-    if (event.key === "Enter" && !event.shiftKey && event.target?.id === "uaiCompanionInput") {
-      scheduleStatus(50);
-      scheduleStatus(260);
-    }
+    if (event.target?.closest?.("#uaiCompanionSettingsSave, #uaiCompanionSettingsBtn")) scheduleStatus(0);
   }
 
   function refresh() {
     reconcileReset();
     pruneOrphanedRoleData();
+    bindGenerationObserver();
     refreshStatus();
   }
 
   document.addEventListener("click", blockUnsafeActions, true);
   document.addEventListener("click", scheduleHousekeeping, false);
   document.addEventListener("click", onClick, false);
-  document.addEventListener("keydown", onKeydown, false);
-  window.addEventListener("uai:companion-core-entered", () => scheduleStatus(0));
-  window.addEventListener("uai:companion-functions-ready", () => scheduleStatus(0));
+  window.addEventListener("uai:companion-core-entered", refresh);
+  window.addEventListener("uai:companion-functions-ready", refresh);
   window.addEventListener("uai:mode-refresh", () => {
-    if (document.body.dataset.uaiMode === "companion") scheduleStatus(0);
+    if (document.body.dataset.uaiMode === "companion") refresh();
+    else bindGenerationObserver();
   });
 
   document.documentElement.dataset.companionSafeRuntimeRevision = REVISION;
