@@ -42,9 +42,8 @@
     ["/companion-v12-ux-hardening.css", "uaiCompanionV123UxHardeningCss"]
   ];
 
-  // Order matters. Phase 1 and phase 4 still contain legacy self-load helpers, so every
-  // later script ID is predeclared before execution. Their helper sees the ID and returns,
-  // leaving this loader as the only owner of insertion/execution order.
+  // V17.4 physically removed the old Phase1/Phase4 self-load chains. This list is now the
+  // one authoritative insertion/execution order for every structural companion enhancement.
   const SCRIPT_ASSETS = [
     ["/companion-characters-core.js", "uaiCompanionCharactersCoreScript"],
     ["/companion-character-editor.js", "uaiCompanionCharacterEditorScript"],
@@ -74,7 +73,7 @@
     ["/companion-live2d.js", "uaiCompanionLive2dScript"],
     ["/companion-live2d-interaction.js", "uaiCompanionLive2dInteractionScript"],
     ["/companion-live2d-voice.js", "uaiCompanionLive2dVoiceScript"],
-    ["/companion-live2d-neural-voice.js", "uaiCompanionLive2dNeuralVoiceScript"],
+    ["/companion-live2d-neural-voice.js", "uaiCompanionNeuralVoiceScript"],
     ["/companion-voice-input.js", "uaiCompanionVoiceInputScript"],
     ["/companion-call-mode.js", "uaiCompanionCallModeScript"],
     ["/companion-live2d-model-pool.js", "uaiCompanionLive2dModelPoolScript"],
@@ -83,7 +82,21 @@
     ["/companion-v12-ux-hardening.js", "uaiCompanionV123UxHardeningScript"]
   ];
 
-  const state = { promise: null, ready: false, error: null, loaded: 0 };
+  const state = {
+    promise: null,
+    assetsReady: false,
+    ready: false,
+    error: null,
+    loaded: 0
+  };
+
+  function companionActive() {
+    const root = document.getElementById("uaiCompanionRoot");
+    return Boolean(
+      document.body.dataset.uaiMode === "companion" &&
+      root && !root.hidden && root.isConnected
+    );
+  }
 
   function versioned(path) {
     const join = path.includes("?") ? "&" : "?";
@@ -97,8 +110,9 @@
       loaded: state.loaded,
       total,
       percent: total ? Math.round((state.loaded / total) * 100) : 100,
+      assetsReady: state.assetsReady,
       ready: state.ready,
-      loading: Boolean(state.promise && !state.ready),
+      loading: Boolean(state.promise),
       ...extra
     };
     if (window.__UNLIMITED_BOOT__) {
@@ -107,7 +121,7 @@
         companionAssetsLoaded: detail.loaded,
         companionAssetsTotal: detail.total,
         companionAssetsProgress: detail.percent,
-        companionAssetsReady: state.ready,
+        companionAssetsReady: state.assetsReady,
         companionEnhancementsReady: state.ready,
         companionAssetsLoading: detail.loading,
         ...extra
@@ -130,6 +144,10 @@
     return new Promise((resolve, reject) => {
       let link = document.getElementById(id);
       if (link && link.tagName !== "LINK") {
+        link.remove();
+        link = null;
+      }
+      if (link?.dataset.uaiLoaded === "false") {
         link.remove();
         link = null;
       }
@@ -156,15 +174,16 @@
       }
 
       let settled = false;
-      const timer = window.setTimeout(() => finish(new Error(`Timed out loading ${path}`)), 20000);
+      let timer = 0;
       const finish = (error) => {
         if (settled) return;
         settled = true;
-        window.clearTimeout(timer);
+        if (timer) window.clearTimeout(timer);
         link.removeEventListener("load", onLoad);
         link.removeEventListener("error", onError);
         if (error) {
           link.dataset.uaiLoaded = "false";
+          if (link.dataset.uaiCompanionEnhancement === "true") link.remove();
           reject(error);
           return;
         }
@@ -177,6 +196,7 @@
       const onError = () => finish(new Error(`Failed to load ${path}`));
       link.addEventListener("load", onLoad, { once: true });
       link.addEventListener("error", onError, { once: true });
+      timer = window.setTimeout(() => finish(new Error(`Timed out loading ${path}`)), 20000);
       if (link.sheet) finish();
     });
   }
@@ -185,6 +205,10 @@
     return new Promise((resolve, reject) => {
       let script = document.getElementById(id);
       if (script && (script.tagName !== "SCRIPT" || script.dataset.uaiCompanionScriptPlaceholder === "true")) {
+        script.remove();
+        script = null;
+      }
+      if (script?.dataset.uaiLoaded === "false") {
         script.remove();
         script = null;
       }
@@ -204,15 +228,16 @@
       }
 
       let settled = false;
-      const timer = window.setTimeout(() => finish(new Error(`Timed out loading ${path}`)), 20000);
+      let timer = 0;
       const finish = (error) => {
         if (settled) return;
         settled = true;
-        window.clearTimeout(timer);
+        if (timer) window.clearTimeout(timer);
         script.removeEventListener("load", onLoad);
         script.removeEventListener("error", onError);
         if (error) {
           script.dataset.uaiLoaded = "false";
+          if (script.dataset.uaiCompanionEnhancement === "true") script.remove();
           reject(error);
           return;
         }
@@ -225,6 +250,7 @@
       const onError = () => finish(new Error(`Failed to load ${path}`));
       script.addEventListener("load", onLoad, { once: true });
       script.addEventListener("error", onError, { once: true });
+      timer = window.setTimeout(() => finish(new Error(`Timed out loading ${path}`)), 20000);
     });
   }
 
@@ -236,6 +262,7 @@
         link.dataset.uaiDeferredActivation = "true";
       }
     }
+    state.ready = false;
     document.documentElement.dataset.companionEnhancementStyles = "deferred";
   }
 
@@ -271,18 +298,15 @@
   }
 
   function structureReady() {
-    if (document.body.dataset.uaiMode !== "companion") return true;
+    if (!companionActive()) return false;
     const root = document.getElementById("uaiCompanionRoot");
-    if (!root || root.hidden || !root.isConnected) return false;
     const coreReady = Boolean(
-      root.querySelector(".uai-c-shell") &&
+      root?.querySelector(".uai-c-shell") &&
       root.querySelector(".uai-c-main") &&
       root.querySelector("#uaiCompanionMessages") &&
       root.querySelector("#uaiCompanionInput")
     );
     if (!coreReady) return false;
-    // These DOM nodes are required by the corresponding V12 layout styles. Never commit
-    // the 3-column / 4-row theme until both have actually been inserted by JavaScript.
     return Boolean(
       root.querySelector(".uai-c-v12-sidepanel") &&
       root.querySelector(".uai-c-v122-scene") &&
@@ -295,6 +319,10 @@
     return new Promise((resolve, reject) => {
       const deadline = performance.now() + timeoutMs;
       const tick = () => {
+        if (!companionActive()) {
+          resolve(false);
+          return;
+        }
         refreshDom();
         if (structureReady()) {
           resolve(true);
@@ -310,44 +338,77 @@
     });
   }
 
-  async function performLoad() {
-    state.error = null;
-    state.ready = false;
-    state.loaded = 0;
+  async function commitVerifiedStyles() {
     suppressStyles();
-    predeclareScripts();
-    document.documentElement.dataset.companionAssetsRevision = REVISION;
-    document.documentElement.dataset.companionEnhancementCommit = "loading";
-    publish({ phase: "start", loading: true });
+    if (!companionActive()) {
+      document.documentElement.dataset.companionEnhancementCommit = "deferred";
+      publish({ phase: "warm", assetsReady: state.assetsReady, ready: false, loading: false });
+      return false;
+    }
 
-    const stylePromise = Promise.all(STYLE_ASSETS.map(([path, id]) => loadStyle(path, id)));
-    for (const [path, id] of SCRIPT_ASSETS) await loadScript(path, id);
-    await stylePromise;
+    refreshDom();
+    const verified = await waitForVerifiedDom();
+    if (!verified || !companionActive()) {
+      suppressStyles();
+      document.documentElement.dataset.companionEnhancementCommit = "deferred";
+      publish({ phase: "warm", assetsReady: state.assetsReady, ready: false, loading: false });
+      return false;
+    }
 
-    // Give every rAF-based enhancer time to materialize the DOM it promises, then verify
-    // the exact structures required by the V12 layout before any optional stylesheet applies.
-    await waitForVerifiedDom();
+    // The commit event lets gated inline styles initialize only after the required DOM exists.
     document.documentElement.dataset.companionEnhancementCommit = "active";
     window.dispatchEvent(new CustomEvent("uai:companion-enhancements-commit", { detail: { revision: REVISION } }));
     activateStyles();
     refreshDom();
     await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 
+    if (!companionActive()) {
+      suppressStyles();
+      document.documentElement.dataset.companionEnhancementCommit = "deferred";
+      return false;
+    }
+
     state.ready = true;
-    publish({ phase: "ready", ready: true, loading: false, enhancementsReady: true });
+    publish({ phase: "ready", assetsReady: true, ready: true, loading: false, enhancementsReady: true });
     return true;
   }
 
+  async function recommit() {
+    if (!state.assetsReady) return false;
+    return commitVerifiedStyles();
+  }
+
+  async function performLoad() {
+    state.error = null;
+    state.assetsReady = false;
+    state.ready = false;
+    state.loaded = 0;
+    suppressStyles();
+    predeclareScripts();
+    document.documentElement.dataset.companionAssetsRevision = REVISION;
+    document.documentElement.dataset.companionEnhancementCommit = "loading";
+    publish({ phase: "start", loading: true, assetsReady: false, ready: false });
+
+    const stylePromise = Promise.all(STYLE_ASSETS.map(([path, id]) => loadStyle(path, id)));
+    for (const [path, id] of SCRIPT_ASSETS) await loadScript(path, id);
+    await stylePromise;
+
+    state.assetsReady = true;
+    publish({ phase: "assets-ready", assetsReady: true, ready: false, loading: true });
+    return commitVerifiedStyles();
+  }
+
   function load() {
-    if (state.ready) return Promise.resolve(true);
+    if (state.assetsReady) return recommit();
     if (state.promise) return state.promise;
     state.promise = performLoad()
       .catch((error) => {
         state.error = error;
+        state.assetsReady = false;
         state.ready = false;
         suppressStyles();
         document.documentElement.dataset.companionEnhancementCommit = "degraded";
-        publish({ phase: "error", error: error?.message || String(error), loading: false, ready: false });
+        publish({ phase: "error", error: error?.message || String(error), loading: false, assetsReady: false, ready: false });
         throw error;
       })
       .finally(() => { state.promise = null; });
@@ -357,15 +418,16 @@
   window.UnlimitedCompanionAssetsV174 = {
     revision: REVISION,
     load,
+    recommit,
     suppressStyles,
     refresh: refreshDom,
     get ready() { return state.ready; },
+    get assetsReady() { return state.assetsReady; },
     get loading() { return Boolean(state.promise); },
     get lastError() { return state.error; },
     styles: STYLE_ASSETS.map(([path]) => path),
     scripts: SCRIPT_ASSETS.map(([path]) => path)
   };
-  // Compatibility alias used by diagnostics/older UI. V17.4 remains the only active loader.
   window.UnlimitedCompanionAssets = window.UnlimitedCompanionAssetsV174;
-  publish({ phase: "deferred", loading: false, ready: false });
+  publish({ phase: "deferred", loading: false, assetsReady: false, ready: false });
 })();
