@@ -116,6 +116,12 @@ jobs:
           set -euo pipefail
           node tests/companion-function-pack-v177.test.mjs
 
+      - name: Check V17.8 safe companion controls contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          node tests/companion-controls-v178.test.mjs
+
       - name: Check companion mode isolation contract
         shell: bash
         run: |
