@@ -16,6 +16,7 @@
   ];
 
   let loadPromise = null;
+  let idleHandle = 0;
   let lastError = null;
 
   function loadStyle(src, id) {
@@ -68,6 +69,7 @@
   }
 
   function refreshFeatures() {
+    if (document.body.dataset.uaiMode !== "companion") return;
     window.UnlimitedCompanionMulti?.refresh?.();
     window.UnlimitedCompanionCharacterControls?.refresh?.();
     window.UnlimitedCompanionMemorySearch?.refresh?.();
@@ -82,12 +84,8 @@
       try {
         await Promise.all(STYLE_ASSETS.map(([src, id]) => loadStyle(src, id)));
         for (const [src, id] of SCRIPT_ASSETS) await loadScript(src, id);
-        if (document.body.dataset.uaiMode === "companion") {
-          requestAnimationFrame(() => {
-            refreshFeatures();
-            document.documentElement.dataset.companionFunctionPack = "ready";
-          });
-        }
+        document.documentElement.dataset.companionFunctionPack = "ready";
+        if (document.body.dataset.uaiMode === "companion") requestAnimationFrame(refreshFeatures);
         return true;
       } catch (error) {
         lastError = error;
@@ -101,14 +99,21 @@
     return loadPromise;
   }
 
-  function onCoreEntered() {
-    load();
+  function scheduleLoad() {
+    if (idleHandle || document.documentElement.dataset.companionFunctionPack === "ready") return;
+    const run = () => {
+      idleHandle = 0;
+      if (document.body.dataset.uaiMode === "companion") load();
+    };
+    if ("requestIdleCallback" in window) idleHandle = window.requestIdleCallback(run, { timeout: 1200 });
+    else idleHandle = window.setTimeout(run, 320);
   }
 
-  window.addEventListener("uai:companion-core-entered", onCoreEntered);
+  window.addEventListener("uai:companion-core-entered", scheduleLoad);
   window.addEventListener("uai:mode-refresh", () => {
-    if (document.body.dataset.uaiMode === "companion" && document.documentElement.dataset.companionFunctionPack === "ready") {
-      requestAnimationFrame(refreshFeatures);
+    if (document.body.dataset.uaiMode === "companion") {
+      if (document.documentElement.dataset.companionFunctionPack === "ready") requestAnimationFrame(refreshFeatures);
+      else scheduleLoad();
     }
   });
 
