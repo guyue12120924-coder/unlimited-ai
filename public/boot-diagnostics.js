@@ -2,7 +2,7 @@
 // Startup guard + dual-mode bootstrap.
 // Compatibility marker: 2026-08-17-v14.7-entry-zero-companion
 (() => {
-  const REVISION = "2026-08-22-v17.4-companion-verified-commit";
+  const REVISION = "2026-08-22-v17.5-companion-core-only-rollback";
   const MODE_ROUTER_REVISION = "2026-08-17-v13.4-mode-router-performance";
   const errors = [];
 
@@ -16,7 +16,8 @@
     companionAssetsDeferred: true,
     companionAssetsReady: false,
     companionAssetsLoaded: 0,
-    companionAssetsProgress: 0
+    companionAssetsProgress: 0,
+    companionEnhancementsDisabled: true
   };
 
   const gateStyle = document.createElement("style");
@@ -91,7 +92,7 @@
       ["/mode-router-luxury-stage3.js", "uaiModeRouterLuxuryStage3Script"],
       ["/mode-router-luxury-stage4.js", "uaiModeRouterLuxuryStage4Script"],
       ["/mode-router-luxury-stage5.js", "uaiModeRouterLuxuryStage5Script"],
-      ["/companion-entry-v174.js", "uaiCompanionEntryV174Script"]
+      ["/companion-entry-v175.js", "uaiCompanionEntryV175Script"]
     ];
 
     routerStyles.forEach(([href, id]) => ensureStyle(`${href}?v=${encodeURIComponent(REVISION)}`, id));
@@ -112,53 +113,53 @@
 
   function companionSnapshot() {
     const companionStyle = document.getElementById("uaiCompanionCss");
-    const directEntryReady = Boolean(window.UnlimitedCompanionEntryV174);
-    const verifiedLoader = window.UnlimitedCompanionAssetsV174;
+    const directEntryReady = Boolean(window.UnlimitedCompanionEntryV175);
     return {
-      companionAssetsDeferred: !verifiedLoader?.ready,
-      companionAssetsReady: Boolean(verifiedLoader?.ready),
-      companionAssetsLoading: Boolean(verifiedLoader?.loading),
+      companionAssetsDeferred: true,
+      companionAssetsReady: false,
+      companionAssetsLoading: false,
       companionCoreReady: Boolean(window.UnlimitedCompanion?.mount),
-      companionEnhancementsReady: Boolean(verifiedLoader?.ready),
-      companionVerifiedLoaderReady: Boolean(verifiedLoader?.load),
+      companionEnhancementsReady: false,
+      companionEnhancementsDisabled: true,
+      companionVerifiedLoaderReady: false,
       companionBaseStyleDeferred: Boolean(companionStyle?.dataset.uaiDeferredPlaceholder === "true"),
       companionEntryReady: directEntryReady,
       companionLazyBridgeReady: directEntryReady,
       companionModeReady: Boolean(window.UnlimitedCompanion?.mount),
-      companionMultiReady: Boolean(window.UnlimitedCompanionMulti),
-      companionRuntimeReady: Boolean(window.UnlimitedCompanionRuntime),
-      companionMemorySearchReady: Boolean(window.UnlimitedCompanionMemorySearch),
-      companionProfileRestoreReady: Boolean(window.UnlimitedCompanionProfileRestore),
-      companionCharacterControlsReady: Boolean(window.UnlimitedCompanionCharacterControls),
-      companionSettingsReady: Boolean(window.UnlimitedCompanionSettings),
-      companionExtrasReady: Boolean(window.UnlimitedCompanionExtras),
-      companionV10ShellReady: Boolean(window.UnlimitedCompanionV10Shell),
-      companionV10Stage2Ready: Boolean(window.UnlimitedCompanionV10Stage2),
-      companionV10Stage4Ready: Boolean(window.UnlimitedCompanionV10Stage4),
-      companionV10Stage5Ready: Boolean(window.UnlimitedCompanionV10Stage5),
-      companionV11Ready: Boolean(window.UnlimitedCompanionV11),
-      companionV11Stage1Ready: Boolean(window.UnlimitedCompanionV11Stage1),
-      companionV11Stage2Ready: Boolean(window.UnlimitedCompanionV11Stage2),
-      companionV11Stage3Ready: Boolean(window.UnlimitedCompanionV11Stage3),
-      companionV11Stage4Ready: Boolean(window.UnlimitedCompanionV11Stage4),
-      companionV12GalaxyReady: Boolean(window.UnlimitedCompanionV12Galaxy),
-      companionV12Stage2Ready: Boolean(window.UnlimitedCompanionV121),
-      companionV12FinalReady: Boolean(window.UnlimitedCompanionV122),
-      companionV12PolishReady: Boolean(window.UnlimitedCompanionV123),
-      companionV12Phase1Ready: Boolean(window.UnlimitedCompanionV124Phase1),
-      companionV12Phase2Ready: Boolean(window.UnlimitedCompanionV125Phase2),
-      companionV12Phase3Ready: Boolean(window.UnlimitedCompanionV126Phase3),
-      companionV12Phase4Ready: Boolean(window.UnlimitedCompanionV127Themes),
-      companionV12Phase5Ready: Boolean(window.UnlimitedCompanionV128Scenes),
-      companionLive2dReady: Boolean(window.UnlimitedCompanionLive2D),
-      companionVoiceReady: Boolean(window.UnlimitedCompanionVoice),
-      companionNeuralVoiceReady: Boolean(window.UnlimitedCompanionNeuralVoice),
-      companionVoiceInputReady: Boolean(window.UnlimitedCompanionVoiceInput),
-      companionCallModeReady: Boolean(window.UnlimitedCompanionCallMode),
-      companionLive2dModelPoolReady: Boolean(window.UnlimitedCompanionLive2DModelPool),
-      companionLive2dPolishReady: Boolean(window.UnlimitedCompanionLive2DPolish),
-      companionLive2dEmotionReady: Boolean(window.UnlimitedCompanionLive2DEmotionEngine),
-      companionV123UxHardeningReady: Boolean(window.UnlimitedCompanionV123UXHardening)
+      companionMultiReady: false,
+      companionRuntimeReady: false,
+      companionMemorySearchReady: false,
+      companionProfileRestoreReady: false,
+      companionCharacterControlsReady: false,
+      companionSettingsReady: false,
+      companionExtrasReady: false,
+      companionV10ShellReady: false,
+      companionV10Stage2Ready: false,
+      companionV10Stage4Ready: false,
+      companionV10Stage5Ready: false,
+      companionV11Ready: false,
+      companionV11Stage1Ready: false,
+      companionV11Stage2Ready: false,
+      companionV11Stage3Ready: false,
+      companionV11Stage4Ready: false,
+      companionV12GalaxyReady: false,
+      companionV12Stage2Ready: false,
+      companionV12FinalReady: false,
+      companionV12PolishReady: false,
+      companionV12Phase1Ready: false,
+      companionV12Phase2Ready: false,
+      companionV12Phase3Ready: false,
+      companionV12Phase4Ready: false,
+      companionV12Phase5Ready: false,
+      companionLive2dReady: false,
+      companionVoiceReady: false,
+      companionNeuralVoiceReady: false,
+      companionVoiceInputReady: false,
+      companionCallModeReady: false,
+      companionLive2dModelPoolReady: false,
+      companionLive2dPolishReady: false,
+      companionLive2dEmotionReady: false,
+      companionV123UxHardeningReady: false
     };
   }
 
