@@ -1,6 +1,6 @@
 Unlimited AI deployment trigger
 Date: 2026-08-22
-Frontend core revision: 2026-08-22-v17.8-safe-controls-restore
+Frontend core revision: 2026-08-22-v17.9-safe-runtime-restore
 Frontend runtime core: 2026-08-21-v17.0-workspace-consolidation
 Workspace UI module: 2026-08-21-v17.0-workspace-ui
 AI collaboration module: 2026-08-21-v17.0-ai-collaboration
@@ -17,6 +17,9 @@ Companion safe controls: public/companion-controls-v178.js + public/companion-co
 Companion restored controls V17.8: visible companion/search/relationship/moments shortcuts, visual reply-length presets, full multi-character backup export, validated backup import/merge/replace, rollback entry, companion/memory management shortcuts
 Companion reply-length policy: uses the existing companion-mode.js settings and companion_preferences.replyLength consumed by src/companion.js; no fetch wrapper is required
 Companion V17.7 readiness contract: uai:companion-functions-ready is emitted only after the safe role/memory/records/extras APIs are loaded; V17.8 unlocks controls only when all required APIs exist
+Companion safe runtime: public/companion-runtime-safe-v179.js + public/companion-runtime-safe-v179.css?v=20260822-v17.9-safe-runtime-restore
+Companion restored runtime V17.9: blocks character switch/delete/add/import/reset actions while a reply is generating, prunes orphaned role-scoped memory/moment data, safely restores missing active profile/session/memory/settings slots from the current character instead of deleting character data, and shows current reply-length/memory/generation status in the header
+Companion generation observation policy: one MutationObserver scoped only to #uaiCompanionInput disabled attribute; no body-wide or subtree observer
 Companion runtime/settings fetch wrapper: NOT restored because companion-runtime.js rewrites window.fetch and would conflict with the consolidated chat transport
 Companion enhancement loader: DISABLED FROM ACTIVE BOOT
 Companion V10/V11/V12 structural themes: source retained, not loaded
@@ -24,7 +27,7 @@ Companion Live2D/scene/voice enhancement layers: source retained, not loaded
 Companion residue cleanup: V17.5 removes known structural enhancement link/script/style IDs and enhancement DOM nodes before core mount
 Companion recovery: if the core shell is incomplete, V17.5 reloads only companion-mode.js and remounts the base UI; localStorage companion data is preserved
 Companion mode isolation: uai_companion_profile_v1 / sessions / memories / settings remain separate from novel storage
-Reason: V17.8 restores a larger portion of the useful companion product experience without reactivating the structural theme stack. Settings, search, relationship tools and validated backup workflows are layered over the proven V17.5 core and V17.7 safe APIs, while the request chain and stable chat grid remain untouched.
+Reason: V17.9 restores the useful non-network portions of the old companion runtime without reintroducing its fetch wrapper or broad MutationObserver. Generation-time role/data mutations are guarded, role data is reconciled conservatively, and a small non-structural runtime status indicator is added while the stable V17.5 chat grid remains untouched.
 Novel prompt source: src/worker.js -> NOVEL_SYSTEM_PROMPT
 Companion prompt source: src/companion.js -> COMPANION_ROLE_CARD
 AI gateway: src/worker-voice.js
