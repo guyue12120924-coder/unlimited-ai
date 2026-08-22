@@ -1,0 +1,166 @@
+/* V17.8 safe companion controls. No shell/main grid changes. */
+.uai-c-v178-tools {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  margin: 8px 0 12px;
+}
+.uai-c-v178-tool {
+  min-width: 0;
+  min-height: 44px;
+  display: grid;
+  place-items: center;
+  gap: 2px;
+  padding: 6px 4px;
+  border: 1px solid rgba(255,255,255,.065);
+  border-radius: 11px;
+  background: rgba(255,255,255,.032);
+  color: rgba(255,255,255,.56);
+  font: inherit;
+  cursor: pointer;
+  transition: border-color .16s ease, background .16s ease, color .16s ease, transform .16s ease;
+}
+.uai-c-v178-tool > span { font-size: 13px; color: rgba(242,119,172,.78); line-height: 1; }
+.uai-c-v178-tool > b { font-size: 9px; font-weight: 650; white-space: nowrap; }
+.uai-c-v178-tool:hover:not(:disabled) {
+  transform: translateY(-1px);
+  color: rgba(255,255,255,.9);
+  border-color: rgba(241,111,169,.18);
+  background: linear-gradient(145deg, rgba(236,95,157,.08), rgba(135,98,220,.065));
+}
+.uai-c-v178-tool:disabled { opacity: .38; cursor: default; }
+.uai-c-v178-tools.is-ready .uai-c-v178-tool { opacity: 1; }
+
+.uai-c-profile-card { cursor: pointer; }
+.uai-c-profile-card:focus-visible,
+.uai-c-profile-card:hover {
+  border-color: rgba(241,113,171,.16);
+}
+
+.uai-c-v178-settings { width: min(680px, 100%); }
+.uai-c-v178-settings .uai-c-stat-grid {
+  margin-bottom: 16px;
+}
+.uai-c-v178-native-select {
+  position: absolute !important;
+  inline-size: 1px !important;
+  block-size: 1px !important;
+  overflow: hidden !important;
+  clip: rect(0 0 0 0) !important;
+  white-space: nowrap !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+.uai-c-v178-reply-presets {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.uai-c-v178-reply-presets button {
+  min-width: 0;
+  min-height: 72px;
+  display: grid;
+  align-content: center;
+  gap: 5px;
+  padding: 10px 11px;
+  border: 1px solid rgba(255,255,255,.075);
+  border-radius: 13px;
+  background: rgba(255,255,255,.032);
+  color: rgba(255,255,255,.62);
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  transition: border-color .16s ease, background .16s ease, box-shadow .16s ease, transform .16s ease;
+}
+.uai-c-v178-reply-presets button strong { color: rgba(255,255,255,.88); font-size: 12px; }
+.uai-c-v178-reply-presets button span { color: rgba(255,255,255,.36); font-size: 10px; line-height: 1.45; }
+.uai-c-v178-reply-presets button:hover { transform: translateY(-1px); border-color: rgba(242,113,171,.17); }
+.uai-c-v178-reply-presets button.selected {
+  border-color: rgba(242,111,171,.34);
+  background: linear-gradient(145deg, rgba(234,91,154,.13), rgba(135,97,218,.10));
+  box-shadow: 0 10px 28px rgba(129,72,143,.09), inset 0 1px rgba(255,255,255,.035);
+}
+.uai-c-v178-reply-presets button.selected strong { color: #fff; }
+
+.uai-c-v178-data-panel {
+  margin-top: 18px;
+  padding-top: 17px;
+  border-top: 1px solid rgba(255,255,255,.07);
+}
+.uai-c-v178-data-head {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 11px;
+}
+.uai-c-v178-data-head > div { display: grid; gap: 3px; }
+.uai-c-v178-data-head span {
+  color: rgba(242,116,171,.58);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: .16em;
+}
+.uai-c-v178-data-head strong { color: rgba(255,255,255,.88); font-size: 13px; }
+.uai-c-v178-data-head small { color: rgba(255,255,255,.28); font-size: 9px; text-align: right; }
+
+.uai-c-v178-data-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.uai-c-v178-data-actions button {
+  min-width: 0;
+  min-height: 62px;
+  display: grid;
+  align-content: center;
+  gap: 4px;
+  padding: 10px 11px;
+  border: 1px solid rgba(255,255,255,.065);
+  border-radius: 12px;
+  background: rgba(255,255,255,.028);
+  color: rgba(255,255,255,.62);
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  transition: background .16s ease, border-color .16s ease, transform .16s ease;
+}
+.uai-c-v178-data-actions button:hover {
+  transform: translateY(-1px);
+  border-color: rgba(242,112,169,.16);
+  background: rgba(255,255,255,.045);
+}
+.uai-c-v178-data-actions button b { color: rgba(255,255,255,.82); font-size: 11px; }
+.uai-c-v178-data-actions button span { color: rgba(255,255,255,.32); font-size: 9px; line-height: 1.45; }
+.uai-c-v178-rollback {
+  width: 100%;
+  min-height: 34px;
+  margin-top: 8px;
+  border: 1px solid rgba(255,188,113,.10);
+  border-radius: 10px;
+  background: rgba(255,166,87,.04);
+  color: rgba(255,197,139,.64);
+  font: inherit;
+  font-size: 10px;
+  cursor: pointer;
+}
+.uai-c-v178-rollback:hover { background: rgba(255,166,87,.07); color: rgba(255,213,170,.88); }
+
+@media (max-width: 780px) {
+  .uai-c-v178-tools { margin: 7px 0 10px; }
+  .uai-c-v178-reply-presets { grid-template-columns: 1fr; }
+  .uai-c-v178-data-head { align-items: start; flex-direction: column; }
+  .uai-c-v178-data-head small { text-align: left; }
+}
+
+@media (max-width: 480px) {
+  .uai-c-v178-data-actions { grid-template-columns: 1fr; }
+  .uai-c-v178-tool { min-height: 42px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .uai-c-v178-tool,
+  .uai-c-v178-reply-presets button,
+  .uai-c-v178-data-actions button { transition: none !important; }
+}
