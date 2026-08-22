@@ -2,15 +2,15 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 
 const boot = fs.readFileSync("public/boot-diagnostics.js", "utf8");
+const loader = fs.readFileSync("public/companion-assets-loader-v174.js", "utf8");
 const editor = fs.readFileSync("public/companion-character-editor.js", "utf8");
 const css = fs.readFileSync("public/companion-support.css", "utf8");
 
-assert.doesNotMatch(boot, /ensureScript\(`\/companion-profile-editor\.js/);
-assert.doesNotMatch(boot, /companion-profile-editor\.css/);
-assert.match(boot, /companion-support\.css/);
+assert.match(boot, /2026-08-22-v17\.4-companion-verified-commit/);
 assert.match(boot, /companionCharacterControlsReady/);
-assert.match(boot, /companion-character-editor\.js/);
-assert.doesNotMatch(boot, /ensureScript\(`\/companion-characters-ui\.js/);
+assert.match(loader, /companion-support\.css/);
+assert.match(loader, /companion-character-editor\.js/);
+assert.doesNotMatch(loader, /companion-profile-editor\.css|companion-profile-editor\.js|companion-characters-ui\.js/);
 assert.match(editor, /v9\.3-character-editor/);
 assert.match(editor, /PROFILE_LIMIT = 5000/);
 assert.match(editor, /MAX_CHARACTERS = 6/);
@@ -28,4 +28,4 @@ assert.match(css, /#uaiV9RoleBackground/);
 assert.match(css, /#uaiV9NewRoleBackground/);
 assert.match(css, /uai-c-v8-length-pills/);
 
-console.log("Companion V9 character editor contract passed.");
+console.log("Companion character editor contract passed under the V17.4 loader.");
