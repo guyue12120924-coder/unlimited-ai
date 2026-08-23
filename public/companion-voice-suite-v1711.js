@@ -94,13 +94,16 @@
 
   function normalizeSettings(stored = {}) {
     const raw = stored && typeof stored === "object" ? stored : {};
+    const legacyProfile = !Object.hasOwn(raw, "voiceId") && !Object.hasOwn(raw, "persona") && !Object.hasOwn(raw, "engine");
     const legacyProvider = String(raw.provider || "");
     let engine = String(raw.engine || "").toLowerCase();
     if (!ENGINES.has(engine)) engine = legacyProvider === "system" ? "system" : "grok";
     const voiceId = Object.hasOwn(VOICES, String(raw.voiceId || "")) ? String(raw.voiceId) : DEFAULTS.voiceId;
     const persona = Object.hasOwn(PERSONAS, String(raw.persona || "")) ? String(raw.persona) : (voiceId === "eve" ? "sweet" : "custom");
     const speechMode = SPEECH_MODES.has(String(raw.speechMode || "")) ? String(raw.speechMode) : DEFAULTS.speechMode;
-    const playbackRate = Math.max(.82, Math.min(1.12, Number(raw.playbackRate) || (PERSONAS[persona]?.rate ?? DEFAULTS.playbackRate)));
+    const playbackRate = legacyProfile
+      ? DEFAULTS.playbackRate
+      : Math.max(.82, Math.min(1.12, Number(raw.playbackRate) || (PERSONAS[persona]?.rate ?? DEFAULTS.playbackRate)));
     return {
       ...DEFAULTS,
       ...raw,
@@ -263,7 +266,7 @@
     return String(text || "")
       .replace(/```[\s\S]*?```/g, " ")
       .replace(/`([^`]+)`/g, "$1")
-      .replace(/[*_#>`~]/g, " ")
+      .replace(/[_#>`~]/g, " ")
       .replace(/\r/g, "");
   }
 
@@ -285,6 +288,7 @@
         .replace(/\*[^*]{1,260}\*/g, "，");
     }
     return source
+      .replace(/\*/g, " ")
       .replace(/\.{3,}/g, "……")
       .replace(/,{2,}/g, "，")
       .replace(/\s*\n+\s*/g, "。")
@@ -359,12 +363,7 @@
     const response = await fetch("/api/companion/tts", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        text: segment.text,
-        lang: "zh",
-        engine: settings.engine === "system" ? "auto" : settings.engine,
-        voice_id: settings.voiceId
-      }),
+      body: JSON.stringify({ text: segment.text, lang: "zh", engine: settings.engine === "system" ? "auto" : settings.engine, voice_id: settings.voiceId }),
       signal,
       cache: "no-store"
     });
@@ -388,21 +387,13 @@
     try { api?.setEmotion?.(segment.emotion); } catch {}
     if (!api?.setMouthOpen) return;
     const ceiling = Math.max(.42, Math.min(.92, Number(segment.mouth) || .7));
-    mouthTimer = setInterval(() => {
-      try { api.setMouthOpen(.12 + Math.random() * ceiling); } catch {}
-    }, 82);
+    mouthTimer = setInterval(() => { try { api.setMouthOpen(.12 + Math.random() * ceiling); } catch {} }, 82);
   }
 
   function stopPlaybackOnly() {
-    if (playbackSource) {
-      try { playbackSource.stop(); } catch {}
-      try { playbackSource.disconnect(); } catch {}
-    }
+    if (playbackSource) { try { playbackSource.stop(); } catch {} try { playbackSource.disconnect(); } catch {} }
     playbackSource = null;
-    if (fallbackAudio) {
-      try { fallbackAudio.pause(); } catch {}
-      try { fallbackAudio.removeAttribute("src"); fallbackAudio.load(); } catch {}
-    }
+    if (fallbackAudio) { try { fallbackAudio.pause(); } catch {} try { fallbackAudio.removeAttribute("src"); fallbackAudio.load(); } catch {} }
     if (fallbackUrl) URL.revokeObjectURL(fallbackUrl);
     fallbackUrl = "";
     stopMouth();
@@ -415,10 +406,7 @@
     stopPlaybackOnly();
     try { window.speechSynthesis?.cancel?.(); } catch {}
     setVoiceState("");
-    if (!options.keepLast) {
-      lastText = "";
-      lastPlan = [];
-    }
+    if (!options.keepLast) { lastText = ""; lastPlan = []; }
   }
 
   function closePlaybackResources() {
@@ -430,9 +418,7 @@
     fallbackAudio = null;
   }
 
-  function delay(ms, token) {
-    return new Promise((resolve) => setTimeout(() => resolve(token === playToken), Math.max(0, ms || 0)));
-  }
+  function delay(ms, token) { return new Promise((resolve) => setTimeout(() => resolve(token === playToken), Math.max(0, ms || 0))); }
 
   async function playBlobWebAudio(blob, segment, token) {
     const context = ensurePlaybackContext();
@@ -449,20 +435,9 @@
       source.buffer = decoded;
       source.playbackRate.value = segment.rate;
       source.connect(context.destination);
-      source.onended = () => {
-        if (playbackSource === source) playbackSource = null;
-        try { source.disconnect(); } catch {}
-        stopMouth();
-        resolve(token === playToken);
-      };
-      try {
-        startMouth(segment);
-        source.start(0);
-      } catch (error) {
-        stopMouth();
-        if (playbackSource === source) playbackSource = null;
-        reject(error);
-      }
+      source.onended = () => { if (playbackSource === source) playbackSource = null; try { source.disconnect(); } catch {} stopMouth(); resolve(token === playToken); };
+      try { startMouth(segment); source.start(0); }
+      catch (error) { stopMouth(); if (playbackSource === source) playbackSource = null; reject(error); }
     });
   }
 
@@ -480,10 +455,7 @@
       audioUnlocked = true;
       startMouth(segment);
       await new Promise((resolve, reject) => {
-        const cleanup = () => {
-          audio.removeEventListener("ended", onEnd);
-          audio.removeEventListener("error", onError);
-        };
+        const cleanup = () => { audio.removeEventListener("ended", onEnd); audio.removeEventListener("error", onError); };
         const onEnd = () => { cleanup(); resolve(); };
         const onError = () => { cleanup(); reject(new Error("Audio playback failed")); };
         audio.addEventListener("ended", onEnd, { once: true });
@@ -534,9 +506,7 @@
   }
 
   async function playNeuralPlan(plan, settings, token, controller) {
-    const pending = plan.map((segment) => fetchTtsSegment(segment, settings, controller.signal)
-      .then((blob) => ({ blob }))
-      .catch((error) => ({ error })));
+    const pending = plan.map((segment) => fetchTtsSegment(segment, settings, controller.signal).then((blob) => ({ blob })).catch((error) => ({ error })));
     const replayPlan = [];
     for (let index = 0; index < plan.length; index += 1) {
       if (token !== playToken || controller.signal.aborted) return false;
@@ -564,9 +534,7 @@
     lastText = extractSpeechText(text, settings);
     lastPlan = [];
     lastPlaybackError = "";
-
     if (settings.engine === "system") return systemSpeakPlan(plan, token);
-
     setVoiceState("loading", plan[0]?.emotion || "neutral");
     const controller = new AbortController();
     abortController = controller;
@@ -584,10 +552,7 @@
       lastPlaybackError = error?.message || "神经语音播放失败";
       neuralStatus = "unavailable";
       neuralStatusText = /浏览器拦截/.test(lastPlaybackError) ? lastPlaybackError : "本次神经语音失败，准备回退系统语音";
-      if (settings.fallbackSystem) {
-        const fallbackToken = ++playToken;
-        return systemSpeakPlan(plan, fallbackToken);
-      }
+      if (settings.fallbackSystem) { const fallbackToken = ++playToken; return systemSpeakPlan(plan, fallbackToken); }
       setVoiceState("");
       showToast(lastPlaybackError);
       return false;
@@ -599,12 +564,7 @@
     if (lastPlan.length && lastPlan.every((item) => item.blob) && settings.engine !== "system") {
       stop({ keepLast: true });
       const token = ++playToken;
-      for (const item of lastPlan) {
-        if (token !== playToken) return false;
-        setVoiceState("speaking", item.emotion);
-        await playBlob(item.blob, item, token);
-        await delay(item.pause, token);
-      }
+      for (const item of lastPlan) { if (token !== playToken) return false; setVoiceState("speaking", item.emotion); await playBlob(item.blob, item, token); await delay(item.pause, token); }
       if (token === playToken) setVoiceState("");
       return token === playToken;
     }
@@ -617,9 +577,7 @@
     return String(row?.querySelector(".uai-c-bubble")?.textContent || "").trim();
   }
 
-  function isGenerating() {
-    return Boolean(root()?.querySelector("#uaiCompanionInput:disabled"));
-  }
+  function isGenerating() { return Boolean(root()?.querySelector("#uaiCompanionInput:disabled")); }
 
   function maybeAutoRead() {
     const generating = isGenerating();
@@ -627,9 +585,7 @@
       const text = lastAssistantText();
       if (text && text !== lastAutoReadText && getSettings().enabled) {
         lastAutoReadText = text;
-        setTimeout(() => {
-          if (root() && !isGenerating() && !autoReadSuppressed) speak(text);
-        }, 120);
+        setTimeout(() => { if (root() && !isGenerating() && !autoReadSuppressed) speak(text); }, 120);
       }
     }
     if (generating && !wasGenerating) stop({ keepLast: true });
@@ -658,66 +614,43 @@
     const state = window.UnlimitedCompanion?.getState?.() || {};
     const sessions = Array.isArray(state.sessions) ? state.sessions : [];
     const allMessages = sessions.flatMap((session) => Array.isArray(session.messages) ? session.messages : []);
-    const start = new Date();
-    start.setDate(1);
-    start.setHours(0, 0, 0, 0);
+    const start = new Date(); start.setDate(1); start.setHours(0, 0, 0, 0);
     const recentSessions = sessions.filter((session) => Number(session.updatedAt || session.createdAt || 0) >= start.getTime());
     const recentMessages = recentSessions.flatMap((session) => Array.isArray(session.messages) ? session.messages : []);
     const map = safeParse(localStorage.getItem(MOMENTS_KEY), {});
     const moments = Array.isArray(map?.[activeCharacterId()]) ? map[activeCharacterId()] : [];
     const recentMoments = moments.filter((item) => Number(item.savedAt || item.createdAt || 0) >= start.getTime());
-    return {
-      totalSessions: sessions.length,
-      totalMessages: allMessages.length,
-      monthSessions: recentSessions.length,
-      monthMessages: recentMessages.length,
-      monthUserMessages: recentMessages.filter((item) => item?.role === "user").length,
-      monthMoments: recentMoments.length,
-      topics: recentSessions.filter((session) => session?.title && session.title !== "新的聊天").sort((a, b) => Number(b.updatedAt || 0) - Number(a.updatedAt || 0)).slice(0, 5).map((session) => String(session.title).slice(0, 34))
-    };
+    return { totalSessions: sessions.length, totalMessages: allMessages.length, monthSessions: recentSessions.length, monthMessages: recentMessages.length, monthUserMessages: recentMessages.filter((item) => item?.role === "user").length, monthMoments: recentMoments.length, topics: recentSessions.filter((session) => session?.title && session.title !== "新的聊天").sort((a, b) => Number(b.updatedAt || 0) - Number(a.updatedAt || 0)).slice(0, 5).map((session) => String(session.title).slice(0, 34)) };
   }
 
-  function escapeHtml(value) {
-    return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
-  }
-
-  function closeModal() {
-    document.getElementById("uaiCompanionV1711Mask")?.remove();
-  }
+  function escapeHtml(value) { return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;"); }
+  function closeModal() { document.getElementById("uaiCompanionV1711Mask")?.remove(); }
 
   function openVoicePanel() {
-    closeModal();
-    unlockAudio();
+    closeModal(); unlockAudio();
     const settings = getSettings();
     const mask = document.createElement("div");
     mask.id = "uaiCompanionV1711Mask";
     mask.className = "uai-c-v1711-mask";
-    mask.innerHTML = `
-      <section class="uai-c-v1711-modal uai-c-v1720-voice-modal" role="dialog" aria-modal="true" aria-label="声音设置">
-        <header><div><span>EMOTIONAL VOICE</span><h3>角色声音</h3><p>同一份角色声音会用于自动朗读、手动朗读和语音通话。</p></div><button type="button" data-v1711-close>×</button></header>
-        <div class="uai-c-v1711-field switch"><div><strong>自动朗读新回复</strong><small>回复完成后按情绪分句朗读，不会整段机械念稿。</small></div><label><input data-v1711-enabled type="checkbox" ${settings.enabled ? "checked" : ""}><i></i></label></div>
-        <div class="uai-c-v1720-personas">
-          ${Object.entries(PERSONAS).filter(([id]) => id !== "custom").map(([id, item]) => `<button type="button" data-v1720-persona="${id}" class="${settings.persona === id ? "active" : ""}"><i>${item.icon}</i><strong>${item.label}</strong><small>${item.subtitle}</small></button>`).join("")}
-        </div>
-        <div class="uai-c-v1711-grid uai-c-v1720-grid">
-          <label>底层音色<select data-v1720-voice>${Object.entries(VOICES).map(([id, item]) => `<option value="${id}">${item.label} · ${item.subtitle}</option>`).join("")}</select></label>
-          <label>语音引擎<select data-v1720-engine><option value="grok">Grok TTS · 推荐</option><option value="auto">自动选择</option><option value="melo">MeloTTS</option><option value="system">浏览器系统语音</option></select></label>
-          <label>基础语速 <b data-v1711-rate-label>${settings.playbackRate.toFixed(2)}×</b><input data-v1711-rate type="range" min="0.82" max="1.12" step="0.01" value="${settings.playbackRate}"></label>
-          <label>朗读方式<select data-v1720-speech-mode><option value="natural">自然陪伴 · 推荐</option><option value="dialogue">只读对白</option><option value="full">完整朗读</option></select></label>
-        </div>
-        <div class="uai-c-v1711-checks"><label><input data-v1720-emotion type="checkbox" ${settings.emotionEnabled ? "checked" : ""}>根据回复情绪自动调整节奏和停顿</label><label><input data-v1711-fallback type="checkbox" ${settings.fallbackSystem ? "checked" : ""}>神经语音失败时自动回退系统语音</label></div>
-        <div class="uai-c-v1720-preview"><div><span>当前声音</span><strong>${VOICES[settings.voiceId]?.label || settings.voiceId} · ${PERSONAS[settings.persona]?.label || "自定义"}</strong><small>每个 AI 角色单独保存，切换角色会一起切换声音。</small></div><button type="button" data-v1711-preview>▶ 试听当前声音</button></div>
-        <div class="uai-c-v1711-status" data-v1711-status data-state="${neuralStatus}">${neuralStatusText}</div>
-        <footer><small>情绪分句 + WebAudio + Live2D 嘴型同步</small><button type="button" data-v1711-recheck>重新检测</button><button type="button" data-v1711-stop>停止</button><button type="button" class="primary" data-v1711-preview2>再试听一次</button></footer>
-      </section>`;
+    mask.innerHTML = `<section class="uai-c-v1711-modal uai-c-v1720-voice-modal" role="dialog" aria-modal="true" aria-label="声音设置">
+      <header><div><span>EMOTIONAL VOICE</span><h3>角色声音</h3><p>同一份角色声音会用于自动朗读、手动朗读和语音通话。</p></div><button type="button" data-v1711-close>×</button></header>
+      <div class="uai-c-v1711-field switch"><div><strong>自动朗读新回复</strong><small>回复完成后按情绪分句朗读，不会整段机械念稿。</small></div><label><input data-v1711-enabled type="checkbox" ${settings.enabled ? "checked" : ""}><i></i></label></div>
+      <div class="uai-c-v1720-personas">${Object.entries(PERSONAS).filter(([id]) => id !== "custom").map(([id, item]) => `<button type="button" data-v1720-persona="${id}" class="${settings.persona === id ? "active" : ""}"><i>${item.icon}</i><strong>${item.label}</strong><small>${item.subtitle}</small></button>`).join("")}</div>
+      <div class="uai-c-v1711-grid uai-c-v1720-grid">
+        <label>底层音色<select data-v1720-voice>${Object.entries(VOICES).map(([id, item]) => `<option value="${id}">${item.label} · ${item.subtitle}</option>`).join("")}</select></label>
+        <label>语音引擎<select data-v1720-engine><option value="grok">Grok TTS · 推荐</option><option value="auto">自动选择</option><option value="melo">MeloTTS</option><option value="system">浏览器系统语音</option></select></label>
+        <label>基础语速 <b data-v1711-rate-label>${settings.playbackRate.toFixed(2)}×</b><input data-v1711-rate type="range" min="0.82" max="1.12" step="0.01" value="${settings.playbackRate}"></label>
+        <label>朗读方式<select data-v1720-speech-mode><option value="natural">自然陪伴 · 推荐</option><option value="dialogue">只读对白</option><option value="full">完整朗读</option></select></label>
+      </div>
+      <div class="uai-c-v1711-checks"><label><input data-v1720-emotion type="checkbox" ${settings.emotionEnabled ? "checked" : ""}>根据回复情绪自动调整节奏和停顿</label><label><input data-v1711-fallback type="checkbox" ${settings.fallbackSystem ? "checked" : ""}>神经语音失败时自动回退系统语音</label></div>
+      <div class="uai-c-v1720-preview"><div><span>当前声音</span><strong>${VOICES[settings.voiceId]?.label || settings.voiceId} · ${PERSONAS[settings.persona]?.label || "自定义"}</strong><small>每个 AI 角色单独保存，切换角色会一起切换声音。</small></div><button type="button" data-v1711-preview>▶ 试听当前声音</button></div>
+      <div class="uai-c-v1711-status" data-v1711-status data-state="${neuralStatus}">${neuralStatusText}</div>
+      <footer><small>情绪分句 + WebAudio + Live2D 嘴型同步</small><button type="button" data-v1711-recheck>重新检测</button><button type="button" data-v1711-stop>停止</button><button type="button" class="primary" data-v1711-preview2>再试听一次</button></footer>
+    </section>`;
     document.body.appendChild(mask);
     mask.addEventListener("click", (event) => { if (event.target === mask) closeModal(); });
     mask.querySelector("[data-v1711-close]")?.addEventListener("click", closeModal);
-    mask.querySelector("[data-v1711-enabled]")?.addEventListener("change", async (event) => {
-      if (event.target.checked) await unlockAudio();
-      setSettings({ enabled: event.target.checked });
-    });
-
+    mask.querySelector("[data-v1711-enabled]")?.addEventListener("change", async (event) => { if (event.target.checked) await unlockAudio(); setSettings({ enabled: event.target.checked }); });
     const voice = mask.querySelector("[data-v1720-voice]");
     const engine = mask.querySelector("[data-v1720-engine]");
     const speechMode = mask.querySelector("[data-v1720-speech-mode]");
@@ -727,23 +660,14 @@
     voice?.addEventListener("change", (event) => setSettings({ voiceId: event.target.value }));
     engine?.addEventListener("change", (event) => setSettings({ engine: event.target.value }));
     speechMode?.addEventListener("change", (event) => setSettings({ speechMode: event.target.value }));
-
     mask.querySelectorAll("[data-v1720-persona]").forEach((button) => button.addEventListener("click", () => {
       const next = setSettings({ persona: button.dataset.v1720Persona });
       mask.querySelectorAll("[data-v1720-persona]").forEach((item) => item.classList.toggle("active", item.dataset.v1720Persona === next.persona));
       if (voice) voice.value = next.voiceId;
-      const rate = mask.querySelector("[data-v1711-rate]");
-      if (rate) rate.value = String(next.playbackRate);
-      const label = mask.querySelector("[data-v1711-rate-label]");
-      if (label) label.textContent = `${next.playbackRate.toFixed(2)}×`;
+      const rate = mask.querySelector("[data-v1711-rate]"); if (rate) rate.value = String(next.playbackRate);
+      const label = mask.querySelector("[data-v1711-rate-label]"); if (label) label.textContent = `${next.playbackRate.toFixed(2)}×`;
     }));
-
-    mask.querySelector("[data-v1711-rate]")?.addEventListener("input", (event) => {
-      const next = setSettings({ playbackRate: Number(event.target.value) });
-      const label = mask.querySelector("[data-v1711-rate-label]");
-      if (label) label.textContent = `${next.playbackRate.toFixed(2)}×`;
-      mask.querySelectorAll("[data-v1720-persona]").forEach((item) => item.classList.remove("active"));
-    });
+    mask.querySelector("[data-v1711-rate]")?.addEventListener("input", (event) => { const next = setSettings({ playbackRate: Number(event.target.value) }); const label = mask.querySelector("[data-v1711-rate-label]"); if (label) label.textContent = `${next.playbackRate.toFixed(2)}×`; mask.querySelectorAll("[data-v1720-persona]").forEach((item) => item.classList.remove("active")); });
     mask.querySelector("[data-v1720-emotion]")?.addEventListener("change", (event) => setSettings({ emotionEnabled: event.target.checked }));
     mask.querySelector("[data-v1711-fallback]")?.addEventListener("change", (event) => setSettings({ fallbackSystem: event.target.checked }));
     mask.querySelector("[data-v1711-recheck]")?.addEventListener("click", () => checkStatus(true));
@@ -758,17 +682,9 @@
   function openMonthlyReview() {
     closeModal();
     const stats = relationStats();
-    const mask = document.createElement("div");
-    mask.id = "uaiCompanionV1711Mask";
-    mask.className = "uai-c-v1711-mask";
+    const mask = document.createElement("div"); mask.id = "uaiCompanionV1711Mask"; mask.className = "uai-c-v1711-mask";
     const topics = stats.topics.length ? stats.topics.map((topic) => `<b>${escapeHtml(topic)}</b>`).join("") : "<small>这个月还没有形成明显的话题记录</small>";
-    mask.innerHTML = `
-      <section class="uai-c-v1711-modal" role="dialog" aria-modal="true" aria-label="本月关系回顾">
-        <header><div><span>MONTHLY REVIEW</span><h3>本月回顾</h3><p>只根据当前浏览器里保存的陪伴会话与珍藏时刻整理。</p></div><button type="button" data-v1711-close>×</button></header>
-        <div class="uai-c-v1711-stats"><div><strong>${stats.monthSessions}</strong><span>本月会话</span></div><div><strong>${stats.monthMessages}</strong><span>本月消息</span></div><div><strong>${stats.monthUserMessages}</strong><span>你说的话</span></div><div><strong>${stats.monthMoments}</strong><span>珍藏时刻</span></div></div>
-        <div class="uai-c-v1711-topics"><span>最近聊过</span><div>${topics}</div></div>
-        <footer><small>累计 ${stats.totalSessions} 个会话 · ${stats.totalMessages} 条消息</small><button class="primary" type="button" data-v1711-close2>知道了</button></footer>
-      </section>`;
+    mask.innerHTML = `<section class="uai-c-v1711-modal" role="dialog" aria-modal="true" aria-label="本月关系回顾"><header><div><span>MONTHLY REVIEW</span><h3>本月回顾</h3><p>只根据当前浏览器里保存的陪伴会话与珍藏时刻整理。</p></div><button type="button" data-v1711-close>×</button></header><div class="uai-c-v1711-stats"><div><strong>${stats.monthSessions}</strong><span>本月会话</span></div><div><strong>${stats.monthMessages}</strong><span>本月消息</span></div><div><strong>${stats.monthUserMessages}</strong><span>你说的话</span></div><div><strong>${stats.monthMoments}</strong><span>珍藏时刻</span></div></div><div class="uai-c-v1711-topics"><span>最近聊过</span><div>${topics}</div></div><footer><small>累计 ${stats.totalSessions} 个会话 · ${stats.totalMessages} 条消息</small><button class="primary" type="button" data-v1711-close2>知道了</button></footer></section>`;
     document.body.appendChild(mask);
     mask.addEventListener("click", (event) => { if (event.target === mask) closeModal(); });
     mask.querySelector("[data-v1711-close]")?.addEventListener("click", closeModal);
@@ -776,27 +692,15 @@
   }
 
   function ensureDock() {
-    const host = root();
-    const header = host?.querySelector(".uai-c-header");
-    if (!header) return null;
+    const host = root(); const header = host?.querySelector(".uai-c-header"); if (!header) return null;
     let dock = header.querySelector("#uaiCompanionVoiceDockV1711");
     if (!dock) {
-      dock = document.createElement("div");
-      dock.id = "uaiCompanionVoiceDockV1711";
-      dock.className = "uai-c-v1711-dock";
+      dock = document.createElement("div"); dock.id = "uaiCompanionVoiceDockV1711"; dock.className = "uai-c-v1711-dock";
       dock.innerHTML = `<button id="uaiCompanionVoiceToggleV1711" type="button"><i>🔇</i><span>语音</span></button><button id="uaiCompanionMonthlyReviewV1711" type="button"><i>♡</i><span>本月回顾</span></button><button id="uaiCompanionVoiceStopV1711" type="button" title="停止播放">■</button>`;
       header.appendChild(dock);
       const toggle = dock.querySelector("#uaiCompanionVoiceToggleV1711");
       toggle?.addEventListener("pointerdown", unlockAudio, { passive: true });
-      toggle?.addEventListener("click", async () => {
-        const next = !getSettings().enabled;
-        if (next) await unlockAudio();
-        setSettings({ enabled: next });
-        if (next) {
-          lastPlaybackError = "";
-          showToast(`自动朗读已开启 · ${PERSONAS[getSettings().persona]?.label || VOICES[getSettings().voiceId]?.label}`);
-        }
-      });
+      toggle?.addEventListener("click", async () => { const next = !getSettings().enabled; if (next) await unlockAudio(); setSettings({ enabled: next }); if (next) { lastPlaybackError = ""; showToast(`自动朗读已开启 · ${PERSONAS[getSettings().persona]?.label || VOICES[getSettings().voiceId]?.label}`); } });
       toggle?.addEventListener("contextmenu", (event) => { event.preventDefault(); openVoicePanel(); });
       dock.querySelector("#uaiCompanionMonthlyReviewV1711")?.addEventListener("click", openMonthlyReview);
       dock.querySelector("#uaiCompanionVoiceStopV1711")?.addEventListener("click", () => stop({ keepLast: true }));
@@ -805,85 +709,36 @@
   }
 
   function refreshUi() {
-    const host = root();
-    if (!host) return;
-    const dock = ensureDock();
-    if (!dock) return;
-    const settings = getSettings();
-    const state = host.dataset.v1711VoiceState || "";
-    const toggle = dock.querySelector("#uaiCompanionVoiceToggleV1711");
-    const stopButton = dock.querySelector("#uaiCompanionVoiceStopV1711");
-    if (toggle) {
-      toggle.classList.toggle("active", settings.enabled);
-      toggle.classList.toggle("loading", state === "loading");
-      toggle.classList.toggle("speaking", state === "speaking");
-      const icon = toggle.querySelector("i");
-      const label = toggle.querySelector("span");
-      if (icon) icon.textContent = settings.enabled ? "🔊" : "🔇";
-      if (label) label.textContent = state === "loading" ? "生成语音" : state === "speaking" ? "说话中" : "语音";
-      toggle.title = lastPlaybackError || `声音：${VOICES[settings.voiceId]?.label || settings.voiceId} · 右键打开设置`;
-    }
+    const host = root(); if (!host) return;
+    const dock = ensureDock(); if (!dock) return;
+    const settings = getSettings(); const state = host.dataset.v1711VoiceState || "";
+    const toggle = dock.querySelector("#uaiCompanionVoiceToggleV1711"); const stopButton = dock.querySelector("#uaiCompanionVoiceStopV1711");
+    if (toggle) { toggle.classList.toggle("active", settings.enabled); toggle.classList.toggle("loading", state === "loading"); toggle.classList.toggle("speaking", state === "speaking"); const icon = toggle.querySelector("i"); const label = toggle.querySelector("span"); if (icon) icon.textContent = settings.enabled ? "🔊" : "🔇"; if (label) label.textContent = state === "loading" ? "生成语音" : state === "speaking" ? "说话中" : "语音"; toggle.title = lastPlaybackError || `声音：${VOICES[settings.voiceId]?.label || settings.voiceId} · 右键打开设置`; }
     if (stopButton) stopButton.hidden = !state;
-    const modal = document.querySelector("#uaiCompanionV1711Mask .uai-c-v1711-modal");
-    const status = modal?.querySelector("[data-v1711-status]");
-    if (status) {
-      status.textContent = neuralStatusText;
-      status.dataset.state = neuralStatus;
-    }
+    const modal = document.querySelector("#uaiCompanionV1711Mask .uai-c-v1711-modal"); const status = modal?.querySelector("[data-v1711-status]");
+    if (status) { status.textContent = neuralStatusText; status.dataset.state = neuralStatus; }
   }
 
   function refresh() {
     const host = root();
-    if (!host) {
-      inputObserver?.disconnect?.();
-      inputObserver = null;
-      observedInput = null;
-      closeModal();
-      closePlaybackResources();
-      return;
-    }
-    const settings = getSettings();
-    dispatchProfile(settings);
-    ensureDock();
-    bindInputObserver();
-    refreshUi();
+    if (!host) { inputObserver?.disconnect?.(); inputObserver = null; observedInput = null; closeModal(); closePlaybackResources(); return; }
+    const settings = getSettings(); dispatchProfile(settings); ensureDock(); bindInputObserver(); refreshUi();
   }
 
   window.addEventListener("uai:companion-core-entered", refresh);
   window.addEventListener("uai:companion-functions-ready", refresh);
   window.addEventListener("uai:mode-refresh", refresh);
-  window.addEventListener("storage", (event) => {
-    if (event.key === KEY || event.key === ACTIVE_KEY) refresh();
-  });
-  document.addEventListener("visibilitychange", () => {
-    if (document.hidden) stop({ keepLast: true });
-    else refresh();
-  });
+  window.addEventListener("storage", (event) => { if (event.key === KEY || event.key === ACTIVE_KEY) refresh(); });
+  document.addEventListener("visibilitychange", () => { if (document.hidden) stop({ keepLast: true }); else refresh(); });
   window.addEventListener("pagehide", closePlaybackResources, { passive: true });
 
   document.documentElement.dataset.companionVoiceV1711Revision = REVISION;
   window.UnlimitedCompanionVoiceV1711 = {
-    revision: REVISION,
-    voices: VOICES,
-    personas: PERSONAS,
-    getSettings,
-    setSettings,
-    checkStatus,
-    extractSpeechText,
-    splitSpeechSegments,
-    buildSpeechPlan,
-    classifyEmotion,
-    unlockAudio,
-    speak,
-    stop,
-    replay,
-    refresh,
-    setAutoReadSuppressed,
+    revision: REVISION, voices: VOICES, personas: PERSONAS, getSettings, setSettings, checkStatus, extractSpeechText, splitSpeechSegments, buildSpeechPlan, classifyEmotion, unlockAudio, speak, stop, replay, refresh, setAutoReadSuppressed,
     get autoReadSuppressed() { return autoReadSuppressed; },
     get audioUnlocked() { return audioUnlocked || playbackContext?.state === "running"; },
     get lastPlaybackError() { return lastPlaybackError; }
   };
 
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", refresh, { once: true });
-  else refresh();
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", refresh, { once: true }); else refresh();
 })();
