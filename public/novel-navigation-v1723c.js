@@ -48,11 +48,11 @@
     const library = document.getElementById("libraryToggleBtn");
     const studio = document.getElementById("studioToggleBtn");
     if (library) {
-      library.textContent = "作品与章节";
+      if (library.textContent !== "作品与章节") library.textContent = "作品与章节";
       library.title = "显示或隐藏作品与章节";
     }
     if (studio) {
-      studio.textContent = "创作资料";
+      if (studio.textContent !== "创作资料") studio.textContent = "创作资料";
       studio.title = "显示或隐藏创作资料";
     }
   }
@@ -176,18 +176,6 @@
     if (item?.dataset.sessionId) requestDelete(item.dataset.sessionId);
   }
 
-  function patchLabels() {
-    const libraryHead = document.querySelector("#studioLibrary > .studio-panel-head strong");
-    const studioHead = document.querySelector("#studioPanel > .studio-panel-head strong");
-    if (libraryHead && libraryHead.textContent !== "作品与章节") libraryHead.textContent = "作品与章节";
-    if (studioHead && studioHead.textContent !== "创作资料") studioHead.textContent = "创作资料";
-
-    const chapterLabel = document.querySelector("#studioLibrary .chapter-section .library-title > span");
-    if (chapterLabel && chapterLabel.textContent !== "章节") chapterLabel.textContent = "章节";
-    const sessionLabel = document.querySelector("#studioLibrary .library-section:not(.chapter-section) .library-title > span");
-    if (sessionLabel && sessionLabel.textContent !== "AI 对话") sessionLabel.textContent = "AI 对话";
-  }
-
   function patch() {
     refreshQueued = false;
     if (!isNovelMode()) return false;
@@ -196,7 +184,8 @@
     ensureMoreTools();
     normalizePrimaryTabs();
     decorateStudioSessions();
-    patchLabels();
+    // Headings are rendered by V17.23C CSS pseudo-content to avoid fighting the
+    // older v3-sidebar MutationObserver over the same text nodes.
     document.body.classList.add("novel-v1723c-ready");
     return true;
   }
