@@ -18,7 +18,7 @@
     if (!button) return;
     if (isNovelMode()) {
       button.textContent = theme === "light" ? "切换深色主题" : "切换浅色主题";
-      button.title = theme === "light" ? "小说工作区当前使用浅色写作主题" : "小说工作区当前使用深色写作主题";
+      button.title = theme === "light" ? "小说工作区当前使用浅色写作主题" : "小说工作区当前使用深色主题";
       button.dataset.novelV1723ThemeControl = "true";
       return;
     }
@@ -163,4 +163,32 @@
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", loadVisualLayer, { once: true });
   else loadVisualLayer();
+})();
+
+// V17.24C is the third and final UI pass: regression polish only.
+// It coordinates existing menus, long labels and narrow-screen return-to-writing behavior.
+(() => {
+  const STYLE_ID = "novelV1724CStyle";
+  const SCRIPT_ID = "novelV1724CScript";
+  const VERSION = "20260823-v17.24c-final-regression-polish";
+
+  function loadRegressionLayer() {
+    if (!document.getElementById(STYLE_ID)) {
+      const link = document.createElement("link");
+      link.id = STYLE_ID;
+      link.rel = "stylesheet";
+      link.href = `/novel-ui-v1724c.css?v=${VERSION}`;
+      document.head.appendChild(link);
+    }
+    if (!document.getElementById(SCRIPT_ID)) {
+      const script = document.createElement("script");
+      script.id = SCRIPT_ID;
+      script.src = `/novel-ui-v1724c.js?v=${VERSION}`;
+      script.defer = true;
+      document.head.appendChild(script);
+    }
+  }
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", loadRegressionLayer, { once: true });
+  else loadRegressionLayer();
 })();
