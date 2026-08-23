@@ -38,7 +38,8 @@ const order = [
   "companion-scene-v1714.js",
   "companion-character-stage-v1712.js",
   "companion-call-suite-v1713.js",
-  "companion-atmosphere-v1715.js"
+  "companion-atmosphere-v1715.js",
+  "companion-audio-gesture-v1716.js"
 ].map((asset) => index.indexOf(asset));
 assert.ok(order.every((position) => position >= 0), "V17.10-V17.16 companion recovery scripts must all be present in index");
 assert.ok(order.every((position, index) => index === 0 || position > order[index - 1]), "companion recovery scripts must load in dependency order");
@@ -49,3 +50,4 @@ await import('./companion-scene-v1714.test.mjs');
 await import('./companion-character-stage-v1712.test.mjs');
 await import('./companion-call-suite-v1713.test.mjs');
 await import('./companion-atmosphere-v1715.test.mjs');
+await import('./companion-audio-gesture-v1716.test.mjs');
