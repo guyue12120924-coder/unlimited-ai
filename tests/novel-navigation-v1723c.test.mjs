@@ -4,6 +4,9 @@ import fs from "node:fs";
 const index = fs.readFileSync("public/index.html", "utf8");
 const js = fs.readFileSync("public/novel-navigation-v1723c.js", "utf8");
 const css = fs.readFileSync("public/novel-navigation-v1723c.css", "utf8");
+const simplifyJs = fs.readFileSync("public/novel-simplify-v1723.js", "utf8");
+const finalJs = fs.readFileSync("public/novel-final-v1723d.js", "utf8");
+const finalCss = fs.readFileSync("public/novel-final-v1723d.css", "utf8");
 const readme = fs.readFileSync("README.md", "utf8");
 
 assert.match(index, /unlimited-novel-revision" content="2026-08-23-v17\.23c-novel-navigation"/);
@@ -35,8 +38,33 @@ assert.match(css, /\.novel-v1723-session-delete/);
 assert.match(css, /\.novel-v1723-more-tools-menu/);
 assert.doesNotMatch(css, /#uaiCompanionRoot|data-uai-mode="companion"|\.uai-c-/);
 
+// V17.23D final UX is loaded from the stable novel V17.23A entry so it stays
+// independent from the companion production chain and old app/studio cores.
+assert.match(simplifyJs, /novel-final-v1723d\.css/);
+assert.match(simplifyJs, /novel-final-v1723d\.js/);
+assert.match(simplifyJs, /v17\.23d-novel-final-ux/);
+assert.match(finalJs, /2026-08-23-v17\.23d-novel-final-ux/);
+assert.match(finalJs, /dataset\?\.uaiMode === "novel"/);
+assert.match(finalJs, /novelV1723TopMore/);
+assert.match(finalJs, /novelV1723CurrentWork/);
+assert.match(finalJs, /novelV1723QuickBtn/);
+assert.match(finalJs, /继续正文/);
+assert.match(finalJs, /推进剧情/);
+assert.match(finalJs, /写对话/);
+assert.match(finalJs, /规划本章/);
+assert.match(finalJs, /润色/);
+assert.match(finalJs, /检查剧情/);
+assert.match(finalJs, /novelV1723Onboarding/);
+assert.match(finalJs, /cfw_novel_onboarding_v1723d/);
+assert.doesNotMatch(finalJs, /UnlimitedCompanion|uai_companion_|uaiCompanionRoot/);
+assert.match(finalCss, /V17\.23D Novel Final UX/);
+assert.match(finalCss, /body\[data-uai-mode="novel"\] #topbar #readerBtn/);
+assert.match(finalCss, /\.novel-v1723d-quick-menu/);
+assert.match(finalCss, /\.novel-v1723d-onboarding/);
+assert.doesNotMatch(finalCss, /#uaiCompanionRoot|data-uai-mode="companion"|\.uai-c-/);
+
 assert.match(readme, /V17\.23C — 作品 \/ 章节 \/ 创作资料导航 ✅ 已完成/);
 assert.match(readme, /V17\.23D — 输入区、顶部栏和最终 UX 收口 ⏳ 下一阶段/);
 assert.match(readme, /收藏按钮旁直接增加“删除”按钮/);
 
-console.log("V17.23C novel navigation contract passed.");
+console.log("V17.23C navigation + V17.23D final UX contract passed.");
