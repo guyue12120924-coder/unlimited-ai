@@ -1,0 +1,422 @@
+/* V17.24B Novel Visual Unification
+ * Second of three UI passes: one calm writing system for light + dark novel modes.
+ * Visual-only. No feature controls are removed or hidden here.
+ */
+
+body[data-uai-mode="novel"] {
+  --novel-ui-radius-sm: 8px;
+  --novel-ui-radius: 12px;
+  --novel-ui-radius-lg: 16px;
+  --novel-ui-control-h: 34px;
+  --novel-ui-shadow-soft: 0 10px 30px rgba(52, 45, 34, .07);
+  --novel-ui-shadow-float: 0 18px 46px rgba(49, 42, 31, .12);
+}
+
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] {
+  --bg-canvas: #f1eee7;
+  --bg-canvas-soft: #ebe7df;
+  --bg-surface: #faf8f3;
+  --bg-surface-raised: #fffdf9;
+  --surface-soft: rgba(71, 77, 64, .045);
+  --text-primary: #272923;
+  --text-secondary: #555a51;
+  --text-muted: #7e8279;
+  --border-subtle: rgba(56, 61, 52, .085);
+  --border-default: rgba(56, 61, 52, .14);
+  --accent: #6f8d58;
+  --accent-strong: #5e7a49;
+  --studio-accent: #6f8d58;
+  --studio-accent-strong: #5e7a49;
+  --studio-line: rgba(56, 61, 52, .10);
+  --studio-panel: rgba(248, 246, 240, .97);
+  --studio-panel-soft: #fffdf9;
+}
+
+body[data-uai-mode="novel"][data-novel-v1723-theme="dark"] {
+  color-scheme: dark;
+  --bg-canvas: #171916;
+  --bg-canvas-soft: #1c1f1b;
+  --bg-surface: #20231f;
+  --bg-surface-raised: #262924;
+  --surface-soft: rgba(255, 255, 255, .045);
+  --text-primary: #eceee8;
+  --text-secondary: #b7bdb2;
+  --text-muted: #878e83;
+  --border-subtle: rgba(232, 237, 226, .075);
+  --border-default: rgba(232, 237, 226, .12);
+  --accent: #a4c484;
+  --accent-strong: #b8d89a;
+  --studio-accent: #a4c484;
+  --studio-accent-strong: #b8d89a;
+  --studio-line: rgba(232, 237, 226, .085);
+  --studio-panel: rgba(29, 32, 28, .98);
+  --studio-panel-soft: #252824;
+  --novel-ui-shadow-soft: 0 10px 30px rgba(0, 0, 0, .18);
+  --novel-ui-shadow-float: 0 18px 46px rgba(0, 0, 0, .28);
+  background: #171916 !important;
+  color: var(--text-primary) !important;
+}
+
+/* One surface language across the full workspace. */
+body[data-uai-mode="novel"] #creativeWorkspace {
+  border-top-color: var(--border-subtle) !important;
+  background: var(--bg-canvas) !important;
+}
+body[data-uai-mode="novel"] #studioLibrary,
+body[data-uai-mode="novel"] #studioPanel {
+  color: var(--text-primary) !important;
+  background: var(--studio-panel) !important;
+  backdrop-filter: blur(18px) saturate(1.02);
+  box-shadow: none !important;
+}
+body[data-uai-mode="novel"] #studioLibrary { border-right-color: var(--border-subtle) !important; }
+body[data-uai-mode="novel"] #studioPanel { border-left-color: var(--border-subtle) !important; }
+body[data-uai-mode="novel"] #conversationPane {
+  background: var(--bg-canvas) !important;
+}
+
+/* Top bar: flatter and quieter. */
+body[data-uai-mode="novel"] #topbar {
+  border-bottom: 1px solid var(--border-subtle) !important;
+  background: color-mix(in srgb, var(--bg-surface) 94%, transparent) !important;
+  box-shadow: none !important;
+  backdrop-filter: blur(18px) saturate(1.02);
+}
+body[data-uai-mode="novel"] #topbar .brand-copy strong { color: var(--text-primary) !important; letter-spacing: -.01em; }
+body[data-uai-mode="novel"] #topbar .brand-copy span,
+body[data-uai-mode="novel"] #topbar .model-label { color: var(--text-muted) !important; }
+body[data-uai-mode="novel"] #topbar .iconbtn,
+body[data-uai-mode="novel"] #topbar .studio-top-btn,
+body[data-uai-mode="novel"] #topbar .pill.model-pill,
+body[data-uai-mode="novel"] .novel-v1723d-top-more {
+  min-height: var(--novel-ui-control-h);
+  border: 1px solid var(--border-default) !important;
+  border-radius: var(--novel-ui-radius-sm) !important;
+  background: var(--bg-surface-raised) !important;
+  color: var(--text-secondary) !important;
+  box-shadow: none !important;
+}
+body[data-uai-mode="novel"] #topbar .iconbtn:hover,
+body[data-uai-mode="novel"] #topbar .studio-top-btn:hover,
+body[data-uai-mode="novel"] .novel-v1723d-top-more:hover,
+body[data-uai-mode="novel"] .novel-v1723d-top-more[aria-expanded="true"] {
+  border-color: color-mix(in srgb, var(--accent) 34%, var(--border-default)) !important;
+  background: color-mix(in srgb, var(--accent) 7%, var(--bg-surface-raised)) !important;
+  color: var(--text-primary) !important;
+  transform: none !important;
+}
+body[data-uai-mode="novel"] .novel-v1723d-current-work {
+  border-color: var(--border-subtle) !important;
+  border-radius: var(--novel-ui-radius-sm) !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+body[data-uai-mode="novel"] .novel-v1723d-current-work > strong { color: var(--text-primary) !important; }
+body[data-uai-mode="novel"] .novel-v1723d-current-work > b { color: var(--accent) !important; }
+
+/* Unified buttons and focus language. */
+body[data-uai-mode="novel"] button,
+body[data-uai-mode="novel"] select,
+body[data-uai-mode="novel"] input,
+body[data-uai-mode="novel"] textarea {
+  font-family: inherit;
+}
+body[data-uai-mode="novel"] button:focus-visible,
+body[data-uai-mode="novel"] select:focus-visible,
+body[data-uai-mode="novel"] input:focus-visible,
+body[data-uai-mode="novel"] textarea:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 45%, transparent) !important;
+  outline-offset: 2px;
+}
+body[data-uai-mode="novel"] .studio-icon-btn,
+body[data-uai-mode="novel"] .library-title button,
+body[data-uai-mode="novel"] .library-footer button,
+body[data-uai-mode="novel"] .studio-action-grid button,
+body[data-uai-mode="novel"] .chapter-manuscript-head button,
+body[data-uai-mode="novel"] .manuscript-check-head button {
+  border: 1px solid var(--border-default) !important;
+  border-radius: var(--novel-ui-radius-sm) !important;
+  background: var(--bg-surface-raised) !important;
+  color: var(--text-secondary) !important;
+  box-shadow: none !important;
+}
+body[data-uai-mode="novel"] .studio-icon-btn:hover,
+body[data-uai-mode="novel"] .library-title button:hover,
+body[data-uai-mode="novel"] .library-footer button:hover,
+body[data-uai-mode="novel"] .studio-action-grid button:hover,
+body[data-uai-mode="novel"] .chapter-manuscript-head button:hover,
+body[data-uai-mode="novel"] .manuscript-check-head button:hover {
+  border-color: color-mix(in srgb, var(--accent) 28%, var(--border-default)) !important;
+  background: color-mix(in srgb, var(--accent) 6%, var(--bg-surface-raised)) !important;
+  color: var(--text-primary) !important;
+  transform: none !important;
+}
+
+/* Left navigation: selected row is obvious without looking like a card stack. */
+body[data-uai-mode="novel"] #studioLibrary .studio-panel-head,
+body[data-uai-mode="novel"] #studioPanel .studio-panel-head,
+body[data-uai-mode="novel"] #studioLibrary .library-section,
+body[data-uai-mode="novel"] #studioLibrary .project-switcher,
+body[data-uai-mode="novel"] #studioLibrary .studio-search,
+body[data-uai-mode="novel"] #studioLibrary .library-footer {
+  border-color: var(--border-subtle) !important;
+}
+body[data-uai-mode="novel"] #studioLibrary .library-title { color: var(--text-muted) !important; }
+body[data-uai-mode="novel"] #studioLibrary .studio-list-item {
+  border: 0 !important;
+  border-radius: var(--novel-ui-radius-sm) !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+body[data-uai-mode="novel"] #studioLibrary .studio-list-item:hover {
+  background: var(--surface-soft) !important;
+}
+body[data-uai-mode="novel"] #studioLibrary .studio-list-item.active {
+  background: color-mix(in srgb, var(--accent) 10%, transparent) !important;
+  box-shadow: inset 3px 0 0 var(--accent) !important;
+}
+body[data-uai-mode="novel"] #studioLibrary .studio-list-item.active::before { display: none !important; }
+body[data-uai-mode="novel"] #studioLibrary .studio-item-main { color: var(--text-primary) !important; }
+body[data-uai-mode="novel"] #studioLibrary .studio-item-main small { color: var(--text-muted) !important; }
+body[data-uai-mode="novel"] #studioLibrary .favorite-session,
+body[data-uai-mode="novel"] #studioLibrary .chapter-status,
+body[data-uai-mode="novel"] #studioLibrary .chapter-drag { color: var(--text-muted) !important; }
+body[data-uai-mode="novel"] #studioLibrary .favorite-session.active { color: #b99247 !important; }
+
+/* Inputs: same border, surface and radius everywhere. */
+body[data-uai-mode="novel"] .project-switcher select,
+body[data-uai-mode="novel"] .inline-create input,
+body[data-uai-mode="novel"] .studio-search input,
+body[data-uai-mode="novel"] .editor-pane input,
+body[data-uai-mode="novel"] .editor-pane select,
+body[data-uai-mode="novel"] .editor-pane textarea,
+body[data-uai-mode="novel"] .character-form input,
+body[data-uai-mode="novel"] .character-card textarea,
+body[data-uai-mode="novel"] .relation-form input,
+body[data-uai-mode="novel"] .relation-form select,
+body[data-uai-mode="novel"] .relation-list textarea,
+body[data-uai-mode="novel"] .goal-control input,
+body[data-uai-mode="novel"] .scene-form input,
+body[data-uai-mode="novel"] .scene-form select,
+body[data-uai-mode="novel"] .scene-form textarea {
+  border: 1px solid var(--border-default) !important;
+  border-radius: var(--novel-ui-radius-sm) !important;
+  background: var(--bg-surface-raised) !important;
+  color: var(--text-primary) !important;
+  box-shadow: none !important;
+}
+body[data-uai-mode="novel"] input::placeholder,
+body[data-uai-mode="novel"] textarea::placeholder { color: var(--text-muted) !important; opacity: .76; }
+
+/* Reading / AI center: typography first, cards second. */
+body[data-uai-mode="novel"] #conversationPane .chat {
+  color: var(--text-primary);
+}
+body[data-uai-mode="novel"] #conversationPane .row {
+  margin-block: 7px;
+}
+body[data-uai-mode="novel"] #conversationPane .avatar {
+  border: 1px solid var(--border-subtle) !important;
+  background: var(--surface-soft) !important;
+  color: var(--text-muted) !important;
+  box-shadow: none !important;
+}
+body[data-uai-mode="novel"] #conversationPane .bubble {
+  border: 1px solid var(--border-subtle) !important;
+  border-radius: 14px !important;
+  background: var(--bg-surface-raised) !important;
+  color: var(--text-primary) !important;
+  box-shadow: none !important;
+  line-height: 1.78;
+}
+body[data-uai-mode="novel"] #conversationPane .bubble.user {
+  border-color: color-mix(in srgb, var(--accent) 16%, var(--border-subtle)) !important;
+  background: color-mix(in srgb, var(--accent) 8%, var(--bg-surface)) !important;
+}
+body[data-uai-mode="novel"] #conversationPane .meta,
+body[data-uai-mode="novel"] #conversationPane .stats,
+body[data-uai-mode="novel"] #conversationPane .reader-toggle { color: var(--text-muted) !important; }
+body[data-uai-mode="novel"] .novel-v15-context {
+  border: 0 !important;
+  border-bottom: 1px solid var(--border-subtle) !important;
+  border-radius: 0 !important;
+  background: color-mix(in srgb, var(--bg-canvas) 92%, transparent) !important;
+  box-shadow: none !important;
+}
+
+/* Composer feels like a writing control, not a floating widget. */
+body[data-uai-mode="novel"] #conversationPane .input-floating {
+  background: linear-gradient(180deg, transparent 0%, color-mix(in srgb, var(--bg-canvas) 88%, transparent) 24%, var(--bg-canvas) 72%) !important;
+  border-top: 0 !important;
+  backdrop-filter: none !important;
+}
+body[data-uai-mode="novel"] #composer {
+  border: 1px solid var(--border-default) !important;
+  border-radius: var(--novel-ui-radius-lg) !important;
+  background: var(--bg-surface-raised) !important;
+  box-shadow: var(--novel-ui-shadow-soft) !important;
+}
+body[data-uai-mode="novel"] #composer.novel-v15-focused,
+body[data-uai-mode="novel"] #composer:focus-within {
+  border-color: color-mix(in srgb, var(--accent) 48%, var(--border-default)) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 8%, transparent), var(--novel-ui-shadow-soft) !important;
+}
+body[data-uai-mode="novel"] #composer textarea#msg {
+  background: transparent !important;
+  color: var(--text-primary) !important;
+  caret-color: var(--accent) !important;
+}
+body[data-uai-mode="novel"] .novel-v1723d-quick-btn {
+  border: 1px solid transparent !important;
+  border-radius: 10px !important;
+  background: var(--surface-soft) !important;
+  color: var(--accent) !important;
+  box-shadow: none !important;
+}
+body[data-uai-mode="novel"] .novel-v1723d-quick-btn:hover,
+body[data-uai-mode="novel"] .novel-v1723d-quick-btn[aria-expanded="true"] {
+  border-color: color-mix(in srgb, var(--accent) 22%, var(--border-default)) !important;
+  background: color-mix(in srgb, var(--accent) 8%, var(--bg-surface)) !important;
+  transform: none !important;
+}
+body[data-uai-mode="novel"] #composer #sendBtn {
+  border: 1px solid var(--accent-strong) !important;
+  border-radius: 10px !important;
+  background: var(--accent-strong) !important;
+  color: #fff !important;
+  box-shadow: none !important;
+}
+body[data-uai-mode="novel"][data-novel-v1723-theme="dark"] #composer #sendBtn { color: #182015 !important; }
+
+/* Right panel: reference desk, not a dashboard. */
+body[data-uai-mode="novel"] #studioPanel .studio-tabs {
+  border-bottom: 1px solid var(--border-subtle) !important;
+  background: transparent !important;
+}
+body[data-uai-mode="novel"] #studioPanel .studio-tabs button {
+  border: 0 !important;
+  border-bottom: 2px solid transparent !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: var(--text-muted) !important;
+  box-shadow: none !important;
+}
+body[data-uai-mode="novel"] #studioPanel .studio-tabs button:hover { color: var(--text-secondary) !important; }
+body[data-uai-mode="novel"] #studioPanel .studio-tabs button.active {
+  border-bottom-color: var(--accent) !important;
+  background: transparent !important;
+  color: var(--accent-strong) !important;
+  box-shadow: none !important;
+}
+body[data-uai-mode="novel"] #studioPanelBody .pane-hero {
+  border-bottom: 1px solid var(--border-subtle) !important;
+}
+body[data-uai-mode="novel"] #studioPanelBody .pane-hero span { color: var(--accent) !important; }
+body[data-uai-mode="novel"] #studioPanelBody .pane-hero h3 { color: var(--text-primary) !important; letter-spacing: -.01em; }
+body[data-uai-mode="novel"] #studioPanelBody .pane-hero p,
+body[data-uai-mode="novel"] #studioPanelBody .autosave-note,
+body[data-uai-mode="novel"] #studioPanelBody .goal-caption { color: var(--text-muted) !important; }
+
+body[data-uai-mode="novel"] #studioPanelBody .chapter-editor,
+body[data-uai-mode="novel"] #studioPanelBody .activity-panel,
+body[data-uai-mode="novel"] #studioPanelBody .accent-settings,
+body[data-uai-mode="novel"] #studioPanelBody .manuscript-check,
+body[data-uai-mode="novel"] #studioPanelBody .draft-fragment-card,
+body[data-uai-mode="novel"] #studioPanelBody .character-card,
+body[data-uai-mode="novel"] #studioPanelBody .scene-card,
+body[data-uai-mode="novel"] #studioPanelBody .stat-grid > div,
+body[data-uai-mode="novel"] #studioPanelBody .storage-note {
+  border: 1px solid var(--border-subtle) !important;
+  border-radius: var(--novel-ui-radius) !important;
+  background: var(--bg-surface-raised) !important;
+  box-shadow: none !important;
+}
+body[data-uai-mode="novel"] #studioPanelBody .draft-fragment,
+body[data-uai-mode="novel"] #studioPanelBody .manuscript-check-list > button {
+  border-color: var(--border-subtle) !important;
+  background: transparent !important;
+  color: var(--text-primary) !important;
+}
+body[data-uai-mode="novel"] #studioPanelBody .draft-fragment p,
+body[data-uai-mode="novel"] #studioPanelBody .chapter-clip-list p,
+body[data-uai-mode="novel"] #studioPanelBody .character-card span,
+body[data-uai-mode="novel"] #studioPanelBody .scene-card-copy span { color: var(--text-secondary) !important; }
+
+/* Menus / popovers all use the same floating surface. */
+body[data-uai-mode="novel"] .novel-v1723d-top-more-menu,
+body[data-uai-mode="novel"] .novel-v1723d-quick-menu,
+body[data-uai-mode="novel"] .novel-v1723-more-tools-menu,
+body[data-uai-mode="novel"] .novel-v1724a-library-tools-panel {
+  border: 1px solid var(--border-default) !important;
+  border-radius: var(--novel-ui-radius) !important;
+  background: color-mix(in srgb, var(--bg-surface-raised) 97%, transparent) !important;
+  color: var(--text-primary) !important;
+  box-shadow: var(--novel-ui-shadow-float) !important;
+}
+body[data-uai-mode="novel"] .novel-v1723d-top-more-menu button,
+body[data-uai-mode="novel"] .novel-v1723d-quick-menu button,
+body[data-uai-mode="novel"] .novel-v1723-more-tools-menu button,
+body[data-uai-mode="novel"] .novel-v1724a-library-tools-panel button {
+  border-radius: var(--novel-ui-radius-sm) !important;
+}
+
+/* Session / settings surfaces follow the same system. */
+body[data-uai-mode="novel"] #sessionPanel,
+body[data-uai-mode="novel"] .modal-panel,
+body[data-uai-mode="novel"] .novel-v1723d-onboarding > section {
+  border: 1px solid var(--border-default) !important;
+  background: var(--bg-surface-raised) !important;
+  color: var(--text-primary) !important;
+  box-shadow: var(--novel-ui-shadow-float) !important;
+}
+body[data-uai-mode="novel"] #sessionPanel .session-header,
+body[data-uai-mode="novel"] .modal-header {
+  border-bottom-color: var(--border-subtle) !important;
+}
+
+/* Subtle scrollbars for long writing/reference surfaces. */
+body[data-uai-mode="novel"] #studioLibrary,
+body[data-uai-mode="novel"] #studioPanelBody,
+body[data-uai-mode="novel"] #history,
+body[data-uai-mode="novel"] .studio-list,
+body[data-uai-mode="novel"] .novel-v1724a-library-tools-panel {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--text-muted) 34%, transparent) transparent;
+}
+body[data-uai-mode="novel"] #studioLibrary::-webkit-scrollbar,
+body[data-uai-mode="novel"] #studioPanelBody::-webkit-scrollbar,
+body[data-uai-mode="novel"] #history::-webkit-scrollbar,
+body[data-uai-mode="novel"] .studio-list::-webkit-scrollbar,
+body[data-uai-mode="novel"] .novel-v1724a-library-tools-panel::-webkit-scrollbar { width: 7px; height: 7px; }
+body[data-uai-mode="novel"] #studioLibrary::-webkit-scrollbar-thumb,
+body[data-uai-mode="novel"] #studioPanelBody::-webkit-scrollbar-thumb,
+body[data-uai-mode="novel"] #history::-webkit-scrollbar-thumb,
+body[data-uai-mode="novel"] .studio-list::-webkit-scrollbar-thumb,
+body[data-uai-mode="novel"] .novel-v1724a-library-tools-panel::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--text-muted) 32%, transparent);
+  background-clip: padding-box;
+}
+
+@media (max-width: 980px) {
+  body[data-uai-mode="novel"] #studioLibrary,
+  body[data-uai-mode="novel"] #studioPanel {
+    box-shadow: var(--novel-ui-shadow-float) !important;
+  }
+}
+
+@media (max-width: 640px) {
+  body[data-uai-mode="novel"] #conversationPane .bubble {
+    border-radius: 12px !important;
+  }
+  body[data-uai-mode="novel"] #composer {
+    border-radius: 13px !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body[data-uai-mode="novel"] * {
+    scroll-behavior: auto !important;
+  }
+}
