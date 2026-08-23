@@ -4,6 +4,7 @@ const MAX_TEXT_LENGTH = 700;
 const LANGS = new Set(["zh", "en", "ja", "ko", "es", "fr"]);
 const ENGINES = new Set(["auto", "grok", "melo"]);
 const GROK_VOICES = new Set(["eve", "ara", "rex", "sal", "leo"]);
+const DEFAULT_GROK_VOICE = "eve";
 
 function json(value, status = 200) {
   return new Response(JSON.stringify(value), {
@@ -126,8 +127,8 @@ export async function handleCompanionTts(request, env) {
   const lang = LANGS.has(requestedLang) ? requestedLang : "zh";
   const requestedEngine = String(payload?.engine || "auto").toLowerCase();
   const engine = ENGINES.has(requestedEngine) ? requestedEngine : "auto";
-  const requestedVoice = String(payload?.voice_id || "ara").toLowerCase();
-  const voice = GROK_VOICES.has(requestedVoice) ? requestedVoice : "ara";
+  const requestedVoice = String(payload?.voice_id || DEFAULT_GROK_VOICE).toLowerCase();
+  const voice = GROK_VOICES.has(requestedVoice) ? requestedVoice : DEFAULT_GROK_VOICE;
 
   try {
     let audio;
@@ -160,6 +161,7 @@ export async function handleCompanionTts(request, env) {
 export const companionTtsInfo = {
   models: { grok: GROK_MODEL, melo: MELO_MODEL },
   voices: [...GROK_VOICES],
+  defaultVoice: DEFAULT_GROK_VOICE,
   maxTextLength: MAX_TEXT_LENGTH,
   languages: [...LANGS]
 };
