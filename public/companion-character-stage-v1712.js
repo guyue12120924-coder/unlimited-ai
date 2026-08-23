@@ -1,6 +1,6 @@
-// V17.17 integrated Live2D background. One renderer is reused across refreshes and role changes.
+// V17.20 integrated Live2D background with emotional voice lip-sync ownership.
 (() => {
-  const REVISION = "2026-08-23-v17.17-integrated-live2d-background";
+  const REVISION = "2026-08-23-v17.20-emotional-lipsync-compat";
   if (window.UnlimitedCompanionStageV1712?.revision === REVISION) return;
 
   const CONFIG_URL = "/live2d/characters.json";
@@ -489,10 +489,7 @@
     const viewport = stageHost?.querySelector(".uai-c-v1712-viewport");
     const rect = viewport?.getBoundingClientRect();
     if (!rect?.width || !rect.height) return null;
-    return {
-      x: Math.max(0, Math.min(rect.width, event.clientX - rect.left)),
-      y: Math.max(0, Math.min(rect.height, event.clientY - rect.top))
-    };
+    return { x: Math.max(0, Math.min(rect.width, event.clientX - rect.left)), y: Math.max(0, Math.min(rect.height, event.clientY - rect.top)) };
   }
 
   function focusPointer(event) {
@@ -508,9 +505,7 @@
     if (!point) return;
     try { model.tap(point.x, point.y); } catch {}
     const groups = Array.isArray(modelSpec?.tapMotionGroups) ? modelSpec.tapMotionGroups : ["TapBody"];
-    for (const group of groups) {
-      try { if (model.motion(group)) break; } catch {}
-    }
+    for (const group of groups) { try { if (model.motion(group)) break; } catch {} }
   }
 
   function parameterIds() {
@@ -525,9 +520,7 @@
     const ids = parameterIds();
     const mouthIds = ["ParamMouthOpenY", "ParamA", "PARAM_MOUTH_OPEN_Y"].filter((id) => !ids.length || ids.includes(id));
     mouthValue = Math.max(0, Math.min(1, Number(value) || 0));
-    for (const id of mouthIds.length ? mouthIds : ["ParamMouthOpenY"]) {
-      try { core.setParameterValueById(id, mouthValue, 1); } catch {}
-    }
+    for (const id of mouthIds.length ? mouthIds : ["ParamMouthOpenY"]) { try { core.setParameterValueById(id, mouthValue, 1); } catch {} }
     return true;
   }
 
@@ -535,6 +528,11 @@
     if (mouthTimer) clearInterval(mouthTimer);
     mouthTimer = 0;
     setMouthOpen(0);
+  }
+
+  function pauseLegacyMouthAnimation() {
+    if (mouthTimer) clearInterval(mouthTimer);
+    mouthTimer = 0;
   }
 
   function startMouthAnimation() {
@@ -545,9 +543,16 @@
     }, 90);
   }
 
+  function emotionalVoiceOwnsLipSync() {
+    return String(window.UnlimitedCompanionVoiceV1711?.revision || "").includes("v17.20-emotional-voice-system");
+  }
+
   function syncVoiceState() {
     const voiceState = root()?.dataset.v1711VoiceState || "";
-    if (voiceState === "speaking") startMouthAnimation(); else stopMouthAnimation();
+    if (voiceState === "speaking") {
+      if (emotionalVoiceOwnsLipSync()) pauseLegacyMouthAnimation();
+      else startMouthAnimation();
+    } else stopMouthAnimation();
     fitModel();
   }
 
@@ -574,22 +579,11 @@
     if (!model) return false;
     const key = String(emotion || "normal").toLowerCase();
     stageHost?.setAttribute("data-emotion", key);
-    const defaults = {
-      happy: ["happy", "smile", "joy"],
-      shy: ["shy", "blush"],
-      sad: ["sad"],
-      angry: ["angry"],
-      caring: ["gentle", "smile"],
-      thinking: ["thinking", "serious"]
-    };
+    const defaults = { happy: ["happy", "smile", "joy"], shy: ["shy", "blush"], sad: ["sad"], angry: ["angry"], caring: ["gentle", "smile"], thinking: ["thinking", "serious"] };
     const expressions = modelSpec?.expressions?.[key] || defaults[key] || [];
-    for (const name of Array.isArray(expressions) ? expressions : [expressions]) {
-      try { if (await model.expression(name)) return true; } catch {}
-    }
+    for (const name of Array.isArray(expressions) ? expressions : [expressions]) { try { if (await model.expression(name)) return true; } catch {} }
     const motions = modelSpec?.motions?.[key] || [];
-    for (const group of Array.isArray(motions) ? motions : [motions]) {
-      try { if (await model.motion(group)) return true; } catch {}
-    }
+    for (const group of Array.isArray(motions) ? motions : [motions]) { try { if (await model.motion(group)) return true; } catch {} }
     return false;
   }
 
@@ -602,10 +596,7 @@
   function onGenerationChange() {
     const disabled = Boolean(observedInput?.disabled);
     stageHost?.classList.toggle("is-thinking", disabled);
-    if (!disabled) {
-      const text = lastAssistantText();
-      if (text) setEmotion(classifyEmotion(text));
-    }
+    if (!disabled) { const text = lastAssistantText(); if (text) setEmotion(classifyEmotion(text)); }
   }
 
   function bindGenerationObserver() {
@@ -617,27 +608,14 @@
     generationObserver.observe(input, { attributes: true, attributeFilter: ["disabled"] });
   }
 
-  async function open() {
-    if (!root()) return false;
-    openState = true;
-    ensureStageHost();
-    return loadCharacter();
-  }
-
-  function close() {
-    openState = false;
-    destroyStage();
-    return true;
-  }
+  async function open() { if (!root()) return false; openState = true; ensureStageHost(); return loadCharacter(); }
+  function close() { openState = false; destroyStage(); return true; }
 
   function setModelForCharacter(characterId, url, options = {}) {
     const id = String(characterId || activeCharacter().id || "").trim();
     const modelUrl = String(url || "").trim();
     if (!id || !modelUrl) return false;
-    const map = assignments();
-    map[id] = { ...options, model: modelUrl };
-    localStorage.setItem(ASSIGNMENTS_KEY, JSON.stringify(map));
-    availabilityCache.delete(modelUrl);
+    const map = assignments(); map[id] = { ...options, model: modelUrl }; localStorage.setItem(ASSIGNMENTS_KEY, JSON.stringify(map)); availabilityCache.delete(modelUrl);
     if (openState && id === activeCharacter().id) loadCharacter({ resetConfig: true });
     return true;
   }
@@ -646,63 +624,33 @@
     const id = String(characterId || activeCharacter().id || "").trim();
     const map = assignments();
     if (!id || !Object.prototype.hasOwnProperty.call(map, id)) return false;
-    delete map[id];
-    localStorage.setItem(ASSIGNMENTS_KEY, JSON.stringify(map));
-    configPromise = null;
+    delete map[id]; localStorage.setItem(ASSIGNMENTS_KEY, JSON.stringify(map)); configPromise = null;
     if (openState && id === activeCharacter().id) loadCharacter({ resetConfig: true });
     return true;
   }
 
   function refresh() {
     const host = root();
-    if (!host) {
-      openState = false;
-      destroyStage();
-      return false;
-    }
+    if (!host) { openState = false; destroyStage(); return false; }
     if (!openState) openState = true;
-    ensureStageHost();
-    bindVoiceObserver();
-    bindGenerationObserver();
-    loadCharacter();
-    return true;
+    ensureStageHost(); bindVoiceObserver(); bindGenerationObserver(); loadCharacter(); return true;
   }
 
   window.addEventListener("uai:companion-core-entered", refresh);
   window.addEventListener("uai:companion-functions-ready", refresh);
   window.addEventListener("uai:mode-refresh", refresh);
   window.addEventListener("storage", (event) => {
-    if ([ACTIVE_KEY, ASSIGNMENTS_KEY, "uai_companion_characters_v1"].includes(event.key)) {
-      configPromise = null;
-      refresh();
-    }
+    if ([ACTIVE_KEY, ASSIGNMENTS_KEY, "uai_companion_characters_v1"].includes(event.key)) { configPromise = null; refresh(); }
   });
   document.addEventListener("visibilitychange", () => {
-    if (document.hidden) {
-      stopMouthAnimation();
-      try { app?.ticker?.stop?.(); } catch {}
-    } else if (openState && root()) {
-      try { app?.ticker?.start?.(); } catch {}
-      resizeRenderer();
-      fitModel();
-      syncVoiceState();
-    }
+    if (document.hidden) { stopMouthAnimation(); try { app?.ticker?.stop?.(); } catch {} }
+    else if (openState && root()) { try { app?.ticker?.start?.(); } catch {} resizeRenderer(); fitModel(); syncVoiceState(); }
   });
-  window.addEventListener("pagehide", () => {
-    openState = false;
-    destroyStage();
-  }, { passive: true });
+  window.addEventListener("pagehide", () => { openState = false; destroyStage(); }, { passive: true });
 
   document.documentElement.dataset.companionStageV1712Revision = REVISION;
   window.UnlimitedCompanionStageV1712 = {
-    revision: REVISION,
-    open,
-    close,
-    refresh,
-    setEmotion,
-    setMouthOpen,
-    setModelForCharacter,
-    clearModelForCharacter,
+    revision: REVISION, open, close, refresh, setEmotion, setMouthOpen, setModelForCharacter, clearModelForCharacter,
     getModel: () => model,
     getStatus: () => ({ open: openState, state: status, model: modelSpec?.model || "", integrated: true }),
     get rendererHealthy() { return rendererHealthy(); }
