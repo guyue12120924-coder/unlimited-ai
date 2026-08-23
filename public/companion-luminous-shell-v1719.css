@@ -1,0 +1,253 @@
+/* V17.19 Luminous Shell
+ * Final visual overlay only. Extends scene color across sidebar/header/composer without changing chat structure.
+ */
+
+body[data-uai-mode="companion"] #uaiCompanionRoot {
+  --v1719-glow-a: rgba(217,112,255,.34);
+  --v1719-glow-b: rgba(101,143,255,.28);
+  --v1719-glow-c: rgba(255,108,191,.24);
+  --v1719-shell-top: rgba(31,22,48,.66);
+  --v1719-shell-bottom: rgba(16,17,32,.72);
+  --v1719-glass: rgba(25,20,39,.58);
+  --v1719-glass-strong: rgba(29,23,44,.72);
+  --v1719-line: rgba(255,220,255,.14);
+  --v1719-text-glow: rgba(236,181,255,.18);
+  background:
+    radial-gradient(ellipse at 10% 8%, var(--v1719-glow-a), transparent 35%),
+    radial-gradient(ellipse at 50% 112%, var(--v1719-glow-b), transparent 42%),
+    radial-gradient(ellipse at 92% 18%, var(--v1719-glow-c), transparent 36%),
+    linear-gradient(145deg, #171027 0%, #11172d 48%, #19102a 100%) !important;
+}
+
+body[data-uai-mode="companion"] #uaiCompanionRoot::before,
+body[data-uai-mode="companion"] #uaiCompanionRoot::after {
+  opacity: .46;
+  filter: blur(62px) saturate(1.25);
+}
+
+body[data-uai-mode="companion"] #uaiCompanionRoot[data-v1714-scene-theme="galaxy"] {
+  --v1719-glow-a: rgba(221,105,255,.42);
+  --v1719-glow-b: rgba(91,132,255,.34);
+  --v1719-glow-c: rgba(255,101,202,.30);
+  --v1719-shell-top: rgba(44,24,66,.62);
+  --v1719-shell-bottom: rgba(17,20,43,.70);
+  --v1719-glass: rgba(36,24,53,.56);
+  --v1719-glass-strong: rgba(42,27,60,.72);
+}
+body[data-uai-mode="companion"] #uaiCompanionRoot[data-v1714-scene-theme="sakura"] {
+  --v1719-glow-a: rgba(255,122,191,.38);
+  --v1719-glow-b: rgba(187,111,255,.31);
+  --v1719-glow-c: rgba(117,119,255,.24);
+  --v1719-shell-top: rgba(61,27,58,.60);
+  --v1719-shell-bottom: rgba(28,19,43,.69);
+  --v1719-glass: rgba(48,27,46,.56);
+  --v1719-glass-strong: rgba(57,31,52,.72);
+}
+body[data-uai-mode="companion"] #uaiCompanionRoot[data-v1714-scene-theme="moonlight"] {
+  --v1719-glow-a: rgba(151,188,255,.34);
+  --v1719-glow-b: rgba(105,128,255,.31);
+  --v1719-glow-c: rgba(255,196,140,.18);
+  --v1719-shell-top: rgba(25,43,70,.61);
+  --v1719-shell-bottom: rgba(17,25,48,.70);
+  --v1719-glass: rgba(24,36,58,.57);
+  --v1719-glass-strong: rgba(29,42,66,.73);
+}
+body[data-uai-mode="companion"] #uaiCompanionRoot[data-v1714-scene-theme="neon"] {
+  --v1719-glow-a: rgba(155,77,255,.40);
+  --v1719-glow-b: rgba(36,210,255,.31);
+  --v1719-glow-c: rgba(255,55,174,.34);
+  --v1719-shell-top: rgba(30,28,74,.61);
+  --v1719-shell-bottom: rgba(12,27,55,.69);
+  --v1719-glass: rgba(27,27,62,.56);
+  --v1719-glass-strong: rgba(32,31,72,.72);
+}
+
+/* Make the entire shell feel like one scene instead of a black sidebar attached to a colored main. */
+body[data-uai-mode="companion"] #uaiCompanionRoot .uai-c-shell {
+  background: transparent !important;
+}
+body[data-uai-mode="companion"] #uaiCompanionRoot .uai-c-sidebar {
+  background:
+    linear-gradient(180deg, var(--v1719-shell-top), var(--v1719-shell-bottom)) !important;
+  border-right: 1px solid var(--v1719-line) !important;
+  box-shadow:
+    22px 0 70px rgba(7,6,18,.20),
+    inset -1px 0 rgba(255,255,255,.025) !important;
+  backdrop-filter: blur(30px) saturate(145%) brightness(1.08) !important;
+  -webkit-backdrop-filter: blur(30px) saturate(145%) brightness(1.08) !important;
+}
+body[data-uai-mode="companion"] #uaiCompanionRoot .uai-c-sidebar::before {
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:
+    radial-gradient(circle at 12% 8%, var(--v1719-glow-a), transparent 28%),
+    radial-gradient(circle at 92% 72%, var(--v1719-glow-b), transparent 42%),
+    linear-gradient(135deg, rgba(255,255,255,.035), transparent 42%);
+  opacity:.72;
+  mix-blend-mode:screen;
+}
+body[data-uai-mode="companion"] #uaiCompanionRoot .uai-c-sidebar > * {
+  position:relative;
+  z-index:1;
+}
+
+/* Brighten the main cinematic scene, especially at night. */
+body[data-uai-mode="companion"] #uaiCompanionRoot .uai-c-v1714-scene {
+  filter: brightness(1.12) saturate(1.16) contrast(1.035) !important;
+}
+body[data-uai-mode="companion"] #uaiCompanionRoot[data-v1715-period="night"] .uai-c-v1714-scene {
+  filter: brightness(1.07) saturate(1.20) contrast(1.05) !important;
+}
+body[data-uai-mode="companion"] #uaiCompanionRoot[data-v1715-period="evening"] .uai-c-v1714-scene {
+  filter: brightness(1.10) saturate(1.18) contrast(1.04) !important;
+}
+
+/* Soften the old reading veil: messages remain readable without turning half the page black. */
+body[data-uai-mode="companion"] #uaiCompanionRoot .uai-c-v1714-vignette {
+  background:
+    linear-gradient(90deg, rgba(10,8,22,.42) 0%, rgba(10,8,22,.20) 30%, transparent 55%),
+    linear-gradient(180deg, rgba(9,8,22,.08), transparent 24%, transparent 76%, rgba(8,7,19,.18)),
+    radial-gradient(ellipse at 72% 45%, transparent 35%, rgba(6,5,17,.13) 100%) !important;
+}
+
+/* Header becomes luminous glass rather than an opaque black strip. */
+body[data-uai-mode="companion"] #uaiCompanionRoot .uai-c-header {
+  background:
+    linear-gradient(180deg, rgba(37,27,52,.68), rgba(23,21,41,.52)) !important;
+  border-bottom-color: rgba(255,223,255,.12) !important;
+  box-shadow:
+    0 12px 42px rgba(8,6,24,.16),
+    inset 0 -1px rgba(255,255,255,.025) !important;
+  backdrop-filter: blur(26px) saturate(145%) brightness(1.08) !important;
+  -webkit-backdrop-filter: blur(26px) saturate(145%) brightness(1.08) !important;
+}
+body[data-uai-mode="companion"] #uaiCompanionRoot .uai-c-title strong {
+  text-shadow: 0 0 24px var(--v1719-text-glow);
+}
+
+/* Cards now catch scene light instead of staying charcoal. */
+body[data-uai-mode="companion"] #uaiCompanionRoot .uai-c-profile-card,
+body[data-uai-mode="companion"] #uaiCompanionRoot .uai-c-session.active,
+body[data-uai-mode="companion"] #uaiCompanionRoot .uai-c-v1710-relationship,
+body[data-uai-mode="companion"] #uaiCompanionRoot .uai-c-v179-runtime-pill {
+  border-color: rgba(255,225,255,.13) !important;
+  background:
+    linear-gradient(145deg, rgba(255,255,255,.095), rgba(255,255,255,.035)),
+    radial-gradient(circle at 15% 5%, var(--v1719-glow-a), transparent 58%) !important;
+  box-shadow:
+    0 16px 42px rgba(8,6,24,.15),
+    inset 0 1px rgba(255,255,255,.065) !important;
+}
+body[data-uai-mode="companion"] #uaiCompanionRoot .uai-c-new-chat,
+body[data-uai-mode="companion"] #uaiCompanionRoot .uai-c-v178-shortcut {
+  background: linear-gradient(135deg, rgba(255,126,190,.15), rgba(143,112,255,.13)) !important;
+  border-color: rgba(255,213,244,.13) !important;
+}
+body[data-uai-mode="companion"] #uaiCompanionRoot .uai-c-new-chat:hover,
+body[data-uai-mode="companion"] #uaiCompanionRoot .uai-c-v178-shortcut:hover {
+  background: linear-gradient(135deg, rgba(255,126,190,.23), rgba(143,112,255,.20)) !important;
+  border-color: rgba(255,222,249,.25) !important;
+  box-shadow: 0 8px 26px rgba(201,105,235,.10) !important;
+}
+
+/* Messages float in a cleaner glass layer so the artwork remains visible. */
+body[data-uai-mode="companion"] #uaiCompanionRoot .uai-c-message-row.assistant .uai-c-bubble {
+  background:
+    linear-gradient(145deg, rgba(57,45,70,.72), rgba(31,31,49,.67)) !important;
+  border-color: rgba(255,232,255,.12) !important;
+  box-shadow:
+    0 16px 45px rgba(7,5,22,.17),
+    inset 0 1px rgba(255,255,255,.06) !important;
+  backdrop-filter: blur(16px) saturate(125%);
+  -webkit-backdrop-filter: blur(16px) saturate(125%);
+}
+body[data-uai-mode="companion"] #uaiCompanionRoot .uai-c-message-row.user .uai-c-bubble {
+  background: linear-gradient(135deg, #f56fae 0%, #d35ac5 53%, #9769ed 100%) !important;
+  box-shadow:
+    0 13px 38px rgba(224,87,176,.28),
+    0 0 28px rgba(153,105,237,.12),
+    inset 0 1px rgba(255,255,255,.18) !important;
+}
+
+/* Let Live2D catch more of the surrounding scene light. */
+body[data-uai-mode="companion"] #uaiCompanionStageV1712 canvas {
+  opacity: 1 !important;
+  filter:
+    drop-shadow(0 20px 42px rgba(0,0,0,.22))
+    drop-shadow(0 0 22px rgba(226,150,255,.12))
+    saturate(1.08)
+    brightness(1.035) !important;
+}
+body[data-uai-mode="companion"] #uaiCompanionStageV1712 .uai-c-v1712-glow {
+  opacity: .96 !important;
+  filter: blur(26px) saturate(1.28) brightness(1.12) !important;
+}
+
+/* Composer should look like luminous glass, not a heavy black slab. */
+body[data-uai-mode="companion"] #uaiCompanionRoot .uai-c-composer-wrap {
+  background:
+    linear-gradient(to top, rgba(16,12,31,.84) 35%, rgba(17,13,31,.52) 68%, transparent) !important;
+}
+body[data-uai-mode="companion"] #uaiCompanionRoot .uai-c-composer {
+  border-color: rgba(255,224,255,.16) !important;
+  background:
+    linear-gradient(145deg, rgba(50,39,63,.76), rgba(27,29,49,.72)) !important;
+  box-shadow:
+    0 22px 62px rgba(8,5,25,.25),
+    0 0 38px rgba(212,103,230,.08),
+    inset 0 1px rgba(255,255,255,.07) !important;
+  backdrop-filter: blur(22px) saturate(135%);
+  -webkit-backdrop-filter: blur(22px) saturate(135%);
+}
+body[data-uai-mode="companion"] #uaiCompanionRoot .uai-c-composer:focus-within {
+  border-color: rgba(255,149,209,.42) !important;
+  box-shadow:
+    0 24px 70px rgba(8,5,25,.28),
+    0 0 0 4px rgba(245,111,174,.075),
+    0 0 44px rgba(186,104,239,.15) !important;
+}
+
+/* Scene controller becomes a brighter jewel-like control. */
+body[data-uai-mode="companion"] #uaiCompanionRoot .uai-c-v1714-scene-button {
+  border-color: rgba(255,220,255,.21) !important;
+  background:
+    linear-gradient(145deg, rgba(78,49,93,.75), rgba(37,35,69,.68)) !important;
+  box-shadow:
+    0 10px 30px rgba(7,5,22,.18),
+    0 0 22px rgba(221,112,255,.09),
+    inset 0 1px rgba(255,255,255,.09) !important;
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+}
+body[data-uai-mode="companion"] #uaiCompanionRoot .uai-c-v1714-scene-button:hover {
+  border-color: rgba(255,225,255,.38) !important;
+  background: linear-gradient(145deg, rgba(102,58,118,.82), rgba(48,45,86,.75)) !important;
+  box-shadow: 0 12px 34px rgba(160,81,210,.18), 0 0 28px rgba(238,128,255,.13) !important;
+}
+
+@media (max-width: 900px) {
+  body[data-uai-mode="companion"] #uaiCompanionRoot .uai-c-sidebar {
+    background: linear-gradient(180deg, rgba(35,25,50,.91), rgba(18,20,37,.90)) !important;
+  }
+  body[data-uai-mode="companion"] #uaiCompanionStageV1712 canvas {
+    opacity: .82 !important;
+  }
+}
+
+@media (max-width: 640px) {
+  body[data-uai-mode="companion"] #uaiCompanionRoot .uai-c-v1714-scene {
+    filter: brightness(1.06) saturate(1.10) !important;
+  }
+  body[data-uai-mode="companion"] #uaiCompanionRoot .uai-c-header {
+    background: rgba(30,23,47,.76) !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body[data-uai-mode="companion"] #uaiCompanionRoot::before,
+  body[data-uai-mode="companion"] #uaiCompanionRoot::after {
+    animation: none !important;
+  }
+}
