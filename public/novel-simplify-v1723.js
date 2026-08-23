@@ -88,3 +88,32 @@
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", applyTheme, { once: true });
   else applyTheme();
 })();
+
+// V17.23D is kept as an independent, rollback-friendly novel enhancement layer.
+// Load it from the already stable V17.23A entry so the companion production chain
+// and the older app/studio cores remain untouched.
+(() => {
+  const STYLE_ID = "novelV1723DStyle";
+  const SCRIPT_ID = "novelV1723DScript";
+  const VERSION = "20260823-v17.23d-novel-final-ux";
+
+  function loadFinalLayer() {
+    if (!document.getElementById(STYLE_ID)) {
+      const link = document.createElement("link");
+      link.id = STYLE_ID;
+      link.rel = "stylesheet";
+      link.href = `/novel-final-v1723d.css?v=${VERSION}`;
+      document.head.appendChild(link);
+    }
+    if (!document.getElementById(SCRIPT_ID)) {
+      const script = document.createElement("script");
+      script.id = SCRIPT_ID;
+      script.src = `/novel-final-v1723d.js?v=${VERSION}`;
+      script.defer = true;
+      document.head.appendChild(script);
+    }
+  }
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", loadFinalLayer, { once: true });
+  else loadFinalLayer();
+})();
