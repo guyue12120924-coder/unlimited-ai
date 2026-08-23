@@ -6,13 +6,17 @@ const js = fs.readFileSync("public/companion-experience-v1710.js", "utf8");
 const css = fs.readFileSync("public/companion-experience-v1710.css", "utf8");
 
 assert.match(index, /2026-08-22-v17\.10-safe-experience-restore/);
-assert.match(index, /2026-08-23-v17\.20-emotional-voice-system/);
+assert.match(index, /2026-08-23-v17\.21-voice-experience-polish/);
 assert.match(index, /companion-experience-v1710\.css\?v=20260822-v17\.10-safe-experience-restore/);
 assert.match(index, /companion-experience-v1710\.js\?v=20260822-v17\.10-safe-experience-restore/);
-assert.match(index, /companion-voice-suite-v1711\.js\?v=20260823-v17\.20-emotional-voice-system/);
-assert.match(index, /companion-call-suite-v1713\.js\?v=20260823-v17\.20-emotional-call-unified/);
+assert.match(index, /companion-voice-suite-v1711\.js\?v=20260823-v17\.21-voice-experience-polish/);
+assert.match(index, /companion-character-stage-v1712\.js\?v=20260823-v17\.21-emotional-lipsync-owner/);
+assert.match(index, /companion-call-suite-v1713\.js\?v=20260823-v17\.21-call-voice-polish/);
+assert.match(index, /companion-voice-polish-v1721\.css\?v=20260823-v17\.21-call-voice-polish/);
 assert.match(index, /companion-luminous-shell-v1719\.css\?v=20260823-v17\.19-luminous-full-canvas/);
 assert.ok(index.indexOf("companion-runtime-safe-v179.js") < index.indexOf("companion-experience-v1710.js"));
+assert.ok(index.indexOf("companion-voice-suite-v1711.js") < index.indexOf("companion-character-stage-v1712.js"));
+assert.ok(index.indexOf("companion-character-stage-v1712.js") < index.indexOf("companion-call-suite-v1713.js"));
 assert.ok(index.indexOf("companion-atmosphere-v1715.css") < index.indexOf("companion-luminous-shell-v1719.css"));
 
 assert.doesNotMatch(js, /window\.fetch\s*=/);
@@ -54,10 +58,11 @@ for (const asset of [
   "companion-call-suite-v1713.js",
   "companion-atmosphere-v1715.js",
   "companion-audio-gesture-v1716.js",
+  "companion-voice-polish-v1721.css",
   "companion-luminous-shell-v1719.css"
 ]) assert.ok(index.includes(asset), `restored companion feature missing from active page: ${asset}`);
 
-console.log("V17.20 complete companion experience contract passed");
+console.log("V17.21 complete companion experience contract passed");
 await import('./companion-voice-suite-v1711.test.mjs');
 await import('./companion-scene-v1714.test.mjs');
 await import('./companion-character-stage-v1712.test.mjs');
