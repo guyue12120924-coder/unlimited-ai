@@ -6,7 +6,7 @@ Unlimited AI 是一个部署在 Cloudflare Workers 上的本地优先 AI 工作�
 
 - 陪伴前端：**V17.21 Voice Experience Polish**
 - 启动与诊断：**V17.22 Final Cleanup & Diagnostics**
-- 小说工作区：**V17.23B Novel Session Management**
+- 小说工作区：**V17.23C Novel Navigation**
 
 > 当前陪伴架构以“稳定核心 + 独立安全增强层”为原则。旧 V10/V11/V12 结构主题和旧 runtime/Live2D/通话实现仅保留作历史参考，不属于正式启动链。详见 `docs/COMPANION_LEGACY.md`。
 >
@@ -30,6 +30,7 @@ Unlimited AI 是一个部署在 Cloudflare Workers 上的本地优先 AI 工作�
 - 本地备份与恢复
 - V17.23A 浅暖色、纸张式写作视觉
 - V17.23B 明确的会话重命名/删除与站内确认
+- V17.23C 左右侧栏恢复入口、收藏旁删除、作品/章节/创作资料导航收敛
 
 小说模式继续使用原有 `cfw_*`、Story Memory 和连续性数据结构。V17.23 的新增层使用 `body[data-uai-mode="novel"]` 进行模式隔离，不修改陪伴页面的 Live2D、语音、通话、场景或数据。
 
@@ -103,9 +104,11 @@ V17.23A public/novel-simplify-v1723.css
 V17.23A public/novel-simplify-v1723.js
 V17.23B public/novel-sessions-v1723b.css
 V17.23B public/novel-sessions-v1723b.js
+V17.23C public/novel-navigation-v1723c.css
+V17.23C public/novel-navigation-v1723c.js
 ```
 
-V17.23A 负责小说模式默认浅暖色写作主题、降低背景/卡片噪音、突出正文与 AI 输入。V17.23B 在不替换原 `app.js` 会话核心的前提下增强会话列表、重命名和删除交互。
+V17.23A 负责小说模式默认浅暖色写作主题、降低背景/卡片噪音、突出正文与 AI 输入。V17.23B 在不替换原 `app.js` 会话核心的前提下增强会话列表、重命名和删除交互。V17.23C 修复桌面端左右侧栏收起后无入口恢复的问题，把删除操作放到左侧 AI 对话列表的收藏按钮旁，并把左侧导航整理为作品/章节/AI 对话、右侧整理为创作资料 + 更多工具。
 
 ### 基础聊天
 
@@ -292,7 +295,9 @@ GET /api/diagnostics
 - Live2D renderer 可复用且嘴型所有权唯一
 - 场景 CSS 不修改核心聊天网格
 - 安全 runtime 不重写 `window.fetch`
-- V17.23 小说视觉/会话增强不得操作 `#uaiCompanionRoot` 或陪伴数据
+- V17.23 小说视觉/会话/导航增强不得操作 `#uaiCompanionRoot` 或陪伴数据
+- 桌面端左右栏收起后必须存在可见恢复入口
+- 左侧 AI 对话列表必须保留收藏并提供相邻删除入口
 
 ---
 
@@ -369,20 +374,28 @@ public/novel-sessions-v1723b.css
 public/novel-sessions-v1723b.js
 ```
 
-### V17.23C — 作品 / 章节 / 创作资料导航 ⏳ 下一阶段
+### V17.23C — 作品 / 章节 / 创作资料导航 ✅ 已完成
 
-下一步计划：
+已完成内容：
 
-- 左侧导航收敛为“作品 + 章节 + 创作资料”。
-- 作品名称和当前章节保持最突出。
-- “+ 新建章节”固定为明显入口。
-- 大纲、人物、世界观放入统一“创作资料”。
-- Story Memory、连续性检查、场景等低频工具放入“更多工具”。
-- 减少多个 tab / subtab / guide 同时出现的情况。
-- 不删除原有数据和功能，只重新组织入口层级。
-- 保持正文编辑始终在视觉中心，不让资料面板抢占主任务。
+- 修复桌面端 `studio.css` 在宽屏隐藏 `libraryToggleBtn / studioToggleBtn`，导致左右侧栏收起后无法重新打开的问题。
+- 左右侧栏收起时，页面左右边缘会出现清楚的“作品与章节 / 创作资料”恢复按钮；顶部恢复按钮也只在对应侧栏收起时显示。
+- 左侧结构重新排序为：当前作品 → 章节 → AI 对话 → 搜索/低频工具。
+- “添加章节”入口强化为明显的 `+` 操作。
+- AI 对话列表每个会话保留 `☆/★` 收藏按钮，并在其旁直接增加“删除”按钮。
+- 收藏旁删除继续复用 V17.23B 的站内删除确认与原 `app.js` 会话核心，不创建第二套删除状态。
+- 右侧工作台统一命名为“创作资料”，主标签收敛为“正文 / 大纲 / 人物 / 世界观”。
+- 场景、便签、统计、Story Memory、连续性检查收进“更多工具”，降低主界面复杂度。
+- 所有新增视觉与交互继续限定在小说模式，不修改 AI 陪伴文件。
 
-### V17.23D — 输入区、顶部栏和最终 UX 收口 ⏳ 待完成
+当前文件：
+
+```text
+public/novel-navigation-v1723c.css
+public/novel-navigation-v1723c.js
+```
+
+### V17.23D — 输入区、顶部栏和最终 UX 收口 ⏳ 下一阶段
 
 最后阶段计划：
 
@@ -396,4 +409,4 @@ public/novel-sessions-v1723b.js
 
 ### 下一次继续修改时
 
-如果 V17.23A/B 没有明显回归，默认从 **V17.23C** 开始，不要重新做 A/B。若用户反馈 A/B 有视觉或交互问题，先修对应问题，再进入 C。
+如果 V17.23A/B/C 没有明显回归，默认从 **V17.23D** 开始。若用户反馈 A/B/C 有视觉或交互问题，先修对应问题，再进入 D。
