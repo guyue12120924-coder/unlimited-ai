@@ -170,3 +170,9 @@ jobs:
         run: |
           set -euo pipefail
           node tests/companion-v10-ux.test.mjs
+
+      - name: Check V17.22 final cleanup and diagnostics contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          node tests/v1722-final-cleanup.test.mjs
