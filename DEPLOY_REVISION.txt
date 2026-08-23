@@ -1,6 +1,6 @@
 Unlimited AI deployment trigger
 Date: 2026-08-23
-Frontend core revision: 2026-08-23-v17.17-integrated-live2d-complete
+Frontend core revision: 2026-08-23-v17.18-cinematic-companion-scenes
 Frontend runtime core: 2026-08-21-v17.0-workspace-consolidation
 Workspace UI module: 2026-08-21-v17.0-workspace-ui
 AI collaboration module: 2026-08-21-v17.0-ai-collaboration
@@ -13,17 +13,31 @@ Companion controls V17.8: companion/search/relationship/moments shortcuts, reply
 Companion safe runtime V17.9: generation-safe role operations, orphan cleanup, active-slot repair, runtime status
 Companion experience V17.10: relationship stage, time-of-day presence, safe quick reply actions, browser-local speech and microphone STT
 Companion neural voice V17.16: persistent gesture-unlocked WebAudio, neural TTS, system fallback, auto-read, manual read/replay/stop, monthly relationship review
-Companion scenes V17.14: galaxy / sakura / moonlight / neon, deterministic particles, light bands, glow, parallax and per-character scene persistence
-Companion atmosphere V17.15: reply-emotion and time-of-day ambience, Live2D emotion synchronization and call scene identity
 Companion audio guard V17.16: first real companion gesture unlocks persisted auto-read; playback-policy errors can retry without accidentally disabling the speaker
+
+Companion cinematic scenes V17.18: public/companion-scene-v1714.css?v=20260823-v17.18-cinematic-scenes
+Scene JS remains the proven public/companion-scene-v1714.js?v=20260823-v17.14-safe-scene-restore and keeps per-character scene persistence plus lightweight pointer parallax.
+Visual rebuild: the four existing themes are no longer simple gradient backgrounds. They use the existing base/wash/band/accent/particles/vignette layers as a cinematic depth stack without adding Canvas or a new RAF loop.
+Galaxy Dream: deep-space nebula volumes, diagonal Milky Way ribbon/core, multi-scale star fields, bright cross-star and occasional CSS meteor.
+Sakura Night: luminous moon, distant stars, blossom/branch silhouettes, pink haze and layered falling petals.
+Moonlight Room: window-grid silhouette, large moon, diagonal moon beam, warm interior/floor glow and floating moonlit dust.
+Neon Fantasy: layered city skyline silhouette, window lines, horizon glow, vertical neon columns, scan light, sign flicker and foreground neon particles.
+Readability: a dedicated left-side dark reading veil protects chat contrast while the brighter cinematic detail remains strongest around the integrated role/background area.
+Scene controller: upgraded to a glass/premium two-line control with hover light sweep while retaining the same stable scene-switching JS.
+Performance: CSS-only motion, mobile particle reduction, no new network assets, no new DOM observer, no shell/main grid changes and prefers-reduced-motion disables cinematic animations.
+
+Companion cinematic mood V17.18: public/companion-atmosphere-v1715.css?v=20260823-v17.18-cinematic-mood
+Atmosphere JS remains public/companion-atmosphere-v1715.js?v=20260823-v17.15-adaptive-atmosphere.
+Mood grading: reply emotion overlays are stronger but remain visual-only; morning/day/evening/night grading no longer crushes night scenes toward black. Night now preserves rich saturation/contrast while retaining a dark cinematic tone.
+Call backgrounds inherit stronger scene identities so galaxy/sakura/moonlight/neon remain recognizable inside the call overlay.
 
 Companion integrated Live2D V17.17: public/companion-character-stage-v1712.js + public/companion-character-stage-v1712.css?v=20260823-v17.17-integrated-live2d-background
 Revision: 2026-08-23-v17.17-integrated-live2d-background
-Behavior: the old CHARACTER STAGE floating card is removed. Live2D is mounted as an absolute background layer inside .uai-c-main, between the V17.14 scene and the stable chat/header/composer UI.
+Behavior: the old CHARACTER STAGE floating card is removed. Live2D is mounted as an absolute background layer inside .uai-c-main, between the cinematic scene and the stable chat/header/composer UI.
 Automatic role: entering companion mode automatically prepares the background role; no separate stage launcher is required.
 Renderer stability: Pixi Application/WebGL renderer is created once per mounted companion session and reused by normal refreshes. mode-refresh/functions-ready no longer destroy and recreate the WebGL context.
 Model switching: the current model remains visible while the replacement model loads; it is destroyed only after the replacement is ready. Same-character/same-model refreshes reuse the current model and renderer.
-Removed regression trigger: the old manual reload button (data-v1712-reload) and old CHARACTER STAGE header/footer chrome are removed from the active UI.
+Removed regression trigger: the old manual reload button (data-v1712-reload) and old CHARACTER STAGE header/footer chrome remain removed from the active UI.
 Context recovery: webglcontextlost is handled without immediate destructive recreation; webglcontextrestored schedules controlled recovery.
 Interaction safety: pointer listeners are scoped to .uai-c-main through an AbortController and are released on stage teardown, preventing duplicate listeners across repeated entries.
 Call presentation: data-v1713-call changes are observed alongside voice state so the same renderer changes placement for a call and returns to the normal background position on hangup.
@@ -51,8 +65,9 @@ Safety boundaries retained:
 - legacy scene/Live2D/call stacks remain source-only; isolated replacements are active instead.
 - companion localStorage remains isolated from novel storage.
 - chat shell columns and header/messages/composer rows remain owned by the proven core.
+- V17.18 scene work changes CSS presentation only; Live2D/voice/call/relationship/memory/search/backup behavior is untouched.
 
-Reason: V17.17 removes the unstable floating Live2D stage and the shader-error reload path while preserving all restored companion capabilities. Live2D is now part of the background composition and reuses one renderer across ordinary refreshes, while scenes, voice, call, relationship/memory/search/backup features and adaptive atmosphere remain active.
+Reason: V17.18 upgrades the companion background from tasteful gradients into four recognizable cinematic environments while preserving the stable V17.17 integrated Live2D and the fully restored companion feature stack. The scene is intentionally richer around the character/background area and darker behind reading content, so the UI feels more luxurious without sacrificing chat usability or renderer stability.
 
 Novel prompt source: src/worker.js -> NOVEL_SYSTEM_PROMPT
 Companion prompt source: src/companion.js -> COMPANION_ROLE_CARD
