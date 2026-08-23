@@ -1,166 +1,208 @@
-/* V17.12 isolated character stage. It floats above the stable chat and never participates in its grid. */
-body[data-uai-mode="companion"] #uaiCompanionRoot .uai-c-v1712-launch {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  min-height: 34px;
-  border: 1px solid rgba(255,255,255,.09);
-  border-radius: 12px;
-  padding: 0 11px;
-  color: rgba(255,255,255,.76);
-  background: rgba(119,83,170,.08);
-  cursor: pointer;
-  font: inherit;
+/* V17.17 integrated Live2D background. The character lives between scene ambience and chat UI. */
+body[data-uai-mode="companion"] #uaiCompanionRoot .uai-c-main {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
 }
-body[data-uai-mode="companion"] #uaiCompanionRoot .uai-c-v1712-launch span { color: #d58cec; }
-body[data-uai-mode="companion"] #uaiCompanionRoot .uai-c-v1712-launch.active { color: #fff; border-color: rgba(218,124,222,.28); background: rgba(185,93,199,.13); }
 
 body[data-uai-mode="companion"] #uaiCompanionStageV1712 {
-  position: fixed;
-  right: max(20px, env(safe-area-inset-right));
-  bottom: max(104px, calc(env(safe-area-inset-bottom) + 90px));
-  z-index: 50450;
-  width: min(370px, calc(100vw - 40px));
-  height: min(590px, calc(100vh - 150px));
-  min-height: 430px;
-  display: grid;
-  grid-template-rows: auto 1fr auto;
-  overflow: hidden;
-  border: 1px solid rgba(255,255,255,.11);
-  border-radius: 28px;
-  background:
-    radial-gradient(circle at 50% 30%, rgba(186,103,219,.18), transparent 34%),
-    linear-gradient(180deg, rgba(26,20,35,.98), rgba(12,11,18,.98));
-  box-shadow: 0 32px 90px rgba(0,0,0,.46), 0 0 70px rgba(182,86,203,.08);
-  isolation: isolate;
-}
-
-body[data-uai-mode="companion"] #uaiCompanionStageV1712 > header,
-body[data-uai-mode="companion"] #uaiCompanionStageV1712 > footer {
-  position: relative;
-  z-index: 4;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 14px 16px;
-  background: rgba(13,11,18,.68);
-  backdrop-filter: blur(18px);
-}
-body[data-uai-mode="companion"] #uaiCompanionStageV1712 > header { border-bottom: 1px solid rgba(255,255,255,.065); }
-body[data-uai-mode="companion"] #uaiCompanionStageV1712 > footer { border-top: 1px solid rgba(255,255,255,.065); }
-body[data-uai-mode="companion"] #uaiCompanionStageV1712 > header small { display: block; margin-bottom: 3px; color: #ce8ee6; font-size: 9px; font-weight: 800; letter-spacing: .16em; }
-body[data-uai-mode="companion"] #uaiCompanionStageV1712 > header strong { color: #fff; font-size: 14px; }
-body[data-uai-mode="companion"] #uaiCompanionStageV1712 > header button {
-  width: 32px;
-  height: 32px;
-  border: 1px solid rgba(255,255,255,.08);
-  border-radius: 10px;
-  color: rgba(255,255,255,.72);
-  background: rgba(255,255,255,.04);
-  cursor: pointer;
-  font-size: 17px;
-}
-
-body[data-uai-mode="companion"] #uaiCompanionStageV1712 .uai-c-v1712-viewport {
-  position: relative;
-  min-height: 0;
-  overflow: hidden;
-  background:
-    radial-gradient(circle at 50% 48%, rgba(228,131,210,.1), transparent 32%),
-    linear-gradient(180deg, rgba(67,42,88,.12), transparent 40%);
-  touch-action: pan-y;
-}
-body[data-uai-mode="companion"] #uaiCompanionStageV1712 canvas {
   position: absolute;
   inset: 0;
   z-index: 2;
+  overflow: hidden;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  pointer-events: none;
+  contain: paint;
+}
+
+body[data-uai-mode="companion"] #uaiCompanionStageV1712 .uai-c-v1712-viewport {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: transparent;
+  pointer-events: none;
+}
+
+body[data-uai-mode="companion"] #uaiCompanionStageV1712 canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
   width: 100% !important;
   height: 100% !important;
-}
-body[data-uai-mode="companion"] #uaiCompanionStageV1712 .uai-c-v1712-floor {
-  position: absolute;
-  z-index: 1;
-  left: 14%;
-  right: 14%;
-  bottom: 4%;
-  height: 12%;
-  border-radius: 50%;
-  background: radial-gradient(ellipse, rgba(216,111,199,.22), rgba(142,82,190,.06) 45%, transparent 70%);
-  filter: blur(4px);
+  opacity: .94;
   pointer-events: none;
+  filter: drop-shadow(0 18px 34px rgba(0,0,0,.28));
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, rgba(0,0,0,.18) 31%, #000 48%, #000 100%);
+  mask-image: linear-gradient(90deg, transparent 0%, rgba(0,0,0,.18) 31%, #000 48%, #000 100%);
+  transition: opacity .28s ease, filter .28s ease;
 }
+
 body[data-uai-mode="companion"] #uaiCompanionStageV1712 .uai-c-v1712-glow {
   position: absolute;
-  z-index: 0;
-  width: 78%;
-  aspect-ratio: 1;
-  left: 50%;
-  top: 42%;
-  transform: translate(-50%, -50%);
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(198,100,216,.16), transparent 68%);
+  z-index: 1;
+  right: -8%;
+  bottom: 2%;
+  width: min(58vw, 760px);
+  aspect-ratio: .86;
+  border-radius: 48% 52% 48% 52%;
+  background:
+    radial-gradient(ellipse at 54% 58%, rgba(231,132,222,.16), transparent 42%),
+    radial-gradient(ellipse at 62% 36%, rgba(145,111,255,.14), transparent 55%);
+  filter: blur(24px);
+  opacity: .78;
   pointer-events: none;
+  transition: opacity .28s ease, filter .28s ease;
+}
+
+body[data-uai-mode="companion"] #uaiCompanionStageV1712 .uai-c-v1712-floor {
+  position: absolute;
+  z-index: 2;
+  right: 4%;
+  bottom: -2%;
+  width: min(46vw, 610px);
+  height: 14%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(240,142,220,.22), rgba(133,94,214,.07) 45%, transparent 72%);
+  filter: blur(8px);
+  opacity: .7;
+  pointer-events: none;
+}
+
+body[data-uai-mode="companion"] #uaiCompanionStageV1712.is-thinking canvas {
+  opacity: .82;
+  filter: drop-shadow(0 18px 38px rgba(0,0,0,.32)) saturate(.94);
+}
+body[data-uai-mode="companion"] #uaiCompanionStageV1712.is-thinking .uai-c-v1712-glow {
+  opacity: .96;
+  filter: blur(28px) saturate(1.15);
+}
+
+body[data-uai-mode="companion"] #uaiCompanionStageV1712[data-emotion="happy"] .uai-c-v1712-glow,
+body[data-uai-mode="companion"] #uaiCompanionStageV1712[data-emotion="shy"] .uai-c-v1712-glow {
+  background:
+    radial-gradient(ellipse at 54% 58%, rgba(255,132,211,.24), transparent 42%),
+    radial-gradient(ellipse at 62% 36%, rgba(197,119,255,.18), transparent 55%);
+}
+body[data-uai-mode="companion"] #uaiCompanionStageV1712[data-emotion="caring"] .uai-c-v1712-glow {
+  background: radial-gradient(ellipse at 56% 52%, rgba(255,166,202,.22), transparent 56%);
+}
+body[data-uai-mode="companion"] #uaiCompanionStageV1712[data-emotion="sad"] .uai-c-v1712-glow,
+body[data-uai-mode="companion"] #uaiCompanionStageV1712[data-emotion="thinking"] .uai-c-v1712-glow {
+  background: radial-gradient(ellipse at 58% 48%, rgba(116,145,255,.18), transparent 58%);
 }
 
 body[data-uai-mode="companion"] #uaiCompanionStageV1712 .uai-c-v1712-fallback {
   position: absolute;
-  inset: 0;
-  z-index: 3;
+  z-index: 4;
+  right: clamp(34px, 7vw, 120px);
+  bottom: clamp(74px, 12vh, 150px);
+  width: 148px;
+  min-height: 176px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  color: rgba(255,255,255,.78);
-  background: radial-gradient(circle at 50% 48%, rgba(186,94,203,.12), transparent 40%);
+  gap: 10px;
+  color: rgba(255,255,255,.74);
+  opacity: .74;
+  pointer-events: none;
 }
 body[data-uai-mode="companion"] #uaiCompanionStageV1712 .uai-c-v1712-fallback[hidden] { display: none; }
 body[data-uai-mode="companion"] #uaiCompanionStageV1712 .uai-c-v1712-fallback img,
 body[data-uai-mode="companion"] #uaiCompanionStageV1712 .uai-c-v1712-fallback > span {
-  width: 132px;
-  height: 132px;
-  border: 1px solid rgba(255,255,255,.13);
-  border-radius: 50%;
-  object-fit: cover;
+  width: 110px;
+  height: 110px;
   display: grid;
   place-items: center;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 50%;
+  object-fit: cover;
   color: #fff;
-  background: linear-gradient(145deg, rgba(185,93,205,.3), rgba(90,63,148,.28));
-  box-shadow: 0 18px 50px rgba(0,0,0,.25);
-  font-size: 46px;
+  background: linear-gradient(145deg, rgba(211,128,226,.28), rgba(100,74,168,.22));
+  box-shadow: 0 14px 44px rgba(0,0,0,.2), 0 0 50px rgba(190,105,218,.14);
+  font-size: 40px;
+  backdrop-filter: blur(12px);
+}
+body[data-uai-mode="companion"] #uaiCompanionStageV1712 .uai-c-v1712-fallback strong {
+  font-size: 12px;
+  text-shadow: 0 2px 12px rgba(0,0,0,.4);
 }
 
 body[data-uai-mode="companion"] #uaiCompanionStageV1712 .uai-c-v1712-credit {
   position: absolute;
   z-index: 5;
-  right: 10px;
-  bottom: 8px;
-  max-width: 70%;
-  color: rgba(255,255,255,.35);
+  right: 12px;
+  bottom: 9px;
+  max-width: 46%;
+  color: rgba(255,255,255,.26);
+  font-size: 8px;
+  pointer-events: none;
+}
+
+body[data-uai-mode="companion"] #uaiCompanionStageV1712 .uai-c-v1712-status {
+  position: absolute;
+  z-index: 6;
+  right: 18px;
+  bottom: 22px;
+  max-width: min(320px, 46vw);
+  padding: 6px 9px;
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 999px;
+  color: rgba(255,255,255,.48);
+  background: rgba(11,9,18,.28);
+  backdrop-filter: blur(12px);
   font-size: 9px;
   pointer-events: none;
 }
-body[data-uai-mode="companion"] #uaiCompanionStageV1712 > footer { color: rgba(255,255,255,.48); font-size: 10px; }
-body[data-uai-mode="companion"] #uaiCompanionStageV1712 .uai-c-v1712-online { display: inline-flex; align-items: center; gap: 7px; }
-body[data-uai-mode="companion"] #uaiCompanionStageV1712 .uai-c-v1712-online i { width: 7px; height: 7px; border-radius: 50%; background: #78d59c; box-shadow: 0 0 10px rgba(120,213,156,.45); }
-body[data-uai-mode="companion"] #uaiCompanionStageV1712[data-state="loading"] .uai-c-v1712-online i { background: #dca0e7; }
-body[data-uai-mode="companion"] #uaiCompanionStageV1712[data-state="fallback"] .uai-c-v1712-online i,
-body[data-uai-mode="companion"] #uaiCompanionStageV1712[data-state="error"] .uai-c-v1712-online i { background: #e4ae7b; }
-body[data-uai-mode="companion"] #uaiCompanionStageV1712 .uai-c-v1712-online b { font-weight: 600; color: rgba(255,255,255,.62); }
+body[data-uai-mode="companion"] #uaiCompanionStageV1712 .uai-c-v1712-status[hidden] { display: none; }
 
-@media (max-width: 760px) {
-  body[data-uai-mode="companion"] #uaiCompanionRoot .uai-c-v1712-launch b { display: none; }
-  body[data-uai-mode="companion"] #uaiCompanionStageV1712 {
-    right: 10px;
-    bottom: max(92px, calc(env(safe-area-inset-bottom) + 78px));
-    width: min(320px, calc(100vw - 20px));
-    height: min(500px, calc(100vh - 130px));
-    min-height: 390px;
-    border-radius: 22px;
+/* The stable chat remains above both the V17.14 scene and the integrated role. */
+body[data-uai-mode="companion"] #uaiCompanionRoot .uai-c-header,
+body[data-uai-mode="companion"] #uaiCompanionRoot .uai-c-messages,
+body[data-uai-mode="companion"] #uaiCompanionRoot .uai-c-composer-wrap {
+  position: relative;
+  z-index: 6;
+}
+body[data-uai-mode="companion"] #uaiCompanionRoot .uai-c-messages {
+  background: transparent !important;
+}
+
+/* Calls keep using the same renderer; the role simply becomes a little more prominent behind the overlay. */
+body[data-uai-mode="companion"] #uaiCompanionRoot[data-v1713-call="active"] #uaiCompanionStageV1712 canvas {
+  opacity: 1;
+  filter: drop-shadow(0 22px 42px rgba(0,0,0,.3)) saturate(1.04);
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, rgba(0,0,0,.2) 20%, #000 38%, #000 100%);
+  mask-image: linear-gradient(90deg, transparent 0%, rgba(0,0,0,.2) 20%, #000 38%, #000 100%);
+}
+body[data-uai-mode="companion"] #uaiCompanionRoot[data-v1713-call="active"] #uaiCompanionStageV1712 .uai-c-v1712-glow {
+  opacity: 1;
+}
+
+@media (max-width: 900px) {
+  body[data-uai-mode="companion"] #uaiCompanionStageV1712 canvas {
+    opacity: .72;
+    -webkit-mask-image: linear-gradient(90deg, transparent 0%, transparent 35%, rgba(0,0,0,.35) 55%, #000 72%);
+    mask-image: linear-gradient(90deg, transparent 0%, transparent 35%, rgba(0,0,0,.35) 55%, #000 72%);
+  }
+  body[data-uai-mode="companion"] #uaiCompanionStageV1712 .uai-c-v1712-glow { opacity: .58; }
+  body[data-uai-mode="companion"] #uaiCompanionStageV1712 .uai-c-v1712-fallback {
+    right: 22px;
+    bottom: 110px;
+    transform: scale(.82);
+    transform-origin: right bottom;
   }
 }
 
+@media (max-width: 640px) {
+  body[data-uai-mode="companion"] #uaiCompanionStageV1712 canvas { opacity: .56; }
+  body[data-uai-mode="companion"] #uaiCompanionStageV1712 .uai-c-v1712-floor { opacity: .4; }
+  body[data-uai-mode="companion"] #uaiCompanionStageV1712 .uai-c-v1712-status { display: none; }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  body[data-uai-mode="companion"] #uaiCompanionStageV1712 .uai-c-v1712-glow { display: none; }
+  body[data-uai-mode="companion"] #uaiCompanionStageV1712 canvas,
+  body[data-uai-mode="companion"] #uaiCompanionStageV1712 .uai-c-v1712-glow { transition: none !important; }
 }
