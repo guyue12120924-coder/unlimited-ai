@@ -6,7 +6,7 @@ const js = fs.readFileSync("public/companion-experience-v1710.js", "utf8");
 const css = fs.readFileSync("public/companion-experience-v1710.css", "utf8");
 
 assert.match(index, /2026-08-22-v17\.10-safe-experience-restore/, "index must retain the V17.10 safe experience asset");
-assert.match(index, /2026-08-23-v17\.16-voice-audio-recovery/, "index must advertise the current companion recovery revision");
+assert.match(index, /2026-08-23-v17\.17-integrated-live2d-complete/, "index must advertise the current complete companion revision");
 assert.match(index, /companion-experience-v1710\.css\?v=20260822-v17\.10-safe-experience-restore/, "V17.10 CSS must load");
 assert.match(index, /companion-experience-v1710\.js\?v=20260822-v17\.10-safe-experience-restore/, "V17.10 JS must load");
 assert.ok(index.indexOf("companion-runtime-safe-v179.js") < index.indexOf("companion-experience-v1710.js"), "V17.10 must load after V17.9");
@@ -41,10 +41,23 @@ const order = [
   "companion-atmosphere-v1715.js",
   "companion-audio-gesture-v1716.js"
 ].map((asset) => index.indexOf(asset));
-assert.ok(order.every((position) => position >= 0), "V17.10-V17.16 companion recovery scripts must all be present in index");
-assert.ok(order.every((position, index) => index === 0 || position > order[index - 1]), "companion recovery scripts must load in dependency order");
+assert.ok(order.every((position) => position >= 0), "all restored companion layers must remain present in index");
+assert.ok(order.every((position, index) => index === 0 || position > order[index - 1]), "restored companion layers must load in dependency order");
 
-console.log("V17.10 safe companion experience contract passed");
+for (const asset of [
+  "companion-function-pack-v177.js",
+  "companion-controls-v178.js",
+  "companion-runtime-safe-v179.js",
+  "companion-experience-v1710.js",
+  "companion-voice-suite-v1711.js",
+  "companion-scene-v1714.js",
+  "companion-character-stage-v1712.js",
+  "companion-call-suite-v1713.js",
+  "companion-atmosphere-v1715.js",
+  "companion-audio-gesture-v1716.js"
+]) assert.ok(index.includes(asset), `restored companion feature missing from active page: ${asset}`);
+
+console.log("V17.17 complete companion experience contract passed");
 await import('./companion-voice-suite-v1711.test.mjs');
 await import('./companion-scene-v1714.test.mjs');
 await import('./companion-character-stage-v1712.test.mjs');
