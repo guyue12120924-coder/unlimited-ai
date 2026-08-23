@@ -18,7 +18,7 @@
     if (!button) return;
     if (isNovelMode()) {
       button.textContent = theme === "light" ? "切换深色主题" : "切换浅色主题";
-      button.title = theme === "light" ? "小说工作区当前使用浅色写作主题" : "小说工作区当前使用深色主题";
+      button.title = theme === "light" ? "小说工作区当前使用浅色写作主题" : "小说工作区当前使用深色写作主题";
       button.dataset.novelV1723ThemeControl = "true";
       return;
     }
@@ -116,4 +116,32 @@
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", loadFinalLayer, { once: true });
   else loadFinalLayer();
+})();
+
+// V17.24A is the first of three interface-only polish passes.
+// It loads after V17.23D and only reorganizes presentation; original controls stay intact.
+(() => {
+  const STYLE_ID = "novelV1724AStyle";
+  const SCRIPT_ID = "novelV1724AScript";
+  const VERSION = "20260823-v17.24a-interface-simplification";
+
+  function loadInterfaceLayer() {
+    if (!document.getElementById(STYLE_ID)) {
+      const link = document.createElement("link");
+      link.id = STYLE_ID;
+      link.rel = "stylesheet";
+      link.href = `/novel-ui-v1724a.css?v=${VERSION}`;
+      document.head.appendChild(link);
+    }
+    if (!document.getElementById(SCRIPT_ID)) {
+      const script = document.createElement("script");
+      script.id = SCRIPT_ID;
+      script.src = `/novel-ui-v1724a.js?v=${VERSION}`;
+      script.defer = true;
+      document.head.appendChild(script);
+    }
+  }
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", loadInterfaceLayer, { once: true });
+  else loadInterfaceLayer();
 })();
