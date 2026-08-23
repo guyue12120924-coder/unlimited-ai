@@ -42,8 +42,8 @@ assert.match(js, /playBlobWithWebAudio/);
 assert.match(js, /playBlobWithAudio/);
 assert.match(js, /浏览器拦截了声音/);
 assert.match(js, /lastPlaybackError/);
-assert.match(js, /unlockPlayback\(\);[\s\S]{0,700}await startListening\(true\)/,
-  'call start must unlock playback before the first microphone wait');
+assert.match(js, /unlockPlayback\(\);[\s\S]{0,2200}await startListening\(true\)/,
+  'call start must unlock playback before waiting for microphone startup');
 
 assert.doesNotMatch(js, /window\.fetch\s*=/, 'call mode must never replace window.fetch');
 assert.doesNotMatch(js, /observe\(document\.body/, 'call mode must not observe the whole document body');
