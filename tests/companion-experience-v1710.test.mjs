@@ -5,7 +5,8 @@ const index = fs.readFileSync("public/index.html", "utf8");
 const js = fs.readFileSync("public/companion-experience-v1710.js", "utf8");
 const css = fs.readFileSync("public/companion-experience-v1710.css", "utf8");
 
-assert.match(index, /2026-08-22-v17\.10-safe-experience-restore/, "index must advertise V17.10");
+assert.match(index, /2026-08-22-v17\.10-safe-experience-restore/, "index must retain the V17.10 safe experience asset");
+assert.match(index, /2026-08-23-v17\.13-complete-companion-restore/, "index must advertise the completed three-stage companion restoration");
 assert.match(index, /companion-experience-v1710\.css\?v=20260822-v17\.10-safe-experience-restore/, "V17.10 CSS must load");
 assert.match(index, /companion-experience-v1710\.js\?v=20260822-v17\.10-safe-experience-restore/, "V17.10 JS must load");
 assert.ok(index.indexOf("companion-runtime-safe-v179.js") < index.indexOf("companion-experience-v1710.js"), "V17.10 must load after V17.9");
@@ -31,4 +32,16 @@ assert.doesNotMatch(css, /\.uai-c-main\s*\{[^}]*grid-template/i, "V17.10 CSS mus
 assert.doesNotMatch(css, /#uaiCompanionMessages\s*\{[^}]*(display\s*:\s*none|visibility\s*:\s*hidden)/i, "V17.10 CSS must not hide messages");
 assert.match(css, /prefers-reduced-motion/, "V17.10 must respect reduced motion");
 
+const order = [
+  "companion-experience-v1710.js",
+  "companion-voice-suite-v1711.js",
+  "companion-character-stage-v1712.js",
+  "companion-call-suite-v1713.js"
+].map((asset) => index.indexOf(asset));
+assert.ok(order.every((position) => position >= 0), "V17.10-V17.13 scripts must all be present in index");
+assert.ok(order.every((position, index) => index === 0 || position > order[index - 1]), "V17.10-V17.13 scripts must load in dependency order");
+
 console.log("V17.10 safe companion experience contract passed");
+await import('./companion-voice-suite-v1711.test.mjs');
+await import('./companion-character-stage-v1712.test.mjs');
+await import('./companion-call-suite-v1713.test.mjs');
