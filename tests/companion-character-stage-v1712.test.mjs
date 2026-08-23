@@ -1,10 +1,14 @@
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 
+const index = fs.readFileSync('public/index.html', 'utf8');
 const js = fs.readFileSync('public/companion-character-stage-v1712.js', 'utf8');
 const css = fs.readFileSync('public/companion-character-stage-v1712.css', 'utf8');
 
-assert.match(js, /2026-08-23-v17\.12-isolated-character-stage/);
+assert.match(index, /2026-08-23-v17\.17-integrated-live2d-complete/);
+assert.match(index, /companion-character-stage-v1712\.css\?v=20260823-v17\.17-integrated-live2d-background/);
+assert.match(index, /companion-character-stage-v1712\.js\?v=20260823-v17\.17-integrated-live2d-background/);
+assert.match(js, /2026-08-23-v17\.17-integrated-live2d-background/);
 assert.match(js, /\/live2d\/characters\.json/);
 assert.match(js, /pixi\.js@6\.5\.10/);
 assert.match(js, /pixi-live2d-display@0\.4\.0/);
@@ -19,16 +23,28 @@ assert.match(js, /voiceObserver\?\.disconnect/);
 assert.match(js, /generationObserver\?\.disconnect/);
 assert.match(js, /attributeFilter:\s*\["data-v1711-voice-state"\]/);
 assert.match(js, /attributeFilter:\s*\["disabled"\]/);
-assert.match(js, /角色舞台/);
+assert.match(js, /targetMain\.appendChild\(stageHost\)/, 'Live2D must be mounted inside the stable companion main area');
+assert.match(js, /currentModelKey/);
+assert.match(js, /rendererHealthy/);
+assert.match(js, /Load the replacement first/, 'a replacement model must load before the old model is destroyed');
+assert.match(js, /model && currentModelKey === nextKey && rendererHealthy\(\)/, 'normal refreshes must reuse the current model/renderer');
+assert.match(js, /webglcontextlost/);
+assert.match(js, /webglcontextrestored/);
 assert.match(js, /fallbackAvatar/);
+assert.match(js, /integrated:\s*true/);
 
-assert.doesNotMatch(js, /observe\(document\.body/, 'V17.12 must not observe the whole body');
-assert.doesNotMatch(js, /subtree\s*:\s*true/, 'V17.12 must not use subtree-wide MutationObserver');
-assert.doesNotMatch(js, /window\.fetch\s*=/, 'V17.12 must not replace window.fetch');
-assert.doesNotMatch(js, /companion-v10|companion-v11|companion-v12/, 'V17.12 must not load legacy structural themes');
-assert.doesNotMatch(css, /\.uai-c-shell\s*\{[^}]*grid-template-columns/s, 'V17.12 must not change core shell columns');
-assert.doesNotMatch(css, /\.uai-c-main\s*\{[^}]*grid-template-rows/s, 'V17.12 must not change core main rows');
-assert.match(css, /position:\s*fixed/);
+assert.doesNotMatch(js, /data-v1712-reload/, 'the shader-triggering manual reload button must stay removed');
+assert.doesNotMatch(js, /uaiCompanionStageButtonV1712/, 'the old floating stage launcher must stay removed');
+assert.doesNotMatch(js, /CHARACTER STAGE/, 'the old floating stage chrome must stay removed');
+assert.doesNotMatch(js, /observe\(document\.body/, 'integrated Live2D must not observe the whole body');
+assert.doesNotMatch(js, /subtree\s*:\s*true/, 'integrated Live2D must not use subtree-wide MutationObserver');
+assert.doesNotMatch(js, /window\.fetch\s*=/, 'integrated Live2D must not replace window.fetch');
+assert.doesNotMatch(js, /companion-v10|companion-v11|companion-v12/, 'integrated Live2D must not load legacy structural themes');
+assert.doesNotMatch(css, /\.uai-c-shell\s*\{[^}]*grid-template-columns/s, 'Live2D must not change core shell columns');
+assert.doesNotMatch(css, /\.uai-c-main\s*\{[^}]*grid-template-rows/s, 'Live2D must not change core main rows');
+assert.match(css, /#uaiCompanionStageV1712\s*\{[^}]*position:\s*absolute/s, 'the character must be a background layer rather than a floating window');
+assert.match(css, /#uaiCompanionStageV1712\s*\{[^}]*pointer-events:\s*none/s);
+assert.doesNotMatch(css, /#uaiCompanionStageV1712\s*\{[^}]*position:\s*fixed/s, 'the old floating window must not return');
 assert.match(css, /prefers-reduced-motion/);
 
-console.log('V17.12 isolated character stage contract passed');
+console.log('V17.17 integrated Live2D background contract passed');
