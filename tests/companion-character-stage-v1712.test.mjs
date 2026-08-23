@@ -5,7 +5,7 @@ const index = fs.readFileSync('public/index.html', 'utf8');
 const js = fs.readFileSync('public/companion-character-stage-v1712.js', 'utf8');
 const css = fs.readFileSync('public/companion-character-stage-v1712.css', 'utf8');
 
-assert.match(index, /2026-08-23-v17\.18-cinematic-companion-scenes/);
+assert.match(index, /2026-08-23-v17\.19-luminous-full-canvas/);
 assert.match(index, /companion-character-stage-v1712\.css\?v=20260823-v17\.17-integrated-live2d-background/);
 assert.match(index, /companion-character-stage-v1712\.js\?v=20260823-v17\.17-integrated-live2d-background/);
 assert.match(js, /2026-08-23-v17\.17-integrated-live2d-background/);
@@ -49,4 +49,4 @@ assert.match(css, /#uaiCompanionStageV1712\s*\{[^}]*pointer-events:\s*none/s);
 assert.doesNotMatch(css, /#uaiCompanionStageV1712\s*\{[^}]*position:\s*fixed/s, 'the old floating window must not return');
 assert.match(css, /prefers-reduced-motion/);
 
-console.log('V17.17 integrated Live2D background contract passed under V17.18 frontend');
+console.log('V17.17 integrated Live2D background contract passed under V17.19 frontend');
