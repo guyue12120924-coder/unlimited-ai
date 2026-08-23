@@ -1,58 +1,60 @@
-/* V17.15 adaptive atmosphere. Visual-only accents over V17.14 scenes and V17.12 stage. */
+/* V17.18 cinematic mood grading over V17.18 scenes and integrated Live2D. */
 #uaiCompanionRoot .uai-c-v1714-scene::before{
   content:"";
   position:absolute;
   inset:0;
   z-index:6;
   pointer-events:none;
-  opacity:.32;
-  transition:background .8s ease,opacity .8s ease;
+  opacity:.38;
+  mix-blend-mode:screen;
+  transition:background .8s ease,opacity .8s ease,filter .8s ease;
 }
 
-#uaiCompanionRoot[data-v1715-emotion="happy"] .uai-c-v1714-scene::before{background:radial-gradient(circle at 62% 44%,rgba(255,195,118,.18),transparent 34%),radial-gradient(circle at 34% 65%,rgba(255,110,205,.13),transparent 30%)}
-#uaiCompanionRoot[data-v1715-emotion="shy"] .uai-c-v1714-scene::before{background:radial-gradient(circle at 68% 40%,rgba(255,112,183,.23),transparent 31%),radial-gradient(circle at 42% 70%,rgba(220,128,255,.14),transparent 34%)}
-#uaiCompanionRoot[data-v1715-emotion="caring"] .uai-c-v1714-scene::before{background:radial-gradient(circle at 68% 42%,rgba(255,157,210,.17),transparent 34%),radial-gradient(circle at 28% 74%,rgba(139,174,255,.15),transparent 32%)}
-#uaiCompanionRoot[data-v1715-emotion="sad"] .uai-c-v1714-scene::before{background:linear-gradient(rgba(70,102,170,.08),rgba(30,46,100,.18)),radial-gradient(circle at 58% 36%,rgba(108,151,255,.13),transparent 35%)}
-#uaiCompanionRoot[data-v1715-emotion="angry"] .uai-c-v1714-scene::before{background:radial-gradient(circle at 65% 42%,rgba(255,74,115,.18),transparent 28%),linear-gradient(135deg,rgba(128,31,79,.09),transparent 55%)}
-#uaiCompanionRoot[data-v1715-emotion="thinking"] .uai-c-v1714-scene::before{background:radial-gradient(circle at 64% 38%,rgba(148,126,255,.18),transparent 31%),radial-gradient(circle at 35% 70%,rgba(71,161,255,.10),transparent 35%)}
+#uaiCompanionRoot[data-v1715-emotion="happy"] .uai-c-v1714-scene::before{background:radial-gradient(circle at 68% 42%,rgba(255,205,116,.24),transparent 31%),radial-gradient(circle at 34% 67%,rgba(255,103,207,.19),transparent 29%),linear-gradient(120deg,transparent 36%,rgba(255,210,139,.05),transparent 70%)}
+#uaiCompanionRoot[data-v1715-emotion="shy"] .uai-c-v1714-scene::before{background:radial-gradient(circle at 70% 40%,rgba(255,102,180,.30),transparent 29%),radial-gradient(circle at 42% 71%,rgba(223,117,255,.19),transparent 33%),radial-gradient(circle at 84% 70%,rgba(255,169,205,.09),transparent 26%)}
+#uaiCompanionRoot[data-v1715-emotion="caring"] .uai-c-v1714-scene::before{background:radial-gradient(circle at 70% 43%,rgba(255,158,209,.23),transparent 32%),radial-gradient(circle at 28% 74%,rgba(132,178,255,.20),transparent 31%),linear-gradient(140deg,rgba(255,190,220,.04),transparent 58%)}
+#uaiCompanionRoot[data-v1715-emotion="sad"] .uai-c-v1714-scene::before{background:linear-gradient(rgba(62,96,170,.11),rgba(24,40,98,.20)),radial-gradient(circle at 62% 37%,rgba(102,153,255,.18),transparent 34%);mix-blend-mode:soft-light}
+#uaiCompanionRoot[data-v1715-emotion="angry"] .uai-c-v1714-scene::before{background:radial-gradient(circle at 67% 43%,rgba(255,65,112,.25),transparent 27%),linear-gradient(135deg,rgba(148,27,82,.13),transparent 55%);mix-blend-mode:screen}
+#uaiCompanionRoot[data-v1715-emotion="thinking"] .uai-c-v1714-scene::before{background:radial-gradient(circle at 65% 38%,rgba(148,120,255,.24),transparent 30%),radial-gradient(circle at 35% 70%,rgba(65,164,255,.15),transparent 34%),linear-gradient(160deg,transparent 40%,rgba(151,117,255,.06),transparent 70%)}
 
-#uaiCompanionRoot[data-v1715-period="morning"] .uai-c-v1714-scene{filter:brightness(1.08) saturate(.96)}
-#uaiCompanionRoot[data-v1715-period="day"] .uai-c-v1714-scene{filter:brightness(1.02) saturate(1.02)}
-#uaiCompanionRoot[data-v1715-period="evening"] .uai-c-v1714-scene{filter:brightness(.96) saturate(1.09)}
-#uaiCompanionRoot[data-v1715-period="night"] .uai-c-v1714-scene{filter:brightness(.87) saturate(1.08)}
+/* Keep night cinematic instead of dimming the whole scene into black. */
+#uaiCompanionRoot[data-v1715-period="morning"] .uai-c-v1714-scene{filter:brightness(1.12) saturate(1.04) contrast(1.02)}
+#uaiCompanionRoot[data-v1715-period="day"] .uai-c-v1714-scene{filter:brightness(1.07) saturate(1.08) contrast(1.03)}
+#uaiCompanionRoot[data-v1715-period="evening"] .uai-c-v1714-scene{filter:brightness(1.02) saturate(1.17) contrast(1.04)}
+#uaiCompanionRoot[data-v1715-period="night"] .uai-c-v1714-scene{filter:brightness(.97) saturate(1.22) contrast(1.06)}
 
-#uaiCompanionRoot.uai-c-v1715-thinking .uai-c-v1714-band{opacity:.76}
-#uaiCompanionRoot.uai-c-v1715-thinking .uai-c-v1714-wash{filter:blur(29px) saturate(1.12)}
+#uaiCompanionRoot.uai-c-v1715-thinking .uai-c-v1714-band{opacity:.88}
+#uaiCompanionRoot.uai-c-v1715-thinking .uai-c-v1714-wash{filter:blur(31px) saturate(1.20)}
 #uaiCompanionRoot.uai-c-v1715-thinking .uai-c-v1714-particles{animation:v1715ThinkDrift 3.2s ease-in-out infinite alternate}
 
 #uaiCompanionRoot #uaiCompanionStageV1712::before{
   content:"";
   position:absolute;
-  left:12%;right:12%;bottom:12%;height:26%;
+  left:10%;right:8%;bottom:9%;height:31%;
   z-index:-1;
   pointer-events:none;
   border-radius:50%;
-  opacity:.28;
-  filter:blur(28px);
-  background:radial-gradient(ellipse,rgba(205,125,255,.46),transparent 68%);
-  transition:background .7s ease,opacity .7s ease;
+  opacity:.36;
+  filter:blur(32px);
+  background:radial-gradient(ellipse,rgba(205,125,255,.50),rgba(110,122,255,.10) 45%,transparent 70%);
+  transition:background .7s ease,opacity .7s ease,filter .7s ease;
 }
-#uaiCompanionRoot[data-v1715-emotion="happy"] #uaiCompanionStageV1712::before{background:radial-gradient(ellipse,rgba(255,185,111,.50),rgba(255,109,196,.20),transparent 70%)}
-#uaiCompanionRoot[data-v1715-emotion="shy"] #uaiCompanionStageV1712::before{background:radial-gradient(ellipse,rgba(255,116,190,.55),rgba(205,112,255,.20),transparent 70%)}
-#uaiCompanionRoot[data-v1715-emotion="caring"] #uaiCompanionStageV1712::before{background:radial-gradient(ellipse,rgba(255,149,211,.46),rgba(118,165,255,.20),transparent 70%)}
-#uaiCompanionRoot[data-v1715-emotion="sad"] #uaiCompanionStageV1712::before{background:radial-gradient(ellipse,rgba(91,145,255,.38),transparent 68%)}
-#uaiCompanionRoot[data-v1715-emotion="angry"] #uaiCompanionStageV1712::before{background:radial-gradient(ellipse,rgba(255,73,116,.40),transparent 68%)}
-#uaiCompanionRoot[data-v1715-emotion="thinking"] #uaiCompanionStageV1712::before{background:radial-gradient(ellipse,rgba(151,126,255,.45),transparent 68%)}
+#uaiCompanionRoot[data-v1715-emotion="happy"] #uaiCompanionStageV1712::before{background:radial-gradient(ellipse,rgba(255,190,105,.58),rgba(255,104,196,.24),transparent 71%);opacity:.44}
+#uaiCompanionRoot[data-v1715-emotion="shy"] #uaiCompanionStageV1712::before{background:radial-gradient(ellipse,rgba(255,104,187,.62),rgba(205,105,255,.24),transparent 71%);opacity:.46}
+#uaiCompanionRoot[data-v1715-emotion="caring"] #uaiCompanionStageV1712::before{background:radial-gradient(ellipse,rgba(255,151,211,.52),rgba(112,170,255,.24),transparent 71%);opacity:.42}
+#uaiCompanionRoot[data-v1715-emotion="sad"] #uaiCompanionStageV1712::before{background:radial-gradient(ellipse,rgba(83,145,255,.43),rgba(79,96,199,.11),transparent 69%);opacity:.33}
+#uaiCompanionRoot[data-v1715-emotion="angry"] #uaiCompanionStageV1712::before{background:radial-gradient(ellipse,rgba(255,66,111,.47),rgba(140,39,94,.09),transparent 69%);opacity:.38}
+#uaiCompanionRoot[data-v1715-emotion="thinking"] #uaiCompanionStageV1712::before{background:radial-gradient(ellipse,rgba(150,121,255,.52),rgba(72,157,255,.13),transparent 70%);opacity:.42}
 
-/* Call overlay inherits the active scene identity instead of falling back to near-black. */
-#uaiCompanionRoot[data-v1714-scene-theme="galaxy"] #uaiCompanionCallV1713 .uai-c-v1713-call-bg{background:radial-gradient(circle at 50% 31%,rgba(191,88,220,.34),transparent 29%),radial-gradient(circle at 22% 73%,rgba(78,106,223,.24),transparent 34%),radial-gradient(circle at 80% 71%,rgba(241,98,181,.18),transparent 31%),linear-gradient(160deg,#160c2c,#070813 72%)}
-#uaiCompanionRoot[data-v1714-scene-theme="sakura"] #uaiCompanionCallV1713 .uai-c-v1713-call-bg{background:radial-gradient(circle at 51% 30%,rgba(255,115,188,.31),transparent 29%),radial-gradient(circle at 21% 75%,rgba(187,92,255,.22),transparent 34%),radial-gradient(circle at 82% 68%,rgba(92,98,205,.18),transparent 32%),linear-gradient(160deg,#29102d,#090813 72%)}
-#uaiCompanionRoot[data-v1714-scene-theme="moonlight"] #uaiCompanionCallV1713 .uai-c-v1713-call-bg{background:radial-gradient(circle at 57% 25%,rgba(198,222,255,.28),transparent 27%),radial-gradient(circle at 20% 73%,rgba(76,112,209,.24),transparent 35%),radial-gradient(circle at 82% 68%,rgba(115,104,211,.17),transparent 32%),linear-gradient(160deg,#0d1b35,#070a13 72%)}
-#uaiCompanionRoot[data-v1714-scene-theme="neon"] #uaiCompanionCallV1713 .uai-c-v1713-call-bg{background:radial-gradient(circle at 53% 29%,rgba(172,74,255,.28),transparent 29%),radial-gradient(circle at 18% 73%,rgba(34,194,255,.22),transparent 34%),radial-gradient(circle at 82% 68%,rgba(255,54,172,.22),transparent 32%),linear-gradient(160deg,#0b1235,#060710 72%)}
+/* Call overlay inherits scene identity with stronger cinematic depth. */
+#uaiCompanionRoot[data-v1714-scene-theme="galaxy"] #uaiCompanionCallV1713 .uai-c-v1713-call-bg{background:radial-gradient(circle at 50% 28%,rgba(202,88,234,.40),transparent 27%),radial-gradient(circle at 19% 72%,rgba(71,108,235,.30),transparent 32%),radial-gradient(circle at 82% 69%,rgba(245,91,183,.24),transparent 30%),linear-gradient(125deg,transparent 15%,rgba(154,102,255,.12) 45%,transparent 70%),linear-gradient(160deg,#120825,#050711 72%)}
+#uaiCompanionRoot[data-v1714-scene-theme="sakura"] #uaiCompanionCallV1713 .uai-c-v1713-call-bg{background:radial-gradient(circle at 51% 27%,rgba(255,108,185,.38),transparent 28%),radial-gradient(circle at 18% 74%,rgba(193,85,255,.28),transparent 33%),radial-gradient(circle at 82% 66%,rgba(90,100,220,.23),transparent 31%),radial-gradient(circle at 72% 20%,rgba(255,220,238,.13),transparent 16%),linear-gradient(160deg,#250c2b,#070711 72%)}
+#uaiCompanionRoot[data-v1714-scene-theme="moonlight"] #uaiCompanionCallV1713 .uai-c-v1713-call-bg{background:radial-gradient(circle at 58% 22%,rgba(212,232,255,.35),transparent 25%),radial-gradient(circle at 18% 73%,rgba(69,112,224,.30),transparent 34%),radial-gradient(circle at 84% 67%,rgba(117,104,225,.22),transparent 31%),linear-gradient(112deg,transparent 41%,rgba(204,226,255,.09) 49%,transparent 58%),linear-gradient(160deg,#0a1931,#050811 72%)}
+#uaiCompanionRoot[data-v1714-scene-theme="neon"] #uaiCompanionCallV1713 .uai-c-v1713-call-bg{background:radial-gradient(circle at 53% 27%,rgba(178,67,255,.36),transparent 27%),radial-gradient(circle at 16% 72%,rgba(26,207,255,.29),transparent 32%),radial-gradient(circle at 84% 67%,rgba(255,44,171,.30),transparent 31%),linear-gradient(180deg,transparent 45%,rgba(255,50,177,.09) 50%,transparent 55%),linear-gradient(160deg,#07102f,#04050d 72%)}
 
-#uaiCompanionRoot[data-v1715-emotion="happy"] #uaiCompanionCallV1713 .uai-c-v1713-call-bg{filter:brightness(1.08) saturate(1.1)}
-#uaiCompanionRoot[data-v1715-emotion="shy"] #uaiCompanionCallV1713 .uai-c-v1713-call-bg{filter:hue-rotate(-8deg) saturate(1.14)}
-#uaiCompanionRoot[data-v1715-emotion="sad"] #uaiCompanionCallV1713 .uai-c-v1713-call-bg{filter:brightness(.84) saturate(.82)}
+#uaiCompanionRoot[data-v1715-emotion="happy"] #uaiCompanionCallV1713 .uai-c-v1713-call-bg{filter:brightness(1.12) saturate(1.16)}
+#uaiCompanionRoot[data-v1715-emotion="shy"] #uaiCompanionCallV1713 .uai-c-v1713-call-bg{filter:hue-rotate(-8deg) saturate(1.22) brightness(1.05)}
+#uaiCompanionRoot[data-v1715-emotion="sad"] #uaiCompanionCallV1713 .uai-c-v1713-call-bg{filter:brightness(.90) saturate(.92)}
 
 @keyframes v1715ThinkDrift{from{transform:translate3d(-2px,1px,0)}to{transform:translate3d(3px,-2px,0)}}
 
