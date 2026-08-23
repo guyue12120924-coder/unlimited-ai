@@ -73,6 +73,9 @@ body[data-uai-mode="novel"] .novel-v1723d-top-more-menu {
   right: 0;
   z-index: 230;
   width: 228px;
+  max-height: calc(100dvh - 92px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 7px;
   border: 1px solid var(--border-default, var(--border));
   border-radius: 12px;
@@ -114,6 +117,8 @@ body[data-uai-mode="novel"] #composer .composer-main {
   align-items: end;
   gap: 8px;
 }
+body[data-uai-mode="novel"] #composer #msg,
+body[data-uai-mode="novel"] #composer .composer-actions { min-width: 0; }
 body[data-uai-mode="novel"] #composer .composer-footer { display: none !important; }
 body[data-uai-mode="novel"] .novel-v1723d-quick-wrap {
   position: relative;
@@ -143,6 +148,9 @@ body[data-uai-mode="novel"] .novel-v1723d-quick-menu {
   bottom: calc(100% + 9px);
   z-index: 220;
   width: min(320px, calc(100vw - 30px));
+  max-height: min(62dvh, 460px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 5px;
@@ -199,6 +207,9 @@ body[data-uai-mode="novel"] .novel-v1723d-onboarding {
 body[data-uai-mode="novel"] .novel-v1723d-onboarding > section {
   position: relative;
   width: min(680px, 100%);
+  max-height: calc(100dvh - 40px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 28px;
   border: 1px solid var(--border-default, var(--border));
   border-radius: 20px;
@@ -207,11 +218,12 @@ body[data-uai-mode="novel"] .novel-v1723d-onboarding > section {
   box-shadow: 0 30px 90px rgba(47, 39, 28, .2);
 }
 body[data-uai-mode="novel"] .novel-v1723d-onboarding-close {
-  position: absolute;
-  top: 14px;
-  right: 14px;
+  position: sticky;
+  top: 0;
+  float: right;
   width: 32px;
   height: 32px;
+  margin: -14px -14px 0 0;
   border: 0;
   border-radius: 50%;
   background: var(--surface-soft);
@@ -289,8 +301,9 @@ body[data-uai-mode="novel"] .novel-v1723d-onboarding > section > small {
 @media (max-width: 520px) {
   body[data-uai-mode="novel"] .novel-v1723d-top-more { width: 34px; padding: 0; font-size: 0; }
   body[data-uai-mode="novel"] .novel-v1723d-top-more::after { content: "•••"; font-size: 11px; letter-spacing: 1px; }
-  body[data-uai-mode="novel"] .novel-v1723d-quick-menu { grid-template-columns: 1fr; }
-  body[data-uai-mode="novel"] .novel-v1723d-onboarding > section { padding: 24px 18px 20px; border-radius: 16px; }
+  body[data-uai-mode="novel"] .novel-v1723d-quick-menu { grid-template-columns: 1fr; max-height: min(72dvh, 520px); }
+  body[data-uai-mode="novel"] .novel-v1723d-onboarding { padding: 12px; }
+  body[data-uai-mode="novel"] .novel-v1723d-onboarding > section { max-height: calc(100dvh - 24px); padding: 24px 18px 20px; border-radius: 16px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
