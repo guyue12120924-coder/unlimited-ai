@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 const index = fs.readFileSync('public/index.html', 'utf8');
 const css = fs.readFileSync('public/companion-luminous-shell-v1719.css', 'utf8');
 
-assert.match(index, /2026-08-23-v17\.20-emotional-voice-system/);
+assert.match(index, /2026-08-23-v17\.21-voice-experience-polish/);
 assert.match(index, /companion-luminous-shell-v1719\.css\?v=20260823-v17\.19-luminous-full-canvas/);
 assert.ok(index.indexOf('companion-atmosphere-v1715.css') < index.indexOf('companion-luminous-shell-v1719.css'));
 assert.match(css, /#uaiCompanionRoot\s*\{[^}]*--v1719-glow-a/s);
@@ -21,4 +21,4 @@ assert.match(css, /prefers-reduced-motion/);
 assert.doesNotMatch(css, /\.uai-c-shell\s*\{[^}]*grid-template/s);
 assert.doesNotMatch(css, /\.uai-c-main\s*\{[^}]*grid-template/s);
 assert.doesNotMatch(css, /canvas\s*\{[^}]*position\s*:\s*fixed/s);
-console.log('V17.19 luminous shell retained under V17.20 frontend');
+console.log('V17.19 luminous shell retained under V17.21 frontend');
