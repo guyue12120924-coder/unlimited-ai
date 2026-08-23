@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 const index = fs.readFileSync('public/index.html', 'utf8');
 const js = fs.readFileSync('public/companion-voice-suite-v1711.js', 'utf8');
 const css = fs.readFileSync('public/companion-voice-suite-v1711.css', 'utf8');
+const tts = fs.readFileSync('src/tts.js', 'utf8');
 
 assert.match(index, /2026-08-23-v17\.20-emotional-voice-system/);
 assert.match(index, /companion-voice-suite-v1711\.css\?v=20260823-v17\.20-emotional-voice-system/);
@@ -17,6 +18,8 @@ assert.match(js, /gentle:[^]*voiceId:\s*"ara"/);
 assert.match(js, /natural:[^]*voiceId:\s*"sal"/);
 for (const voice of ['eve', 'ara', 'sal', 'rex', 'leo']) assert.ok(js.includes(`${voice}:`), `missing voice ${voice}`);
 
+assert.match(js, /legacyProfile/, 'old V17.16 profiles must be recognized for migration');
+assert.match(js, /legacyProfile\s*\?\s*DEFAULTS\.playbackRate/, 'legacy 1.00x profiles must migrate to the new 0.95x default');
 assert.match(js, /speechMode:\s*"natural"/);
 assert.match(js, /emotionEnabled:\s*true/);
 assert.match(js, /function classifyEmotion\(/);
@@ -26,6 +29,8 @@ assert.match(js, /segment\.length <= 138/, 'speech must be split into short expr
 assert.doesNotMatch(js, /function chunkText\([^)]*520/, 'legacy 520-char monotone chunks must stay removed');
 assert.match(js, /EMOTION_PLAN/);
 for (const emotion of ['happy', 'shy', 'caring', 'sad', 'angry', 'thinking']) assert.ok(js.includes(`${emotion}:`));
+assert.match(js, /\.replace\(\/\\\*\[\^\*\]\{1,260\}\\\*\/g,\s*"，"\)/, 'natural mode must convert roleplay actions into pauses instead of speaking them');
+assert.match(js, /\.replace\(\/\\\*\/g,\s*" "\)/, 'remaining markdown stars must be removed only after action filtering');
 assert.match(js, /voice_id:\s*settings\.voiceId/, 'ordinary TTS must send the selected voice id');
 assert.match(js, /engine:\s*settings\.engine/, 'ordinary TTS must send the selected engine');
 assert.match(js, /uai:companion-voice-profile/, 'voice profile changes must be shared with call mode');
@@ -57,6 +62,10 @@ assert.match(js, /function ensureFallbackAudio\(/);
 assert.match(js, /uaiCompanionVoiceAudioV1720/);
 assert.match(js, /URL\.revokeObjectURL/);
 assert.match(js, /浏览器拦截了声音/);
+
+assert.match(tts, /const DEFAULT_GROK_VOICE = "eve";/, 'backend TTS default must also be Eve');
+assert.match(tts, /payload\?\.voice_id \|\| DEFAULT_GROK_VOICE/);
+assert.match(tts, /defaultVoice:\s*DEFAULT_GROK_VOICE/);
 
 assert.doesNotMatch(js, /window\.fetch\s*=/, 'voice suite must not replace window.fetch');
 assert.doesNotMatch(js, /observe\(document\.body/, 'voice suite must not observe the whole body');
