@@ -29,8 +29,8 @@ assert.match(js, /segment\.length <= 138/, 'speech must be split into short expr
 assert.doesNotMatch(js, /function chunkText\([^)]*520/, 'legacy 520-char monotone chunks must stay removed');
 assert.match(js, /EMOTION_PLAN/);
 for (const emotion of ['happy', 'shy', 'caring', 'sad', 'angry', 'thinking']) assert.ok(js.includes(`${emotion}:`));
-assert.match(js, /\.replace\(\/\\\*\[\^\*\]\{1,260\}\\\*\/g,\s*"，"\)/, 'natural mode must convert roleplay actions into pauses instead of speaking them');
-assert.match(js, /\.replace\(\/\\\*\/g,\s*" "\)/, 'remaining markdown stars must be removed only after action filtering');
+assert.ok(js.includes('.replace(/\\*[^*]{1,260}\\*/g, "，")'), 'natural mode must convert roleplay actions into pauses instead of speaking them');
+assert.ok(js.includes('.replace(/\\*/g, " ")'), 'remaining markdown stars must be removed only after action filtering');
 assert.match(js, /voice_id:\s*settings\.voiceId/, 'ordinary TTS must send the selected voice id');
 assert.match(js, /engine:\s*settings\.engine/, 'ordinary TTS must send the selected engine');
 assert.match(js, /uai:companion-voice-profile/, 'voice profile changes must be shared with call mode');
