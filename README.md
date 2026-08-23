@@ -1,10 +1,14 @@
 # Unlimited AI — 小说创作 + AI 陪伴
 
-一个部署在 Cloudflare Workers 上的本地优先 AI 工作台。打开网页后先进入模式大厅，可选择 **AI 小说创作** 或 **AI 陪伴**。两个模式共用 Worker 和模型基础设施，但 Prompt、上下文、会话和长期记忆彼此隔离。
+Unlimited AI 是一个部署在 Cloudflare Workers 上的本地优先 AI 工作台。首页先进入模式大厅，可选择 **AI 小说创作** 或 **AI 陪伴**。两个模式共用 Worker 和模型基础设施，但 Prompt、上下文、会话和长期记忆相互隔离。
 
-当前陪伴前端版本：**V9.5**。
+当前版本：
 
-> 陪伴模式的详细模块边界与退役文件清单见：`docs/COMPANION_V9_ARCHITECTURE.md`。
+- 陪伴前端：**V17.21 Voice Experience Polish**
+- 启动与诊断：**V17.22 Final Cleanup & Diagnostics**
+- 小说工作区：**V17.0 Workspace Consolidation**
+
+> 当前陪伴架构以“稳定核心 + 独立安全增强层”为原则。旧 V10/V11/V12 结构主题和旧 runtime/Live2D/通话实现仅保留作历史参考，不属于正式启动链。详见 `docs/COMPANION_LEGACY.md`。
 
 ---
 
@@ -12,7 +16,7 @@
 
 ### AI 小说创作
 
-保留长篇创作工作台，主要包括：
+主要能力包括：
 
 - 作品与章节管理
 - 人物、世界观、场景和资料
@@ -23,190 +27,159 @@
 - 阅读模式
 - 本地备份与恢复
 
-小说模式继续使用原有 `cfw_*`、Story Memory 和连续性数据结构，旧浏览器数据不需要因为陪伴模式升级而迁移。
+小说模式继续使用原有 `cfw_*`、Story Memory 和连续性数据结构。
 
 ### AI 陪伴
 
-V9.5 当前支持：
+当前正式能力包括：
 
-- 第一次进入时创建 AI 伙伴或使用默认“小雨”
-- 最多 6 个角色
-- 每个角色独立保存资料、聊天、长期记忆和模型设置
-- 角色新增、编辑、切换、删除
-- 单个“完整角色设定”大文本框，可直接粘贴人物卡，最多 5000 字
-- 独立多会话聊天
-- SSE 流式回复与停止生成
-- 用户消息编辑重发、最后一条 AI 回复重新生成
-- 约 500 / 1000 / 5000 字三档回复长度
-- 当前角色聊天全文搜索和消息定位
-- 任意消息加入“重要时刻”
-- 长期记忆手动管理、去重、置顶、归档、恢复
-- 关系时间线、重要时刻纪念册、本月回顾
-- 可读 Markdown 导出
-- 全部角色 JSON 备份、导入校验、合并/覆盖恢复和一次回滚快照
-- 生成期间禁止切换角色或执行可能导致异步串写的危险操作
-- 桌面端和移动端响应式布局
-
-V9.5 的 UI 原则是：**主聊天页只保留高频操作，低频功能进入角色管理、记忆、设置或关系记录。**
+- 多角色创建、编辑、切换和删除
+- 每个角色独立保存聊天、记忆、关系、模型与声音配置
+- 多会话聊天与 SSE 流式回复
+- 生成中停止与危险操作保护
+- 当前角色聊天全文搜索与定位
+- 长期记忆整理、去重、置顶、归档与恢复
+- 关系记录、时间线、重要时刻和月度回顾
+- 消息复制、珍藏、长回复折叠和快捷续聊/改写
+- 回复长度：简短 / 自然 / 详细
+- 全角色 JSON 备份、合并/覆盖导入和一次回滚
+- 麦克风 STT 语音输入
+- Grok/Melo/系统语音 TTS
+- V17.21 情绪语音：Eve 默认、声音人格、A/B 试听、短句预取、情绪语速与停顿
+- 普通朗读与通话共享同一角色声音档案
+- Live2D 背景角色、表情、动作、视线跟随和精确嘴型
+- 四套动态场景：星河梦境、樱花夜色、月光房间、霓虹幻想
+- 场景与情绪氛围联动
+- 完整语音通话：VAD、录音、Whisper STT、自动续听、字幕、统一 TTS
 
 ---
 
-## 2. 陪伴模式当前结构
+## 2. 当前陪伴启动链
 
-### 启动与模式路由
+正式入口仍采用经过故障恢复验证的 **V17.5 core-only entry**：先保证基础聊天可用，再加载独立增强层。
 
-- `public/boot-diagnostics.js`：双模式启动、资源加载和前端自检
-- `public/mode-router.js`：小说 / 陪伴模式大厅与切换
-- `public/mode-router.css`：模式大厅样式
+核心链：
 
-### 基础聊天核心
+```text
+boot-diagnostics.js
+  -> mode-router.js
+  -> companion-entry-v175.js
+  -> companion-mode.css + companion-mode.js
+```
+
+进入基础聊天后，页面按顺序挂载安全增强：
+
+```text
+V17.6  companion-core-polish-v176.css
+V17.7  companion-function-pack-v177.js
+V17.8  companion-controls-v178.js
+V17.9  companion-runtime-safe-v179.js
+V17.10 companion-experience-v1710.js
+V17.21 companion-voice-suite-v1711.js
+V17.14 companion-scene-v1714.js
+V17.21 companion-character-stage-v1712.js
+V17.21 companion-call-suite-v1713.js
+V17.15 companion-atmosphere-v1715.js
+V17.16 companion-audio-gesture-v1716.js
+V17.19 companion-luminous-shell-v1719.css
+```
+
+其中 V17.6-V17.10 不修改基础聊天主网格；Live2D 和场景也作为独立背景层，不再创建旧版 V12 的第二套主布局。
+
+---
+
+## 3. 关键模块
+
+### 基础聊天
 
 - `public/companion-mode.js`
-  - 基础陪伴 DOM 壳
-  - 当前角色兼容槽位
-  - 会话列表与消息渲染
-  - 输入、SSE 流式回复、停止生成
-  - 基础长期记忆和设置数据源
-- `public/companion-mode.css`：基础结构和通用组件
+- `public/companion-mode.css`
+- `public/companion-entry-v175.js`
 
-### 多角色与角色编辑
+负责基础 DOM、会话、消息、输入、SSE、停止生成、基础设置与兼容存储槽位。
+
+### 多角色、记忆与关系
 
 - `public/companion-characters-core.js`
-  - 多角色持久化
-  - 当前角色快照保存 / 目标角色装载
-  - 角色聊天、记忆和设置隔离
 - `public/companion-character-editor.js`
-  - 只负责新增角色、编辑角色和首次创建角色
-  - 完整角色设定统一使用单个大文本框
-- `public/companion-characters.css`：角色管理/编辑弹窗基础样式
-
-### 设置与运行时
-
-- `public/companion-settings.js`
-  - 回复长度三档
-  - 设置弹窗整理
-  - 数据与备份低频区域
-- `public/companion-runtime.js`
-  - 回复长度请求约束
-  - 生成期间危险操作保护
-  - 全部角色备份与辅助数据清理
-
-### 搜索、记忆与关系记录
-
 - `public/companion-memory.js`
-  - 聊天搜索
-  - 重要时刻管理
-  - 长期记忆整理、去重、归档与恢复
 - `public/companion-records.js`
-  - 关系记录、时间线、纪念册
-  - 备份导入校验和回滚
 - `public/companion-extras.js`
-  - 消息复制 / 珍藏
-  - 长回复展开/收起
-  - 回到底部
-  - 本月回顾与可读 Markdown 导出
-- `public/companion-memory.css`：搜索与记忆组件
-- `public/companion-records.css`：关系记录与恢复组件
+- `public/companion-function-pack-v177.js`
+- `public/companion-controls-v178.js`
 
-### V9 页面收口
+### 安全运行时
 
-- `public/companion-v9-shell.js`
-  - 角色卡新增/编辑/管理入口
-  - 左侧可见聊天搜索入口
-  - 角色管理弹窗整理
-  - 记忆弹窗高频/低频入口整理
-  - 消息操作去重
-- `public/companion-v9.css`
-  - 当前主聊天页最终视觉层
-  - 桌面端 1120px 对话内容宽度
-  - AI 正文 16.5px
-  - 输入区、角色管理和移动端响应式
-- `public/companion-support.css`
-  - 角色大文本框
-  - 回复长度卡片
-  - 数据折叠区
-  - 消息操作
-  - 长回复
-  - 回到底部
-  - Toast
-  - 本月回顾
+- `public/companion-runtime-safe-v179.js`
 
-旧的 V2/V3/V4/V5/V6 companion 增量脚本、`companion-characters-ui.js` 和 `companion-profile-editor.css` 已退出当前运行时，不应恢复成“旧文件 + 新覆盖层”的开发方式。
+负责生成期危险操作保护、状态提示和角色数据整理。旧 `companion-runtime.js` 不属于正式运行时，因为它曾通过重写 `window.fetch` 修改请求链。
+
+### 语音输入与体验
+
+- `public/companion-experience-v1710.js`
+
+负责麦克风录音、`/api/companion/stt`、消息快捷操作与本地浏览器朗读辅助。
+
+### V17.21 情绪语音
+
+- `public/companion-voice-suite-v1711.js`
+- `public/companion-voice-suite-v1711.css`
+- `public/companion-voice-polish-v1721.css`
+- `src/tts.js`
+
+当前默认：
+
+```text
+engine: grok
+voice: eve
+persona: sweet
+rate: 0.95x
+```
+
+语音会先清理动作描写，再按短句生成情绪计划；长回复只保持小窗口预取，避免一次并发大量 TTS 请求。普通朗读和通话共用同一角色声音档案。
+
+### Live2D
+
+- `public/companion-character-stage-v1712.js`
+- `public/companion-character-stage-v1712.css`
+- `public/live2d/characters.json`
+- `public/live2d/model-pool.json`
+
+Live2D 直接融合在聊天背景中。普通 refresh 不重建 WebGL renderer；只有真实角色/模型变化才替换模型。V17.21 情绪语音存在时，由统一语音引擎拥有嘴型控制权。
+
+### 场景与氛围
+
+- `public/companion-scene-v1714.js`
+- `public/companion-scene-v1714.css`
+- `public/companion-atmosphere-v1715.js`
+- `public/companion-atmosphere-v1715.css`
+- `public/companion-luminous-shell-v1719.css`
+
+场景与聊天主结构解耦。背景、Live2D、聊天内容按固定层级叠放，避免旧 V12 结构样式再次改变消息区布局。
+
+### 通话
+
+- `public/companion-call-suite-v1713.js`
+- `public/companion-call-suite-v1713.css`
+- `public/companion-audio-gesture-v1716.js`
+- `src/stt.js`
+- `src/tts.js`
+
+通话使用 WebAudio/MediaRecorder + Whisper STT，并直接复用 V17.21 统一声音引擎。
 
 ---
 
-## 3. 陪伴 Prompt 边界
+## 4. Prompt 与数据隔离
 
-陪伴模式应用层最高优先级角色卡位于：
-
-```text
-src/companion.js -> COMPANION_ROLE_CARD
-```
-
-实际陪伴请求的应用消息层级是：
-
-1. `system`：`COMPANION_ROLE_CARD`
-2. `user`：当前角色、关系、长期记忆、最近话题、时间、回复长度等动态参考资料
-3. 用户/助手聊天历史
-
-也就是说，页面里填写的角色设定和长期记忆不会与角色卡处在同一个 `system` 层级。
-
-小说模式提示词继续由：
+陪伴应用层角色卡位于：
 
 ```text
-src/worker.js -> NOVEL_SYSTEM_PROMPT
+src/companion.js
 ```
 
-维护。陪伴 V9 前端重构不会修改小说系统提示词。
+陪伴请求不会注入小说模式的 `creative_context`、`memory_context` 或 `continuity_context`。
 
----
-
-## 4. `/api/chat` 模式路由
-
-仍然使用同一个：
-
-```text
-POST /api/chat
-```
-
-通过 `mode` 区分产品路径。
-
-### 小说模式
-
-```json
-{
-  "mode": "novel",
-  "creative_context": {},
-  "memory_context": {},
-  "continuity_context": {},
-  "messages": []
-}
-```
-
-为了兼容旧前端，缺省 `mode` 仍按小说模式处理。
-
-### 陪伴模式
-
-```json
-{
-  "mode": "companion",
-  "character": {},
-  "companion_memory": [],
-  "relationship_context": {},
-  "companion_preferences": {},
-  "messages": []
-}
-```
-
-陪伴路径不会注入小说的 `creative_context`、`memory_context` 或 `continuity_context`。
-
----
-
-## 5. 陪伴数据隔离
-
-陪伴模式使用独立 `uai_companion_*` localStorage 命名空间。
-
-核心兼容槽位：
+陪伴模式使用独立 `uai_companion_*` localStorage 命名空间。核心兼容槽位：
 
 ```text
 uai_companion_profile_v1
@@ -215,143 +188,96 @@ uai_companion_memories_v1
 uai_companion_settings_v1
 ```
 
-多角色：
-
-```text
-uai_companion_characters_v1
-uai_companion_active_character_v1
-```
-
-辅助数据：
-
-```text
-uai_companion_moments_v1
-uai_companion_memory_archive_v1
-uai_companion_import_rollback_v1
-```
-
-当前角色会装载到兼容槽位中；切换角色前先保存当前角色快照，再装载目标角色，因此角色之间不共享聊天和长期记忆。
-
-陪伴模式不会读取或写入小说会话、人物、Story Memory 或连续性数据。
+角色、关系、语音和场景均有独立角色级数据。
 
 ---
 
-## 6. 模型配置
+## 5. API
 
-模型注册统一位于：
+主要路由：
 
 ```text
-src/models.js
+POST /api/chat
+POST /api/memory/extract
+POST /api/continuity/review
+POST /api/companion/stt
+POST /api/companion/tts
+GET  /api/companion/stt/status
+GET  /api/companion/tts/status
+GET  /api/diagnostics
 ```
 
-每个模型可维护：
-
-- `id`
-- `label`
-- `promptProfile`
-- `provider`
-- `requestTimeoutMs`
-- `request` 参数
-
-Worker 会通过 `/config.js` 把可用模型同步到前端。小说模式和陪伴模式可以分别保存模型选择；多角色下每个角色也会保存自己的陪伴设置快照。
+AI 网关入口为 `src/worker-voice.js`，对受保护 POST 路由执行 same-site、Content-Type 和速率限制检查。
 
 ---
 
-## 7. 小说上下文链路
+## 6. 诊断
 
-小说模式会整理并注入：
+V17.22 将诊断与实际陪伴架构重新对齐。
 
-- 作品简介与总纲
-- 当前章节与上一章摘要
-- 相关人物和人物关系
-- 世界观与时间线
-- 伏笔与创作备注
-- 已确认 Story Memory
-- 连续性层中的章节摘要和人物当前状态
+浏览器端：
 
-主要模块：
+```js
+window.__UNLIMITED_BOOT__
+```
 
-- `src/context.js`
-- `src/memory-extractor.js`
-- `src/continuity-review.js`
-- `public/context-bridge.js`
-- `public/memory-bridge.js`
-- `public/continuity-bridge.js`
+会动态报告 core、功能包、声音、场景、Live2D、通话和旧结构主题是否被错误加载。
 
----
-
-## 8. 回归测试
-
-GitHub Actions 工作流：
+服务端：
 
 ```text
-.github/workflows/js-syntax-check.yml
+GET /api/diagnostics
 ```
 
-当前检查包括：
+会检查当前正式 `index.html`、V17.21 声音、Live2D、场景、通话和 V17.19 亮色外壳的部署标记。
 
-- 浏览器脚本语法
-- Worker 模块语法
-- 小说 Story Context 质量契约
-- 小说用户主流程契约
-- 陪伴 / 小说模式隔离
-- 陪伴角色编辑器
-- 关系记录与备份恢复
-- 陪伴运行时兼容性
-- V9 UX / 模块结构
-
-V9.5 在删除旧角色 UI 大模块和旧 V8 覆盖样式后，完整 CI 已通过。
-
----
-
-## 9. Cloudflare Workers 部署
-
-`wrangler.toml` 当前入口：
-
-```toml
-name = "unlimited-ai"
-main = "src/worker.js"
-compatibility_date = "2026-03-11"
-
-[assets]
-directory = "./public"
-binding = "ASSETS"
-run_worker_first = true
-```
-
-首次手动部署：
-
-```bash
-npm i -g wrangler
-wrangler login
-wrangler secret put NVIDIA_API_KEY
-wrangler deploy
-```
-
-如果 Cloudflare 已连接 GitHub 自动部署，则向 `main` 推送提交会按 Cloudflare 侧配置触发构建。仓库本身的 GitHub Deployments API 不一定会显示 Cloudflare 的实际生产部署状态，因此 **GitHub CI 通过不等于已经确认生产环境上线**。
-
-当前部署标记见：
+静态部署状态：
 
 ```text
-DEPLOY_REVISION.txt
+/public/deploy-status.json
 ```
 
 ---
 
-## 10. 后续开发规则
+## 7. Legacy 规则
 
-继续开发陪伴模式时：
+以下类别仍保留在仓库中用于历史参考/回滚，但**禁止重新加入正式启动链**：
 
-- 高频入口留在主聊天页；低频入口进入角色管理、记忆、设置或关系记录
-- 一个模块只负责一类职责，避免再次出现“全能补丁脚本”
-- 不增加重复头像、重复按钮和重复设置入口
-- 角色数据必须按角色隔离
-- 生成过程中不得切换角色或执行可能导致异步串写的操作
-- 新功能同步补回归测试
-- 不修改陪伴角色卡或小说系统提示词，除非任务明确要求修改 Prompt
+- `companion-v10*`
+- `companion-v11*`
+- `companion-v12*`
+- 旧 `companion-runtime.js`
+- 旧 `companion-call-mode.js`
+- 旧 `companion-voice-input.js`
+- 旧 `companion-live2d*.js/css` 组合式增强
+- `companion-entry-v172/v173/v174.js`
+- 旧 `companion-assets-loader*.js`
 
-更详细的 V9.5 陪伴架构说明：
+详细清单与替代模块见 `docs/COMPANION_LEGACY.md`。
 
-```text
-docs/COMPANION_V9_ARCHITECTURE.md
-```
+---
+
+## 8. 测试
+
+`.github/workflows/js-syntax-check.yml` 会对浏览器端 JS 和 Worker JS 执行语法检查，并运行 companion 稳定性/合同测试。
+
+测试重点不是要求旧模块继续加载，而是保证：
+
+- 基础聊天入口不会再被增强资源阻塞
+- 旧 V10/V11/V12 不回到正式启动链
+- V17.21 声音默认 Eve 且通话共用声音档案
+- Live2D renderer 可复用且嘴型所有权唯一
+- 场景 CSS 不修改核心聊天网格
+- 安全 runtime 不重写 `window.fetch`
+
+---
+
+## 9. 部署
+
+项目使用 Cloudflare Workers/Assets。部署后若需要确认是否为最新版本，优先检查：
+
+1. `/deploy-status.json`
+2. `/api/diagnostics`
+3. 页面控制台中的 `window.__UNLIMITED_BOOT__`
+
+如果浏览器仍显示旧界面，先确认 Cloudflare 已部署当前 `main`，然后执行强制刷新以绕过旧静态资源缓存。
