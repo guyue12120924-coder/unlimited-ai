@@ -206,3 +206,9 @@ jobs:
         run: |
           set -euo pipefail
           node tests/novel-ui-v1724a.test.mjs
+
+      - name: Check V17.24B novel visual unification contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          node tests/novel-ui-v1724b.test.mjs
