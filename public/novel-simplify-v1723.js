@@ -145,3 +145,22 @@
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", loadInterfaceLayer, { once: true });
   else loadInterfaceLayer();
 })();
+
+// V17.24B is the second of three UI passes and is intentionally CSS-only.
+// It unifies visual language without changing structure, events, storage or feature access.
+(() => {
+  const STYLE_ID = "novelV1724BStyle";
+  const VERSION = "20260823-v17.24b-visual-unification";
+
+  function loadVisualLayer() {
+    if (document.getElementById(STYLE_ID)) return;
+    const link = document.createElement("link");
+    link.id = STYLE_ID;
+    link.rel = "stylesheet";
+    link.href = `/novel-ui-v1724b.css?v=${VERSION}`;
+    document.head.appendChild(link);
+  }
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", loadVisualLayer, { once: true });
+  else loadVisualLayer();
+})();
