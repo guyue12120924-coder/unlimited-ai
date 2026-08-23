@@ -1,20 +1,56 @@
-// V17.16 safe neural voice + relationship review with gesture-unlocked WebAudio playback.
+// V17.20 emotional companion voice engine: one per-character voice profile for chat and calls.
 (() => {
-  const REVISION = "2026-08-23-v17.16-voice-audio-recovery";
+  const REVISION = "2026-08-23-v17.20-emotional-voice-system";
   if (window.UnlimitedCompanionVoiceV1711?.revision === REVISION) return;
 
   const KEY = "uai_companion_neural_voice_v1";
   const ACTIVE_KEY = "uai_companion_active_character_v1";
   const MOMENTS_KEY = "uai_companion_moments_v1";
+  const CALL_KEY = "uai_companion_call_mode_v1";
+  const SILENT_WAV = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQQAAACAgICA";
+
+  const VOICES = {
+    eve: { label: "Eve", subtitle: "明亮 · 灵动 · 少女感" },
+    ara: { label: "Ara", subtitle: "温柔 · 轻缓 · 治愈" },
+    sal: { label: "Sal", subtitle: "自然 · 松弛 · 日常" },
+    rex: { label: "Rex", subtitle: "沉稳 · 自信 · 低调" },
+    leo: { label: "Leo", subtitle: "成熟 · 低沉 · 克制" }
+  };
+
+  const PERSONAS = {
+    sweet: { icon: "💗", label: "甜美陪伴", subtitle: "轻盈、有亲近感", voiceId: "eve", rate: .95 },
+    gentle: { icon: "🌸", label: "温柔治愈", subtitle: "更慢、更柔和", voiceId: "ara", rate: .92 },
+    natural: { icon: "☕", label: "自然日常", subtitle: "像真实聊天", voiceId: "sal", rate: .97 },
+    mature: { icon: "🌙", label: "成熟温柔", subtitle: "沉静、不做作", voiceId: "ara", rate: .89 },
+    lively: { icon: "✨", label: "活泼元气", subtitle: "更明快、更有起伏", voiceId: "eve", rate: 1.01 },
+    custom: { icon: "🎛", label: "自定义", subtitle: "使用下方手动参数", voiceId: "eve", rate: .95 }
+  };
+
+  const EMOTIONS = new Set(["neutral", "happy", "shy", "caring", "sad", "angry", "thinking"]);
+  const EMOTION_PLAN = {
+    neutral: { rate: 1, pause: 115, mouth: .72 },
+    happy: { rate: 1.035, pause: 80, mouth: .84 },
+    shy: { rate: .94, pause: 175, mouth: .58 },
+    caring: { rate: .925, pause: 160, mouth: .62 },
+    sad: { rate: .89, pause: 220, mouth: .50 },
+    angry: { rate: 1.025, pause: 72, mouth: .80 },
+    thinking: { rate: .91, pause: 205, mouth: .54 }
+  };
+
   const DEFAULTS = {
     enabled: false,
-    provider: "auto",
-    playbackRate: 1,
-    dialogueOnly: true,
+    provider: "neural",
+    engine: "grok",
+    voiceId: "eve",
+    persona: "sweet",
+    playbackRate: .95,
+    speechMode: "natural",
+    emotionEnabled: true,
     fallbackSystem: true
   };
-  const PROVIDERS = new Set(["auto", "neural", "system"]);
-  const SILENT_WAV = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQQAAACAgICA";
+
+  const ENGINES = new Set(["auto", "grok", "melo", "system"]);
+  const SPEECH_MODES = new Set(["dialogue", "natural", "full"]);
 
   let playbackContext = null;
   let playbackSource = null;
@@ -24,8 +60,10 @@
   let unlockPromise = null;
   let abortController = null;
   let playToken = 0;
+  let mouthTimer = 0;
   let lastText = "";
-  let lastBlobs = [];
+  let lastPlan = [];
+  let lastPlaybackError = "";
   let neuralStatus = "unknown";
   let neuralStatusText = "尚未检查神经语音";
   let lastStatusCheck = 0;
@@ -33,7 +71,7 @@
   let observedInput = null;
   let wasGenerating = false;
   let lastAutoReadText = "";
-  let lastPlaybackError = "";
+  let autoReadSuppressed = false;
 
   function root() {
     if (document.body.dataset.uaiMode !== "companion") return null;
@@ -54,33 +92,71 @@
     return value && typeof value === "object" && !Array.isArray(value) ? value : {};
   }
 
+  function normalizeSettings(stored = {}) {
+    const raw = stored && typeof stored === "object" ? stored : {};
+    const legacyProvider = String(raw.provider || "");
+    let engine = String(raw.engine || "").toLowerCase();
+    if (!ENGINES.has(engine)) engine = legacyProvider === "system" ? "system" : "grok";
+    const voiceId = Object.hasOwn(VOICES, String(raw.voiceId || "")) ? String(raw.voiceId) : DEFAULTS.voiceId;
+    const persona = Object.hasOwn(PERSONAS, String(raw.persona || "")) ? String(raw.persona) : (voiceId === "eve" ? "sweet" : "custom");
+    const speechMode = SPEECH_MODES.has(String(raw.speechMode || "")) ? String(raw.speechMode) : DEFAULTS.speechMode;
+    const playbackRate = Math.max(.82, Math.min(1.12, Number(raw.playbackRate) || (PERSONAS[persona]?.rate ?? DEFAULTS.playbackRate)));
+    return {
+      ...DEFAULTS,
+      ...raw,
+      enabled: Boolean(raw.enabled),
+      provider: engine === "system" ? "system" : engine === "auto" ? "auto" : "neural",
+      engine,
+      voiceId,
+      persona,
+      playbackRate,
+      speechMode,
+      emotionEnabled: raw.emotionEnabled !== false,
+      fallbackSystem: raw.fallbackSystem !== false,
+      dialogueOnly: speechMode !== "full"
+    };
+  }
+
   function getSettings() {
-    const stored = settingsMap()[activeCharacterId()];
-    const value = { ...DEFAULTS, ...(stored && typeof stored === "object" ? stored : {}) };
-    value.provider = PROVIDERS.has(String(value.provider)) ? String(value.provider) : "auto";
-    value.playbackRate = Math.max(.82, Math.min(1.18, Number(value.playbackRate) || 1));
-    value.enabled = Boolean(value.enabled);
-    value.dialogueOnly = value.dialogueOnly !== false;
-    value.fallbackSystem = value.fallbackSystem !== false;
-    return value;
+    return normalizeSettings(settingsMap()[activeCharacterId()]);
+  }
+
+  function syncCallStorage(settings) {
+    const map = safeParse(localStorage.getItem(CALL_KEY), {});
+    const safeMap = map && typeof map === "object" && !Array.isArray(map) ? map : {};
+    const id = activeCharacterId();
+    safeMap[id] = {
+      ...(safeMap[id] && typeof safeMap[id] === "object" ? safeMap[id] : {}),
+      engine: settings.engine,
+      voiceId: settings.voiceId,
+      playbackRate: settings.playbackRate
+    };
+    localStorage.setItem(CALL_KEY, JSON.stringify(safeMap));
+  }
+
+  function dispatchProfile(settings) {
+    syncCallStorage(settings);
+    window.dispatchEvent(new CustomEvent("uai:companion-voice-profile", {
+      detail: { characterId: activeCharacterId(), settings: { ...settings }, revision: REVISION }
+    }));
   }
 
   function setSettings(patch = {}) {
     const map = settingsMap();
     const previous = getSettings();
-    const provider = PROVIDERS.has(String(patch.provider ?? previous.provider)) ? String(patch.provider ?? previous.provider) : "auto";
-    const next = {
-      ...previous,
-      ...patch,
-      enabled: Boolean(patch.enabled ?? previous.enabled),
-      provider,
-      playbackRate: Math.max(.82, Math.min(1.18, Number(patch.playbackRate ?? previous.playbackRate) || 1)),
-      dialogueOnly: Boolean(patch.dialogueOnly ?? previous.dialogueOnly),
-      fallbackSystem: Boolean(patch.fallbackSystem ?? previous.fallbackSystem)
-    };
+    let nextPatch = { ...patch };
+    if (Object.hasOwn(patch, "persona") && Object.hasOwn(PERSONAS, String(patch.persona))) {
+      const persona = PERSONAS[String(patch.persona)];
+      nextPatch = { ...nextPatch, voiceId: persona.voiceId, playbackRate: persona.rate };
+    }
+    if ((Object.hasOwn(patch, "voiceId") || Object.hasOwn(patch, "playbackRate")) && !Object.hasOwn(patch, "persona")) {
+      nextPatch.persona = "custom";
+    }
+    const next = normalizeSettings({ ...previous, ...nextPatch });
     map[activeCharacterId()] = next;
     localStorage.setItem(KEY, JSON.stringify(map));
-    if (!next.enabled) stop({ keepLast: true });
+    dispatchProfile(next);
+    if (!next.enabled && !autoReadSuppressed) stop({ keepLast: true });
     refreshUi();
     return next;
   }
@@ -104,7 +180,7 @@
   function ensureFallbackAudio() {
     if (fallbackAudio) return fallbackAudio;
     const audio = document.createElement("audio");
-    audio.id = "uaiCompanionVoiceAudioV1716";
+    audio.id = "uaiCompanionVoiceAudioV1720";
     audio.preload = "auto";
     audio.playsInline = true;
     audio.setAttribute("playsinline", "");
@@ -132,8 +208,7 @@
     audio.volume = .01;
     audio.src = SILENT_WAV;
     try {
-      const result = audio.play();
-      unlockPromise = Promise.resolve(result).then(() => {
+      unlockPromise = Promise.resolve(audio.play()).then(() => {
         audio.pause();
         try { audio.currentTime = 0; } catch {}
         audio.removeAttribute("src");
@@ -155,37 +230,110 @@
     }
   }
 
-  function setVoiceState(state = "") {
+  function setVoiceState(state = "", emotion = "neutral") {
     const host = root();
     if (!host) return;
     if (state) host.dataset.v1711VoiceState = state;
     else delete host.dataset.v1711VoiceState;
+    if (emotion && EMOTIONS.has(emotion)) host.dataset.v1720VoiceEmotion = emotion;
+    else delete host.dataset.v1720VoiceEmotion;
     host.dispatchEvent(new CustomEvent("uai:companion-voice-state", {
       bubbles: false,
-      detail: { state, revision: REVISION }
+      detail: { state, emotion, revision: REVISION }
     }));
     refreshUi();
   }
 
-  function extractSpeechText(text, settings = getSettings()) {
-    let source = String(text || "").replace(/```[\s\S]*?```/g, " ").replace(/[*_#>`~]/g, " ");
-    if (settings.dialogueOnly) source = source.replace(/（[^）]{0,260}）/g, " ").replace(/\([^)]{0,260}\)/g, " ");
-    return source.replace(/\s+/g, " ").trim().slice(0, 1800);
+  function classifyEmotion(text) {
+    const source = String(text || "");
+    const tests = [
+      ["shy", /害羞|脸红|羞|不好意思|嘿嘿|唔|笨蛋|才没有|别看|人家/],
+      ["caring", /担心|别怕|没事|陪你|抱抱|辛苦|早点休息|照顾|难受|我在|乖/],
+      ["sad", /难过|伤心|委屈|想哭|哭了|失落|孤单|寂寞|对不起|舍不得/],
+      ["angry", /生气|讨厌|哼|不许|气死|可恶|坏蛋|别闹|烦死/],
+      ["happy", /开心|高兴|喜欢|太好|哈哈|嘿嘿|耶|真棒|好呀|当然|终于/],
+      ["thinking", /让我想想|想一想|也许|可能|等等|唔……|嗯……|我想|应该/]
+    ];
+    for (const [emotion, pattern] of tests) if (pattern.test(source)) return emotion;
+    const inherited = String(root()?.dataset.v1715Emotion || "");
+    return EMOTIONS.has(inherited) ? inherited : "neutral";
   }
 
-  function chunkText(text, max = 520) {
-    const parts = String(text || "").match(/[^。！？!?；;\n]+[。！？!?；;\n]?/g) || [];
-    const chunks = [];
-    let current = "";
-    for (const part of parts) {
-      const candidate = `${current}${part}`.trim();
-      if (current && candidate.length > max) {
-        chunks.push(current.trim());
-        current = part.trim();
-      } else current = candidate;
+  function stripMarkup(text) {
+    return String(text || "")
+      .replace(/```[\s\S]*?```/g, " ")
+      .replace(/`([^`]+)`/g, "$1")
+      .replace(/[*_#>`~]/g, " ")
+      .replace(/\r/g, "");
+  }
+
+  function extractSpeechText(text, settings = getSettings()) {
+    let source = stripMarkup(text);
+    if (settings.speechMode === "dialogue") {
+      source = source
+        .replace(/\[[^\]]{1,180}\]/g, " ")
+        .replace(/【[^】]{1,180}】/g, " ")
+        .replace(/（[^）]{1,260}）/g, " ")
+        .replace(/\([^)]{1,260}\)/g, " ")
+        .replace(/\*[^*]{1,260}\*/g, " ");
+    } else if (settings.speechMode === "natural") {
+      source = source
+        .replace(/\[[^\]]{1,160}\]/g, "。")
+        .replace(/【[^】]{1,160}】/g, "。")
+        .replace(/（[^）]{1,260}）/g, "，")
+        .replace(/\([^)]{1,260}\)/g, "，")
+        .replace(/\*[^*]{1,260}\*/g, "，");
     }
-    if (current.trim()) chunks.push(current.trim());
-    return chunks.filter(Boolean).slice(0, 5);
+    return source
+      .replace(/\.{3,}/g, "……")
+      .replace(/,{2,}/g, "，")
+      .replace(/\s*\n+\s*/g, "。")
+      .replace(/\s+/g, " ")
+      .replace(/([，。！？；])\1+/g, "$1")
+      .trim()
+      .slice(0, 1800);
+  }
+
+  function splitSpeechSegments(text, settings = getSettings()) {
+    const cleaned = extractSpeechText(text, settings);
+    if (!cleaned) return [];
+    const raw = cleaned.match(/[^。！？!?；;…]+(?:……|[。！？!?；;])?|……/g) || [cleaned];
+    const combined = [];
+    let current = "";
+    for (const pieceRaw of raw) {
+      const piece = String(pieceRaw || "").trim();
+      if (!piece) continue;
+      if (!current) current = piece;
+      else if ((current + piece).length <= 68 && current.length < 24) current += piece;
+      else { combined.push(current); current = piece; }
+    }
+    if (current) combined.push(current);
+
+    const result = [];
+    for (const segment of combined) {
+      if (segment.length <= 138) result.push(segment);
+      else {
+        for (let index = 0; index < segment.length; index += 126) result.push(segment.slice(index, index + 126));
+      }
+    }
+    return result.filter(Boolean).slice(0, 10);
+  }
+
+  function buildSpeechPlan(text, overrideSettings = {}) {
+    const settings = normalizeSettings({ ...getSettings(), ...overrideSettings });
+    const segments = splitSpeechSegments(text, settings);
+    return segments.map((segment) => {
+      const emotion = settings.emotionEnabled ? classifyEmotion(segment) : "neutral";
+      const emotionConfig = EMOTION_PLAN[emotion] || EMOTION_PLAN.neutral;
+      const punctuationPause = /[！？!?]$/.test(segment) ? -25 : /……$/.test(segment) ? 110 : /[。；;]$/.test(segment) ? 45 : 0;
+      return {
+        text: segment,
+        emotion,
+        rate: Math.max(.78, Math.min(1.12, settings.playbackRate * emotionConfig.rate)),
+        pause: Math.max(45, emotionConfig.pause + punctuationPause),
+        mouth: emotionConfig.mouth
+      };
+    });
   }
 
   async function checkStatus(force = false) {
@@ -198,7 +346,7 @@
       const response = await fetch(`/api/companion/tts/status?ts=${Date.now()}`, { cache: "no-store" });
       const data = await response.json().catch(() => ({}));
       neuralStatus = response.ok && data.available ? "ready" : "unavailable";
-      neuralStatusText = neuralStatus === "ready" ? "Cloudflare 神经语音可用" : "神经语音暂不可用，可回退系统语音";
+      neuralStatusText = neuralStatus === "ready" ? "Grok / Melo 神经语音可用" : "神经语音暂不可用，可回退系统语音";
     } catch {
       neuralStatus = "unavailable";
       neuralStatusText = "神经语音连接失败，可回退系统语音";
@@ -207,11 +355,16 @@
     return neuralStatus === "ready";
   }
 
-  async function fetchChunk(text, signal) {
+  async function fetchTtsSegment(segment, settings, signal) {
     const response = await fetch("/api/companion/tts", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text, lang: "zh" }),
+      body: JSON.stringify({
+        text: segment.text,
+        lang: "zh",
+        engine: settings.engine === "system" ? "auto" : settings.engine,
+        voice_id: settings.voiceId
+      }),
       signal,
       cache: "no-store"
     });
@@ -221,6 +374,23 @@
     }
     if (!String(response.headers.get("content-type") || "").includes("audio/")) throw new Error("TTS did not return audio");
     return response.blob();
+  }
+
+  function stopMouth() {
+    if (mouthTimer) clearInterval(mouthTimer);
+    mouthTimer = 0;
+    try { window.UnlimitedCompanionStageV1712?.setMouthOpen?.(0); } catch {}
+  }
+
+  function startMouth(segment) {
+    stopMouth();
+    const api = window.UnlimitedCompanionStageV1712;
+    try { api?.setEmotion?.(segment.emotion); } catch {}
+    if (!api?.setMouthOpen) return;
+    const ceiling = Math.max(.42, Math.min(.92, Number(segment.mouth) || .7));
+    mouthTimer = setInterval(() => {
+      try { api.setMouthOpen(.12 + Math.random() * ceiling); } catch {}
+    }, 82);
   }
 
   function stopPlaybackOnly() {
@@ -235,6 +405,7 @@
     }
     if (fallbackUrl) URL.revokeObjectURL(fallbackUrl);
     fallbackUrl = "";
+    stopMouth();
   }
 
   function stop(options = {}) {
@@ -246,7 +417,7 @@
     setVoiceState("");
     if (!options.keepLast) {
       lastText = "";
-      lastBlobs = [];
+      lastPlan = [];
     }
   }
 
@@ -259,31 +430,11 @@
     fallbackAudio = null;
   }
 
-  function systemSpeak(text, settings) {
-    if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) return Promise.resolve(false);
-    return new Promise((resolve) => {
-      const token = ++playToken;
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = "zh-CN";
-      utterance.rate = settings.playbackRate;
-      const voices = window.speechSynthesis.getVoices?.() || [];
-      const zh = voices.find((voice) => /^zh(?:-|_)/i.test(voice.lang || ""));
-      if (zh) utterance.voice = zh;
-      utterance.onstart = () => setVoiceState("speaking");
-      utterance.onend = () => {
-        if (token === playToken) setVoiceState("");
-        resolve(token === playToken);
-      };
-      utterance.onerror = () => {
-        if (token === playToken) setVoiceState("");
-        resolve(false);
-      };
-      window.speechSynthesis.cancel();
-      window.speechSynthesis.speak(utterance);
-    });
+  function delay(ms, token) {
+    return new Promise((resolve) => setTimeout(() => resolve(token === playToken), Math.max(0, ms || 0)));
   }
 
-  async function playBlobWebAudio(blob, settings, token) {
+  async function playBlobWebAudio(blob, segment, token) {
     const context = ensurePlaybackContext();
     if (!context) throw new Error("WebAudio unavailable");
     await context.resume();
@@ -296,22 +447,26 @@
       const source = context.createBufferSource();
       playbackSource = source;
       source.buffer = decoded;
-      source.playbackRate.value = settings.playbackRate;
+      source.playbackRate.value = segment.rate;
       source.connect(context.destination);
       source.onended = () => {
         if (playbackSource === source) playbackSource = null;
         try { source.disconnect(); } catch {}
+        stopMouth();
         resolve(token === playToken);
       };
-      try { source.start(0); }
-      catch (error) {
+      try {
+        startMouth(segment);
+        source.start(0);
+      } catch (error) {
+        stopMouth();
         if (playbackSource === source) playbackSource = null;
         reject(error);
       }
     });
   }
 
-  async function playBlobAudio(blob, settings, token) {
+  async function playBlobAudio(blob, segment, token) {
     if (token !== playToken) return false;
     const audio = ensureFallbackAudio();
     const url = URL.createObjectURL(blob);
@@ -319,10 +474,11 @@
     fallbackUrl = url;
     audio.src = url;
     audio.volume = 1;
-    audio.playbackRate = settings.playbackRate;
+    audio.playbackRate = segment.rate;
     try {
       await audio.play();
       audioUnlocked = true;
+      startMouth(segment);
       await new Promise((resolve, reject) => {
         const cleanup = () => {
           audio.removeEventListener("ended", onEnd);
@@ -335,67 +491,102 @@
       });
       return token === playToken;
     } finally {
+      stopMouth();
       if (fallbackUrl === url) fallbackUrl = "";
       URL.revokeObjectURL(url);
     }
   }
 
-  async function playBlobs(blobs, settings) {
-    if (!Array.isArray(blobs) || !blobs.length) return false;
-    const token = ++playToken;
-    setVoiceState("speaking");
-    for (const blob of blobs) {
-      if (token !== playToken) return false;
-      try {
-        await playBlobWebAudio(blob, settings, token);
-      } catch (webError) {
-        try {
-          await playBlobAudio(blob, settings, token);
-        } catch (audioError) {
-          lastPlaybackError = audioError?.message || webError?.message || "声音播放失败";
-          throw new Error(/play|gesture|allowed/i.test(lastPlaybackError) ? "浏览器拦截了声音，请再次点击语音按钮" : lastPlaybackError);
-        }
+  async function playBlob(blob, segment, token) {
+    try { return await playBlobWebAudio(blob, segment, token); }
+    catch (webError) {
+      try { return await playBlobAudio(blob, segment, token); }
+      catch (audioError) {
+        lastPlaybackError = audioError?.message || webError?.message || "声音播放失败";
+        throw new Error(/play|gesture|allowed/i.test(lastPlaybackError) ? "浏览器拦截了声音，请再次点击语音按钮" : lastPlaybackError);
       }
     }
+  }
+
+  async function systemSpeakPlan(plan, token) {
+    if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) return false;
+    window.speechSynthesis.cancel();
+    for (const segment of plan) {
+      if (token !== playToken) return false;
+      setVoiceState("speaking", segment.emotion);
+      const ok = await new Promise((resolve) => {
+        const utterance = new SpeechSynthesisUtterance(segment.text);
+        utterance.lang = "zh-CN";
+        utterance.rate = segment.rate;
+        const voices = window.speechSynthesis.getVoices?.() || [];
+        const zh = voices.find((voice) => /^zh(?:-|_)/i.test(voice.lang || ""));
+        if (zh) utterance.voice = zh;
+        utterance.onstart = () => startMouth(segment);
+        utterance.onend = () => { stopMouth(); resolve(true); };
+        utterance.onerror = () => { stopMouth(); resolve(false); };
+        window.speechSynthesis.speak(utterance);
+      });
+      if (!ok || token !== playToken) return false;
+      await delay(segment.pause, token);
+    }
     if (token === playToken) setVoiceState("");
-    return true;
+    return token === playToken;
+  }
+
+  async function playNeuralPlan(plan, settings, token, controller) {
+    const pending = plan.map((segment) => fetchTtsSegment(segment, settings, controller.signal)
+      .then((blob) => ({ blob }))
+      .catch((error) => ({ error })));
+    const replayPlan = [];
+    for (let index = 0; index < plan.length; index += 1) {
+      if (token !== playToken || controller.signal.aborted) return false;
+      const loaded = await pending[index];
+      if (loaded.error) throw loaded.error;
+      const segment = plan[index];
+      replayPlan.push({ ...segment, blob: loaded.blob });
+      setVoiceState("speaking", segment.emotion);
+      await playBlob(loaded.blob, segment, token);
+      if (token !== playToken) return false;
+      await delay(segment.pause, token);
+    }
+    lastPlan = replayPlan;
+    if (token === playToken) setVoiceState("");
+    return token === playToken;
   }
 
   async function speak(text, options = {}) {
-    const settings = { ...getSettings(), ...(options.settings || {}) };
+    const settings = normalizeSettings({ ...getSettings(), ...(options.settings || {}) });
     if (!settings.enabled && !options.force) return false;
-    const cleaned = extractSpeechText(text, settings);
-    if (!cleaned) return false;
+    const plan = buildSpeechPlan(text, settings);
+    if (!plan.length) return false;
     stop({ keepLast: true });
-    lastText = cleaned;
-    lastBlobs = [];
+    const token = ++playToken;
+    lastText = extractSpeechText(text, settings);
+    lastPlan = [];
     lastPlaybackError = "";
-    const provider = options.provider || settings.provider;
-    if (provider === "system") return systemSpeak(cleaned, settings);
 
-    setVoiceState("loading");
+    if (settings.engine === "system") return systemSpeakPlan(plan, token);
+
+    setVoiceState("loading", plan[0]?.emotion || "neutral");
     const controller = new AbortController();
     abortController = controller;
     try {
       const available = await checkStatus();
       if (!available) throw new Error("Neural TTS unavailable");
-      const blobs = [];
-      for (const chunk of chunkText(cleaned)) blobs.push(await fetchChunk(chunk, controller.signal));
-      if (controller !== abortController) return false;
-      abortController = null;
-      lastBlobs = blobs;
+      const ok = await playNeuralPlan(plan, settings, token, controller);
+      if (controller === abortController) abortController = null;
       neuralStatus = "ready";
-      neuralStatusText = "Cloudflare 神经语音已验证";
-      return await playBlobs(blobs, settings);
+      neuralStatusText = `${VOICES[settings.voiceId]?.label || settings.voiceId} · 情绪语音已就绪`;
+      return ok;
     } catch (error) {
       if (controller === abortController) abortController = null;
-      if (error?.name === "AbortError") return false;
+      if (error?.name === "AbortError" || token !== playToken) return false;
       lastPlaybackError = error?.message || "神经语音播放失败";
       neuralStatus = "unavailable";
-      neuralStatusText = /浏览器拦截/.test(lastPlaybackError) ? lastPlaybackError : "本次神经语音失败，已准备回退系统语音";
-      if (provider === "auto" || settings.fallbackSystem) {
-        const ok = await systemSpeak(cleaned, settings);
-        if (ok) return true;
+      neuralStatusText = /浏览器拦截/.test(lastPlaybackError) ? lastPlaybackError : "本次神经语音失败，准备回退系统语音";
+      if (settings.fallbackSystem) {
+        const fallbackToken = ++playToken;
+        return systemSpeakPlan(plan, fallbackToken);
       }
       setVoiceState("");
       showToast(lastPlaybackError);
@@ -405,9 +596,17 @@
 
   async function replay() {
     const settings = getSettings();
-    if (lastBlobs.length && settings.provider !== "system") {
+    if (lastPlan.length && lastPlan.every((item) => item.blob) && settings.engine !== "system") {
       stop({ keepLast: true });
-      return playBlobs(lastBlobs, settings);
+      const token = ++playToken;
+      for (const item of lastPlan) {
+        if (token !== playToken) return false;
+        setVoiceState("speaking", item.emotion);
+        await playBlob(item.blob, item, token);
+        await delay(item.pause, token);
+      }
+      if (token === playToken) setVoiceState("");
+      return token === playToken;
     }
     return lastText ? speak(lastText, { force: true }) : false;
   }
@@ -424,13 +623,13 @@
 
   function maybeAutoRead() {
     const generating = isGenerating();
-    if (wasGenerating && !generating) {
+    if (wasGenerating && !generating && !autoReadSuppressed) {
       const text = lastAssistantText();
       if (text && text !== lastAutoReadText && getSettings().enabled) {
         lastAutoReadText = text;
         setTimeout(() => {
-          if (root() && !isGenerating()) speak(text);
-        }, 140);
+          if (root() && !isGenerating() && !autoReadSuppressed) speak(text);
+        }, 120);
       }
     }
     if (generating && !wasGenerating) stop({ keepLast: true });
@@ -446,6 +645,13 @@
     wasGenerating = Boolean(input.disabled);
     inputObserver = new MutationObserver(maybeAutoRead);
     inputObserver.observe(input, { attributes: true, attributeFilter: ["disabled"] });
+  }
+
+  function setAutoReadSuppressed(value) {
+    autoReadSuppressed = Boolean(value);
+    if (autoReadSuppressed) stop({ keepLast: true });
+    refreshUi();
+    return autoReadSuppressed;
   }
 
   function relationStats() {
@@ -471,6 +677,10 @@
     };
   }
 
+  function escapeHtml(value) {
+    return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
+  }
+
   function closeModal() {
     document.getElementById("uaiCompanionV1711Mask")?.remove();
   }
@@ -483,13 +693,22 @@
     mask.id = "uaiCompanionV1711Mask";
     mask.className = "uai-c-v1711-mask";
     mask.innerHTML = `
-      <section class="uai-c-v1711-modal" role="dialog" aria-modal="true" aria-label="声音设置">
-        <header><div><span>VOICE</span><h3>角色声音</h3><p>神经语音优先，失败时自动回退浏览器系统语音。</p></div><button type="button" data-v1711-close>×</button></header>
-        <div class="uai-c-v1711-field switch"><div><strong>自动朗读新回复</strong><small>打开后只在一条回复生成完成时触发。</small></div><label><input data-v1711-enabled type="checkbox" ${settings.enabled ? "checked" : ""}><i></i></label></div>
-        <div class="uai-c-v1711-grid"><label>语音引擎<select data-v1711-provider><option value="auto">自动 · 神经优先</option><option value="neural">Cloudflare 神经语音</option><option value="system">浏览器系统语音</option></select></label><label>语速 <b data-v1711-rate-label>${settings.playbackRate.toFixed(2)}×</b><input data-v1711-rate type="range" min="0.82" max="1.18" step="0.02" value="${settings.playbackRate}"></label></div>
-        <div class="uai-c-v1711-checks"><label><input data-v1711-dialogue type="checkbox" ${settings.dialogueOnly ? "checked" : ""}>只朗读角色说出口的台词</label><label><input data-v1711-fallback type="checkbox" ${settings.fallbackSystem ? "checked" : ""}>神经语音失败时自动回退系统语音</label></div>
+      <section class="uai-c-v1711-modal uai-c-v1720-voice-modal" role="dialog" aria-modal="true" aria-label="声音设置">
+        <header><div><span>EMOTIONAL VOICE</span><h3>角色声音</h3><p>同一份角色声音会用于自动朗读、手动朗读和语音通话。</p></div><button type="button" data-v1711-close>×</button></header>
+        <div class="uai-c-v1711-field switch"><div><strong>自动朗读新回复</strong><small>回复完成后按情绪分句朗读，不会整段机械念稿。</small></div><label><input data-v1711-enabled type="checkbox" ${settings.enabled ? "checked" : ""}><i></i></label></div>
+        <div class="uai-c-v1720-personas">
+          ${Object.entries(PERSONAS).filter(([id]) => id !== "custom").map(([id, item]) => `<button type="button" data-v1720-persona="${id}" class="${settings.persona === id ? "active" : ""}"><i>${item.icon}</i><strong>${item.label}</strong><small>${item.subtitle}</small></button>`).join("")}
+        </div>
+        <div class="uai-c-v1711-grid uai-c-v1720-grid">
+          <label>底层音色<select data-v1720-voice>${Object.entries(VOICES).map(([id, item]) => `<option value="${id}">${item.label} · ${item.subtitle}</option>`).join("")}</select></label>
+          <label>语音引擎<select data-v1720-engine><option value="grok">Grok TTS · 推荐</option><option value="auto">自动选择</option><option value="melo">MeloTTS</option><option value="system">浏览器系统语音</option></select></label>
+          <label>基础语速 <b data-v1711-rate-label>${settings.playbackRate.toFixed(2)}×</b><input data-v1711-rate type="range" min="0.82" max="1.12" step="0.01" value="${settings.playbackRate}"></label>
+          <label>朗读方式<select data-v1720-speech-mode><option value="natural">自然陪伴 · 推荐</option><option value="dialogue">只读对白</option><option value="full">完整朗读</option></select></label>
+        </div>
+        <div class="uai-c-v1711-checks"><label><input data-v1720-emotion type="checkbox" ${settings.emotionEnabled ? "checked" : ""}>根据回复情绪自动调整节奏和停顿</label><label><input data-v1711-fallback type="checkbox" ${settings.fallbackSystem ? "checked" : ""}>神经语音失败时自动回退系统语音</label></div>
+        <div class="uai-c-v1720-preview"><div><span>当前声音</span><strong>${VOICES[settings.voiceId]?.label || settings.voiceId} · ${PERSONAS[settings.persona]?.label || "自定义"}</strong><small>每个 AI 角色单独保存，切换角色会一起切换声音。</small></div><button type="button" data-v1711-preview>▶ 试听当前声音</button></div>
         <div class="uai-c-v1711-status" data-v1711-status data-state="${neuralStatus}">${neuralStatusText}</div>
-        <footer><small>播放通道：WebAudio + 持久 Audio fallback</small><button type="button" data-v1711-recheck>重新检测</button><button type="button" data-v1711-stop>停止</button><button type="button" class="primary" data-v1711-preview>试听</button></footer>
+        <footer><small>情绪分句 + WebAudio + Live2D 嘴型同步</small><button type="button" data-v1711-recheck>重新检测</button><button type="button" data-v1711-stop>停止</button><button type="button" class="primary" data-v1711-preview2>再试听一次</button></footer>
       </section>`;
     document.body.appendChild(mask);
     mask.addEventListener("click", (event) => { if (event.target === mask) closeModal(); });
@@ -498,20 +717,42 @@
       if (event.target.checked) await unlockAudio();
       setSettings({ enabled: event.target.checked });
     });
-    const provider = mask.querySelector("[data-v1711-provider]");
-    if (provider) provider.value = settings.provider;
-    provider?.addEventListener("change", (event) => setSettings({ provider: event.target.value }));
+
+    const voice = mask.querySelector("[data-v1720-voice]");
+    const engine = mask.querySelector("[data-v1720-engine]");
+    const speechMode = mask.querySelector("[data-v1720-speech-mode]");
+    if (voice) voice.value = settings.voiceId;
+    if (engine) engine.value = settings.engine;
+    if (speechMode) speechMode.value = settings.speechMode;
+    voice?.addEventListener("change", (event) => setSettings({ voiceId: event.target.value }));
+    engine?.addEventListener("change", (event) => setSettings({ engine: event.target.value }));
+    speechMode?.addEventListener("change", (event) => setSettings({ speechMode: event.target.value }));
+
+    mask.querySelectorAll("[data-v1720-persona]").forEach((button) => button.addEventListener("click", () => {
+      const next = setSettings({ persona: button.dataset.v1720Persona });
+      mask.querySelectorAll("[data-v1720-persona]").forEach((item) => item.classList.toggle("active", item.dataset.v1720Persona === next.persona));
+      if (voice) voice.value = next.voiceId;
+      const rate = mask.querySelector("[data-v1711-rate]");
+      if (rate) rate.value = String(next.playbackRate);
+      const label = mask.querySelector("[data-v1711-rate-label]");
+      if (label) label.textContent = `${next.playbackRate.toFixed(2)}×`;
+    }));
+
     mask.querySelector("[data-v1711-rate]")?.addEventListener("input", (event) => {
       const next = setSettings({ playbackRate: Number(event.target.value) });
       const label = mask.querySelector("[data-v1711-rate-label]");
       if (label) label.textContent = `${next.playbackRate.toFixed(2)}×`;
+      mask.querySelectorAll("[data-v1720-persona]").forEach((item) => item.classList.remove("active"));
     });
-    mask.querySelector("[data-v1711-dialogue]")?.addEventListener("change", (event) => setSettings({ dialogueOnly: event.target.checked }));
+    mask.querySelector("[data-v1720-emotion]")?.addEventListener("change", (event) => setSettings({ emotionEnabled: event.target.checked }));
     mask.querySelector("[data-v1711-fallback]")?.addEventListener("change", (event) => setSettings({ fallbackSystem: event.target.checked }));
     mask.querySelector("[data-v1711-recheck]")?.addEventListener("click", () => checkStatus(true));
     mask.querySelector("[data-v1711-stop]")?.addEventListener("click", () => stop({ keepLast: true }));
+    const preview = () => speak("晚上好呀……你终于来了。今天过得怎么样？如果有点累，就先靠过来陪我待一会儿吧。", { force: true });
     mask.querySelector("[data-v1711-preview]")?.addEventListener("pointerdown", unlockAudio, { passive: true });
-    mask.querySelector("[data-v1711-preview]")?.addEventListener("click", () => speak("晚上好呀。今天终于又见到你了，要不要陪我多待一会儿？", { force: true }));
+    mask.querySelector("[data-v1711-preview2]")?.addEventListener("pointerdown", unlockAudio, { passive: true });
+    mask.querySelector("[data-v1711-preview]")?.addEventListener("click", preview);
+    mask.querySelector("[data-v1711-preview2]")?.addEventListener("click", preview);
   }
 
   function openMonthlyReview() {
@@ -534,10 +775,6 @@
     mask.querySelector("[data-v1711-close2]")?.addEventListener("click", closeModal);
   }
 
-  function escapeHtml(value) {
-    return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
-  }
-
   function ensureDock() {
     const host = root();
     const header = host?.querySelector(".uai-c-header");
@@ -556,8 +793,8 @@
         if (next) await unlockAudio();
         setSettings({ enabled: next });
         if (next) {
-          if (lastPlaybackError) lastPlaybackError = "";
-          showToast("自动朗读已开启");
+          lastPlaybackError = "";
+          showToast(`自动朗读已开启 · ${PERSONAS[getSettings().persona]?.label || VOICES[getSettings().voiceId]?.label}`);
         }
       });
       toggle?.addEventListener("contextmenu", (event) => { event.preventDefault(); openVoicePanel(); });
@@ -584,7 +821,7 @@
       const label = toggle.querySelector("span");
       if (icon) icon.textContent = settings.enabled ? "🔊" : "🔇";
       if (label) label.textContent = state === "loading" ? "生成语音" : state === "speaking" ? "说话中" : "语音";
-      toggle.title = lastPlaybackError || "左键开关自动朗读；右键打开声音设置";
+      toggle.title = lastPlaybackError || `声音：${VOICES[settings.voiceId]?.label || settings.voiceId} · 右键打开设置`;
     }
     if (stopButton) stopButton.hidden = !state;
     const modal = document.querySelector("#uaiCompanionV1711Mask .uai-c-v1711-modal");
@@ -605,6 +842,8 @@
       closePlaybackResources();
       return;
     }
+    const settings = getSettings();
+    dispatchProfile(settings);
     ensureDock();
     bindInputObserver();
     refreshUi();
@@ -625,15 +864,22 @@
   document.documentElement.dataset.companionVoiceV1711Revision = REVISION;
   window.UnlimitedCompanionVoiceV1711 = {
     revision: REVISION,
+    voices: VOICES,
+    personas: PERSONAS,
     getSettings,
     setSettings,
     checkStatus,
     extractSpeechText,
+    splitSpeechSegments,
+    buildSpeechPlan,
+    classifyEmotion,
     unlockAudio,
     speak,
     stop,
     replay,
     refresh,
+    setAutoReadSuppressed,
+    get autoReadSuppressed() { return autoReadSuppressed; },
     get audioUnlocked() { return audioUnlocked || playbackContext?.state === "running"; },
     get lastPlaybackError() { return lastPlaybackError; }
   };
