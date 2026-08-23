@@ -1,0 +1,206 @@
+/* V17.23C Novel Navigation
+ * Novel-only hierarchy, collapse rescue and session delete affordance.
+ */
+
+body[data-uai-mode="novel"] .novel-v1723-edge-restore {
+  position: fixed;
+  top: 82px;
+  z-index: 185;
+  display: none;
+  align-items: center;
+  gap: 7px;
+  min-height: 36px;
+  padding: 0 11px;
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border));
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--bg-surface-raised, #fff) 94%, transparent);
+  color: var(--text-primary, var(--text));
+  box-shadow: 0 10px 28px rgba(62, 52, 39, .11);
+  backdrop-filter: blur(14px);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 690;
+}
+body[data-uai-mode="novel"] .novel-v1723-edge-restore span { color: var(--accent); font-size: 17px; line-height: 1; }
+body[data-uai-mode="novel"] .novel-v1723-edge-restore.left { left: 10px; }
+body[data-uai-mode="novel"] .novel-v1723-edge-restore.right { right: 10px; }
+body[data-uai-mode="novel"].library-collapsed #novelV1723OpenLibrary { display: inline-flex; }
+body[data-uai-mode="novel"].studio-collapsed #novelV1723OpenStudio { display: inline-flex; }
+body[data-uai-mode="novel"] .novel-v1723-edge-restore:hover {
+  border-color: color-mix(in srgb, var(--accent) 52%, var(--border));
+  background: var(--bg-surface-raised, #fff);
+  transform: translateY(-1px);
+}
+
+/* On desktop, the original top-bar toggles used to disappear completely. Show them only when they are needed to restore a collapsed panel. */
+@media (min-width: 981px) {
+  body[data-uai-mode="novel"] #libraryToggleBtn,
+  body[data-uai-mode="novel"] #studioToggleBtn { display: none !important; }
+  body[data-uai-mode="novel"].library-collapsed #libraryToggleBtn,
+  body[data-uai-mode="novel"].studio-collapsed #studioToggleBtn { display: inline-flex !important; }
+}
+
+/* Left-side writing hierarchy: project -> chapter -> conversations -> low-frequency utilities. */
+body[data-uai-mode="novel"] #studioLibrary > .studio-panel-head { order: 0; }
+body[data-uai-mode="novel"] #studioLibrary > .project-switcher { order: 1; }
+body[data-uai-mode="novel"] #studioLibrary > #projectCreateRow { order: 2; }
+body[data-uai-mode="novel"] #studioLibrary > .chapter-section { order: 3; flex: 1.05 1 0; border-top-color: var(--border-subtle, var(--border)); }
+body[data-uai-mode="novel"] #studioLibrary > .library-section:not(.chapter-section) { order: 4; flex: .8 1 0; border-top-color: var(--border-subtle, var(--border)); }
+body[data-uai-mode="novel"] #studioLibrary > .studio-search { order: 5; padding-top: 8px; border-top: 1px solid var(--border-subtle, var(--border)); }
+body[data-uai-mode="novel"] #studioLibrary > .library-footer { order: 6; }
+
+body[data-uai-mode="novel"] #studioLibrary > .studio-panel-head .studio-kicker,
+body[data-uai-mode="novel"] #studioPanel > .studio-panel-head .studio-kicker {
+  font-size: 0 !important;
+}
+body[data-uai-mode="novel"] #studioLibrary > .studio-panel-head .studio-kicker::after {
+  content: "写作导航" !important;
+  font-size: 8px !important;
+  font-weight: 760;
+  letter-spacing: .12em;
+}
+body[data-uai-mode="novel"] #studioPanel > .studio-panel-head .studio-kicker::after {
+  content: "创作资料" !important;
+  font-size: 8px !important;
+  font-weight: 760;
+  letter-spacing: .12em;
+}
+body[data-uai-mode="novel"] #studioLibrary > .studio-panel-head strong,
+body[data-uai-mode="novel"] #studioPanel > .studio-panel-head strong {
+  min-height: 20px;
+  font-size: 0 !important;
+}
+body[data-uai-mode="novel"] #studioLibrary > .studio-panel-head strong::after {
+  content: "作品与章节" !important;
+  font-size: 15px !important;
+  font-weight: 740;
+}
+body[data-uai-mode="novel"] #studioPanel > .studio-panel-head strong::after {
+  content: "创作资料" !important;
+  font-size: 15px !important;
+  font-weight: 740;
+}
+
+body[data-uai-mode="novel"] #studioLibrary .chapter-section .library-title {
+  padding-top: 7px;
+}
+body[data-uai-mode="novel"] #studioLibrary .chapter-section .library-title > button {
+  min-height: 28px;
+  padding: 0 9px;
+  border-color: color-mix(in srgb, var(--accent) 32%, var(--border));
+  background: color-mix(in srgb, var(--accent) 8%, var(--bg-surface));
+  color: var(--accent);
+  font-weight: 700;
+}
+body[data-uai-mode="novel"] #studioLibrary .chapter-section .library-title > button::before { content: "+ "; }
+
+/* Conversation rows: favorite and delete live together. */
+body[data-uai-mode="novel"] #studioSessionList .studio-list-item {
+  grid-template-columns: minmax(0, 1fr) 30px 48px !important;
+  gap: 4px;
+}
+body[data-uai-mode="novel"] #studioSessionList .favorite-session {
+  color: var(--text-muted, var(--muted));
+}
+body[data-uai-mode="novel"] #studioSessionList .favorite-session.active { color: #b58a39; }
+body[data-uai-mode="novel"] #studioSessionList .novel-v1723-session-delete {
+  width: 46px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  color: color-mix(in srgb, var(--status-danger, #b7443c) 78%, var(--text-muted));
+  cursor: pointer;
+  font-size: 9px;
+  font-weight: 680;
+}
+body[data-uai-mode="novel"] #studioSessionList .novel-v1723-session-delete:hover,
+body[data-uai-mode="novel"] #studioSessionList .novel-v1723-session-delete:focus-visible {
+  border-color: color-mix(in srgb, var(--status-danger, #b7443c) 24%, transparent);
+  background: color-mix(in srgb, var(--status-danger, #b7443c) 8%, transparent);
+  color: var(--status-danger, #b7443c);
+}
+
+/* Primary creative information stays simple; low-frequency tools move behind one clear menu. */
+body[data-uai-mode="novel"] #studioPanel > .studio-panel-head {
+  position: relative;
+}
+body[data-uai-mode="novel"] .novel-v1723-studio-head-actions {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-left: auto;
+}
+body[data-uai-mode="novel"] .novel-v1723-more-tools-btn {
+  min-height: 31px;
+  padding: 0 9px;
+  border: 1px solid var(--border-default, var(--border));
+  border-radius: 8px;
+  background: var(--surface-soft);
+  color: var(--text-secondary, var(--text-soft));
+  cursor: pointer;
+  font-size: 9px;
+  font-weight: 680;
+}
+body[data-uai-mode="novel"] .novel-v1723-more-tools-btn:hover,
+body[data-uai-mode="novel"] .novel-v1723-more-tools-btn[aria-expanded="true"] {
+  border-color: color-mix(in srgb, var(--accent) 30%, var(--border));
+  background: color-mix(in srgb, var(--accent) 7%, var(--bg-surface));
+  color: var(--text-primary, var(--text));
+}
+body[data-uai-mode="novel"] .novel-v1723-more-tools-menu {
+  position: absolute;
+  top: calc(100% + 7px);
+  right: 0;
+  z-index: 60;
+  width: 156px;
+  padding: 6px;
+  border: 1px solid var(--border-default, var(--border));
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--bg-surface-raised, #fff) 97%, transparent);
+  box-shadow: 0 14px 34px rgba(53, 45, 33, .13);
+  backdrop-filter: blur(18px);
+}
+body[data-uai-mode="novel"] .novel-v1723-more-tools-menu[hidden] { display: none !important; }
+body[data-uai-mode="novel"] .novel-v1723-more-tools-menu button {
+  width: 100%;
+  min-height: 31px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-secondary, var(--text-soft));
+  text-align: left;
+  cursor: pointer;
+  font-size: 10px;
+}
+body[data-uai-mode="novel"] .novel-v1723-more-tools-menu button:hover {
+  background: var(--surface-soft);
+  color: var(--text-primary, var(--text));
+}
+body[data-uai-mode="novel"] .novel-v1723-more-divider {
+  display: block;
+  height: 1px;
+  margin: 5px 3px;
+  background: var(--border-subtle, var(--border));
+}
+body[data-uai-mode="novel"] #studioPanel .studio-tabs {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+}
+
+@media (max-width: 980px) {
+  body[data-uai-mode="novel"] .novel-v1723-edge-restore { top: calc(var(--topbar-height, 70px) + 9px); }
+  body[data-uai-mode="novel"] #studioSessionList .studio-list-item { grid-template-columns: minmax(0,1fr) 30px 46px !important; }
+}
+
+@media (max-width: 640px) {
+  body[data-uai-mode="novel"] .novel-v1723-edge-restore b { display: none; }
+  body[data-uai-mode="novel"] .novel-v1723-edge-restore { width: 36px; justify-content: center; padding: 0; }
+  body[data-uai-mode="novel"] .novel-v1723-more-tools-btn { padding-inline: 7px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body[data-uai-mode="novel"] .novel-v1723-edge-restore { transition: none !important; }
+}
