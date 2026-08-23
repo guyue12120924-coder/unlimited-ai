@@ -37,6 +37,7 @@
   let audioContext = null;
   let analyser = null;
   let vadFrame = 0;
+  let recordDeadline = 0;
   let recordStartedAt = 0;
   let lastSoundAt = 0;
   let heardSpeech = false;
@@ -283,6 +284,8 @@
   function stopVad() {
     if (vadFrame) cancelAnimationFrame(vadFrame);
     vadFrame = 0;
+    if (recordDeadline) clearTimeout(recordDeadline);
+    recordDeadline = 0;
     try { audioContext?.close?.(); } catch {}
     audioContext = null;
     analyser = null;
@@ -342,6 +345,9 @@
       lastSoundAt = recordStartedAt;
       heardSpeech = false;
       current.start(200);
+      recordDeadline = setTimeout(() => {
+        if (recorder === current && current.state !== "inactive") finishRecording(false);
+      }, 16000);
       setCallState("listening", "正在听你说话…");
       refreshOverlay();
       if (analyser) vadFrame = requestAnimationFrame(monitorVoice);
@@ -669,7 +675,7 @@
     bindGenerationObserver();
     disableGeneralAutoVoice();
     stageWasOpen = Boolean(window.UnlimitedCompanionStageV1712?.getStatus?.().open);
-    try { await window.UnlimitedCompanionStageV1712?.open?.(); } catch {}
+    try { window.UnlimitedCompanionStageV1712?.open?.(); } catch {}
     clearInterval(callTimer);
     callTimer = setInterval(updateTimer, 500);
     updateTimer();
