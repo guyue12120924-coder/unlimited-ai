@@ -176,3 +176,9 @@ jobs:
         run: |
           set -euo pipefail
           node tests/v1722-final-cleanup.test.mjs
+
+      - name: Check V17.23A novel simplification contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          node tests/novel-simplify-v1723.test.mjs
