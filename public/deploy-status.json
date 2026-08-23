@@ -1,7 +1,17 @@
 {
   "product": "Unlimited AI",
-  "frontendRevision": "2026-08-14-v10.2-dual-mode-1",
-  "workerRevisionExpected": "2026-08-14-v10.0-worker-1",
+  "frontendRevision": "2026-08-23-v17.21-voice-experience-polish",
+  "diagnosticsRevision": "2026-08-23-v17.22-final-cleanup-diagnostics",
+  "runtimeRevision": "2026-08-21-v17.0-workspace-consolidation",
+  "workerGatewayRevision": "2026-08-23-v17.22-companion-diagnostics-gateway",
   "diagnosticsPath": "/api/diagnostics",
-  "status": "v10.2-static-assets-current"
+  "companion": {
+    "entry": "V17.5 core-only stable entry",
+    "functions": "V17.7-V17.10 safe restore",
+    "voice": "V17.21 emotional voice experience",
+    "live2d": "V17.21 integrated background lip-sync owner",
+    "scene": "V17.18 cinematic scenes + V17.19 luminous shell",
+    "call": "V17.21 unified voice call"
+  },
+  "status": "v17.22-diagnostics-current"
 }
