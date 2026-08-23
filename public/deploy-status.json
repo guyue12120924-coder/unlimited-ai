@@ -2,9 +2,15 @@
   "product": "Unlimited AI",
   "frontendRevision": "2026-08-23-v17.21-voice-experience-polish",
   "diagnosticsRevision": "2026-08-23-v17.22-final-cleanup-diagnostics",
+  "novelRevision": "2026-08-23-v17.23b-novel-session-management",
   "runtimeRevision": "2026-08-21-v17.0-workspace-consolidation",
   "workerGatewayRevision": "2026-08-23-v17.22-companion-diagnostics-gateway",
   "diagnosticsPath": "/api/diagnostics",
+  "novel": {
+    "visual": "V17.23A light writing workspace simplification",
+    "sessions": "V17.23B explicit rename/delete session management",
+    "next": "V17.23C project/chapter/creative-material navigation"
+  },
   "companion": {
     "entry": "V17.5 core-only stable entry",
     "functions": "V17.7-V17.10 safe restore",
@@ -13,5 +19,5 @@
     "scene": "V17.18 cinematic scenes + V17.19 luminous shell",
     "call": "V17.21 unified voice call"
   },
-  "status": "v17.22-diagnostics-current"
+  "status": "v17.23b-novel-session-current"
 }
