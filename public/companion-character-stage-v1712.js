@@ -29,6 +29,7 @@
   let generationObserver = null;
   let observedInput = null;
   let pointerBoundMain = null;
+  let interactionController = null;
   let mouthTimer = 0;
   let mouthValue = 0;
   let status = "idle";
@@ -223,20 +224,26 @@
     observedInput = null;
   }
 
+  function disconnectInteractions() {
+    interactionController?.abort?.();
+    interactionController = null;
+    pointerBoundMain = null;
+  }
+
   function ensureStageHost() {
     const host = root();
     const targetMain = main();
     if (!host || !targetMain) return null;
 
     if (stageHost && (!stageHost.isConnected || stageMain !== targetMain)) {
+      destroyModel();
       disconnectStageObservers();
+      disconnectInteractions();
       releaseRenderer();
       stageHost?.remove();
       stageHost = null;
       canvas = null;
       stageMain = null;
-      model = null;
-      modelSpec = null;
       currentModelKey = "";
     }
 
@@ -274,14 +281,17 @@
 
   function bindStageInteractions(targetMain) {
     if (!targetMain || pointerBoundMain === targetMain) return;
+    disconnectInteractions();
     pointerBoundMain = targetMain;
-    targetMain.addEventListener("pointermove", focusPointer, { passive: true });
+    interactionController = new AbortController();
+    const signal = interactionController.signal;
+    targetMain.addEventListener("pointermove", focusPointer, { passive: true, signal });
     targetMain.addEventListener("pointerdown", (event) => {
       if (event.target?.closest?.("button,textarea,input,select,a,.uai-c-bubble,.uai-c-composer,.uai-c-header")) return;
       const rect = targetMain.getBoundingClientRect();
       if (!rect.width || event.clientX < rect.left + rect.width * .52) return;
       tapModel(event);
-    }, { passive: true });
+    }, { passive: true, signal });
   }
 
   function rendererHealthy() {
@@ -367,12 +377,12 @@
     pendingReload = false;
     destroyModel();
     disconnectStageObservers();
+    disconnectInteractions();
     releaseRenderer();
     stageHost?.remove();
     stageHost = null;
     stageMain = null;
     canvas = null;
-    pointerBoundMain = null;
     status = "idle";
   }
 
@@ -538,6 +548,7 @@
   function syncVoiceState() {
     const voiceState = root()?.dataset.v1711VoiceState || "";
     if (voiceState === "speaking") startMouthAnimation(); else stopMouthAnimation();
+    fitModel();
   }
 
   function bindVoiceObserver() {
@@ -545,7 +556,7 @@
     if (!host) return;
     voiceObserver?.disconnect?.();
     voiceObserver = new MutationObserver(syncVoiceState);
-    voiceObserver.observe(host, { attributes: true, attributeFilter: ["data-v1711-voice-state"] });
+    voiceObserver.observe(host, { attributes: true, attributeFilter: ["data-v1711-voice-state", "data-v1713-call"] });
   }
 
   function classifyEmotion(text) {
