@@ -21,7 +21,8 @@ assert.match(js, /app\.destroy/);
 assert.match(js, /resizeObserver\?\.disconnect/);
 assert.match(js, /voiceObserver\?\.disconnect/);
 assert.match(js, /generationObserver\?\.disconnect/);
-assert.match(js, /attributeFilter:\s*\["data-v1711-voice-state"\]/);
+assert.match(js, /interactionController\?\.abort/);
+assert.match(js, /attributeFilter:\s*\["data-v1711-voice-state",\s*"data-v1713-call"\]/);
 assert.match(js, /attributeFilter:\s*\["disabled"\]/);
 assert.match(js, /targetMain\.appendChild\(stageHost\)/, 'Live2D must be mounted inside the stable companion main area');
 assert.match(js, /currentModelKey/);
@@ -32,6 +33,7 @@ assert.match(js, /webglcontextlost/);
 assert.match(js, /webglcontextrestored/);
 assert.match(js, /fallbackAvatar/);
 assert.match(js, /integrated:\s*true/);
+assert.match(js, /const inCall = root\(\)\?\.dataset\.v1713Call === "active"/);
 
 assert.doesNotMatch(js, /data-v1712-reload/, 'the shader-triggering manual reload button must stay removed');
 assert.doesNotMatch(js, /uaiCompanionStageButtonV1712/, 'the old floating stage launcher must stay removed');
