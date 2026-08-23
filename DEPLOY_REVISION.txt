@@ -1,6 +1,6 @@
 Unlimited AI deployment trigger
-Date: 2026-08-22
-Frontend core revision: 2026-08-22-v17.10-safe-experience-restore
+Date: 2026-08-23
+Frontend core revision: 2026-08-23-v17.13-complete-companion-restore
 Frontend runtime core: 2026-08-21-v17.0-workspace-consolidation
 Workspace UI module: 2026-08-21-v17.0-workspace-ui
 AI collaboration module: 2026-08-21-v17.0-ai-collaboration
@@ -23,15 +23,23 @@ Companion generation observation policy: one MutationObserver scoped only to #ua
 Companion safe experience: public/companion-experience-v1710.js + public/companion-experience-v1710.css?v=20260822-v17.10-safe-experience-restore
 Companion restored experience V17.10: relationship-stage summary with days/messages/memory count, time-of-day presence text, assistant quick actions (continue/rephrase/shorter/more detail) that only fill the composer, optional browser-local speech synthesis for assistant messages, and optional microphone speech-to-text using the existing /api/companion/stt endpoint
 Companion V17.10 observer policy: one MutationObserver scoped only to the current #uaiCompanionMessages direct child list; no body-wide observation; voice capture is stopped and tracks are released on companion exit/pagehide
-Companion voice policy V17.10: browser speechSynthesis for playback and existing STT endpoint for microphone transcription only; neural TTS, Live2D lip sync and call-mode stacks remain disabled
-Companion runtime/settings fetch wrapper: NOT restored because companion-runtime.js rewrites window.fetch and would conflict with the consolidated chat transport
-Companion enhancement loader: DISABLED FROM ACTIVE BOOT
+Companion neural voice V17.11: public/companion-voice-suite-v1711.js + public/companion-voice-suite-v1711.css?v=20260823-v17.11-safe-neural-voice
+Companion restored voice/relationship V17.11: Cloudflare neural TTS status and playback, browser-system fallback, per-character auto-read/provider/rate/dialogue settings, manual neural-read action, replay/stop controls, and local monthly relationship review
+Companion V17.11 safety policy: no window.fetch replacement, no body-wide observer, automatic reading observes only #uaiCompanionInput disabled transitions, all audio requests use AbortController, audio/blob resources are released on stop/mode exit/pagehide
+Companion character stage V17.12: public/companion-character-stage-v1712.js + public/companion-character-stage-v1712.css?v=20260823-v17.12-isolated-character-stage
+Companion restored character stage V17.12: optional floating Live2D stage, lazy Pixi/Cubism/model loading, characters.json assignments with official Mao fallback, pointer focus/tap reactions, lightweight reply-emotion mapping and speaking mouth motion
+Companion V17.12 safety policy: the stage is fixed-position and independent of the core chat grid; runtime/model assets load only after the user opens the stage; close/mode exit destroys model, Pixi renderer, ResizeObserver, generation/voice observers and mouth timer; model failure falls back to the role avatar
+Companion complete call V17.13: public/companion-call-suite-v1713.js + public/companion-call-suite-v1713.css?v=20260823-v17.13-complete-call-experience
+Companion restored call V17.13: explicit full-screen call overlay, microphone recording, WebAudio voice activity detection, 16-second hard recording limit, Cloudflare Whisper STT, explicit-call auto-send, generation-aware response detection, Grok/Melo/system TTS, Ara/Eve/Sal/Rex/Leo voices, captions, mute/speaker controls, auto-listen, call timer and V17.12 stage mouth sync
+Companion V17.13 safety policy: normal chat never gains automatic sending; automatic sending exists only while an explicit call session is active; no fetch monkeypatch; the core chat remains mounted underneath; microphone tracks, AudioContext, RAF, timers, STT/TTS controllers, audio/blob URLs, mouth timer and generation observer are stopped/released on hangup, mode exit, pagehide or hidden-tab termination
+Companion runtime/settings fetch wrapper: NOT restored because companion-runtime.js rewrites window.fetch and conflicts with the consolidated chat transport
+Companion legacy structural loader: DISABLED FROM ACTIVE BOOT
 Companion V10/V11/V12 structural themes: source retained, not loaded
-Companion Live2D/scene/call-mode enhancement layers: source retained, not loaded
+Companion legacy Live2D/scene/call files: source retained, not loaded; V17.12/V17.13 are isolated replacements instead
 Companion residue cleanup: V17.5 removes known structural enhancement link/script/style IDs and enhancement DOM nodes before core mount
 Companion recovery: if the core shell is incomplete, V17.5 reloads only companion-mode.js and remounts the base UI; localStorage companion data is preserved
 Companion mode isolation: uai_companion_profile_v1 / sessions / memories / settings remain separate from novel storage
-Reason: V17.10 restores a larger portion of the companion experience on top of the proven V17.5 core without reviving the structural theme stack. Relationship presence, safe message follow-up tools and optional voice input/playback are additive and independently degradable, while the core chat grid, request transport and companion storage model remain unchanged.
+Reason: V17.13 completes the three-step restoration without reviving the unstable V10/V11/V12 structural stack. Neural voice, Live2D and call behavior are restored as independently degradable layers above the proven V17.5 chat core, while request transport and core layout remain unchanged.
 Novel prompt source: src/worker.js -> NOVEL_SYSTEM_PROMPT
 Companion prompt source: src/companion.js -> COMPANION_ROLE_CARD
 AI gateway: src/worker-voice.js
