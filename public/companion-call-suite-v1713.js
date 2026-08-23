@@ -1,6 +1,6 @@
-// V17.20 unified emotional call. Microphone/STT/call lifecycle remain isolated; TTS is owned by the shared voice engine.
+// V17.21 unified emotional call. Call audio uses the shared per-character voice profile.
 (() => {
-  const REVISION = "2026-08-23-v17.20-emotional-call-unified";
+  const REVISION = "2026-08-23-v17.21-call-voice-polish";
   if (window.UnlimitedCompanionCallV1713?.revision === REVISION) return;
 
   const KEY = "uai_companion_call_mode_v1";
@@ -8,6 +8,9 @@
   const DEFAULTS = { autoSend: true, autoListen: true, speaker: true, captions: true };
   const FALLBACK_VOICES = {
     eve: "Eve · 明亮活泼", ara: "Ara · 温柔暖声", sal: "Sal · 自然平衡", rex: "Rex · 沉稳自信", leo: "Leo · 成熟低沉"
+  };
+  const FALLBACK_PERSONAS = {
+    sweet: { icon: "💗", label: "甜美陪伴" }, gentle: { icon: "🌸", label: "温柔治愈" }, natural: { icon: "☕", label: "自然日常" }, mature: { icon: "🌙", label: "成熟温柔" }, lively: { icon: "✨", label: "活泼元气" }, custom: { icon: "🎛", label: "自定义" }
   };
 
   let callActive = false;
@@ -17,7 +20,6 @@
   let generationObserver = null;
   let observedInput = null;
   let previousGenerating = false;
-
   let stream = null;
   let recorder = null;
   let chunks = [];
@@ -29,7 +31,6 @@
   let lastSoundAt = 0;
   let heardSpeech = false;
   let transcribeController = null;
-
   let muted = false;
   let lastAssistantText = "";
   let lastSpokenText = "";
@@ -66,8 +67,8 @@
       engine: voice.engine || local.engine || "grok",
       voiceId: voice.voiceId || local.voiceId || "eve",
       playbackRate: Number(voice.playbackRate || local.playbackRate || .95),
-      persona: voice.persona || "sweet",
-      speechMode: voice.speechMode || "natural",
+      persona: voice.persona || local.persona || "sweet",
+      speechMode: voice.speechMode || local.speechMode || "natural",
       emotionEnabled: voice.emotionEnabled !== false
     };
   }
@@ -78,7 +79,6 @@
       if (Object.hasOwn(patch, key)) voicePatch[key] = patch[key];
     }
     if (Object.keys(voicePatch).length && voiceApi()?.setSettings) voiceApi().setSettings(voicePatch);
-
     const map = readMap();
     const id = activeCharacterId();
     const previous = map[id] && typeof map[id] === "object" ? map[id] : {};
@@ -149,13 +149,24 @@
   function setCallState(state, text) { if (!overlay) return; overlay.dataset.state = state || "idle"; const label = overlay.querySelector("[data-v1713-status]"); if (label) label.textContent = text || ""; }
   function setCaption(role, text) { if (!overlay || !getSettings().captions) return; const node = overlay.querySelector(`[data-v1713-caption="${role}"]`); if (!node) return; const value = String(text || "").trim(); node.textContent = value || (role === "user" ? "你说的话会显示在这里" : "她的回复会显示在这里"); node.parentElement?.classList.toggle("has-text", Boolean(value)); }
 
+  function voiceCatalog() {
+    return voiceApi()?.voices || Object.fromEntries(Object.entries(FALLBACK_VOICES).map(([id, label]) => [id, { label, subtitle: "" }]));
+  }
+  function personaCatalog() { return voiceApi()?.personas || FALLBACK_PERSONAS; }
+  function voiceSummary(settings = getSettings()) {
+    const voices = voiceCatalog();
+    const personas = personaCatalog();
+    return `${personas[settings.persona]?.icon || "🎙"} ${personas[settings.persona]?.label || "自定义"} · ${voices[settings.voiceId]?.label || settings.voiceId} · ${settings.playbackRate.toFixed(2)}×`;
+  }
+
   function ensureOverlay() {
     if (overlay?.isConnected) return overlay;
     const host = root();
     if (!host) return null;
     const profile = activeProfile();
     const settings = getSettings();
-    const voices = voiceApi()?.voices || Object.fromEntries(Object.entries(FALLBACK_VOICES).map(([id, label]) => [id, { label, subtitle: "" }]));
+    const voices = voiceCatalog();
+    const personas = personaCatalog();
     overlay = document.createElement("section");
     overlay.id = "uaiCompanionCallV1713";
     overlay.className = "uai-c-v1713-call";
@@ -167,7 +178,8 @@
       <header><div><small>LIVE CALL</small><strong>${escapeHtml(profile.name || "AI 伙伴")}</strong><span><i></i><b data-v1713-status>正在连接…</b></span></div><div><time data-v1713-time>00:00</time><button type="button" data-v1713-settings title="通话设置">⚙</button></div></header>
       <main><div class="uai-c-v1713-stage-space" aria-hidden="true"></div><div class="uai-c-v1713-captions"><article><small>你</small><p data-v1713-caption="user">你说的话会显示在这里</p></article><article><small>${escapeHtml(profile.name || "她")}</small><p data-v1713-caption="assistant">她的回复会显示在这里</p></article></div></main>
       <div class="uai-c-v1713-settings" data-v1713-panel hidden>
-        <p class="uai-c-v1713-voice-sync">声音与普通陪伴模式同步 · 当前 ${escapeHtml(voices[settings.voiceId]?.label || settings.voiceId)}</p>
+        <p class="uai-c-v1713-voice-sync"><span>声音与普通陪伴实时同步</span><b data-v1713-voice-summary>${escapeHtml(voiceSummary(settings))}</b></p>
+        <label><span>声音人格</span><select data-v1713-persona>${Object.entries(personas).map(([id, item]) => `<option value="${id}">${escapeHtml(item.icon || "🎙")} ${escapeHtml(item.label || id)}</option>`).join("")}</select></label>
         <label><span>语音引擎</span><select data-v1713-engine><option value="grok">Grok TTS · 推荐</option><option value="auto">自动</option><option value="melo">MeloTTS</option><option value="system">浏览器系统语音</option></select></label>
         <label><span>角色声音</span><select data-v1713-voice>${Object.entries(voices).map(([id, value]) => `<option value="${id}">${escapeHtml(value.label || id)}${value.subtitle ? ` · ${escapeHtml(value.subtitle)}` : ""}</option>`).join("")}</select></label>
         <label><span>语速</span><input data-v1713-rate type="range" min="0.82" max="1.12" step="0.01" value="${settings.playbackRate}"></label>
@@ -194,12 +206,9 @@
       if (current.speaker) stopSpeech();
     });
     overlay.querySelector("[data-v1713-settings]")?.addEventListener("click", () => { const panel = overlay?.querySelector("[data-v1713-panel]"); if (panel) panel.hidden = !panel.hidden; });
-    const engine = overlay.querySelector("[data-v1713-engine]");
-    const voice = overlay.querySelector("[data-v1713-voice]");
-    if (engine) engine.value = settings.engine;
-    if (voice) voice.value = settings.voiceId;
-    engine?.addEventListener("change", (event) => setSettings({ engine: event.target.value }));
-    voice?.addEventListener("change", (event) => setSettings({ voiceId: event.target.value }));
+    overlay.querySelector("[data-v1713-persona]")?.addEventListener("change", (event) => setSettings({ persona: event.target.value }));
+    overlay.querySelector("[data-v1713-engine]")?.addEventListener("change", (event) => setSettings({ engine: event.target.value }));
+    overlay.querySelector("[data-v1713-voice]")?.addEventListener("change", (event) => setSettings({ voiceId: event.target.value }));
     overlay.querySelector("[data-v1713-rate]")?.addEventListener("input", (event) => setSettings({ playbackRate: Number(event.target.value) }));
     overlay.querySelector("[data-v1713-auto-send]")?.addEventListener("change", (event) => setSettings({ autoSend: event.target.checked }));
     overlay.querySelector("[data-v1713-auto-listen]")?.addEventListener("change", (event) => setSettings({ autoListen: event.target.checked }));
@@ -219,6 +228,16 @@
     if (speaker) { speaker.classList.toggle("off", !settings.speaker); speaker.querySelector("span").textContent = settings.speaker ? "🔊" : "🔈"; speaker.querySelector("small").textContent = settings.speaker ? "扬声器" : "已关闭"; }
     if (listen) { listen.classList.toggle("recording", Boolean(recorder)); listen.querySelector("small").textContent = recorder ? "正在聆听" : "开始说话"; }
     overlay.classList.toggle("captions-off", !settings.captions);
+    const persona = overlay.querySelector("[data-v1713-persona]");
+    const engine = overlay.querySelector("[data-v1713-engine]");
+    const voice = overlay.querySelector("[data-v1713-voice]");
+    const rate = overlay.querySelector("[data-v1713-rate]");
+    const summary = overlay.querySelector("[data-v1713-voice-summary]");
+    if (persona) persona.value = settings.persona;
+    if (engine) engine.value = settings.engine;
+    if (voice) voice.value = settings.voiceId;
+    if (rate) rate.value = String(settings.playbackRate);
+    if (summary) summary.textContent = voiceSummary(settings);
   }
 
   function chooseMimeType() {
@@ -348,10 +367,10 @@
     lastSpokenText = cleaned;
     if (!settings.speaker || !cleaned) { setCallState("ready", "她回复你了"); scheduleAutoListen(420); return false; }
     stopSpeech(); lastPlaybackError = "";
-    setCallState("speaking", options.retry ? "正在重新播放…" : "她正在对你说话…");
+    setCallState("speaking", options.retry ? "正在重新播放…" : `她正在用${personaCatalog()[settings.persona]?.label || "当前声音"}对你说话…`);
     try {
       const api = voiceApi();
-      const ok = api?.speak ? await api.speak(cleaned, { force: true, source: "call", settings: { enabled: true, engine: settings.engine, voiceId: settings.voiceId, playbackRate: settings.playbackRate, speechMode: settings.speechMode, emotionEnabled: settings.emotionEnabled } }) : await fallbackSystemSpeak(cleaned, settings.playbackRate);
+      const ok = api?.speak ? await api.speak(cleaned, { force: true, source: "call", settings: { enabled: true, engine: settings.engine, voiceId: settings.voiceId, playbackRate: settings.playbackRate, persona: settings.persona, speechMode: settings.speechMode, emotionEnabled: settings.emotionEnabled } }) : await fallbackSystemSpeak(cleaned, settings.playbackRate);
       if (!ok) throw new Error(api?.lastPlaybackError || "语音播放失败");
       if (callActive) setCallState("ready", "她说完了");
     } catch (error) {
