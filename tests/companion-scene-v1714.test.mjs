@@ -5,7 +5,7 @@ const index = fs.readFileSync('public/index.html', 'utf8');
 const js = fs.readFileSync('public/companion-scene-v1714.js', 'utf8');
 const css = fs.readFileSync('public/companion-scene-v1714.css', 'utf8');
 
-assert.match(index, /2026-08-23-v17\.18-cinematic-companion-scenes/);
+assert.match(index, /2026-08-23-v17\.19-luminous-full-canvas/);
 assert.match(index, /companion-scene-v1714\.css\?v=20260823-v17\.18-cinematic-scenes/);
 assert.match(index, /companion-scene-v1714\.js\?v=20260823-v17\.14-safe-scene-restore/);
 assert.match(js, /2026-08-23-v17\.14-safe-scene-restore/);
@@ -38,4 +38,4 @@ assert.doesNotMatch(css, /\.uai-c-shell\s*\{[^}]*grid-template/s);
 assert.doesNotMatch(css, /\.uai-c-main\s*\{[^}]*grid-template/s);
 assert.doesNotMatch(css, /canvas\s*\{/,'scene visual layer must remain CSS-only and must not add a canvas renderer');
 
-console.log('V17.18 cinematic companion scene contract passed');
+console.log('V17.18 cinematic companion scene contract passed under V17.19 shell');
