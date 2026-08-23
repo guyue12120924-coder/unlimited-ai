@@ -1,6 +1,6 @@
-// V17.20 emotional companion voice engine: one per-character voice profile for chat and calls.
+// V17.21 emotional companion voice: low-latency lookahead, emotion continuity and A/B preview.
 (() => {
-  const REVISION = "2026-08-23-v17.20-emotional-voice-system";
+  const REVISION = "2026-08-23-v17.21-voice-experience-polish";
   if (window.UnlimitedCompanionVoiceV1711?.revision === REVISION) return;
 
   const KEY = "uai_companion_neural_voice_v1";
@@ -8,6 +8,7 @@
   const MOMENTS_KEY = "uai_companion_moments_v1";
   const CALL_KEY = "uai_companion_call_mode_v1";
   const SILENT_WAV = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQQAAACAgICA";
+  const PREVIEW_TEXT = "晚上好呀……你终于来了。今天过得怎么样？如果有点累，就先靠过来陪我待一会儿吧。";
 
   const VOICES = {
     eve: { label: "Eve", subtitle: "明亮 · 灵动 · 少女感" },
@@ -120,9 +121,7 @@
     };
   }
 
-  function getSettings() {
-    return normalizeSettings(settingsMap()[activeCharacterId()]);
-  }
+  function getSettings() { return normalizeSettings(settingsMap()[activeCharacterId()]); }
 
   function syncCallStorage(settings) {
     const map = safeParse(localStorage.getItem(CALL_KEY), {});
@@ -132,7 +131,10 @@
       ...(safeMap[id] && typeof safeMap[id] === "object" ? safeMap[id] : {}),
       engine: settings.engine,
       voiceId: settings.voiceId,
-      playbackRate: settings.playbackRate
+      playbackRate: settings.playbackRate,
+      persona: settings.persona,
+      speechMode: settings.speechMode,
+      emotionEnabled: settings.emotionEnabled
     };
     localStorage.setItem(CALL_KEY, JSON.stringify(safeMap));
   }
@@ -152,9 +154,7 @@
       const persona = PERSONAS[String(patch.persona)];
       nextPatch = { ...nextPatch, voiceId: persona.voiceId, playbackRate: persona.rate };
     }
-    if ((Object.hasOwn(patch, "voiceId") || Object.hasOwn(patch, "playbackRate")) && !Object.hasOwn(patch, "persona")) {
-      nextPatch.persona = "custom";
-    }
+    if ((Object.hasOwn(patch, "voiceId") || Object.hasOwn(patch, "playbackRate")) && !Object.hasOwn(patch, "persona")) nextPatch.persona = "custom";
     const next = normalizeSettings({ ...previous, ...nextPatch });
     map[activeCharacterId()] = next;
     localStorage.setItem(KEY, JSON.stringify(map));
@@ -183,7 +183,7 @@
   function ensureFallbackAudio() {
     if (fallbackAudio) return fallbackAudio;
     const audio = document.createElement("audio");
-    audio.id = "uaiCompanionVoiceAudioV1720";
+    audio.id = "uaiCompanionVoiceAudioV1721";
     audio.preload = "auto";
     audio.playsInline = true;
     audio.setAttribute("playsinline", "");
@@ -312,13 +312,10 @@
       else { combined.push(current); current = piece; }
     }
     if (current) combined.push(current);
-
     const result = [];
     for (const segment of combined) {
       if (segment.length <= 138) result.push(segment);
-      else {
-        for (let index = 0; index < segment.length; index += 126) result.push(segment.slice(index, index + 126));
-      }
+      else for (let index = 0; index < segment.length; index += 126) result.push(segment.slice(index, index + 126));
     }
     return result.filter(Boolean).slice(0, 10);
   }
@@ -326,8 +323,13 @@
   function buildSpeechPlan(text, overrideSettings = {}) {
     const settings = normalizeSettings({ ...getSettings(), ...overrideSettings });
     const segments = splitSpeechSegments(text, settings);
+    const globalEmotion = settings.emotionEnabled ? classifyEmotion(text) : "neutral";
+    let previousEmotion = globalEmotion;
     return segments.map((segment) => {
-      const emotion = settings.emotionEnabled ? classifyEmotion(segment) : "neutral";
+      let emotion = settings.emotionEnabled ? classifyEmotion(segment) : "neutral";
+      if (emotion === "neutral") emotion = previousEmotion !== "neutral" ? previousEmotion : globalEmotion;
+      if (!EMOTIONS.has(emotion)) emotion = "neutral";
+      if (emotion !== "neutral") previousEmotion = emotion;
       const emotionConfig = EMOTION_PLAN[emotion] || EMOTION_PLAN.neutral;
       const punctuationPause = /[！？!?]$/.test(segment) ? -25 : /……$/.test(segment) ? 110 : /[。；;]$/.test(segment) ? 45 : 0;
       return {
@@ -506,12 +508,24 @@
   }
 
   async function playNeuralPlan(plan, settings, token, controller) {
-    const pending = plan.map((segment) => fetchTtsSegment(segment, settings, controller.signal).then((blob) => ({ blob })).catch((error) => ({ error })));
+    const pending = new Map();
+    const queue = (index) => {
+      if (index < 0 || index >= plan.length || pending.has(index)) return;
+      pending.set(index, fetchTtsSegment(plan[index], settings, controller.signal)
+        .then((blob) => ({ blob }))
+        .catch((error) => ({ error })));
+    };
+    queue(0);
+    queue(1);
     const replayPlan = [];
     for (let index = 0; index < plan.length; index += 1) {
       if (token !== playToken || controller.signal.aborted) return false;
-      const loaded = await pending[index];
-      if (loaded.error) throw loaded.error;
+      queue(index);
+      const loaded = await pending.get(index);
+      pending.delete(index);
+      if (loaded?.error) throw loaded.error;
+      queue(index + 1);
+      queue(index + 2);
       const segment = plan[index];
       replayPlan.push({ ...segment, blob: loaded.blob });
       setVoiceState("speaking", segment.emotion);
@@ -539,18 +553,20 @@
     const controller = new AbortController();
     abortController = controller;
     try {
-      const available = await checkStatus();
-      if (!available) throw new Error("Neural TTS unavailable");
+      // No preflight status request here: the first TTS segment starts immediately.
       const ok = await playNeuralPlan(plan, settings, token, controller);
       if (controller === abortController) abortController = null;
       neuralStatus = "ready";
+      lastStatusCheck = Date.now();
       neuralStatusText = `${VOICES[settings.voiceId]?.label || settings.voiceId} · 情绪语音已就绪`;
+      refreshUi();
       return ok;
     } catch (error) {
       if (controller === abortController) abortController = null;
       if (error?.name === "AbortError" || token !== playToken) return false;
       lastPlaybackError = error?.message || "神经语音播放失败";
       neuralStatus = "unavailable";
+      lastStatusCheck = Date.now();
       neuralStatusText = /浏览器拦截/.test(lastPlaybackError) ? lastPlaybackError : "本次神经语音失败，准备回退系统语音";
       if (settings.fallbackSystem) { const fallbackToken = ++playToken; return systemSpeakPlan(plan, fallbackToken); }
       setVoiceState("");
@@ -559,12 +575,23 @@
     }
   }
 
+  async function previewVoice(settingsPatch, label = "试听") {
+    await unlockAudio();
+    showToast(`${label} · 只试听，不修改角色声音`);
+    return speak(PREVIEW_TEXT, { force: true, settings: { enabled: true, ...settingsPatch } });
+  }
+
   async function replay() {
     const settings = getSettings();
     if (lastPlan.length && lastPlan.every((item) => item.blob) && settings.engine !== "system") {
       stop({ keepLast: true });
       const token = ++playToken;
-      for (const item of lastPlan) { if (token !== playToken) return false; setVoiceState("speaking", item.emotion); await playBlob(item.blob, item, token); await delay(item.pause, token); }
+      for (const item of lastPlan) {
+        if (token !== playToken) return false;
+        setVoiceState("speaking", item.emotion);
+        await playBlob(item.blob, item, token);
+        await delay(item.pause, token);
+      }
       if (token === playToken) setVoiceState("");
       return token === playToken;
     }
@@ -585,7 +612,7 @@
       const text = lastAssistantText();
       if (text && text !== lastAutoReadText && getSettings().enabled) {
         lastAutoReadText = text;
-        setTimeout(() => { if (root() && !isGenerating() && !autoReadSuppressed) speak(text); }, 120);
+        setTimeout(() => { if (root() && !isGenerating() && !autoReadSuppressed) speak(text); }, 100);
       }
     }
     if (generating && !wasGenerating) stop({ keepLast: true });
@@ -626,6 +653,24 @@
   function escapeHtml(value) { return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;"); }
   function closeModal() { document.getElementById("uaiCompanionV1711Mask")?.remove(); }
 
+  function syncVoicePanel(mask) {
+    if (!mask?.isConnected) return;
+    const settings = getSettings();
+    const voice = mask.querySelector("[data-v1720-voice]");
+    const engine = mask.querySelector("[data-v1720-engine]");
+    const speechMode = mask.querySelector("[data-v1720-speech-mode]");
+    const rate = mask.querySelector("[data-v1711-rate]");
+    const rateLabel = mask.querySelector("[data-v1711-rate-label]");
+    if (voice) voice.value = settings.voiceId;
+    if (engine) engine.value = settings.engine;
+    if (speechMode) speechMode.value = settings.speechMode;
+    if (rate) rate.value = String(settings.playbackRate);
+    if (rateLabel) rateLabel.textContent = `${settings.playbackRate.toFixed(2)}×`;
+    mask.querySelectorAll("[data-v1720-persona]").forEach((item) => item.classList.toggle("active", item.dataset.v1720Persona === settings.persona));
+    const current = mask.querySelector("[data-v1721-current-voice]");
+    if (current) current.textContent = `${VOICES[settings.voiceId]?.label || settings.voiceId} · ${PERSONAS[settings.persona]?.label || "自定义"} · ${settings.playbackRate.toFixed(2)}×`;
+  }
+
   function openVoicePanel() {
     closeModal(); unlockAudio();
     const settings = getSettings();
@@ -633,7 +678,7 @@
     mask.id = "uaiCompanionV1711Mask";
     mask.className = "uai-c-v1711-mask";
     mask.innerHTML = `<section class="uai-c-v1711-modal uai-c-v1720-voice-modal" role="dialog" aria-modal="true" aria-label="声音设置">
-      <header><div><span>EMOTIONAL VOICE</span><h3>角色声音</h3><p>同一份角色声音会用于自动朗读、手动朗读和语音通话。</p></div><button type="button" data-v1711-close>×</button></header>
+      <header><div><span>EMOTIONAL VOICE</span><h3>角色声音</h3><p>自动朗读、手动朗读和通话共享同一份角色声音档案。</p></div><button type="button" data-v1711-close>×</button></header>
       <div class="uai-c-v1711-field switch"><div><strong>自动朗读新回复</strong><small>回复完成后按情绪分句朗读，不会整段机械念稿。</small></div><label><input data-v1711-enabled type="checkbox" ${settings.enabled ? "checked" : ""}><i></i></label></div>
       <div class="uai-c-v1720-personas">${Object.entries(PERSONAS).filter(([id]) => id !== "custom").map(([id, item]) => `<button type="button" data-v1720-persona="${id}" class="${settings.persona === id ? "active" : ""}"><i>${item.icon}</i><strong>${item.label}</strong><small>${item.subtitle}</small></button>`).join("")}</div>
       <div class="uai-c-v1711-grid uai-c-v1720-grid">
@@ -643,40 +688,34 @@
         <label>朗读方式<select data-v1720-speech-mode><option value="natural">自然陪伴 · 推荐</option><option value="dialogue">只读对白</option><option value="full">完整朗读</option></select></label>
       </div>
       <div class="uai-c-v1711-checks"><label><input data-v1720-emotion type="checkbox" ${settings.emotionEnabled ? "checked" : ""}>根据回复情绪自动调整节奏和停顿</label><label><input data-v1711-fallback type="checkbox" ${settings.fallbackSystem ? "checked" : ""}>神经语音失败时自动回退系统语音</label></div>
-      <div class="uai-c-v1720-preview"><div><span>当前声音</span><strong>${VOICES[settings.voiceId]?.label || settings.voiceId} · ${PERSONAS[settings.persona]?.label || "自定义"}</strong><small>每个 AI 角色单独保存，切换角色会一起切换声音。</small></div><button type="button" data-v1711-preview>▶ 试听当前声音</button></div>
+      <div class="uai-c-v1720-preview"><div><span>当前声音</span><strong data-v1721-current-voice>${VOICES[settings.voiceId]?.label || settings.voiceId} · ${PERSONAS[settings.persona]?.label || "自定义"} · ${settings.playbackRate.toFixed(2)}×</strong><small>每个 AI 角色单独保存，切换角色会一起切换声音。</small></div><button type="button" data-v1711-preview>▶ 试听当前声音</button></div>
+      <div class="uai-c-v1721-compare"><div><span>A / B 快速试听</span><small>只试听，不会修改当前角色的声音设置。</small></div><button type="button" data-v1721-ab="eve"><b>A</b><strong>Eve</strong><small>甜美灵动 · 0.95×</small></button><button type="button" data-v1721-ab="ara"><b>B</b><strong>Ara</strong><small>温柔治愈 · 0.92×</small></button></div>
       <div class="uai-c-v1711-status" data-v1711-status data-state="${neuralStatus}">${neuralStatusText}</div>
-      <footer><small>情绪分句 + WebAudio + Live2D 嘴型同步</small><button type="button" data-v1711-recheck>重新检测</button><button type="button" data-v1711-stop>停止</button><button type="button" class="primary" data-v1711-preview2>再试听一次</button></footer>
+      <footer><small>首句直出 · 两句预取 · 情绪连续 · Live2D 嘴型同步</small><button type="button" data-v1711-recheck>重新检测</button><button type="button" data-v1711-stop>停止</button><button type="button" class="primary" data-v1711-preview2>再试听一次</button></footer>
     </section>`;
     document.body.appendChild(mask);
     mask.addEventListener("click", (event) => { if (event.target === mask) closeModal(); });
     mask.querySelector("[data-v1711-close]")?.addEventListener("click", closeModal);
     mask.querySelector("[data-v1711-enabled]")?.addEventListener("change", async (event) => { if (event.target.checked) await unlockAudio(); setSettings({ enabled: event.target.checked }); });
-    const voice = mask.querySelector("[data-v1720-voice]");
-    const engine = mask.querySelector("[data-v1720-engine]");
-    const speechMode = mask.querySelector("[data-v1720-speech-mode]");
-    if (voice) voice.value = settings.voiceId;
-    if (engine) engine.value = settings.engine;
-    if (speechMode) speechMode.value = settings.speechMode;
-    voice?.addEventListener("change", (event) => setSettings({ voiceId: event.target.value }));
-    engine?.addEventListener("change", (event) => setSettings({ engine: event.target.value }));
-    speechMode?.addEventListener("change", (event) => setSettings({ speechMode: event.target.value }));
-    mask.querySelectorAll("[data-v1720-persona]").forEach((button) => button.addEventListener("click", () => {
-      const next = setSettings({ persona: button.dataset.v1720Persona });
-      mask.querySelectorAll("[data-v1720-persona]").forEach((item) => item.classList.toggle("active", item.dataset.v1720Persona === next.persona));
-      if (voice) voice.value = next.voiceId;
-      const rate = mask.querySelector("[data-v1711-rate]"); if (rate) rate.value = String(next.playbackRate);
-      const label = mask.querySelector("[data-v1711-rate-label]"); if (label) label.textContent = `${next.playbackRate.toFixed(2)}×`;
-    }));
-    mask.querySelector("[data-v1711-rate]")?.addEventListener("input", (event) => { const next = setSettings({ playbackRate: Number(event.target.value) }); const label = mask.querySelector("[data-v1711-rate-label]"); if (label) label.textContent = `${next.playbackRate.toFixed(2)}×`; mask.querySelectorAll("[data-v1720-persona]").forEach((item) => item.classList.remove("active")); });
+    mask.querySelector("[data-v1720-voice]")?.addEventListener("change", (event) => { setSettings({ voiceId: event.target.value }); syncVoicePanel(mask); });
+    mask.querySelector("[data-v1720-engine]")?.addEventListener("change", (event) => { setSettings({ engine: event.target.value }); syncVoicePanel(mask); });
+    mask.querySelector("[data-v1720-speech-mode]")?.addEventListener("change", (event) => { setSettings({ speechMode: event.target.value }); syncVoicePanel(mask); });
+    mask.querySelectorAll("[data-v1720-persona]").forEach((button) => button.addEventListener("click", () => { setSettings({ persona: button.dataset.v1720Persona }); syncVoicePanel(mask); }));
+    mask.querySelector("[data-v1711-rate]")?.addEventListener("input", (event) => { setSettings({ playbackRate: Number(event.target.value) }); syncVoicePanel(mask); });
     mask.querySelector("[data-v1720-emotion]")?.addEventListener("change", (event) => setSettings({ emotionEnabled: event.target.checked }));
     mask.querySelector("[data-v1711-fallback]")?.addEventListener("change", (event) => setSettings({ fallbackSystem: event.target.checked }));
     mask.querySelector("[data-v1711-recheck]")?.addEventListener("click", () => checkStatus(true));
     mask.querySelector("[data-v1711-stop]")?.addEventListener("click", () => stop({ keepLast: true }));
-    const preview = () => speak("晚上好呀……你终于来了。今天过得怎么样？如果有点累，就先靠过来陪我待一会儿吧。", { force: true });
-    mask.querySelector("[data-v1711-preview]")?.addEventListener("pointerdown", unlockAudio, { passive: true });
-    mask.querySelector("[data-v1711-preview2]")?.addEventListener("pointerdown", unlockAudio, { passive: true });
-    mask.querySelector("[data-v1711-preview]")?.addEventListener("click", preview);
-    mask.querySelector("[data-v1711-preview2]")?.addEventListener("click", preview);
+    const previewCurrent = () => previewVoice(getSettings(), "当前声音");
+    for (const selector of ["[data-v1711-preview]", "[data-v1711-preview2]"]) {
+      mask.querySelector(selector)?.addEventListener("pointerdown", unlockAudio, { passive: true });
+      mask.querySelector(selector)?.addEventListener("click", previewCurrent);
+    }
+    mask.querySelector("[data-v1721-ab=\"eve\"]")?.addEventListener("pointerdown", unlockAudio, { passive: true });
+    mask.querySelector("[data-v1721-ab=\"ara\"]")?.addEventListener("pointerdown", unlockAudio, { passive: true });
+    mask.querySelector("[data-v1721-ab=\"eve\"]")?.addEventListener("click", () => previewVoice({ engine: "grok", voiceId: "eve", playbackRate: .95, persona: "custom", speechMode: "natural", emotionEnabled: true }, "A · Eve"));
+    mask.querySelector("[data-v1721-ab=\"ara\"]")?.addEventListener("click", () => previewVoice({ engine: "grok", voiceId: "ara", playbackRate: .92, persona: "custom", speechMode: "natural", emotionEnabled: true }, "B · Ara"));
+    syncVoicePanel(mask);
   }
 
   function openMonthlyReview() {
@@ -713,9 +752,18 @@
     const dock = ensureDock(); if (!dock) return;
     const settings = getSettings(); const state = host.dataset.v1711VoiceState || "";
     const toggle = dock.querySelector("#uaiCompanionVoiceToggleV1711"); const stopButton = dock.querySelector("#uaiCompanionVoiceStopV1711");
-    if (toggle) { toggle.classList.toggle("active", settings.enabled); toggle.classList.toggle("loading", state === "loading"); toggle.classList.toggle("speaking", state === "speaking"); const icon = toggle.querySelector("i"); const label = toggle.querySelector("span"); if (icon) icon.textContent = settings.enabled ? "🔊" : "🔇"; if (label) label.textContent = state === "loading" ? "生成语音" : state === "speaking" ? "说话中" : "语音"; toggle.title = lastPlaybackError || `声音：${VOICES[settings.voiceId]?.label || settings.voiceId} · 右键打开设置`; }
+    if (toggle) {
+      toggle.classList.toggle("active", settings.enabled);
+      toggle.classList.toggle("loading", state === "loading");
+      toggle.classList.toggle("speaking", state === "speaking");
+      const icon = toggle.querySelector("i"); const label = toggle.querySelector("span");
+      if (icon) icon.textContent = settings.enabled ? "🔊" : "🔇";
+      if (label) label.textContent = state === "loading" ? "生成语音" : state === "speaking" ? "说话中" : "语音";
+      toggle.title = lastPlaybackError || `声音：${VOICES[settings.voiceId]?.label || settings.voiceId} · ${PERSONAS[settings.persona]?.label || "自定义"} · 右键打开设置`;
+    }
     if (stopButton) stopButton.hidden = !state;
-    const modal = document.querySelector("#uaiCompanionV1711Mask .uai-c-v1711-modal"); const status = modal?.querySelector("[data-v1711-status]");
+    const modal = document.querySelector("#uaiCompanionV1711Mask .uai-c-v1711-modal");
+    const status = modal?.querySelector("[data-v1711-status]");
     if (status) { status.textContent = neuralStatusText; status.dataset.state = neuralStatus; }
   }
 
@@ -734,7 +782,23 @@
 
   document.documentElement.dataset.companionVoiceV1711Revision = REVISION;
   window.UnlimitedCompanionVoiceV1711 = {
-    revision: REVISION, voices: VOICES, personas: PERSONAS, getSettings, setSettings, checkStatus, extractSpeechText, splitSpeechSegments, buildSpeechPlan, classifyEmotion, unlockAudio, speak, stop, replay, refresh, setAutoReadSuppressed,
+    revision: REVISION,
+    voices: VOICES,
+    personas: PERSONAS,
+    getSettings,
+    setSettings,
+    checkStatus,
+    extractSpeechText,
+    splitSpeechSegments,
+    buildSpeechPlan,
+    classifyEmotion,
+    unlockAudio,
+    speak,
+    previewVoice,
+    stop,
+    replay,
+    refresh,
+    setAutoReadSuppressed,
     get autoReadSuppressed() { return autoReadSuppressed; },
     get audioUnlocked() { return audioUnlocked || playbackContext?.state === "running"; },
     get lastPlaybackError() { return lastPlaybackError; }
