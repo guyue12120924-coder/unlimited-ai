@@ -109,7 +109,8 @@
     if (opener?.id) closeFloating(opener.id);
 
     // On overlay-style narrow layouts, selecting actual writing content should
-    // immediately return the user to the center writing area.
+    // immediately return the user to the center writing area. Do not focus the
+    // composer here: on phones that would unexpectedly open the software keyboard.
     if (window.innerWidth <= 980) {
       const contentTarget = event.target?.closest?.(
         "#studioChapterList .studio-item-main, #studioSessionList .studio-item-main"
@@ -119,7 +120,6 @@
           if (!document.body.classList.contains("library-collapsed")) {
             document.getElementById("collapseLibrary")?.click();
           }
-          document.getElementById("msg")?.focus({ preventScroll: true });
         });
       }
     }
