@@ -1,0 +1,247 @@
+/* V17.24C Novel Final Regression Polish
+ * Third of three UI passes: remove remaining friction without deleting features.
+ * Novel-only and intentionally conservative.
+ */
+
+body[data-uai-mode="novel"] {
+  --novel-v1724c-safe-gap: 10px;
+}
+
+/* Keep every floating tool inside the viewport and visually consistent. */
+body[data-uai-mode="novel"] .novel-v1723d-top-more-menu,
+body[data-uai-mode="novel"] .novel-v1723-more-tools-menu,
+body[data-uai-mode="novel"] .novel-v1724a-library-tools-panel,
+body[data-uai-mode="novel"] .novel-v1723d-quick-menu {
+  max-width: calc(100vw - (var(--novel-v1724c-safe-gap) * 2));
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+body[data-uai-mode="novel"] .novel-v1723d-top-more-menu {
+  width: min(228px, calc(100vw - 20px));
+  max-height: calc(100dvh - 78px);
+}
+
+body[data-uai-mode="novel"] .novel-v1723-more-tools-menu {
+  width: min(176px, calc(100vw - 20px));
+  max-height: calc(100dvh - 110px);
+  overflow-y: auto;
+}
+
+body[data-uai-mode="novel"] .novel-v1724a-library-tools-panel {
+  max-height: min(440px, calc(100dvh - 118px));
+}
+
+body[data-uai-mode="novel"] .novel-v1723d-quick-menu {
+  width: min(320px, calc(100vw - 20px));
+  max-height: min(58dvh, 430px);
+}
+
+/* Long project/chapter/session names stay single-line and predictable.
+   V17.24C JS supplies the full text through native title tooltips. */
+body[data-uai-mode="novel"] .novel-v1723d-current-work > strong,
+body[data-uai-mode="novel"] .novel-v1723d-current-work > b,
+body[data-uai-mode="novel"] #studioLibrary .studio-item-main span,
+body[data-uai-mode="novel"] #studioProjectTitle,
+body[data-uai-mode="novel"] #projectSelect {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+body[data-uai-mode="novel"] .novel-v1723d-current-work > strong {
+  flex: 1 1 auto;
+}
+body[data-uai-mode="novel"] .novel-v1723d-current-work > b {
+  flex: 0 1 44%;
+}
+body[data-uai-mode="novel"] #studioLibrary .studio-item-main {
+  overflow: hidden;
+}
+
+/* Collapse/reopen affordances should be visible without floating like primary CTAs. */
+body[data-uai-mode="novel"] .novel-v1723-edge-restore {
+  min-height: 34px;
+  border-radius: 9px;
+  box-shadow: 0 8px 22px rgba(48, 41, 31, .08);
+  opacity: .92;
+}
+body[data-uai-mode="novel"] .novel-v1723-edge-restore:hover,
+body[data-uai-mode="novel"] .novel-v1723-edge-restore:focus-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* Final composer alignment: one stable row, no squeezed send/stop controls. */
+body[data-uai-mode="novel"] #composer .composer-main {
+  align-items: end;
+}
+body[data-uai-mode="novel"] #composer .composer-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+body[data-uai-mode="novel"] #composer .composer-actions button {
+  flex: 0 0 auto;
+}
+body[data-uai-mode="novel"] #composer textarea#msg {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* Make the active writing context readable without becoming another card. */
+body[data-uai-mode="novel"] .novel-v15-context {
+  padding-inline: clamp(12px, 2vw, 24px) !important;
+}
+body[data-uai-mode="novel"] .novel-v15-context-copy,
+body[data-uai-mode="novel"] .novel-v15-context-copy > strong {
+  min-width: 0;
+}
+body[data-uai-mode="novel"] .novel-v15-context-copy > strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* First-run dialog: the close control is anchored, not sticky/float. */
+body[data-uai-mode="novel"] .novel-v1723d-onboarding > section {
+  overflow-x: hidden;
+  padding-top: 30px;
+}
+body[data-uai-mode="novel"] .novel-v1723d-onboarding-close {
+  position: absolute !important;
+  top: 12px !important;
+  right: 12px !important;
+  float: none !important;
+  margin: 0 !important;
+  z-index: 3;
+}
+body[data-uai-mode="novel"] .novel-v1723d-onboarding h2 {
+  padding-right: 34px;
+}
+
+/* Right-side material editing: avoid accidental horizontal overflow. */
+body[data-uai-mode="novel"] #studioPanelBody,
+body[data-uai-mode="novel"] #studioPanelBody .studio-pane,
+body[data-uai-mode="novel"] #studioPanelBody .editor-pane,
+body[data-uai-mode="novel"] #studioPanelBody .character-grid,
+body[data-uai-mode="novel"] #studioPanelBody .scene-list {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+body[data-uai-mode="novel"] #studioPanelBody textarea,
+body[data-uai-mode="novel"] #studioPanelBody input,
+body[data-uai-mode="novel"] #studioPanelBody select {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* Only the active tab receives strong emphasis. */
+body[data-uai-mode="novel"] #studioPanel .studio-tabs button {
+  font-weight: 560;
+}
+body[data-uai-mode="novel"] #studioPanel .studio-tabs button.active {
+  font-weight: 720;
+}
+
+/* Cleaner scroll behavior for the three principal columns. */
+body[data-uai-mode="novel"] #studioLibrary .studio-list,
+body[data-uai-mode="novel"] #studioPanelBody,
+body[data-uai-mode="novel"] #conversationPane #history {
+  overscroll-behavior: contain;
+}
+
+/* Laptop/narrow desktop: preserve center space before controls start wrapping. */
+@media (max-width: 1120px) and (min-width: 981px) {
+  body[data-uai-mode="novel"] {
+    --studio-left: 210px;
+    --studio-right: 266px;
+  }
+  body[data-uai-mode="novel"] #creativeWorkspace {
+    grid-template-columns: var(--studio-left) minmax(400px, 1fr) var(--studio-right);
+  }
+  body[data-uai-mode="novel"] .novel-v1723d-current-work {
+    max-width: 220px;
+  }
+}
+
+/* Overlay layouts: slightly narrower panels leave context around the edges.
+   V17.24C JS automatically returns to writing after selecting a chapter/session. */
+@media (max-width: 980px) {
+  body[data-uai-mode="novel"] #studioLibrary {
+    width: min(310px, 88vw);
+  }
+  body[data-uai-mode="novel"] #studioPanel {
+    width: min(360px, 94vw);
+  }
+  body[data-uai-mode="novel"] .novel-v1723d-top-more-menu {
+    max-height: calc(100dvh - 72px);
+  }
+  body[data-uai-mode="novel"] .novel-v1724a-library-tools-panel {
+    max-height: calc(100dvh - 110px);
+  }
+}
+
+@media (max-width: 640px) {
+  body[data-uai-mode="novel"] #conversationPane #history {
+    padding-bottom: 106px !important;
+  }
+  body[data-uai-mode="novel"] #composer .composer-main {
+    grid-template-columns: 34px minmax(0, 1fr) auto;
+    gap: 5px;
+  }
+  body[data-uai-mode="novel"] .novel-v1723d-quick-btn {
+    width: 34px;
+    height: 34px;
+  }
+  body[data-uai-mode="novel"] .novel-v1723d-quick-menu {
+    width: min(300px, calc(100vw - 16px));
+  }
+  body[data-uai-mode="novel"] .novel-v1723d-onboarding > section {
+    padding: 24px 16px 18px;
+  }
+  body[data-uai-mode="novel"] .novel-v1723d-onboarding h2 {
+    padding-right: 30px;
+  }
+}
+
+@media (max-width: 420px) {
+  body[data-uai-mode="novel"] #studioLibrary,
+  body[data-uai-mode="novel"] #studioPanel {
+    width: 92vw;
+  }
+  body[data-uai-mode="novel"] .novel-v1723d-quick-title {
+    display: block;
+  }
+  body[data-uai-mode="novel"] .novel-v1723d-quick-title span {
+    display: block;
+    margin-top: 3px;
+  }
+}
+
+/* Short landscape viewports need reachable menus and dialogs. */
+@media (max-height: 620px) {
+  body[data-uai-mode="novel"] .novel-v1723d-top-more-menu,
+  body[data-uai-mode="novel"] .novel-v1723-more-tools-menu,
+  body[data-uai-mode="novel"] .novel-v1724a-library-tools-panel {
+    max-height: calc(100dvh - 76px);
+  }
+  body[data-uai-mode="novel"] .novel-v1723d-quick-menu {
+    max-height: 52dvh;
+  }
+  body[data-uai-mode="novel"] .novel-v1723d-onboarding {
+    padding: 8px;
+  }
+  body[data-uai-mode="novel"] .novel-v1723d-onboarding > section {
+    max-height: calc(100dvh - 16px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body[data-uai-mode="novel"] .novel-v1723-edge-restore {
+    transition: none !important;
+  }
+}
