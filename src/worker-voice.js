@@ -260,19 +260,21 @@ function sceneStatus(request, env) {
 
 function sceneStyleStatus(request, env) {
   return assetMarkerStatus(request, env, "/companion-scene-v1714.css", {
-    galaxyMeteor: "uai-c-v1714-meteor",
-    sakura: "sakura",
-    moonlight: "moonlight",
-    neon: "neon",
+    revision: "V17.18 cinematic companion scene",
+    galaxyMeteor: "v1718Meteor",
+    sakura: 'data-v1714-scene-theme="sakura"',
+    moonlight: 'data-v1714-scene-theme="moonlight"',
+    neon: 'data-v1714-scene-theme="neon"',
     reducedMotion: "prefers-reduced-motion"
   });
 }
 
 function luminousStatus(request, env) {
   return assetMarkerStatus(request, env, "/companion-luminous-shell-v1719.css", {
+    revision: "V17.19 Luminous Shell",
     sidebar: ".uai-c-sidebar",
     live2d: "#uaiCompanionStageV1712",
-    luminous: "luminous"
+    glowVariable: "--v1719-glow-a"
   }, {
     noGridColumns: "grid-template-columns:",
     noGridRows: "grid-template-rows:"
@@ -283,7 +285,7 @@ function callStatus(request, env) {
   return assetMarkerStatus(request, env, "/companion-call-suite-v1713.js", {
     revision: "2026-08-23-v17.21-call-voice-polish",
     api: "window.UnlimitedCompanionCallV1713",
-    sharedVoice: "voiceApi()?.speak",
+    sharedVoice: "api?.speak",
     stt: 'fetch("/api/companion/stt"',
     vad: "AudioContext",
     autoListen: "autoListen"
