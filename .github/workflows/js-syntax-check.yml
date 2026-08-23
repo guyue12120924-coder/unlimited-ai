@@ -188,3 +188,9 @@ jobs:
         run: |
           set -euo pipefail
           node tests/novel-sessions-v1723b.test.mjs
+
+      - name: Check V17.23C novel navigation contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          node tests/novel-navigation-v1723c.test.mjs
