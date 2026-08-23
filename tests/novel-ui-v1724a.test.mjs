@@ -34,6 +34,8 @@ assert.match(css, /\.novel-v1724a-library-tools-panel/);
 assert.match(css, /#conversationPane \.chat/);
 assert.match(css, /max-width:\s*1040px/);
 assert.match(css, /#studioPanel \.studio-tabs/);
+assert.match(css, /@media \(max-width: 980px\)/);
+assert.match(css, /library-collapsed\.studio-collapsed #creativeWorkspace[\s\S]*grid-template-columns:\s*minmax\(0, 1fr\)/);
 assert.doesNotMatch(css, /#uaiCompanionRoot|data-uai-mode="companion"|\.uai-c-/);
 assert.doesNotMatch(css, /#workspaceSearch\s*\{[^}]*display:\s*none/si);
 assert.doesNotMatch(css, /#readProject\s*\{[^}]*display:\s*none/si);
