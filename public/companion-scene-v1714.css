@@ -1,11 +1,12 @@
-/* V17.14 isolated companion scene layer. No shell/grid rewrites. */
+/* V17.18 cinematic companion scene. Visual-only: no chat grid rewrites, no canvas/RAF loops. */
 #uaiCompanionRoot .uai-c-main{
   --v1714-scene-x:0px;
   --v1714-scene-y:0px;
+  --v1718-glow-strength:1;
   position:relative;
   isolation:isolate;
   overflow:hidden;
-  background:#090912;
+  background:#070711;
 }
 
 #uaiCompanionRoot .uai-c-v1714-scene{
@@ -15,14 +16,54 @@
   overflow:hidden;
   pointer-events:none;
   contain:paint;
+  transform:translateZ(0);
+  background:#070711;
 }
 #uaiCompanionRoot .uai-c-v1714-scene>*{position:absolute;inset:0;pointer-events:none}
-#uaiCompanionRoot .uai-c-v1714-base{z-index:0;transform:scale(1.04)}
-#uaiCompanionRoot .uai-c-v1714-wash{z-index:1;inset:-12%;mix-blend-mode:screen;filter:blur(24px);transform:translate3d(calc(var(--v1714-scene-x) * .25),calc(var(--v1714-scene-y) * .25),0)}
-#uaiCompanionRoot .uai-c-v1714-band{z-index:2;inset:-18%;mix-blend-mode:screen;transform:translate3d(calc(var(--v1714-scene-x) * .5),calc(var(--v1714-scene-y) * .5),0)}
-#uaiCompanionRoot .uai-c-v1714-accent{z-index:3;transform:translate3d(calc(var(--v1714-scene-x) * .72),calc(var(--v1714-scene-y) * .72),0)}
-#uaiCompanionRoot .uai-c-v1714-particles{z-index:4;overflow:hidden;transform:translate3d(var(--v1714-scene-x),var(--v1714-scene-y),0)}
-#uaiCompanionRoot .uai-c-v1714-vignette{z-index:5;background:linear-gradient(180deg,rgba(7,7,17,.18),transparent 22%,transparent 70%,rgba(5,5,15,.34)),radial-gradient(ellipse at center,transparent 42%,rgba(4,4,13,.34) 100%)}
+#uaiCompanionRoot .uai-c-v1714-base{z-index:0;inset:-2%;transform:scale(1.045);will-change:transform}
+#uaiCompanionRoot .uai-c-v1714-base::before,
+#uaiCompanionRoot .uai-c-v1714-base::after,
+#uaiCompanionRoot .uai-c-v1714-wash::before,
+#uaiCompanionRoot .uai-c-v1714-wash::after,
+#uaiCompanionRoot .uai-c-v1714-band::before,
+#uaiCompanionRoot .uai-c-v1714-band::after,
+#uaiCompanionRoot .uai-c-v1714-accent::before,
+#uaiCompanionRoot .uai-c-v1714-accent::after{
+  content:"";
+  position:absolute;
+  pointer-events:none;
+}
+#uaiCompanionRoot .uai-c-v1714-wash{
+  z-index:1;
+  inset:-16%;
+  mix-blend-mode:screen;
+  filter:blur(30px) saturate(1.08);
+  transform:translate3d(calc(var(--v1714-scene-x) * .22),calc(var(--v1714-scene-y) * .22),0);
+}
+#uaiCompanionRoot .uai-c-v1714-band{
+  z-index:2;
+  inset:-18%;
+  mix-blend-mode:screen;
+  transform:translate3d(calc(var(--v1714-scene-x) * .45),calc(var(--v1714-scene-y) * .45),0);
+}
+#uaiCompanionRoot .uai-c-v1714-accent{
+  z-index:3;
+  transform:translate3d(calc(var(--v1714-scene-x) * .7),calc(var(--v1714-scene-y) * .7),0);
+}
+#uaiCompanionRoot .uai-c-v1714-particles{
+  z-index:4;
+  overflow:hidden;
+  transform:translate3d(var(--v1714-scene-x),var(--v1714-scene-y),0);
+  filter:saturate(1.12);
+}
+#uaiCompanionRoot .uai-c-v1714-vignette{
+  z-index:5;
+  background:
+    linear-gradient(90deg,rgba(4,4,12,.66) 0%,rgba(5,5,14,.38) 25%,rgba(5,5,14,.08) 48%,transparent 68%),
+    linear-gradient(180deg,rgba(5,5,15,.20),transparent 20%,transparent 72%,rgba(3,3,10,.48)),
+    radial-gradient(ellipse at 54% 48%,transparent 38%,rgba(2,2,10,.32) 100%);
+  box-shadow:inset 0 0 120px rgba(0,0,0,.25);
+}
 
 #uaiCompanionRoot .uai-c-header,
 #uaiCompanionRoot .uai-c-messages,
@@ -32,70 +73,392 @@
 }
 #uaiCompanionRoot .uai-c-messages{background:transparent!important}
 
+/* ---------- Galaxy Dream / 星河梦境 ---------- */
 #uaiCompanionRoot[data-v1714-scene-theme="galaxy"] .uai-c-v1714-base{
-  background:radial-gradient(ellipse at 16% 7%,rgba(190,81,255,.42),transparent 34%),radial-gradient(ellipse at 82% 16%,rgba(78,109,255,.36),transparent 37%),radial-gradient(ellipse at 52% 82%,rgba(255,72,188,.24),transparent 41%),linear-gradient(145deg,#070719 0%,#1d0c49 38%,#11103d 68%,#060717 100%);
+  background:
+    radial-gradient(ellipse at 18% 4%,rgba(213,93,255,.54),transparent 30%),
+    radial-gradient(ellipse at 84% 12%,rgba(67,111,255,.50),transparent 34%),
+    radial-gradient(ellipse at 64% 88%,rgba(255,65,190,.34),transparent 39%),
+    radial-gradient(ellipse at 39% 56%,rgba(111,67,255,.22),transparent 43%),
+    linear-gradient(145deg,#03040f 0%,#170735 31%,#17104f 55%,#090d32 75%,#03040e 100%);
+}
+#uaiCompanionRoot[data-v1714-scene-theme="galaxy"] .uai-c-v1714-base::before{
+  inset:0;
+  opacity:.70;
+  background-image:
+    radial-gradient(circle at 12% 18%,#fff 0 1px,transparent 1.8px),
+    radial-gradient(circle at 78% 16%,rgba(205,218,255,.95) 0 1px,transparent 1.7px),
+    radial-gradient(circle at 35% 74%,rgba(255,206,244,.90) 0 1px,transparent 1.8px),
+    radial-gradient(circle at 91% 65%,rgba(178,196,255,.85) 0 1px,transparent 1.8px),
+    radial-gradient(circle at 54% 38%,rgba(255,255,255,.68) 0 .8px,transparent 1.5px);
+  background-size:113px 113px,157px 157px,193px 193px,239px 239px,83px 83px;
+  animation:v1718StarDrift 38s linear infinite;
+}
+#uaiCompanionRoot[data-v1714-scene-theme="galaxy"] .uai-c-v1714-base::after{
+  inset:-14% -10%;
+  opacity:.24;
+  background:
+    repeating-radial-gradient(ellipse at 50% 50%,rgba(255,255,255,.12) 0 1px,transparent 1.4px 7px),
+    radial-gradient(ellipse at 54% 52%,rgba(213,164,255,.32),transparent 48%);
+  filter:blur(.4px);
+  transform:rotate(-14deg) scale(1.2,.42);
+  animation:v1718DustPulse 11s ease-in-out infinite alternate;
 }
 #uaiCompanionRoot[data-v1714-scene-theme="galaxy"] .uai-c-v1714-wash{
-  background:radial-gradient(circle at 19% 27%,rgba(205,94,255,.31),transparent 24%),radial-gradient(circle at 78% 36%,rgba(86,127,255,.27),transparent 29%),radial-gradient(circle at 51% 78%,rgba(255,88,203,.22),transparent 27%);
-  animation:v1714GalaxyWash 18s ease-in-out infinite alternate;
+  background:
+    radial-gradient(circle at 16% 24%,rgba(214,78,255,.42),transparent 25%),
+    radial-gradient(circle at 77% 28%,rgba(74,126,255,.38),transparent 29%),
+    radial-gradient(circle at 57% 78%,rgba(255,72,204,.30),transparent 29%),
+    conic-gradient(from 198deg at 52% 54%,transparent 0 25%,rgba(151,85,255,.18) 36%,rgba(255,91,207,.18) 43%,transparent 57%);
+  animation:v1718GalaxyNebula 19s ease-in-out infinite alternate;
 }
 #uaiCompanionRoot[data-v1714-scene-theme="galaxy"] .uai-c-v1714-band::before{
-  content:"";position:absolute;left:-15%;right:-15%;top:36%;height:150px;border-radius:50%;transform:rotate(-14deg);background:linear-gradient(90deg,transparent 5%,rgba(111,125,255,.06) 18%,rgba(177,105,255,.26) 35%,rgba(255,126,219,.40) 50%,rgba(113,142,255,.23) 69%,transparent 95%);filter:blur(2px);box-shadow:0 0 50px rgba(174,92,255,.16);animation:v1714GalaxyBand 14s ease-in-out infinite alternate;
+  left:-18%;right:-18%;top:34%;height:190px;
+  border-radius:50%;
+  transform:rotate(-13deg);
+  background:
+    linear-gradient(90deg,transparent 2%,rgba(80,108,255,.08) 14%,rgba(152,105,255,.24) 30%,rgba(255,150,226,.52) 49%,rgba(128,155,255,.28) 68%,rgba(87,88,219,.08) 84%,transparent 98%);
+  filter:blur(2.6px);
+  box-shadow:0 0 70px rgba(186,100,255,.23),0 0 140px rgba(82,112,255,.12);
+  animation:v1718GalaxyRibbon 16s ease-in-out infinite alternate;
 }
-#uaiCompanionRoot[data-v1714-scene-theme="galaxy"] .uai-c-v1714-accent{
-  background-image:radial-gradient(circle at 12% 18%,rgba(255,255,255,.95) 0 1px,transparent 2px),radial-gradient(circle at 67% 22%,rgba(255,166,222,.9) 0 1px,transparent 2px),radial-gradient(circle at 87% 62%,rgba(145,166,255,.85) 0 1px,transparent 2px),radial-gradient(circle at 35% 78%,rgba(228,199,255,.8) 0 1px,transparent 2px);background-size:131px 131px,181px 181px,229px 229px,277px 277px;animation:v1714Stars 22s linear infinite;
+#uaiCompanionRoot[data-v1714-scene-theme="galaxy"] .uai-c-v1714-band::after{
+  left:7%;right:4%;top:41%;height:58px;
+  transform:rotate(-13deg);
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),rgba(255,216,252,.34),rgba(174,195,255,.22),transparent);
+  filter:blur(7px);
+  opacity:.75;
+  animation:v1718RibbonCore 9s ease-in-out infinite alternate;
+}
+#uaiCompanionRoot[data-v1714-scene-theme="galaxy"] .uai-c-v1714-accent::before{
+  right:12%;top:12%;width:4px;height:4px;border-radius:50%;
+  background:#fff;
+  box-shadow:0 0 8px 2px rgba(255,255,255,.95),0 0 28px 8px rgba(179,196,255,.55);
+  animation:v1718StarCross 3.2s ease-in-out infinite;
+}
+#uaiCompanionRoot[data-v1714-scene-theme="galaxy"] .uai-c-v1714-accent::after{
+  left:15%;top:10%;width:190px;height:2px;
+  border-radius:999px;
+  background:linear-gradient(90deg,transparent,rgba(236,244,255,.25),#fff 82%,transparent);
+  box-shadow:0 0 12px rgba(187,207,255,.85);
+  opacity:0;
+  transform:rotate(-28deg) translateX(-100px);
+  animation:v1718Meteor 10s ease-in-out infinite;
 }
 
+/* ---------- Sakura Night / 樱花夜色 ---------- */
 #uaiCompanionRoot[data-v1714-scene-theme="sakura"] .uai-c-v1714-base{
-  background:radial-gradient(ellipse at 15% 5%,rgba(255,111,188,.38),transparent 34%),radial-gradient(ellipse at 72% 17%,rgba(177,87,255,.34),transparent 38%),radial-gradient(ellipse at 88% 80%,rgba(90,91,212,.30),transparent 39%),linear-gradient(148deg,#11071e 0%,#35134f 39%,#21103d 68%,#080918 100%);
+  background:
+    radial-gradient(ellipse at 14% 5%,rgba(255,98,183,.43),transparent 31%),
+    radial-gradient(ellipse at 73% 14%,rgba(193,92,255,.43),transparent 36%),
+    radial-gradient(ellipse at 89% 80%,rgba(77,87,196,.34),transparent 40%),
+    linear-gradient(148deg,#090411 0%,#2b0d3b 34%,#241044 59%,#0a0c26 80%,#050711 100%);
 }
-#uaiCompanionRoot[data-v1714-scene-theme="sakura"] .uai-c-v1714-wash{background:radial-gradient(ellipse at 20% 34%,rgba(255,119,181,.34),transparent 28%),radial-gradient(ellipse at 66% 28%,rgba(211,101,255,.28),transparent 31%),radial-gradient(ellipse at 82% 72%,rgba(112,105,255,.19),transparent 34%);animation:v1714SakuraWash 20s ease-in-out infinite alternate}
-#uaiCompanionRoot[data-v1714-scene-theme="sakura"] .uai-c-v1714-band::before{content:"";position:absolute;left:-18%;right:-18%;top:44%;height:120px;transform:rotate(7deg);background:linear-gradient(90deg,transparent,rgba(255,127,190,.08),rgba(255,166,211,.34),rgba(207,121,255,.27),rgba(131,120,255,.14),transparent);filter:blur(3px);animation:v1714SakuraBand 15s ease-in-out infinite alternate}
-#uaiCompanionRoot[data-v1714-scene-theme="sakura"] .uai-c-v1714-accent::before{content:"";position:absolute;right:8%;top:8%;width:124px;height:124px;border-radius:50%;background:radial-gradient(circle at 40% 38%,rgba(255,244,252,.46),rgba(255,177,222,.15) 45%,transparent 72%);box-shadow:0 0 56px rgba(255,129,195,.20)}
+#uaiCompanionRoot[data-v1714-scene-theme="sakura"] .uai-c-v1714-base::before{
+  inset:0;
+  opacity:.62;
+  background-image:
+    radial-gradient(circle at 16% 14%,rgba(255,220,240,.95) 0 1px,transparent 1.8px),
+    radial-gradient(circle at 72% 22%,rgba(226,207,255,.85) 0 1px,transparent 1.7px),
+    radial-gradient(circle at 42% 68%,rgba(255,183,221,.75) 0 .9px,transparent 1.6px);
+  background-size:149px 149px,207px 207px,113px 113px;
+  animation:v1718StarDrift 46s linear infinite reverse;
+}
+#uaiCompanionRoot[data-v1714-scene-theme="sakura"] .uai-c-v1714-base::after{
+  left:-6%;right:-6%;bottom:-12%;height:38%;
+  background:
+    radial-gradient(ellipse at 22% 34%,rgba(255,125,191,.22),transparent 30%),
+    radial-gradient(ellipse at 68% 50%,rgba(197,100,255,.18),transparent 34%),
+    linear-gradient(180deg,transparent,rgba(21,8,29,.62));
+  filter:blur(15px);
+}
+#uaiCompanionRoot[data-v1714-scene-theme="sakura"] .uai-c-v1714-wash{
+  background:
+    radial-gradient(ellipse at 20% 32%,rgba(255,119,181,.40),transparent 27%),
+    radial-gradient(ellipse at 66% 27%,rgba(215,101,255,.34),transparent 30%),
+    radial-gradient(ellipse at 82% 72%,rgba(113,111,255,.23),transparent 34%);
+  animation:v1718SakuraMist 20s ease-in-out infinite alternate;
+}
+#uaiCompanionRoot[data-v1714-scene-theme="sakura"] .uai-c-v1714-band::before{
+  left:-15%;right:-15%;top:45%;height:130px;
+  transform:rotate(6deg);
+  background:linear-gradient(90deg,transparent,rgba(255,111,185,.10),rgba(255,176,214,.42),rgba(213,120,255,.31),rgba(137,124,255,.14),transparent);
+  filter:blur(5px);
+  box-shadow:0 0 70px rgba(255,117,190,.12);
+  animation:v1718SakuraHaze 14s ease-in-out infinite alternate;
+}
+#uaiCompanionRoot[data-v1714-scene-theme="sakura"] .uai-c-v1714-band::after{
+  left:-4%;top:-5%;width:62%;height:44%;
+  background:
+    radial-gradient(circle at 18% 28%,rgba(255,143,195,.75) 0 7px,transparent 8px),
+    radial-gradient(circle at 35% 18%,rgba(255,168,211,.62) 0 5px,transparent 6px),
+    radial-gradient(circle at 49% 36%,rgba(236,123,198,.55) 0 8px,transparent 9px),
+    radial-gradient(circle at 68% 17%,rgba(255,180,221,.60) 0 5px,transparent 6px),
+    linear-gradient(156deg,transparent 0 40%,rgba(37,13,41,.9) 41% 43%,transparent 44% 100%);
+  background-size:86px 86px,112px 112px,132px 132px,156px 156px,100% 100%;
+  opacity:.46;
+  filter:blur(.2px) drop-shadow(0 0 12px rgba(255,108,188,.15));
+  transform:rotate(-5deg);
+}
+#uaiCompanionRoot[data-v1714-scene-theme="sakura"] .uai-c-v1714-accent::before{
+  right:9%;top:7%;width:154px;height:154px;border-radius:50%;
+  background:
+    radial-gradient(circle at 36% 31%,#fff8fc 0 10%,#ffdff1 24%,#efb9e4 42%,rgba(255,173,221,.24) 60%,transparent 72%);
+  box-shadow:0 0 34px rgba(255,221,243,.42),0 0 92px rgba(255,125,194,.24),0 0 170px rgba(190,102,255,.12);
+  opacity:.90;
+}
+#uaiCompanionRoot[data-v1714-scene-theme="sakura"] .uai-c-v1714-accent::after{
+  right:-8%;bottom:-4%;width:42%;height:72%;
+  background:
+    radial-gradient(circle at 70% 20%,rgba(255,133,195,.30) 0 12px,transparent 13px),
+    radial-gradient(circle at 45% 33%,rgba(255,158,210,.24) 0 10px,transparent 11px),
+    radial-gradient(circle at 78% 46%,rgba(228,119,196,.22) 0 14px,transparent 15px),
+    linear-gradient(105deg,transparent 0 52%,rgba(23,10,30,.90) 53% 56%,transparent 57%);
+  background-size:118px 118px,146px 146px,172px 172px,100% 100%;
+  opacity:.42;
+  filter:drop-shadow(0 0 18px rgba(255,104,184,.10));
+}
 
+/* ---------- Moonlight Room / 月光房间 ---------- */
 #uaiCompanionRoot[data-v1714-scene-theme="moonlight"] .uai-c-v1714-base{
-  background:radial-gradient(ellipse at 73% 3%,rgba(196,220,255,.30),transparent 28%),radial-gradient(ellipse at 28% 16%,rgba(99,123,255,.32),transparent 35%),radial-gradient(ellipse at 58% 74%,rgba(94,89,205,.25),transparent 43%),linear-gradient(150deg,#06101d 0%,#101f43 42%,#0e1531 70%,#060a16 100%);
+  background:
+    radial-gradient(ellipse at 77% 4%,rgba(207,229,255,.34),transparent 25%),
+    radial-gradient(ellipse at 26% 14%,rgba(83,121,255,.32),transparent 34%),
+    linear-gradient(180deg,rgba(11,26,54,.15) 0 66%,rgba(19,16,31,.54) 67% 100%),
+    linear-gradient(150deg,#040b16 0%,#0c1d3f 42%,#10172f 70%,#060912 100%);
 }
-#uaiCompanionRoot[data-v1714-scene-theme="moonlight"] .uai-c-v1714-wash{background:radial-gradient(ellipse at 74% 13%,rgba(211,228,255,.30),transparent 25%),radial-gradient(ellipse at 42% 54%,rgba(106,135,255,.22),transparent 32%),radial-gradient(ellipse at 20% 83%,rgba(129,101,255,.16),transparent 30%);animation:v1714MoonWash 19s ease-in-out infinite alternate}
-#uaiCompanionRoot[data-v1714-scene-theme="moonlight"] .uai-c-v1714-band::before{content:"";position:absolute;left:42%;right:-30%;top:-12%;height:132%;transform:rotate(20deg);background:linear-gradient(90deg,transparent 0 24%,rgba(201,224,255,.04) 33%,rgba(204,225,255,.20) 48%,rgba(141,171,255,.10) 62%,transparent 75%);filter:blur(2px);animation:v1714MoonBeam 11s ease-in-out infinite alternate}
-#uaiCompanionRoot[data-v1714-scene-theme="moonlight"] .uai-c-v1714-accent::before{content:"";position:absolute;right:10%;top:6%;width:150px;height:150px;border-radius:50%;background:radial-gradient(circle at 38% 34%,#f1f7ff 0%,#bfd7ff 31%,rgba(159,185,255,.50) 48%,rgba(127,146,255,.10) 65%,transparent 75%);box-shadow:0 0 55px rgba(171,207,255,.28),0 0 115px rgba(104,140,255,.16);opacity:.78}
+#uaiCompanionRoot[data-v1714-scene-theme="moonlight"] .uai-c-v1714-base::before{
+  left:47%;right:3%;top:7%;bottom:25%;
+  border:1px solid rgba(192,218,255,.16);
+  border-radius:5px 5px 2px 2px;
+  background:
+    linear-gradient(90deg,transparent 49.2%,rgba(185,211,255,.15) 49.4% 50.6%,transparent 50.8%),
+    linear-gradient(180deg,transparent 49.2%,rgba(185,211,255,.13) 49.4% 50.6%,transparent 50.8%),
+    radial-gradient(circle at 70% 25%,rgba(237,247,255,.28),transparent 18%),
+    linear-gradient(150deg,rgba(68,104,167,.16),rgba(19,34,70,.12));
+  box-shadow:inset 0 0 50px rgba(119,162,255,.08),0 0 30px rgba(104,146,255,.08);
+  opacity:.78;
+}
+#uaiCompanionRoot[data-v1714-scene-theme="moonlight"] .uai-c-v1714-base::after{
+  left:0;right:0;bottom:0;height:30%;
+  background:
+    linear-gradient(175deg,transparent 0 31%,rgba(255,186,122,.04) 32% 34%,transparent 35%),
+    radial-gradient(ellipse at 24% 72%,rgba(255,176,111,.12),transparent 25%),
+    linear-gradient(180deg,rgba(11,10,19,.04),rgba(7,6,12,.72));
+  box-shadow:inset 0 32px 50px rgba(0,0,0,.10);
+}
+#uaiCompanionRoot[data-v1714-scene-theme="moonlight"] .uai-c-v1714-wash{
+  background:
+    radial-gradient(ellipse at 75% 12%,rgba(213,231,255,.36),transparent 24%),
+    radial-gradient(ellipse at 43% 53%,rgba(104,139,255,.27),transparent 31%),
+    radial-gradient(ellipse at 18% 82%,rgba(132,104,255,.19),transparent 30%);
+  animation:v1718MoonBreath 18s ease-in-out infinite alternate;
+}
+#uaiCompanionRoot[data-v1714-scene-theme="moonlight"] .uai-c-v1714-band::before{
+  left:44%;right:-26%;top:-15%;height:138%;
+  transform:rotate(18deg);
+  background:linear-gradient(90deg,transparent 0 22%,rgba(206,228,255,.04) 31%,rgba(214,232,255,.24) 47%,rgba(148,181,255,.11) 62%,transparent 75%);
+  filter:blur(2.5px);
+  animation:v1718MoonBeam 12s ease-in-out infinite alternate;
+}
+#uaiCompanionRoot[data-v1714-scene-theme="moonlight"] .uai-c-v1714-band::after{
+  left:5%;bottom:6%;width:230px;height:180px;
+  border-radius:50%;
+  background:radial-gradient(ellipse,rgba(255,188,126,.18),rgba(255,154,105,.06) 42%,transparent 72%);
+  filter:blur(18px);
+  animation:v1718LampBreath 6s ease-in-out infinite alternate;
+}
+#uaiCompanionRoot[data-v1714-scene-theme="moonlight"] .uai-c-v1714-accent::before{
+  right:10%;top:6%;width:158px;height:158px;border-radius:50%;
+  background:
+    radial-gradient(circle at 32% 29%,rgba(255,255,255,.98) 0 8%,#edf5ff 21%,#bfd7ff 39%,rgba(156,187,255,.48) 55%,rgba(114,145,255,.10) 68%,transparent 75%);
+  box-shadow:0 0 42px rgba(203,229,255,.38),0 0 105px rgba(104,145,255,.22),0 0 170px rgba(87,112,233,.10);
+  opacity:.90;
+}
+#uaiCompanionRoot[data-v1714-scene-theme="moonlight"] .uai-c-v1714-accent::after{
+  left:10%;bottom:10%;width:180px;height:105px;
+  border-radius:18px 18px 5px 5px;
+  background:
+    linear-gradient(90deg,rgba(27,20,28,.92),rgba(19,17,28,.74)),
+    radial-gradient(circle at 38% 18%,rgba(255,202,143,.55),transparent 34%);
+  box-shadow:0 -12px 45px rgba(255,168,108,.08);
+  opacity:.40;
+}
 
+/* ---------- Neon Fantasy / 霓虹幻想 ---------- */
 #uaiCompanionRoot[data-v1714-scene-theme="neon"] .uai-c-v1714-base{
-  background:radial-gradient(ellipse at 15% 8%,rgba(118,61,255,.38),transparent 35%),radial-gradient(ellipse at 83% 23%,rgba(255,44,165,.31),transparent 34%),radial-gradient(ellipse at 65% 76%,rgba(27,199,255,.25),transparent 41%),linear-gradient(145deg,#040616 0%,#0b1543 40%,#171038 68%,#050615 100%);
+  background:
+    radial-gradient(ellipse at 13% 5%,rgba(112,55,255,.46),transparent 33%),
+    radial-gradient(ellipse at 84% 19%,rgba(255,37,165,.39),transparent 33%),
+    radial-gradient(ellipse at 66% 78%,rgba(21,211,255,.32),transparent 40%),
+    linear-gradient(145deg,#02040f 0%,#07103a 34%,#170b39 61%,#050515 83%,#02030b 100%);
 }
-#uaiCompanionRoot[data-v1714-scene-theme="neon"] .uai-c-v1714-wash{background:radial-gradient(circle at 18% 25%,rgba(114,54,255,.33),transparent 25%),radial-gradient(circle at 82% 35%,rgba(255,43,165,.30),transparent 28%),radial-gradient(circle at 58% 79%,rgba(27,205,255,.24),transparent 29%);filter:blur(22px) saturate(1.4);animation:v1714NeonWash 14s ease-in-out infinite alternate}
-#uaiCompanionRoot[data-v1714-scene-theme="neon"] .uai-c-v1714-band::before{content:"";position:absolute;left:-16%;right:-16%;top:38%;height:148px;background:linear-gradient(180deg,transparent 42%,rgba(255,47,170,.20) 48%,rgba(255,63,181,.62) 50%,rgba(70,214,255,.28) 52%,transparent 58%),linear-gradient(90deg,transparent 5%,rgba(112,65,255,.12),rgba(255,50,172,.28),rgba(51,211,255,.20),transparent 94%);filter:blur(.8px);animation:v1714NeonBand 9s ease-in-out infinite alternate}
-#uaiCompanionRoot[data-v1714-scene-theme="neon"] .uai-c-v1714-accent{background-image:linear-gradient(rgba(83,99,255,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(255,54,172,.06) 1px,transparent 1px);background-size:78px 78px;mask-image:linear-gradient(to bottom,transparent 0,#000 24%,#000 88%,transparent 100%);animation:v1714Grid 15s linear infinite}
-
-#uaiCompanionRoot .uai-c-v1714-particles i{position:absolute;left:var(--x);top:var(--y);width:var(--size);height:var(--size);font-style:normal;font-size:calc(var(--size) * 1.7);line-height:1;color:rgba(255,255,255,.82);text-shadow:0 0 10px currentColor;opacity:.18;animation:v1714Float var(--duration) ease-in-out var(--delay) infinite}
-#uaiCompanionRoot .uai-c-v1714-particles i[data-kind="sakura"]{color:#ffb7d4;opacity:.42}
-#uaiCompanionRoot .uai-c-v1714-particles i[data-kind="moonlight"]{border-radius:50%;background:#e9f4ff;box-shadow:0 0 10px rgba(189,216,255,.85);opacity:.28}
-#uaiCompanionRoot .uai-c-v1714-particles i[data-kind="neon"]{border-radius:50%;background:#db9aff;box-shadow:0 0 12px #8bdfff;opacity:.38}
-
-#uaiCompanionRoot .uai-c-v1714-scene-button{display:inline-flex;align-items:center;gap:6px;min-height:38px;padding:0 12px;border:1px solid rgba(216,158,255,.16);border-radius:12px;background:rgba(36,25,46,.72);color:#f6eaff;box-shadow:inset 0 1px rgba(255,255,255,.04);cursor:pointer}
-#uaiCompanionRoot .uai-c-v1714-scene-button span{font-size:15px;color:#e9a8ff}
-#uaiCompanionRoot .uai-c-v1714-scene-button b{font-size:13px}
-#uaiCompanionRoot .uai-c-v1714-scene-button small{font-size:10px;color:rgba(245,231,255,.56)}
-#uaiCompanionRoot .uai-c-v1714-scene-button:hover{border-color:rgba(234,162,255,.38);background:rgba(58,35,70,.78)}
-
-@keyframes v1714GalaxyWash{from{transform:translate3d(-4%,-2%,0) scale(.98)}to{transform:translate3d(6%,4%,0) scale(1.08)}}
-@keyframes v1714GalaxyBand{from{translate:-6% -12px;rotate:-2deg}to{translate:8% 15px;rotate:4deg}}
-@keyframes v1714Stars{to{background-position:310px 210px,-230px 170px,180px -250px,-140px 290px}}
-@keyframes v1714SakuraWash{from{transform:translate3d(-5%,2%,0) scale(.97)}to{transform:translate3d(6%,-4%,0) scale(1.07)}}
-@keyframes v1714SakuraBand{from{translate:-7% 5px;rotate:-2deg}to{translate:7% -9px;rotate:3deg}}
-@keyframes v1714MoonWash{from{transform:translate3d(-3%,2%,0) scale(.99)}to{transform:translate3d(4%,-3%,0) scale(1.05)}}
-@keyframes v1714MoonBeam{from{translate:-3% 0;opacity:.54}to{translate:4% 2%;opacity:.9}}
-@keyframes v1714NeonWash{from{transform:translate3d(-4%,-2%,0) scale(.98)}to{transform:translate3d(5%,3%,0) scale(1.07)}}
-@keyframes v1714NeonBand{from{translate:-5% -4px;opacity:.7}to{translate:6% 7px;opacity:1}}
-@keyframes v1714Grid{to{background-position:78px 78px}}
-@keyframes v1714Float{0%,100%{transform:translate3d(0,7px,0) rotate(0deg);opacity:.08}45%{transform:translate3d(var(--drift),-25px,0) rotate(170deg);opacity:.56}70%{opacity:.25}}
-
-@media (prefers-reduced-motion:reduce){
-  #uaiCompanionRoot .uai-c-v1714-scene *{animation:none!important;transition:none!important}
-  #uaiCompanionRoot .uai-c-v1714-particles i{opacity:.18!important}
+#uaiCompanionRoot[data-v1714-scene-theme="neon"] .uai-c-v1714-base::before{
+  left:0;right:0;bottom:0;height:52%;
+  background:
+    repeating-linear-gradient(90deg,transparent 0 25px,rgba(44,219,255,.12) 26px 28px,transparent 29px 58px),
+    repeating-linear-gradient(180deg,rgba(255,65,184,.11) 0 2px,transparent 3px 17px),
+    linear-gradient(90deg,rgba(7,11,26,.98),rgba(14,7,31,.92));
+  clip-path:polygon(0 46%,5% 46%,5% 20%,11% 20%,11% 58%,16% 58%,16% 8%,23% 8%,23% 42%,30% 42%,30% 27%,37% 27%,37% 61%,44% 61%,44% 15%,51% 15%,51% 49%,58% 49%,58% 4%,66% 4%,66% 34%,72% 34%,72% 18%,79% 18%,79% 56%,84% 56%,84% 12%,91% 12%,91% 38%,100% 38%,100% 100%,0 100%);
+  opacity:.78;
+  filter:drop-shadow(0 -8px 18px rgba(66,120,255,.08));
 }
+#uaiCompanionRoot[data-v1714-scene-theme="neon"] .uai-c-v1714-base::after{
+  inset:0;
+  background:
+    linear-gradient(112deg,transparent 0 42%,rgba(255,52,177,.08) 43% 43.4%,transparent 44%),
+    linear-gradient(68deg,transparent 0 58%,rgba(58,219,255,.07) 59% 59.3%,transparent 60%),
+    repeating-linear-gradient(180deg,transparent 0 5px,rgba(255,255,255,.018) 6px 7px);
+  opacity:.9;
+  animation:v1718NeonScan 10s linear infinite;
+}
+#uaiCompanionRoot[data-v1714-scene-theme="neon"] .uai-c-v1714-wash{
+  background:
+    radial-gradient(circle at 18% 25%,rgba(112,51,255,.42),transparent 24%),
+    radial-gradient(circle at 82% 35%,rgba(255,38,165,.38),transparent 27%),
+    radial-gradient(circle at 58% 79%,rgba(22,211,255,.30),transparent 28%),
+    conic-gradient(from 250deg at 50% 60%,rgba(42,216,255,.08),transparent 22%,rgba(255,53,175,.10) 45%,transparent 65%);
+  filter:blur(24px) saturate(1.45);
+  animation:v1718NeonPulse 12s ease-in-out infinite alternate;
+}
+#uaiCompanionRoot[data-v1714-scene-theme="neon"] .uai-c-v1714-band::before{
+  left:-10%;right:-10%;top:36%;height:172px;
+  background:
+    linear-gradient(180deg,transparent 40%,rgba(255,48,173,.16) 47%,rgba(255,72,188,.78) 49.6%,rgba(63,218,255,.42) 51%,transparent 57%),
+    linear-gradient(90deg,transparent 3%,rgba(106,68,255,.12),rgba(255,47,175,.32),rgba(45,216,255,.28),transparent 97%);
+  filter:blur(.7px);
+  box-shadow:0 0 60px rgba(255,49,175,.08),0 0 110px rgba(49,214,255,.08);
+  animation:v1718NeonHorizon 8s ease-in-out infinite alternate;
+}
+#uaiCompanionRoot[data-v1714-scene-theme="neon"] .uai-c-v1714-band::after{
+  left:20%;right:8%;top:18%;height:58%;
+  background:
+    linear-gradient(90deg,transparent 0 6%,rgba(49,215,255,.18) 6.5% 7%,transparent 7.5% 26%,rgba(255,55,177,.17) 26.5% 27%,transparent 27.5% 57%,rgba(131,82,255,.16) 57.5% 58%,transparent 58.5%),
+    linear-gradient(180deg,transparent 0 20%,rgba(255,255,255,.025) 21%,transparent 22% 52%,rgba(255,255,255,.025) 53%,transparent 54%);
+  filter:drop-shadow(0 0 16px rgba(65,209,255,.12));
+  animation:v1718NeonColumns 14s ease-in-out infinite alternate;
+}
+#uaiCompanionRoot[data-v1714-scene-theme="neon"] .uai-c-v1714-accent::before{
+  right:9%;top:13%;width:180px;height:62px;
+  border:1px solid rgba(255,91,192,.18);
+  border-radius:14px;
+  background:linear-gradient(135deg,rgba(255,48,177,.11),rgba(52,211,255,.08));
+  box-shadow:0 0 26px rgba(255,52,179,.12),inset 0 0 22px rgba(62,210,255,.06);
+  transform:rotate(-2deg);
+  animation:v1718SignFlicker 6s steps(1,end) infinite;
+}
+#uaiCompanionRoot[data-v1714-scene-theme="neon"] .uai-c-v1714-accent::after{
+  left:4%;bottom:4%;width:46%;height:34%;
+  background:
+    linear-gradient(105deg,transparent 0 20%,rgba(255,64,182,.08) 21% 24%,transparent 25%),
+    linear-gradient(75deg,transparent 0 61%,rgba(55,211,255,.08) 62% 65%,transparent 66%);
+  filter:blur(1px);
+  opacity:.8;
+}
+
+/* Layered particles: far / middle / near. */
+#uaiCompanionRoot .uai-c-v1714-particles i{
+  position:absolute;
+  left:var(--x);top:var(--y);
+  width:var(--size);height:var(--size);
+  font-style:normal;
+  font-size:calc(var(--size) * 1.7);
+  line-height:1;
+  color:rgba(255,255,255,.88);
+  text-shadow:0 0 11px currentColor;
+  opacity:.24;
+  animation:v1718ParticleFloat var(--duration) ease-in-out var(--delay) infinite;
+  will-change:transform,opacity;
+}
+#uaiCompanionRoot .uai-c-v1714-particles i:nth-child(3n){filter:blur(.7px);opacity:.16;transform:scale(.72)}
+#uaiCompanionRoot .uai-c-v1714-particles i:nth-child(3n+1){filter:none;opacity:.34}
+#uaiCompanionRoot .uai-c-v1714-particles i:nth-child(5n){filter:blur(1.4px);opacity:.48;transform:scale(1.25)}
+#uaiCompanionRoot[data-v1714-scene-theme="galaxy"] .uai-c-v1714-particles i:nth-child(7n){color:#fff;opacity:.72;animation-name:v1718Twinkle}
+#uaiCompanionRoot .uai-c-v1714-particles i[data-kind="sakura"]{color:#ffc1dc;opacity:.54;text-shadow:0 0 12px rgba(255,124,190,.55);animation-name:v1718PetalFall}
+#uaiCompanionRoot .uai-c-v1714-particles i[data-kind="moonlight"]{border-radius:50%;background:#edf7ff;box-shadow:0 0 12px rgba(192,222,255,.92);opacity:.34;animation-name:v1718MoonDust}
+#uaiCompanionRoot .uai-c-v1714-particles i[data-kind="neon"]{border-radius:50%;background:#efadff;box-shadow:0 0 14px rgba(112,226,255,.95),0 0 26px rgba(255,64,183,.32);opacity:.45;animation-name:v1718NeonParticle}
+
+/* Premium scene controller. */
+#uaiCompanionRoot .uai-c-v1714-scene-button{
+  position:relative;
+  isolation:isolate;
+  display:inline-grid;
+  grid-template-columns:auto auto;
+  grid-template-rows:auto auto;
+  align-items:center;
+  column-gap:8px;
+  min-height:40px;
+  padding:6px 13px 6px 11px;
+  overflow:hidden;
+  border:1px solid rgba(224,174,255,.22);
+  border-radius:14px;
+  color:#fff7ff;
+  background:linear-gradient(135deg,rgba(53,34,71,.74),rgba(20,21,43,.68));
+  box-shadow:inset 0 1px rgba(255,255,255,.06),0 10px 28px rgba(0,0,0,.16),0 0 30px rgba(186,89,231,.08);
+  backdrop-filter:blur(18px) saturate(1.18);
+  cursor:pointer;
+  transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease,background .2s ease;
+}
+#uaiCompanionRoot .uai-c-v1714-scene-button::before{
+  content:"";
+  position:absolute;
+  inset:-1px;
+  z-index:-1;
+  border-radius:inherit;
+  background:linear-gradient(110deg,transparent 10%,rgba(255,125,221,.16),rgba(120,163,255,.13),transparent 86%);
+  transform:translateX(-75%);
+  transition:transform .45s ease;
+}
+#uaiCompanionRoot .uai-c-v1714-scene-button span{grid-row:1/3;font-size:17px;color:#f1b4ff;text-shadow:0 0 13px rgba(222,123,255,.48)}
+#uaiCompanionRoot .uai-c-v1714-scene-button b{align-self:end;font-size:12px;line-height:1.15;letter-spacing:.02em}
+#uaiCompanionRoot .uai-c-v1714-scene-button small{align-self:start;font-size:9px;line-height:1.15;color:rgba(245,229,255,.56);white-space:nowrap}
+#uaiCompanionRoot .uai-c-v1714-scene-button:hover{transform:translateY(-1px);border-color:rgba(239,172,255,.44);background:linear-gradient(135deg,rgba(70,41,91,.82),rgba(27,29,57,.76));box-shadow:inset 0 1px rgba(255,255,255,.08),0 13px 34px rgba(0,0,0,.22),0 0 34px rgba(197,102,244,.14)}
+#uaiCompanionRoot .uai-c-v1714-scene-button:hover::before{transform:translateX(72%)}
+#uaiCompanionRoot .uai-c-v1714-scene-button:active{transform:translateY(0) scale(.98)}
+
+@keyframes v1718StarDrift{to{background-position:310px 200px,-240px 180px,170px -260px,-150px 280px,90px 150px}}
+@keyframes v1718DustPulse{from{opacity:.16;transform:rotate(-14deg) scale(1.15,.39)}to{opacity:.33;transform:rotate(-12deg) scale(1.28,.46)}}
+@keyframes v1718GalaxyNebula{from{transform:translate3d(-4%,-2%,0) scale(.98)}to{transform:translate3d(6%,4%,0) scale(1.08)}}
+@keyframes v1718GalaxyRibbon{from{translate:-5% -10px;rotate:-1deg}to{translate:7% 13px;rotate:3deg}}
+@keyframes v1718RibbonCore{from{opacity:.38;translate:-4% 0}to{opacity:.88;translate:5% 3px}}
+@keyframes v1718StarCross{0%,100%{opacity:.55;transform:scale(.82)}50%{opacity:1;transform:scale(1.5);box-shadow:0 0 10px 3px #fff,0 0 34px 12px rgba(181,198,255,.65)}}
+@keyframes v1718Meteor{0%,66%,100%{opacity:0;transform:rotate(-28deg) translateX(-120px)}72%{opacity:.95}82%{opacity:.08;transform:rotate(-28deg) translateX(620px)}}
+@keyframes v1718SakuraMist{from{transform:translate3d(-5%,2%,0) scale(.97)}to{transform:translate3d(6%,-4%,0) scale(1.08)}}
+@keyframes v1718SakuraHaze{from{translate:-7% 6px;rotate:-2deg;opacity:.62}to{translate:8% -8px;rotate:3deg;opacity:1}}
+@keyframes v1718MoonBreath{from{transform:translate3d(-3%,2%,0) scale(.99)}to{transform:translate3d(4%,-3%,0) scale(1.06)}}
+@keyframes v1718MoonBeam{from{translate:-3% 0;opacity:.48}to{translate:5% 2%;opacity:.94}}
+@keyframes v1718LampBreath{from{opacity:.48;transform:scale(.94)}to{opacity:.88;transform:scale(1.08)}}
+@keyframes v1718NeonScan{from{background-position:0 0,0 0,0 0}to{background-position:90px 20px,-70px 35px,0 70px}}
+@keyframes v1718NeonPulse{from{transform:translate3d(-4%,-2%,0) scale(.98);opacity:.75}to{transform:translate3d(5%,3%,0) scale(1.07);opacity:1}}
+@keyframes v1718NeonHorizon{from{translate:-4% -3px;opacity:.68}to{translate:5% 6px;opacity:1}}
+@keyframes v1718NeonColumns{from{opacity:.45;transform:translateY(-4px)}to{opacity:.86;transform:translateY(6px)}}
+@keyframes v1718SignFlicker{0%,8%,12%,58%,62%,100%{opacity:.86}9%,10%,59%,60%{opacity:.34}}
+@keyframes v1718ParticleFloat{0%,100%{transform:translate3d(0,10px,0) rotate(0deg);opacity:.10}45%{transform:translate3d(var(--drift),-28px,0) rotate(165deg);opacity:.58}72%{opacity:.27}}
+@keyframes v1718Twinkle{0%,100%{opacity:.16;transform:scale(.72)}50%{opacity:.88;transform:scale(1.4)}}
+@keyframes v1718PetalFall{0%{transform:translate3d(0,-22px,0) rotate(0deg);opacity:0}15%{opacity:.62}70%{opacity:.52}100%{transform:translate3d(var(--drift),110px,0) rotate(320deg);opacity:0}}
+@keyframes v1718MoonDust{0%,100%{transform:translate3d(0,8px,0) scale(.7);opacity:.12}50%{transform:translate3d(var(--drift),-20px,0) scale(1.08);opacity:.52}}
+@keyframes v1718NeonParticle{0%,100%{transform:translate3d(0,5px,0);opacity:.18}50%{transform:translate3d(var(--drift),-24px,0);opacity:.72;box-shadow:0 0 18px rgba(118,227,255,.95),0 0 34px rgba(255,65,184,.48)}}
 
 @media (max-width:900px){
+  #uaiCompanionRoot .uai-c-v1714-vignette{background:linear-gradient(90deg,rgba(4,4,12,.54),rgba(5,5,14,.20) 48%,transparent 78%),linear-gradient(180deg,rgba(4,4,12,.10),transparent 22%,transparent 70%,rgba(3,3,10,.43))}
   #uaiCompanionRoot .uai-c-v1714-scene-button small{display:none}
-  #uaiCompanionRoot .uai-c-v1714-scene-button{padding:0 9px}
+  #uaiCompanionRoot .uai-c-v1714-scene-button{grid-template-rows:1fr;grid-template-columns:auto auto;padding:0 10px;min-height:36px}
+  #uaiCompanionRoot .uai-c-v1714-scene-button span{grid-row:auto;font-size:15px}
+  #uaiCompanionRoot[data-v1714-scene-theme="sakura"] .uai-c-v1714-accent::before,
+  #uaiCompanionRoot[data-v1714-scene-theme="moonlight"] .uai-c-v1714-accent::before{width:118px;height:118px}
+}
+
+@media (max-width:640px){
+  #uaiCompanionRoot .uai-c-v1714-particles i:nth-child(2n){display:none}
+  #uaiCompanionRoot[data-v1714-scene-theme="neon"] .uai-c-v1714-base::before{opacity:.54}
+  #uaiCompanionRoot[data-v1714-scene-theme="sakura"] .uai-c-v1714-band::after{opacity:.28}
+  #uaiCompanionRoot .uai-c-v1714-vignette{background:linear-gradient(180deg,rgba(3,3,10,.18),transparent 20%,transparent 68%,rgba(3,3,10,.52)),radial-gradient(ellipse at center,transparent 45%,rgba(3,3,10,.28) 100%)}
+}
+
+@media (prefers-reduced-motion:reduce){
+  #uaiCompanionRoot .uai-c-v1714-scene *,
+  #uaiCompanionRoot .uai-c-v1714-scene *::before,
+  #uaiCompanionRoot .uai-c-v1714-scene *::after{animation:none!important;transition:none!important}
+  #uaiCompanionRoot .uai-c-v1714-particles i{opacity:.20!important}
+  #uaiCompanionRoot .uai-c-v1714-scene-button::before{display:none}
 }
