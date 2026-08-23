@@ -1,6 +1,6 @@
 Unlimited AI deployment trigger
 Date: 2026-08-23
-Frontend core revision: 2026-08-23-v17.18-cinematic-companion-scenes
+Frontend core revision: 2026-08-23-v17.19-luminous-full-canvas
 Frontend runtime core: 2026-08-21-v17.0-workspace-consolidation
 Workspace UI module: 2026-08-21-v17.0-workspace-ui
 AI collaboration module: 2026-08-21-v17.0-ai-collaboration
@@ -22,13 +22,23 @@ Galaxy Dream: deep-space nebula volumes, diagonal Milky Way ribbon/core, multi-s
 Sakura Night: luminous moon, distant stars, blossom/branch silhouettes, pink haze and layered falling petals.
 Moonlight Room: window-grid silhouette, large moon, diagonal moon beam, warm interior/floor glow and floating moonlit dust.
 Neon Fantasy: layered city skyline silhouette, window lines, horizon glow, vertical neon columns, scan light, sign flicker and foreground neon particles.
-Readability: a dedicated left-side dark reading veil protects chat contrast while the brighter cinematic detail remains strongest around the integrated role/background area.
-Scene controller: upgraded to a glass/premium two-line control with hover light sweep while retaining the same stable scene-switching JS.
 Performance: CSS-only motion, mobile particle reduction, no new network assets, no new DOM observer, no shell/main grid changes and prefers-reduced-motion disables cinematic animations.
+
+Companion luminous shell V17.19: public/companion-luminous-shell-v1719.css?v=20260823-v17.19-luminous-full-canvas
+Purpose: remove the remaining split-screen feeling where the cinematic main area was bright but the sidebar/header/composer stayed almost black from the earlier safe polish layer.
+Full-canvas lighting: galaxy/sakura/moonlight/neon now provide theme-aware ambient colors to the entire companion root instead of only .uai-c-main.
+Sidebar: replaced the near-black 0.90-opacity panel with scene-tinted translucent glass, layered ambient glow and a brighter scene-aware border; sidebar content remains structurally unchanged.
+Main brightness: final scene grading is lifted to brightness(1.12)/saturate(1.16), while night remains vivid at brightness(1.07)/saturate(1.20) rather than dropping toward black.
+Reading veil: the old left dark veil is softened so chat stays readable without turning half of the canvas into a black block.
+Header/composer: both use brighter translucent glass with theme light, stronger edge highlights and less opaque black fill.
+Messages: assistant bubbles use translucent scene-colored glass; user bubbles use a brighter pink-violet gradient.
+Live2D: final presentation receives a small brightness/saturation lift plus scene-colored rim glow; renderer/model logic remains unchanged from stable V17.17.
+Scene controller: final overlay gives the scene switcher a brighter jewel/glass treatment.
+Safety: CSS-only final overlay, no script, no fetch change, no new DOM/observer, no shell/main grid change, no Live2D renderer changes, responsive overrides and reduced-motion support retained.
 
 Companion cinematic mood V17.18: public/companion-atmosphere-v1715.css?v=20260823-v17.18-cinematic-mood
 Atmosphere JS remains public/companion-atmosphere-v1715.js?v=20260823-v17.15-adaptive-atmosphere.
-Mood grading: reply emotion overlays are stronger but remain visual-only; morning/day/evening/night grading no longer crushes night scenes toward black. Night now preserves rich saturation/contrast while retaining a dark cinematic tone.
+Mood grading: reply emotion overlays are stronger but remain visual-only. V17.19 provides the final brightness floor so time-of-day grading cannot make the interface visually collapse back into black.
 Call backgrounds inherit stronger scene identities so galaxy/sakura/moonlight/neon remain recognizable inside the call overlay.
 
 Companion integrated Live2D V17.17: public/companion-character-stage-v1712.js + public/companion-character-stage-v1712.css?v=20260823-v17.17-integrated-live2d-background
@@ -58,6 +68,7 @@ Active companion feature stack in index:
 - companion-call-suite-v1713.js?v=20260823-v17.14-call-audio-recovery
 - companion-atmosphere-v1715.js?v=20260823-v17.15-adaptive-atmosphere
 - companion-audio-gesture-v1716.js?v=20260823-v17.16-audio-gesture-guard
+- companion-luminous-shell-v1719.css?v=20260823-v17.19-luminous-full-canvas
 
 Safety boundaries retained:
 - companion-runtime.js fetch wrapper remains disabled; no restored layer rewrites window.fetch.
@@ -65,9 +76,9 @@ Safety boundaries retained:
 - legacy scene/Live2D/call stacks remain source-only; isolated replacements are active instead.
 - companion localStorage remains isolated from novel storage.
 - chat shell columns and header/messages/composer rows remain owned by the proven core.
-- V17.18 scene work changes CSS presentation only; Live2D/voice/call/relationship/memory/search/backup behavior is untouched.
+- V17.18 and V17.19 scene work changes CSS presentation only; Live2D/voice/call/relationship/memory/search/backup behavior is untouched.
 
-Reason: V17.18 upgrades the companion background from tasteful gradients into four recognizable cinematic environments while preserving the stable V17.17 integrated Live2D and the fully restored companion feature stack. The scene is intentionally richer around the character/background area and darker behind reading content, so the UI feels more luxurious without sacrificing chat usability or renderer stability.
+Reason: V17.19 addresses the visual imbalance visible after V17.18: the main scene and Live2D were colorful, but the sidebar and chrome stayed too dark because the earlier stable polish used near-opaque black surfaces. The final luminous shell extends scene identity across the whole companion canvas, lifts scene and character brightness, softens the dark reading veil, and keeps all existing functional/runtime boundaries unchanged.
 
 Novel prompt source: src/worker.js -> NOVEL_SYSTEM_PROMPT
 Companion prompt source: src/companion.js -> COMPANION_ROLE_CARD
