@@ -3,9 +3,22 @@ Date: 2026-08-23
 
 Frontend companion revision: 2026-08-23-v17.21-voice-experience-polish
 Diagnostics revision: 2026-08-23-v17.22-final-cleanup-diagnostics
-Novel workspace revision: 2026-08-23-v17.23a-novel-simplification
+Novel workspace revision: 2026-08-23-v17.23b-novel-session-management
 Worker gateway revision: 2026-08-23-v17.22-companion-diagnostics-gateway
 Frontend runtime core: 2026-08-21-v17.0-workspace-consolidation
+
+V17.23B novel session management:
+- public/novel-sessions-v1723b.css provides a novel-only session drawer matching the light writing workspace.
+- public/novel-sessions-v1723b.js enhances the existing app.js session core instead of duplicating session state.
+- Session rows now expose full Renaming/Deleting actions instead of the old single-character buttons.
+- Session rows display local message count plus current-session/date context.
+- Rename uses an in-app dialog and delegates the saved rename back to the proven app.js handler.
+- Delete uses an in-app confirmation dialog and delegates the actual removal back to the proven app.js handler.
+- Deleting the last remaining session automatically creates a replacement blank session first, then deletes the old session, so users no longer hit the old at-least-one-session alert.
+- The session MutationObserver uses idempotent DOM writes to avoid self-triggered decoration loops.
+- All V17.23B selectors/actions are scoped to novel mode; no companion data, Live2D, voice, call or scene code is touched.
+- tests/novel-sessions-v1723b.test.mjs locks the session UX and novel/companion isolation contract into CI.
+- README.md now contains the complete V17.23A-D novel simplification roadmap and marks A/B complete, C next, D pending.
 
 V17.23A novel workspace simplification:
 - public/novel-simplify-v1723.css adds a novel-only warm light writing theme.
@@ -27,11 +40,10 @@ V17.22 final cleanup and diagnostics:
 - src/worker-voice.js /api/diagnostics validates the current V17.21 companion stack in addition to the V17.0 novel workspace.
 - Worker diagnostics check the V17.21 emotional voice, integrated Live2D, isolated scene, cinematic scene CSS, V17.19 luminous shell and unified call implementation.
 - /api/companion/tts/status and /api/companion/stt/status identify Eve as the default companion voice and expose current frontend/diagnostics revisions.
-- public/deploy-status.json reflects the V17.21/V17.22 deployment state instead of V10.2.
-- README.md documents the current V17 architecture instead of V9.5.
+- public/deploy-status.json reflects the current companion/diagnostics/novel deployment state.
 - docs/COMPANION_LEGACY.md defines the historical files that must not return to the production startup chain.
 
-Current production companion chain remains unchanged by V17.23A:
+Current production companion chain remains unchanged by V17.23A/B:
 - V17.5 stable core-only entry: public/companion-entry-v175.js
 - Core: public/companion-mode.css + public/companion-mode.js
 - V17.6 safe polish
