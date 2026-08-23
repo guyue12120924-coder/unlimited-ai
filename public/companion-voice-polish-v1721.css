@@ -1,0 +1,29 @@
+/* V17.21 voice polish: call-profile summary only. No layout ownership changes. */
+body[data-uai-mode="companion"] #uaiCompanionCallV1713 .uai-c-v1713-voice-sync{
+  display:grid;
+  gap:5px;
+  margin:0 0 4px;
+  padding:11px 12px;
+  border:1px solid rgba(239,139,207,.14);
+  border-radius:13px;
+  background:linear-gradient(135deg,rgba(235,112,188,.09),rgba(126,105,230,.07));
+}
+body[data-uai-mode="companion"] #uaiCompanionCallV1713 .uai-c-v1713-voice-sync span{
+  color:rgba(255,255,255,.46);
+  font-size:9px;
+  font-weight:700;
+  letter-spacing:.08em;
+}
+body[data-uai-mode="companion"] #uaiCompanionCallV1713 .uai-c-v1713-voice-sync b{
+  color:#f7eafb;
+  font-size:11px;
+  font-weight:650;
+  line-height:1.45;
+}
+body[data-uai-mode="companion"] #uaiCompanionCallV1713 [data-v1713-persona]{
+  border-color:rgba(232,129,198,.17);
+  background:linear-gradient(135deg,rgba(90,57,113,.74),rgba(35,28,49,.76));
+}
+@media(max-width:760px){
+  body[data-uai-mode="companion"] #uaiCompanionCallV1713 .uai-c-v1713-voice-sync{padding:9px 10px}
+}
