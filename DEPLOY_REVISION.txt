@@ -1,6 +1,6 @@
 Unlimited AI deployment trigger
 Date: 2026-08-23
-Frontend core revision: 2026-08-23-v17.19-luminous-full-canvas
+Frontend core revision: 2026-08-23-v17.20-emotional-voice-system
 Frontend runtime core: 2026-08-21-v17.0-workspace-consolidation
 Workspace UI module: 2026-08-21-v17.0-workspace-ui
 AI collaboration module: 2026-08-21-v17.0-ai-collaboration
@@ -12,60 +12,54 @@ Companion function restore V17.7: multi-character switching/editor, memory organ
 Companion controls V17.8: companion/search/relationship/moments shortcuts, reply-length presets, full backup export/import/merge/replace/rollback
 Companion safe runtime V17.9: generation-safe role operations, orphan cleanup, active-slot repair, runtime status
 Companion experience V17.10: relationship stage, time-of-day presence, safe quick reply actions, browser-local speech and microphone STT
-Companion neural voice V17.16: persistent gesture-unlocked WebAudio, neural TTS, system fallback, auto-read, manual read/replay/stop, monthly relationship review
-Companion audio guard V17.16: first real companion gesture unlocks persisted auto-read; playback-policy errors can retry without accidentally disabling the speaker
+
+Companion emotional voice V17.20: public/companion-voice-suite-v1711.js + public/companion-voice-suite-v1711.css?v=20260823-v17.20-emotional-voice-system
+Default voice: Grok TTS + Eve at 0.95x replaces the previous flatter Ara/1.00-style path. The same default is also enforced in src/tts.js through DEFAULT_GROK_VOICE="eve".
+Per-character voice profile: each companion stores one shared voice profile used by auto-read, manual preview/replay and explicit call mode. Normal chat and calls no longer maintain independent voice identities.
+Voice personas: Sweet Companion (Eve/.95), Gentle Healing (Ara/.92), Natural Daily (Sal/.97), Mature Gentle (Ara/.89), Lively (Eve/1.01), plus manual custom voice/rate/engine controls.
+Speech modes: Natural Companion is default; Dialogue Only removes roleplay/actions; Full Read keeps all readable text. Natural Companion converts bracket/parenthetical/starred roleplay actions into pauses instead of literally reading stage directions.
+Legacy migration: V17.16 profiles that do not contain voiceId/persona/engine are normalized to the new Eve/Grok/.95 defaults while preserving the user enabled state.
+Emotional planning: responses are split into short expressive segments (maximum about 138 characters rather than the old ~520-character blocks). happy/shy/caring/sad/angry/thinking each adjust rate, inter-sentence pause and mouth intensity while preserving one consistent character voice.
+TTS transport: active neural requests explicitly send both engine and voice_id. Grok remains preferred; backend can fall back to Melo and the browser system voice remains the final playback fallback.
+Playback: gesture-unlocked WebAudio remains primary with a persistent <audio> fallback. Preview is available from the Emotional Voice panel.
+Live2D synchronization: every speech segment applies the detected expression and drives ParamMouthOpenY/compatible mouth parameters for the duration of that segment.
+
+Companion unified call voice V17.20: public/companion-call-suite-v1713.js?v=20260823-v17.20-emotional-call-unified
+Call microphone path remains intact: getUserMedia, echo/noise processing, MediaRecorder, WebAudio VAD, silence detection, 16-second hard cap, Whisper STT, optional explicit-call auto-send, captions, mute/speaker and auto-listen.
+Call TTS no longer owns a second /api/companion/tts transport or second audio renderer. AI call replies delegate to UnlimitedCompanionVoiceV1711.speak(), so voice/persona/rate/speech mode/emotional rhythm are identical to normal companion speech.
+Call entry suppresses general auto-read without changing the user's saved auto-read preference, and restores it on hangup.
+Call settings can still change voice/engine/rate, but those changes update the shared per-character voice profile immediately.
+
+Companion Live2D V17.20 lip-sync compatibility: public/companion-character-stage-v1712.js?v=20260823-v17.20-emotional-lipsync-compat + public/companion-character-stage-v1712.css?v=20260823-v17.17-integrated-live2d-background
+Renderer/model behavior remains the proven integrated background design: one Pixi/WebGL renderer is reused, model replacements load before the current model is destroyed, no floating CHARACTER STAGE window or manual shader-triggering reload button returns.
+Lip-sync ownership: when the V17.20 emotional voice engine is active, the legacy random speaking mouth timer yields completely to the per-segment emotional mouth driver. The legacy random mouth animation remains only as a fallback for older/non-emotional voice paths.
+
+Companion audio guard V17.16 remains active: first real companion gesture unlocks persisted auto-read; playback-policy errors can retry without accidentally disabling the speaker.
 
 Companion cinematic scenes V17.18: public/companion-scene-v1714.css?v=20260823-v17.18-cinematic-scenes
-Scene JS remains the proven public/companion-scene-v1714.js?v=20260823-v17.14-safe-scene-restore and keeps per-character scene persistence plus lightweight pointer parallax.
-Visual rebuild: the four existing themes are no longer simple gradient backgrounds. They use the existing base/wash/band/accent/particles/vignette layers as a cinematic depth stack without adding Canvas or a new RAF loop.
+Scene JS remains public/companion-scene-v1714.js?v=20260823-v17.14-safe-scene-restore and keeps per-character scene persistence plus lightweight pointer parallax.
 Galaxy Dream: deep-space nebula volumes, diagonal Milky Way ribbon/core, multi-scale star fields, bright cross-star and occasional CSS meteor.
 Sakura Night: luminous moon, distant stars, blossom/branch silhouettes, pink haze and layered falling petals.
 Moonlight Room: window-grid silhouette, large moon, diagonal moon beam, warm interior/floor glow and floating moonlit dust.
 Neon Fantasy: layered city skyline silhouette, window lines, horizon glow, vertical neon columns, scan light, sign flicker and foreground neon particles.
-Performance: CSS-only motion, mobile particle reduction, no new network assets, no new DOM observer, no shell/main grid changes and prefers-reduced-motion disables cinematic animations.
+Performance: CSS-only motion, mobile particle reduction, no new DOM observer, no shell/main grid changes and prefers-reduced-motion support.
 
 Companion luminous shell V17.19: public/companion-luminous-shell-v1719.css?v=20260823-v17.19-luminous-full-canvas
-Purpose: remove the remaining split-screen feeling where the cinematic main area was bright but the sidebar/header/composer stayed almost black from the earlier safe polish layer.
-Full-canvas lighting: galaxy/sakura/moonlight/neon now provide theme-aware ambient colors to the entire companion root instead of only .uai-c-main.
-Sidebar: replaced the near-black 0.90-opacity panel with scene-tinted translucent glass, layered ambient glow and a brighter scene-aware border; sidebar content remains structurally unchanged.
-Main brightness: final scene grading is lifted to brightness(1.12)/saturate(1.16), while night remains vivid at brightness(1.07)/saturate(1.20) rather than dropping toward black.
-Reading veil: the old left dark veil is softened so chat stays readable without turning half of the canvas into a black block.
-Header/composer: both use brighter translucent glass with theme light, stronger edge highlights and less opaque black fill.
-Messages: assistant bubbles use translucent scene-colored glass; user bubbles use a brighter pink-violet gradient.
-Live2D: final presentation receives a small brightness/saturation lift plus scene-colored rim glow; renderer/model logic remains unchanged from stable V17.17.
-Scene controller: final overlay gives the scene switcher a brighter jewel/glass treatment.
-Safety: CSS-only final overlay, no script, no fetch change, no new DOM/observer, no shell/main grid change, no Live2D renderer changes, responsive overrides and reduced-motion support retained.
+Full-canvas lighting keeps the sidebar/header/composer scene-aware instead of near-black, while preserving the stable chat structure.
+Main scene remains lifted at brightness(1.12)/saturate(1.16), night remains vivid at brightness(1.07)/saturate(1.20), and Live2D retains the brighter presentation/rim glow.
 
 Companion cinematic mood V17.18: public/companion-atmosphere-v1715.css?v=20260823-v17.18-cinematic-mood
-Atmosphere JS remains public/companion-atmosphere-v1715.js?v=20260823-v17.15-adaptive-atmosphere.
-Mood grading: reply emotion overlays are stronger but remain visual-only. V17.19 provides the final brightness floor so time-of-day grading cannot make the interface visually collapse back into black.
-Call backgrounds inherit stronger scene identities so galaxy/sakura/moonlight/neon remain recognizable inside the call overlay.
-
-Companion integrated Live2D V17.17: public/companion-character-stage-v1712.js + public/companion-character-stage-v1712.css?v=20260823-v17.17-integrated-live2d-background
-Revision: 2026-08-23-v17.17-integrated-live2d-background
-Behavior: the old CHARACTER STAGE floating card is removed. Live2D is mounted as an absolute background layer inside .uai-c-main, between the cinematic scene and the stable chat/header/composer UI.
-Automatic role: entering companion mode automatically prepares the background role; no separate stage launcher is required.
-Renderer stability: Pixi Application/WebGL renderer is created once per mounted companion session and reused by normal refreshes. mode-refresh/functions-ready no longer destroy and recreate the WebGL context.
-Model switching: the current model remains visible while the replacement model loads; it is destroyed only after the replacement is ready. Same-character/same-model refreshes reuse the current model and renderer.
-Removed regression trigger: the old manual reload button (data-v1712-reload) and old CHARACTER STAGE header/footer chrome remain removed from the active UI.
-Context recovery: webglcontextlost is handled without immediate destructive recreation; webglcontextrestored schedules controlled recovery.
-Interaction safety: pointer listeners are scoped to .uai-c-main through an AbortController and are released on stage teardown, preventing duplicate listeners across repeated entries.
-Call presentation: data-v1713-call changes are observed alongside voice state so the same renderer changes placement for a call and returns to the normal background position on hangup.
-Fallback: model/runtime failure degrades to a small transparent background avatar rather than a white stage card; core text chat remains usable.
-
-Companion call V17.14 + V17.17 presentation: public/companion-call-suite-v1713.js + public/companion-call-suite-v1713.css?v=20260823-v17.17-integrated-live2d-call
-Call features retained: microphone recording, WebAudio VAD, 16-second hard limit, Whisper STT, explicit-call auto-send, generation-aware reply detection, Grok/Melo/system TTS, Ara/Eve/Sal/Rex/Leo voices, captions, mute/speaker, auto-listen and call timer.
-Call visual change: the call overlay is translucent and reuses the integrated background Live2D renderer instead of moving/recreating a floating stage.
+Atmosphere JS remains public/companion-atmosphere-v1715.js?v=20260823-v17.15-adaptive-atmosphere and continues to classify reply emotion/time-of-day for visual ambience. V17.20 voice reuses the same emotional vocabulary for sound rhythm and Live2D expression.
 
 Active companion feature stack in index:
-- companion-function-pack-v177.js
-- companion-controls-v178.js
-- companion-runtime-safe-v179.js
-- companion-experience-v1710.js
-- companion-voice-suite-v1711.js?v=20260823-v17.16-voice-audio-recovery
+- companion-function-pack-v177.js?v=20260822-v17.7-safe-function-restore
+- companion-controls-v178.js?v=20260822-v17.8-safe-controls-restore
+- companion-runtime-safe-v179.js?v=20260822-v17.9-safe-runtime-restore
+- companion-experience-v1710.js?v=20260822-v17.10-safe-experience-restore
+- companion-voice-suite-v1711.js?v=20260823-v17.20-emotional-voice-system
 - companion-scene-v1714.js?v=20260823-v17.14-safe-scene-restore
-- companion-character-stage-v1712.js?v=20260823-v17.17-integrated-live2d-background
-- companion-call-suite-v1713.js?v=20260823-v17.14-call-audio-recovery
+- companion-character-stage-v1712.js?v=20260823-v17.20-emotional-lipsync-compat
+- companion-call-suite-v1713.js?v=20260823-v17.20-emotional-call-unified
 - companion-atmosphere-v1715.js?v=20260823-v17.15-adaptive-atmosphere
 - companion-audio-gesture-v1716.js?v=20260823-v17.16-audio-gesture-guard
 - companion-luminous-shell-v1719.css?v=20260823-v17.19-luminous-full-canvas
@@ -76,9 +70,10 @@ Safety boundaries retained:
 - legacy scene/Live2D/call stacks remain source-only; isolated replacements are active instead.
 - companion localStorage remains isolated from novel storage.
 - chat shell columns and header/messages/composer rows remain owned by the proven core.
-- V17.18 and V17.19 scene work changes CSS presentation only; Live2D/voice/call/relationship/memory/search/backup behavior is untouched.
+- call auto-send remains isolated to explicit call mode; normal microphone input and message quick actions do not auto-send.
+- V17.20 changes sound/profile/lip-sync behavior without changing the stable companion shell grid or WebGL renderer lifecycle.
 
-Reason: V17.19 addresses the visual imbalance visible after V17.18: the main scene and Live2D were colorful, but the sidebar and chrome stayed too dark because the earlier stable polish used near-opaque black surfaces. The final luminous shell extends scene identity across the whole companion canvas, lifts scene and character brightness, softens the dark reading veil, and keeps all existing functional/runtime boundaries unchanged.
+Reason: V17.20 replaces the flat default companion speech with a consistent emotional voice identity. Eve/Grok/.95 becomes the active and backend default, roleplay directions are no longer read mechanically, replies are split into short emotion-aware phrases with natural pauses, normal chat and calls share one character voice profile, and Live2D mouth/expression timing follows each spoken phrase rather than competing random timers.
 
 Novel prompt source: src/worker.js -> NOVEL_SYSTEM_PROMPT
 Companion prompt source: src/companion.js -> COMPANION_ROLE_CARD
