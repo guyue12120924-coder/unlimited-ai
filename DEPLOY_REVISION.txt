@@ -1,45 +1,75 @@
 Unlimited AI deployment trigger
 Date: 2026-08-23
-Frontend core revision: 2026-08-23-v17.13-complete-companion-restore
+Frontend core revision: 2026-08-23-v17.16-voice-audio-recovery
 Frontend runtime core: 2026-08-21-v17.0-workspace-consolidation
 Workspace UI module: 2026-08-21-v17.0-workspace-ui
 AI collaboration module: 2026-08-21-v17.0-ai-collaboration
+
 Companion entry bootstrap: 2026-08-22-v17.5-companion-core-only-rollback
 Companion active entry module: public/companion-entry-v175.js
 Companion active core dependencies: public/companion-mode.css + public/companion-mode.js
-Companion visual polish: public/companion-core-polish-v176.css?v=20260822-v17.6-safe-polish
-Companion visual polish policy: CSS-only, scoped to #uaiCompanionRoot, no shell column changes, no main row changes, no injected DOM, no JavaScript dependency, reduced-motion aware
-Companion safe function pack: public/companion-function-pack-v177.js?v=20260822-v17.7-safe-function-restore
-Companion safe function styles: public/companion-support.css + public/companion-functional-v177.css
-Companion restored functions V17.7: multi-character switching, character editor, memory organizer/search tools, relationship records/validated restore, message copy/favorite/long-reply utilities
-Companion function loading policy: only after uai:companion-core-entered, deferred with requestIdleCallback/setTimeout, failure is non-blocking and leaves core chat usable
-Companion safe controls: public/companion-controls-v178.js + public/companion-controls-v178.css?v=20260822-v17.8-safe-controls-restore
-Companion restored controls V17.8: visible companion/search/relationship/moments shortcuts, visual reply-length presets, full multi-character backup export, validated backup import/merge/replace, rollback entry, companion/memory management shortcuts
-Companion reply-length policy: uses the existing companion-mode.js settings and companion_preferences.replyLength consumed by src/companion.js; no fetch wrapper is required
-Companion V17.7 readiness contract: uai:companion-functions-ready is emitted only after the safe role/memory/records/extras APIs are loaded; V17.8 unlocks controls only when all required APIs exist
-Companion safe runtime: public/companion-runtime-safe-v179.js + public/companion-runtime-safe-v179.css?v=20260822-v17.9-safe-runtime-restore
-Companion restored runtime V17.9: blocks character switch/delete/add/import/reset actions while a reply is generating, prunes orphaned role-scoped memory/moment data, safely restores missing active profile/session/memory/settings slots from the current character instead of deleting character data, and shows current reply-length/memory/generation status in the header
-Companion generation observation policy: one MutationObserver scoped only to #uaiCompanionInput disabled attribute; no body-wide or subtree observer
-Companion safe experience: public/companion-experience-v1710.js + public/companion-experience-v1710.css?v=20260822-v17.10-safe-experience-restore
-Companion restored experience V17.10: relationship-stage summary with days/messages/memory count, time-of-day presence text, assistant quick actions (continue/rephrase/shorter/more detail) that only fill the composer, optional browser-local speech synthesis for assistant messages, and optional microphone speech-to-text using the existing /api/companion/stt endpoint
-Companion V17.10 observer policy: one MutationObserver scoped only to the current #uaiCompanionMessages direct child list; no body-wide observation; voice capture is stopped and tracks are released on companion exit/pagehide
-Companion neural voice V17.11: public/companion-voice-suite-v1711.js + public/companion-voice-suite-v1711.css?v=20260823-v17.11-safe-neural-voice
-Companion restored voice/relationship V17.11: Cloudflare neural TTS status and playback, browser-system fallback, per-character auto-read/provider/rate/dialogue settings, manual neural-read action, replay/stop controls, and local monthly relationship review
-Companion V17.11 safety policy: no window.fetch replacement, no body-wide observer, automatic reading observes only #uaiCompanionInput disabled transitions, all audio requests use AbortController, audio/blob resources are released on stop/mode exit/pagehide
+Companion mode isolation: uai_companion_profile_v1 / sessions / memories / settings remain separate from novel storage
+
+Companion visual polish V17.6: public/companion-core-polish-v176.css?v=20260822-v17.6-safe-polish
+Policy: CSS-only, scoped to #uaiCompanionRoot, no shell column changes, no main row changes, no injected DOM, reduced-motion aware
+
+Companion safe function pack V17.7: public/companion-function-pack-v177.js?v=20260822-v17.7-safe-function-restore
+Restored: multi-character switching, character editor, memory organizer/search tools, relationship records/validated restore, message copy/favorite/long-reply utilities
+Loading policy: only after uai:companion-core-entered, deferred, failure is non-blocking and leaves core chat usable
+
+Companion safe controls V17.8: public/companion-controls-v178.js + public/companion-controls-v178.css?v=20260822-v17.8-safe-controls-restore
+Restored: companion/search/relationship/moments shortcuts, reply-length presets, full multi-character backup export, validated import/merge/replace, rollback entry and management shortcuts
+
+Companion safe runtime V17.9: public/companion-runtime-safe-v179.js + public/companion-runtime-safe-v179.css?v=20260822-v17.9-safe-runtime-restore
+Restored: generation-safe role operations, orphan cleanup, missing active-slot repair and runtime status display
+Observer policy: one MutationObserver scoped only to #uaiCompanionInput disabled state; no body-wide or subtree observer
+
+Companion safe experience V17.10: public/companion-experience-v1710.js + public/companion-experience-v1710.css?v=20260822-v17.10-safe-experience-restore
+Restored: relationship-stage summary, time-of-day presence, safe quick reply actions, browser-local speech option and microphone STT
+
+Companion neural voice V17.16: public/companion-voice-suite-v1711.js + public/companion-voice-suite-v1711.css?v=20260823-v17.16-voice-audio-recovery
+Revision: 2026-08-23-v17.16-voice-audio-recovery
+Restored/fixed: Cloudflare neural TTS, browser-system fallback, per-character auto-read/provider/rate/dialogue settings, manual neural read, replay/stop controls, monthly relationship review
+Audio recovery: user gesture unlocks a persistent WebAudio context; async neural TTS is decoded through WebAudio createBufferSource first, then a persistent hidden Audio element fallback, then system speech fallback
+Playback failure is surfaced instead of leaving the UI indefinitely showing speaking without sound
+Safety: no window.fetch replacement, no body-wide observer, automatic reading observes only #uaiCompanionInput disabled transitions, AbortController is used for TTS and playback resources are released on stop/mode exit/pagehide
+
+Companion scene V17.14: public/companion-scene-v1714.js + public/companion-scene-v1714.css?v=20260823-v17.14-safe-scene-restore
+Revision: 2026-08-23-v17.14-safe-scene-restore
+Restored: four per-character animated scenes — galaxy / sakura / moonlight / neon (星河梦境 / 樱花夜色 / 月光房间 / 霓虹幻想), deterministic particles, light bands, glow layers, pointer parallax and a scene-cycle control
+Scene storage remains compatible with uai_companion_scene_assignments_v1
+Safety: isolated absolute scene layer, pointer-events none, no core grid rewrite, no MutationObserver, no legacy V12 scene runtime loaded
+
 Companion character stage V17.12: public/companion-character-stage-v1712.js + public/companion-character-stage-v1712.css?v=20260823-v17.12-isolated-character-stage
-Companion restored character stage V17.12: optional floating Live2D stage, lazy Pixi/Cubism/model loading, characters.json assignments with official Mao fallback, pointer focus/tap reactions, lightweight reply-emotion mapping and speaking mouth motion
-Companion V17.12 safety policy: the stage is fixed-position and independent of the core chat grid; runtime/model assets load only after the user opens the stage; close/mode exit destroys model, Pixi renderer, ResizeObserver, generation/voice observers and mouth timer; model failure falls back to the role avatar
-Companion complete call V17.13: public/companion-call-suite-v1713.js + public/companion-call-suite-v1713.css?v=20260823-v17.13-complete-call-experience
-Companion restored call V17.13: explicit full-screen call overlay, microphone recording, WebAudio voice activity detection, 16-second hard recording limit, Cloudflare Whisper STT, explicit-call auto-send, generation-aware response detection, Grok/Melo/system TTS, Ara/Eve/Sal/Rex/Leo voices, captions, mute/speaker controls, auto-listen, call timer and V17.12 stage mouth sync
-Companion V17.13 safety policy: normal chat never gains automatic sending; automatic sending exists only while an explicit call session is active; no fetch monkeypatch; the core chat remains mounted underneath; microphone tracks, AudioContext, RAF, timers, STT/TTS controllers, audio/blob URLs, mouth timer and generation observer are stopped/released on hangup, mode exit, pagehide or hidden-tab termination
+Restored: optional floating Live2D stage, lazy Pixi/Cubism/model loading, characters.json assignments with official Mao fallback, pointer focus/tap reactions, reply-emotion mapping and mouth motion
+Safety: fixed-position stage independent of core chat grid; runtime/model assets load only after stage open; close/mode exit destroys model, renderer, observers and timers; model failure falls back to avatar
+
+Companion call V17.14: public/companion-call-suite-v1713.js + public/companion-call-suite-v1713.css?v=20260823-v17.14-call-audio-recovery
+Revision: 2026-08-23-v17.14-call-audio-recovery
+Restored/fixed: full-screen call, microphone recording, WebAudio VAD, 16-second recording hard limit, Cloudflare Whisper STT, explicit-call auto-send, response detection, Grok/Melo/system TTS, Ara/Eve/Sal/Rex/Leo voices, captions, mute/speaker controls, auto-listen, call timer and Live2D mouth sync
+Audio recovery: playback context is unlocked from the explicit call gesture before microphone awaits; TTS uses persistent WebAudio playback first and persistent Audio fallback second; final system-speech fallback is retained
+If playback policy blocks sound, the call displays a visible error instead of silently remaining in speaking state
+Safety: normal chat never gains automatic sending; automatic send exists only inside an explicit active call; no fetch monkeypatch; microphone tracks, VAD context/RAF, STT/TTS controllers, audio resources, mouth timer and generation observer are released on hangup/exit/pagehide
+
+Companion atmosphere V17.15: public/companion-atmosphere-v1715.js + public/companion-atmosphere-v1715.css?v=20260823-v17.15-adaptive-atmosphere
+Revision: 2026-08-23-v17.15-adaptive-atmosphere
+Restored: reply-emotion ambience (happy/shy/caring/sad/angry/thinking), morning/day/evening/night brightness, Live2D emotion synchronization, call-overlay scene identity and thinking-state atmosphere
+Safety: observes only #uaiCompanionInput disabled transitions; no body-wide/subtree observer and no transport changes
+
+Companion audio gesture guard V17.16: public/companion-audio-gesture-v1716.js?v=20260823-v17.16-audio-gesture-guard
+Revision: 2026-08-23-v17.16-audio-gesture-guard
+Purpose: when persisted auto-read is already enabled, the first real pointer interaction inside the companion UI unlocks audio; when a call playback-policy error exists and speaker is already enabled, clicking speaker performs unlock + retry instead of incorrectly toggling the speaker off
+Safety: scoped event listeners only, no MutationObserver and no request transport changes
+
 Companion runtime/settings fetch wrapper: NOT restored because companion-runtime.js rewrites window.fetch and conflicts with the consolidated chat transport
 Companion legacy structural loader: DISABLED FROM ACTIVE BOOT
 Companion V10/V11/V12 structural themes: source retained, not loaded
-Companion legacy Live2D/scene/call files: source retained, not loaded; V17.12/V17.13 are isolated replacements instead
+Companion legacy Live2D/scene/call files: source retained, not loaded; V17.12/V17.14/V17.15/V17.16 are isolated replacements
 Companion residue cleanup: V17.5 removes known structural enhancement link/script/style IDs and enhancement DOM nodes before core mount
-Companion recovery: if the core shell is incomplete, V17.5 reloads only companion-mode.js and remounts the base UI; localStorage companion data is preserved
-Companion mode isolation: uai_companion_profile_v1 / sessions / memories / settings remain separate from novel storage
-Reason: V17.13 completes the three-step restoration without reviving the unstable V10/V11/V12 structural stack. Neural voice, Live2D and call behavior are restored as independently degradable layers above the proven V17.5 chat core, while request transport and core layout remain unchanged.
+Companion recovery: if the core shell is incomplete, V17.5 reloads only companion-mode.js and remounts the base UI; companion localStorage data is preserved
+
+Reason: V17.16 fixes the two remaining visible recovery failures: black companion background and silent companion/call playback. Scene identity is rebuilt as isolated V17.14/V17.15 layers, while both ordinary neural voice and call TTS use gesture-unlocked persistent playback paths. The working V17.12 Live2D stage and proven V17.5 core remain intact, and the unstable V10/V11/V12 structural stack stays disabled.
+
 Novel prompt source: src/worker.js -> NOVEL_SYSTEM_PROMPT
 Companion prompt source: src/companion.js -> COMPANION_ROLE_CARD
 AI gateway: src/worker-voice.js
