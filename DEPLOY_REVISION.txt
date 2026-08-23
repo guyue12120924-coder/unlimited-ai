@@ -1,96 +1,70 @@
 Unlimited AI deployment trigger
 Date: 2026-08-23
-Frontend core revision: 2026-08-23-v17.21-voice-experience-polish
-Frontend runtime core: 2026-08-21-v17.0-workspace-consolidation
-Workspace UI module: 2026-08-21-v17.0-workspace-ui
-AI collaboration module: 2026-08-21-v17.0-ai-collaboration
 
-Companion stable entry: public/companion-entry-v175.js
-Companion base core: public/companion-mode.css + public/companion-mode.js
-Companion function stack retained: V17.7 multi-character/memory/search/relationship tools, V17.8 controls/backup/reply length, V17.9 safe runtime, V17.10 relationship/presence/quick actions/STT, V17.18 cinematic scenes, V17.19 luminous shell.
+Frontend companion revision: 2026-08-23-v17.21-voice-experience-polish
+Diagnostics revision: 2026-08-23-v17.22-final-cleanup-diagnostics
+Worker gateway revision: 2026-08-23-v17.22-companion-diagnostics-gateway
+Frontend runtime core: 2026-08-21-v17.0-workspace-consolidation
+
+V17.22 final cleanup and diagnostics:
+- public/boot-diagnostics.js now owns BOOT_REVISION=2026-08-23-v17.22-final-cleanup-diagnostics.
+- public/index.html cache-busts boot-diagnostics.js with the V17.22 key and exposes unlimited-diagnostics-revision.
+- Browser boot diagnostics dynamically report the current companion core/function/voice/scene/Live2D/call APIs instead of hard-coding old V10/V12 readiness fields to false.
+- Browser diagnostics explicitly report whether legacy V10/V11/V12 structural themes, old companion-runtime.js, old companion-call-mode.js and old companion-live2d.js are absent from the active page.
+- src/worker-voice.js /api/diagnostics now validates the current V17.21 companion stack in addition to the V17.0 novel workspace.
+- Worker diagnostics check the V17.21 emotional voice, integrated Live2D, isolated scene, cinematic scene CSS, V17.19 luminous shell and unified call implementation.
+- /api/companion/tts/status and /api/companion/stt/status now identify Eve as the default companion voice and expose current frontend/diagnostics revisions.
+- public/deploy-status.json now reflects the real V17.21/V17.22 deployment state instead of V10.2.
+- README.md now documents the current V17 architecture instead of V9.5.
+- docs/COMPANION_LEGACY.md defines the historical files that must not return to the production startup chain.
+- tests/v1722-final-cleanup.test.mjs locks the diagnostics/documentation/legacy boundary into CI.
+- Historical direct-entry/recovery tests were updated to accept the V17.22 diagnostics bootstrap while continuing to require the V17.5 stable core entry.
+
+Current production companion chain:
+- V17.5 stable core-only entry: public/companion-entry-v175.js
+- Core: public/companion-mode.css + public/companion-mode.js
+- V17.6 safe polish
+- V17.7 multi-character/memory/search/relationship function pack
+- V17.8 controls/backup/reply-length UX
+- V17.9 safe runtime
+- V17.10 relationship/presence/quick actions/STT
+- V17.21 emotional voice
+- V17.14 isolated scene with V17.18 cinematic CSS
+- V17.21 integrated Live2D lip-sync owner
+- V17.21 unified call voice
+- V17.15 adaptive atmosphere
+- V17.16 audio gesture guard
+- V17.19 luminous full-canvas shell
 
 Companion emotional voice V17.21:
-- JS: public/companion-voice-suite-v1711.js?v=20260823-v17.21-voice-experience-polish
-- CSS: public/companion-voice-suite-v1711.css?v=20260823-v17.21-voice-experience-polish
-- Backend default: src/tts.js keeps DEFAULT_GROK_VOICE="eve".
-- Default identity remains Grok TTS + Eve + 0.95x.
-- Per-character voice profiles remain shared by normal auto-read, manual preview/replay and call mode.
-- Voice personas remain Sweet Companion, Gentle Healing, Natural Daily, Mature Gentle, Lively and manual Custom.
-- Natural Companion remains the default speech mode and converts roleplay/stage directions into pauses instead of reading them literally.
-- Legacy V17.16 voice profiles still migrate to Eve/Grok/.95 while preserving the enabled state.
+- Default identity: Grok TTS + Eve + Sweet Companion + 0.95x.
+- Normal auto-read, manual preview/replay and call mode share the same per-character voice profile.
+- Natural Companion filters roleplay/stage directions into pauses instead of reading them literally.
+- Short expressive segmentation is capped around 138 characters.
+- Emotional continuity carries meaningful emotion through neutral sentences.
+- First TTS segment starts without a status preflight.
+- A bounded look-ahead queue keeps only a small number of TTS segments warming.
+- A/B preview compares Eve/Sweet and Ara/Gentle without mutating the saved role voice.
 
-V17.21 latency and request polish:
-- Normal playback no longer waits for an extra /api/companion/tts/status preflight before requesting the first spoken segment.
-- First TTS segment starts immediately after the speech plan is built.
-- Long replies no longer fan out all segment requests at once.
-- A bounded look-ahead queue keeps the current segment plus only the next two segments warming, reducing burst requests while keeping speech continuous.
-- The old plan.map(all-segments) concurrent request pattern is removed.
+Live2D V17.21:
+- One Pixi/WebGL renderer is reused during normal refresh.
+- Model replacement loads before the previous model is destroyed.
+- Live2D is integrated into the background; no floating CHARACTER STAGE or manual reload button is active.
+- Emotional voice owns precise per-segment lip sync; legacy random mouth animation is fallback only.
 
-V17.21 emotional continuity:
-- Short expressive segmentation remains capped at about 138 characters.
-- happy/shy/caring/sad/angry/thinking continue to adjust playback rate, pause and mouth intensity without changing the character voice identity.
-- Neutral segments now inherit the previous meaningful emotion or the reply-level emotion, preventing an expressive reply from repeatedly snapping back to neutral between sentences.
-
-V17.21 voice comparison UI:
-- Emotional Voice settings now include A/B quick preview cards.
-- A = Eve / sweet / 0.95x.
-- B = Ara / gentle / 0.92x.
-- A/B preview never writes the trial voice into the saved character profile.
-- Current voice preview remains available and the panel displays current voice + persona + rate together.
-
-Companion unified call voice V17.21:
-- JS: public/companion-call-suite-v1713.js?v=20260823-v17.21-call-voice-polish
-- Call voice polish CSS: public/companion-voice-polish-v1721.css?v=20260823-v17.21-call-voice-polish
-- Microphone path remains unchanged: getUserMedia, echo/noise processing, MediaRecorder, WebAudio VAD, silence detection, hard recording cap, Whisper STT, explicit-call auto-send, captions, mute/speaker and auto-listen.
-- Call mode still does not own a second /api/companion/tts transport or second audio renderer.
-- Call replies delegate to UnlimitedCompanionVoiceV1711.speak().
-- Call settings now expose the shared voice persona in addition to engine/voice/rate.
-- The call panel shows a live summary of persona + voice + rate and listens to uai:companion-voice-profile, so changes from the normal Emotional Voice panel appear immediately.
-- Call entry suppresses general auto-read without changing the user's saved auto-read preference and restores it after hangup.
-
-Companion Live2D V17.21 lip-sync ownership:
-- JS: public/companion-character-stage-v1712.js?v=20260823-v17.21-emotional-lipsync-owner
-- CSS remains public/companion-character-stage-v1712.css?v=20260823-v17.17-integrated-live2d-background
-- Renderer/model behavior remains the stable integrated background design: one Pixi/WebGL renderer is reused; model replacements load before the current model is destroyed; no floating CHARACTER STAGE or manual reload button returns.
-- Lip-sync ownership is no longer detected through a hard-coded V17.20 revision string.
-- Live2D now yields the legacy random mouth timer whenever the active voice API exposes the emotional speech-plan/speak/settings/audio capabilities.
-- This keeps per-segment emotional mouth timing compatible with later voice revisions without another version-specific patch.
-
-Companion audio guard V17.16 remains active: first real companion gesture unlocks persisted auto-read and playback-policy retry remains safe.
-
-Companion cinematic scenes V17.18 retained:
-- public/companion-scene-v1714.css?v=20260823-v17.18-cinematic-scenes
-- public/companion-scene-v1714.js?v=20260823-v17.14-safe-scene-restore
-- Galaxy, Sakura, Moonlight and Neon themes remain CSS-driven with reduced-motion support and no shell-grid ownership changes.
-
-Companion luminous shell V17.19 retained:
-- public/companion-luminous-shell-v1719.css?v=20260823-v17.19-luminous-full-canvas
-- Sidebar/header/composer remain scene-aware rather than near-black.
-
-Active companion feature stack in index:
-- companion-function-pack-v177.js?v=20260822-v17.7-safe-function-restore
-- companion-controls-v178.js?v=20260822-v17.8-safe-controls-restore
-- companion-runtime-safe-v179.js?v=20260822-v17.9-safe-runtime-restore
-- companion-experience-v1710.js?v=20260822-v17.10-safe-experience-restore
-- companion-voice-suite-v1711.js?v=20260823-v17.21-voice-experience-polish
-- companion-scene-v1714.js?v=20260823-v17.14-safe-scene-restore
-- companion-character-stage-v1712.js?v=20260823-v17.21-emotional-lipsync-owner
-- companion-call-suite-v1713.js?v=20260823-v17.21-call-voice-polish
-- companion-atmosphere-v1715.js?v=20260823-v17.15-adaptive-atmosphere
-- companion-audio-gesture-v1716.js?v=20260823-v17.16-audio-gesture-guard
-- companion-voice-polish-v1721.css?v=20260823-v17.21-call-voice-polish
-- companion-luminous-shell-v1719.css?v=20260823-v17.19-luminous-full-canvas
-
-Safety boundaries retained:
-- No restored companion layer rewrites window.fetch.
-- V10/V11/V12 legacy structural themes remain outside the active boot chain.
-- Companion storage stays isolated from novel storage.
-- Stable chat shell columns and header/messages/composer rows remain owned by the proven companion core.
-- Call auto-send remains isolated to explicit call mode.
-- Voice polish does not change WebGL renderer lifecycle, chat transport, STT transport, model selection, relationship/memory/search/backup behavior or scene layout ownership.
-
-Reason: V17.21 completes the V17.20 emotional voice plan. The character keeps Eve/Grok/.95 as the default identity, but speech now starts sooner, avoids burst TTS traffic, keeps emotional continuity between neutral sentences, offers non-destructive Eve-vs-Ara A/B preview, keeps call voice-persona controls synchronized with normal companion speech, and makes Live2D lip-sync ownership independent of a hard-coded voice version.
+Legacy production boundaries:
+- Do not load public/companion-v10*.
+- Do not load public/companion-v11*.
+- Do not load public/companion-v12*.
+- Do not load public/companion-runtime.js.
+- Do not load public/companion-call-mode.js.
+- Do not load public/companion-voice-input.js as the production STT layer.
+- Do not load the old public/companion-live2d*.js/css enhancement stack.
+- Do not restore companion-entry-v172/v173/v174 or companion-assets-loader* into the production chain.
+- Historical files remain in the repository for rollback/reference only; see docs/COMPANION_LEGACY.md.
 
 Novel prompt source: src/worker.js -> NOVEL_SYSTEM_PROMPT
 Companion prompt source: src/companion.js -> COMPANION_ROLE_CARD
 AI gateway: src/worker-voice.js
+Diagnostics: GET /api/diagnostics
+Static deployment status: GET /deploy-status.json
