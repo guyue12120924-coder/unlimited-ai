@@ -3,22 +3,33 @@ Date: 2026-08-23
 
 Frontend companion revision: 2026-08-23-v17.21-voice-experience-polish
 Diagnostics revision: 2026-08-23-v17.22-final-cleanup-diagnostics
-Novel workspace revision: 2026-08-23-v17.23b-novel-session-management
+Novel workspace revision: 2026-08-23-v17.23c-novel-navigation
 Worker gateway revision: 2026-08-23-v17.22-companion-diagnostics-gateway
 Frontend runtime core: 2026-08-21-v17.0-workspace-consolidation
+
+V17.23C novel navigation:
+- public/novel-navigation-v1723c.css/js adds novel-only hierarchy and collapse recovery without touching companion assets.
+- Desktop side-panel recovery is fixed: the old studio.css hides libraryToggleBtn/studioToggleBtn above 980px, so V17.23C shows recovery controls only when the matching panel is collapsed.
+- Persistent edge recovery buttons appear for collapsed “作品与章节” and “创作资料” panels, so a collapsed panel always has a visible way back.
+- Left navigation is reordered to current project -> chapters -> AI conversations -> search/low-frequency utilities.
+- The “添加章节” action is visually strengthened as the primary left-nav creation action.
+- Each AI conversation row keeps the existing ☆/★ favorite control and now exposes an adjacent “删除” button.
+- Favorite-adjacent delete reuses V17.23B in-app confirmation and the original app.js session core; it does not duplicate session state.
+- The right panel is renamed “创作资料” and its primary tabs are normalized to 正文 / 大纲 / 人物 / 世界观.
+- Scene management, notes, writing statistics, Story Memory and continuity review are grouped behind one “更多工具” menu.
+- README.md marks V17.23A/B/C complete and V17.23D as the next stage.
+- tests/novel-navigation-v1723c.test.mjs locks collapse recovery, favorite-adjacent delete, more-tools hierarchy and companion isolation into CI.
 
 V17.23B novel session management:
 - public/novel-sessions-v1723b.css provides a novel-only session drawer matching the light writing workspace.
 - public/novel-sessions-v1723b.js enhances the existing app.js session core instead of duplicating session state.
-- Session rows now expose full Renaming/Deleting actions instead of the old single-character buttons.
+- Session rows expose full Rename/Delete actions instead of the old single-character buttons.
 - Session rows display local message count plus current-session/date context.
 - Rename uses an in-app dialog and delegates the saved rename back to the proven app.js handler.
 - Delete uses an in-app confirmation dialog and delegates the actual removal back to the proven app.js handler.
-- Deleting the last remaining session automatically creates a replacement blank session first, then deletes the old session, so users no longer hit the old at-least-one-session alert.
+- Deleting the last remaining session automatically creates a replacement blank session first, then deletes the old session.
 - The session MutationObserver uses idempotent DOM writes to avoid self-triggered decoration loops.
 - All V17.23B selectors/actions are scoped to novel mode; no companion data, Live2D, voice, call or scene code is touched.
-- tests/novel-sessions-v1723b.test.mjs locks the session UX and novel/companion isolation contract into CI.
-- README.md now contains the complete V17.23A-D novel simplification roadmap and marks A/B complete, C next, D pending.
 
 V17.23A novel workspace simplification:
 - public/novel-simplify-v1723.css adds a novel-only warm light writing theme.
@@ -27,23 +38,18 @@ V17.23A novel workspace simplification:
 - The novel theme state is removed when leaving novel mode so companion mode does not inherit novel colors.
 - Old anime wallpaper, blur layer and particle canvas are visually disabled only while the novel light theme is active.
 - Novel workspace uses warm off-white canvas, paper-like white editors, dark readable text and restrained green accents.
-- Left library, center AI conversation and right writing tools remain structurally unchanged but use quieter borders/shadows and clearer active states.
-- Duplicate explanatory chrome is reduced by hiding the V15.1 guide, V15.2 writing-now banner and composer context note in novel mode.
-- Actual editors, project/chapter controls, AI chat actions, manuscript tools and stored data are not removed.
-- tests/novel-simplify-v1723.test.mjs ensures the layer remains novel-only and production companion assets stay unchanged.
+- Duplicate explanatory chrome is reduced while actual editors, project/chapter controls, AI chat actions and stored data remain available.
 
 V17.22 final cleanup and diagnostics:
 - public/boot-diagnostics.js owns BOOT_REVISION=2026-08-23-v17.22-final-cleanup-diagnostics.
 - public/index.html cache-busts boot-diagnostics.js with the V17.22 key and exposes unlimited-diagnostics-revision.
-- Browser boot diagnostics dynamically report the current companion core/function/voice/scene/Live2D/call APIs instead of hard-coding old V10/V12 readiness fields to false.
-- Browser diagnostics explicitly report whether legacy V10/V11/V12 structural themes, old companion-runtime.js, old companion-call-mode.js and old companion-live2d.js are absent from the active page.
+- Browser boot diagnostics dynamically report the current companion core/function/voice/scene/Live2D/call APIs.
+- Browser diagnostics explicitly report whether legacy V10/V11/V12 structural themes and old runtime/call/Live2D stacks are absent from the active page.
 - src/worker-voice.js /api/diagnostics validates the current V17.21 companion stack in addition to the V17.0 novel workspace.
-- Worker diagnostics check the V17.21 emotional voice, integrated Live2D, isolated scene, cinematic scene CSS, V17.19 luminous shell and unified call implementation.
-- /api/companion/tts/status and /api/companion/stt/status identify Eve as the default companion voice and expose current frontend/diagnostics revisions.
 - public/deploy-status.json reflects the current companion/diagnostics/novel deployment state.
 - docs/COMPANION_LEGACY.md defines the historical files that must not return to the production startup chain.
 
-Current production companion chain remains unchanged by V17.23A/B:
+Current production companion chain remains unchanged by V17.23A/B/C:
 - V17.5 stable core-only entry: public/companion-entry-v175.js
 - Core: public/companion-mode.css + public/companion-mode.js
 - V17.6 safe polish
