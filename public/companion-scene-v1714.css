@@ -1,0 +1,101 @@
+/* V17.14 isolated companion scene layer. No shell/grid rewrites. */
+#uaiCompanionRoot .uai-c-main{
+  --v1714-scene-x:0px;
+  --v1714-scene-y:0px;
+  position:relative;
+  isolation:isolate;
+  overflow:hidden;
+  background:#090912;
+}
+
+#uaiCompanionRoot .uai-c-v1714-scene{
+  position:absolute;
+  inset:0;
+  z-index:0;
+  overflow:hidden;
+  pointer-events:none;
+  contain:paint;
+}
+#uaiCompanionRoot .uai-c-v1714-scene>*{position:absolute;inset:0;pointer-events:none}
+#uaiCompanionRoot .uai-c-v1714-base{z-index:0;transform:scale(1.04)}
+#uaiCompanionRoot .uai-c-v1714-wash{z-index:1;inset:-12%;mix-blend-mode:screen;filter:blur(24px);transform:translate3d(calc(var(--v1714-scene-x) * .25),calc(var(--v1714-scene-y) * .25),0)}
+#uaiCompanionRoot .uai-c-v1714-band{z-index:2;inset:-18%;mix-blend-mode:screen;transform:translate3d(calc(var(--v1714-scene-x) * .5),calc(var(--v1714-scene-y) * .5),0)}
+#uaiCompanionRoot .uai-c-v1714-accent{z-index:3;transform:translate3d(calc(var(--v1714-scene-x) * .72),calc(var(--v1714-scene-y) * .72),0)}
+#uaiCompanionRoot .uai-c-v1714-particles{z-index:4;overflow:hidden;transform:translate3d(var(--v1714-scene-x),var(--v1714-scene-y),0)}
+#uaiCompanionRoot .uai-c-v1714-vignette{z-index:5;background:linear-gradient(180deg,rgba(7,7,17,.18),transparent 22%,transparent 70%,rgba(5,5,15,.34)),radial-gradient(ellipse at center,transparent 42%,rgba(4,4,13,.34) 100%)}
+
+#uaiCompanionRoot .uai-c-header,
+#uaiCompanionRoot .uai-c-messages,
+#uaiCompanionRoot .uai-c-composer-wrap{
+  position:relative;
+  z-index:6;
+}
+#uaiCompanionRoot .uai-c-messages{background:transparent!important}
+
+#uaiCompanionRoot[data-v1714-scene-theme="galaxy"] .uai-c-v1714-base{
+  background:radial-gradient(ellipse at 16% 7%,rgba(190,81,255,.42),transparent 34%),radial-gradient(ellipse at 82% 16%,rgba(78,109,255,.36),transparent 37%),radial-gradient(ellipse at 52% 82%,rgba(255,72,188,.24),transparent 41%),linear-gradient(145deg,#070719 0%,#1d0c49 38%,#11103d 68%,#060717 100%);
+}
+#uaiCompanionRoot[data-v1714-scene-theme="galaxy"] .uai-c-v1714-wash{
+  background:radial-gradient(circle at 19% 27%,rgba(205,94,255,.31),transparent 24%),radial-gradient(circle at 78% 36%,rgba(86,127,255,.27),transparent 29%),radial-gradient(circle at 51% 78%,rgba(255,88,203,.22),transparent 27%);
+  animation:v1714GalaxyWash 18s ease-in-out infinite alternate;
+}
+#uaiCompanionRoot[data-v1714-scene-theme="galaxy"] .uai-c-v1714-band::before{
+  content:"";position:absolute;left:-15%;right:-15%;top:36%;height:150px;border-radius:50%;transform:rotate(-14deg);background:linear-gradient(90deg,transparent 5%,rgba(111,125,255,.06) 18%,rgba(177,105,255,.26) 35%,rgba(255,126,219,.40) 50%,rgba(113,142,255,.23) 69%,transparent 95%);filter:blur(2px);box-shadow:0 0 50px rgba(174,92,255,.16);animation:v1714GalaxyBand 14s ease-in-out infinite alternate;
+}
+#uaiCompanionRoot[data-v1714-scene-theme="galaxy"] .uai-c-v1714-accent{
+  background-image:radial-gradient(circle at 12% 18%,rgba(255,255,255,.95) 0 1px,transparent 2px),radial-gradient(circle at 67% 22%,rgba(255,166,222,.9) 0 1px,transparent 2px),radial-gradient(circle at 87% 62%,rgba(145,166,255,.85) 0 1px,transparent 2px),radial-gradient(circle at 35% 78%,rgba(228,199,255,.8) 0 1px,transparent 2px);background-size:131px 131px,181px 181px,229px 229px,277px 277px;animation:v1714Stars 22s linear infinite;
+}
+
+#uaiCompanionRoot[data-v1714-scene-theme="sakura"] .uai-c-v1714-base{
+  background:radial-gradient(ellipse at 15% 5%,rgba(255,111,188,.38),transparent 34%),radial-gradient(ellipse at 72% 17%,rgba(177,87,255,.34),transparent 38%),radial-gradient(ellipse at 88% 80%,rgba(90,91,212,.30),transparent 39%),linear-gradient(148deg,#11071e 0%,#35134f 39%,#21103d 68%,#080918 100%);
+}
+#uaiCompanionRoot[data-v1714-scene-theme="sakura"] .uai-c-v1714-wash{background:radial-gradient(ellipse at 20% 34%,rgba(255,119,181,.34),transparent 28%),radial-gradient(ellipse at 66% 28%,rgba(211,101,255,.28),transparent 31%),radial-gradient(ellipse at 82% 72%,rgba(112,105,255,.19),transparent 34%);animation:v1714SakuraWash 20s ease-in-out infinite alternate}
+#uaiCompanionRoot[data-v1714-scene-theme="sakura"] .uai-c-v1714-band::before{content:"";position:absolute;left:-18%;right:-18%;top:44%;height:120px;transform:rotate(7deg);background:linear-gradient(90deg,transparent,rgba(255,127,190,.08),rgba(255,166,211,.34),rgba(207,121,255,.27),rgba(131,120,255,.14),transparent);filter:blur(3px);animation:v1714SakuraBand 15s ease-in-out infinite alternate}
+#uaiCompanionRoot[data-v1714-scene-theme="sakura"] .uai-c-v1714-accent::before{content:"";position:absolute;right:8%;top:8%;width:124px;height:124px;border-radius:50%;background:radial-gradient(circle at 40% 38%,rgba(255,244,252,.46),rgba(255,177,222,.15) 45%,transparent 72%);box-shadow:0 0 56px rgba(255,129,195,.20)}
+
+#uaiCompanionRoot[data-v1714-scene-theme="moonlight"] .uai-c-v1714-base{
+  background:radial-gradient(ellipse at 73% 3%,rgba(196,220,255,.30),transparent 28%),radial-gradient(ellipse at 28% 16%,rgba(99,123,255,.32),transparent 35%),radial-gradient(ellipse at 58% 74%,rgba(94,89,205,.25),transparent 43%),linear-gradient(150deg,#06101d 0%,#101f43 42%,#0e1531 70%,#060a16 100%);
+}
+#uaiCompanionRoot[data-v1714-scene-theme="moonlight"] .uai-c-v1714-wash{background:radial-gradient(ellipse at 74% 13%,rgba(211,228,255,.30),transparent 25%),radial-gradient(ellipse at 42% 54%,rgba(106,135,255,.22),transparent 32%),radial-gradient(ellipse at 20% 83%,rgba(129,101,255,.16),transparent 30%);animation:v1714MoonWash 19s ease-in-out infinite alternate}
+#uaiCompanionRoot[data-v1714-scene-theme="moonlight"] .uai-c-v1714-band::before{content:"";position:absolute;left:42%;right:-30%;top:-12%;height:132%;transform:rotate(20deg);background:linear-gradient(90deg,transparent 0 24%,rgba(201,224,255,.04) 33%,rgba(204,225,255,.20) 48%,rgba(141,171,255,.10) 62%,transparent 75%);filter:blur(2px);animation:v1714MoonBeam 11s ease-in-out infinite alternate}
+#uaiCompanionRoot[data-v1714-scene-theme="moonlight"] .uai-c-v1714-accent::before{content:"";position:absolute;right:10%;top:6%;width:150px;height:150px;border-radius:50%;background:radial-gradient(circle at 38% 34%,#f1f7ff 0%,#bfd7ff 31%,rgba(159,185,255,.50) 48%,rgba(127,146,255,.10) 65%,transparent 75%);box-shadow:0 0 55px rgba(171,207,255,.28),0 0 115px rgba(104,140,255,.16);opacity:.78}
+
+#uaiCompanionRoot[data-v1714-scene-theme="neon"] .uai-c-v1714-base{
+  background:radial-gradient(ellipse at 15% 8%,rgba(118,61,255,.38),transparent 35%),radial-gradient(ellipse at 83% 23%,rgba(255,44,165,.31),transparent 34%),radial-gradient(ellipse at 65% 76%,rgba(27,199,255,.25),transparent 41%),linear-gradient(145deg,#040616 0%,#0b1543 40%,#171038 68%,#050615 100%);
+}
+#uaiCompanionRoot[data-v1714-scene-theme="neon"] .uai-c-v1714-wash{background:radial-gradient(circle at 18% 25%,rgba(114,54,255,.33),transparent 25%),radial-gradient(circle at 82% 35%,rgba(255,43,165,.30),transparent 28%),radial-gradient(circle at 58% 79%,rgba(27,205,255,.24),transparent 29%);filter:blur(22px) saturate(1.4);animation:v1714NeonWash 14s ease-in-out infinite alternate}
+#uaiCompanionRoot[data-v1714-scene-theme="neon"] .uai-c-v1714-band::before{content:"";position:absolute;left:-16%;right:-16%;top:38%;height:148px;background:linear-gradient(180deg,transparent 42%,rgba(255,47,170,.20) 48%,rgba(255,63,181,.62) 50%,rgba(70,214,255,.28) 52%,transparent 58%),linear-gradient(90deg,transparent 5%,rgba(112,65,255,.12),rgba(255,50,172,.28),rgba(51,211,255,.20),transparent 94%);filter:blur(.8px);animation:v1714NeonBand 9s ease-in-out infinite alternate}
+#uaiCompanionRoot[data-v1714-scene-theme="neon"] .uai-c-v1714-accent{background-image:linear-gradient(rgba(83,99,255,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(255,54,172,.06) 1px,transparent 1px);background-size:78px 78px;mask-image:linear-gradient(to bottom,transparent 0,#000 24%,#000 88%,transparent 100%);animation:v1714Grid 15s linear infinite}
+
+#uaiCompanionRoot .uai-c-v1714-particles i{position:absolute;left:var(--x);top:var(--y);width:var(--size);height:var(--size);font-style:normal;font-size:calc(var(--size) * 1.7);line-height:1;color:rgba(255,255,255,.82);text-shadow:0 0 10px currentColor;opacity:.18;animation:v1714Float var(--duration) ease-in-out var(--delay) infinite}
+#uaiCompanionRoot .uai-c-v1714-particles i[data-kind="sakura"]{color:#ffb7d4;opacity:.42}
+#uaiCompanionRoot .uai-c-v1714-particles i[data-kind="moonlight"]{border-radius:50%;background:#e9f4ff;box-shadow:0 0 10px rgba(189,216,255,.85);opacity:.28}
+#uaiCompanionRoot .uai-c-v1714-particles i[data-kind="neon"]{border-radius:50%;background:#db9aff;box-shadow:0 0 12px #8bdfff;opacity:.38}
+
+#uaiCompanionRoot .uai-c-v1714-scene-button{display:inline-flex;align-items:center;gap:6px;min-height:38px;padding:0 12px;border:1px solid rgba(216,158,255,.16);border-radius:12px;background:rgba(36,25,46,.72);color:#f6eaff;box-shadow:inset 0 1px rgba(255,255,255,.04);cursor:pointer}
+#uaiCompanionRoot .uai-c-v1714-scene-button span{font-size:15px;color:#e9a8ff}
+#uaiCompanionRoot .uai-c-v1714-scene-button b{font-size:13px}
+#uaiCompanionRoot .uai-c-v1714-scene-button small{font-size:10px;color:rgba(245,231,255,.56)}
+#uaiCompanionRoot .uai-c-v1714-scene-button:hover{border-color:rgba(234,162,255,.38);background:rgba(58,35,70,.78)}
+
+@keyframes v1714GalaxyWash{from{transform:translate3d(-4%,-2%,0) scale(.98)}to{transform:translate3d(6%,4%,0) scale(1.08)}}
+@keyframes v1714GalaxyBand{from{translate:-6% -12px;rotate:-2deg}to{translate:8% 15px;rotate:4deg}}
+@keyframes v1714Stars{to{background-position:310px 210px,-230px 170px,180px -250px,-140px 290px}}
+@keyframes v1714SakuraWash{from{transform:translate3d(-5%,2%,0) scale(.97)}to{transform:translate3d(6%,-4%,0) scale(1.07)}}
+@keyframes v1714SakuraBand{from{translate:-7% 5px;rotate:-2deg}to{translate:7% -9px;rotate:3deg}}
+@keyframes v1714MoonWash{from{transform:translate3d(-3%,2%,0) scale(.99)}to{transform:translate3d(4%,-3%,0) scale(1.05)}}
+@keyframes v1714MoonBeam{from{translate:-3% 0;opacity:.54}to{translate:4% 2%;opacity:.9}}
+@keyframes v1714NeonWash{from{transform:translate3d(-4%,-2%,0) scale(.98)}to{transform:translate3d(5%,3%,0) scale(1.07)}}
+@keyframes v1714NeonBand{from{translate:-5% -4px;opacity:.7}to{translate:6% 7px;opacity:1}}
+@keyframes v1714Grid{to{background-position:78px 78px}}
+@keyframes v1714Float{0%,100%{transform:translate3d(0,7px,0) rotate(0deg);opacity:.08}45%{transform:translate3d(var(--drift),-25px,0) rotate(170deg);opacity:.56}70%{opacity:.25}}
+
+@media (prefers-reduced-motion:reduce){
+  #uaiCompanionRoot .uai-c-v1714-scene *{animation:none!important;transition:none!important}
+  #uaiCompanionRoot .uai-c-v1714-particles i{opacity:.18!important}
+}
+
+@media (max-width:900px){
+  #uaiCompanionRoot .uai-c-v1714-scene-button small{display:none}
+  #uaiCompanionRoot .uai-c-v1714-scene-button{padding:0 9px}
+}
