@@ -6,11 +6,11 @@ const boot = fs.readFileSync("public/boot-diagnostics.js", "utf8");
 const legacyBridge = fs.readFileSync("public/companion-lazy-bridge.js", "utf8");
 const currentEntry = fs.readFileSync("public/companion-entry-v175.js", "utf8");
 
-assert.match(index, /boot-diagnostics\.js\?v=20260822-v17\.5-companion-core-only-rollback/);
-assert.match(boot, /2026-08-22-v17\.5-companion-core-only-rollback/);
+assert.match(index, /boot-diagnostics\.js\?v=20260823-v17\.22-final-cleanup-diagnostics/);
+assert.match(boot, /2026-08-23-v17\.22-final-cleanup-diagnostics/);
 assert.match(boot, /companion-entry-v175\.js/);
 assert.doesNotMatch(boot, /companion-lazy-bridge\.js|companion-entry-v174\.js|companion-assets-loader-v174\.js/,
-  "legacy/enhancement entry code must stay out of the active V17.5 boot chain");
+  "legacy/enhancement entry code must stay out of the active V17.22 boot chain");
 
 assert.match(legacyBridge, /COMPANION_ENTRY_TIMEOUT/);
 assert.doesNotMatch(legacyBridge, /alert\(/, "legacy recovery source must stay inline and non-blocking");
@@ -25,4 +25,4 @@ assert.match(currentEntry, /root\.querySelector\("#uaiCompanionMessages"\)/);
 assert.match(currentEntry, /root\.querySelector\("#uaiCompanionInput"\)/);
 assert.doesNotMatch(currentEntry, /startEnhancements|UnlimitedCompanionAssetsV174|assets-loader-v174/);
 
-console.log("Companion recovery contract passed: V17.5 keeps direct-core entry and hard recovery while all optional enhancement loading remains disabled.");
+console.log("Companion recovery contract passed: V17.22 diagnostics preserve the V17.5 direct-core recovery path and keep obsolete loaders disabled.");
