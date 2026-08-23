@@ -5,7 +5,7 @@ const index = fs.readFileSync('public/index.html', 'utf8');
 const js = fs.readFileSync('public/companion-scene-v1714.js', 'utf8');
 const css = fs.readFileSync('public/companion-scene-v1714.css', 'utf8');
 
-assert.match(index, /2026-08-23-v17\.16-voice-audio-recovery/);
+assert.match(index, /2026-08-23-v17\.17-integrated-live2d-complete/);
 assert.match(index, /companion-scene-v1714\.css\?v=20260823-v17\.14-safe-scene-restore/);
 assert.match(index, /companion-scene-v1714\.js\?v=20260823-v17\.14-safe-scene-restore/);
 assert.match(js, /2026-08-23-v17\.14-safe-scene-restore/);
