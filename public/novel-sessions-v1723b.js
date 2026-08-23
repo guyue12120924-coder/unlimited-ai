@@ -58,19 +58,20 @@
         copy.appendChild(meta);
       }
       const meta = copy.querySelector(".novel-v1723-session-meta");
-      if (meta) meta.textContent = sessionMeta(id, item.classList.contains("active"));
+      const nextMeta = sessionMeta(id, item.classList.contains("active"));
+      if (meta && meta.textContent !== nextMeta) meta.textContent = nextMeta;
 
       const rename = item.querySelector(".rename-session");
       const remove = item.querySelector(".delete-session");
       if (rename) {
-        rename.textContent = "重命名";
-        rename.title = "重命名这个会话";
+        if (rename.textContent !== "重命名") rename.textContent = "重命名";
+        if (rename.title !== "重命名这个会话") rename.title = "重命名这个会话";
       }
       if (remove) {
-        remove.textContent = "删除";
-        remove.title = "删除这个会话";
+        if (remove.textContent !== "删除") remove.textContent = "删除";
+        if (remove.title !== "删除这个会话") remove.title = "删除这个会话";
       }
-      item.dataset.novelV1723Session = "true";
+      if (item.dataset.novelV1723Session !== "true") item.dataset.novelV1723Session = "true";
     });
   }
 
