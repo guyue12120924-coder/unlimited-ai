@@ -6,8 +6,8 @@ const index = read("public/index.html");
 const boot = read("public/boot-diagnostics.js");
 const entry = read("public/companion-entry-v175.js");
 
-assert.match(index, /boot-diagnostics\.js\?v=20260822-v17\.5-companion-core-only-rollback/);
-assert.match(boot, /2026-08-22-v17\.5-companion-core-only-rollback/);
+assert.match(index, /boot-diagnostics\.js\?v=20260823-v17\.22-final-cleanup-diagnostics/);
+assert.match(boot, /2026-08-23-v17\.22-final-cleanup-diagnostics/);
 assert.match(boot, /companion-entry-v175\.js/);
 assert.doesNotMatch(boot, /companion-entry-v174\.js/);
 assert.doesNotMatch(boot, /companion-assets-loader-v174\.js/);
@@ -29,4 +29,4 @@ assert.doesNotMatch(entry, /startEnhancements/);
 assert.doesNotMatch(entry, /companion-assets-loader-v174\.js/);
 assert.doesNotMatch(entry, /UnlimitedCompanionAssetsV174/);
 
-console.log("Companion V17.5 core-only rollback contract passed: only the base companion CSS/JS may participate in active entry, and all enhancement residue is disabled/removed.");
+console.log("Core-only entry contract passed under V17.22 diagnostics: only base companion CSS/JS participate in entry and obsolete enhancement loaders remain disabled.");
