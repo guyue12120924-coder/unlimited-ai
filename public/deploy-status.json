@@ -2,7 +2,7 @@
   "product": "Unlimited AI",
   "frontendRevision": "2026-08-23-v17.21-voice-experience-polish",
   "diagnosticsRevision": "2026-08-23-v17.22-final-cleanup-diagnostics",
-  "novelRevision": "2026-08-23-v17.24b-visual-unification",
+  "novelRevision": "2026-08-23-v17.24c-final-regression-polish",
   "runtimeRevision": "2026-08-21-v17.0-workspace-consolidation",
   "workerGatewayRevision": "2026-08-23-v17.22-companion-diagnostics-gateway",
   "diagnosticsPath": "/api/diagnostics",
@@ -12,7 +12,8 @@
     "navigation": "V17.23C collapse rescue + favorite-adjacent delete + creative-material hierarchy",
     "finalUx": "V17.23D compact topbar + composer quick actions + first-run onboarding",
     "uiPass1": "V17.24A wider writing center + lighter sidebars + folded project tools without feature deletion",
-    "uiPass2": "V17.24B unified light/dark writing surfaces + controls + typography + cards without feature changes"
+    "uiPass2": "V17.24B unified light/dark writing surfaces + controls + typography + cards without feature changes",
+    "uiPass3": "V17.24C single-open floating menus + long-name hints + narrow-screen return-to-writing + final overflow regression polish"
   },
   "companion": {
     "entry": "V17.5 core-only stable entry",
@@ -22,5 +23,5 @@
     "scene": "V17.18 cinematic scenes + V17.19 luminous shell",
     "call": "V17.21 unified voice call"
   },
-  "status": "v17.24b-visual-unification-current"
+  "status": "v17.24c-final-regression-polish-current"
 }
