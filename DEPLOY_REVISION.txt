@@ -3,24 +3,35 @@ Date: 2026-08-23
 
 Frontend companion revision: 2026-08-23-v17.21-voice-experience-polish
 Diagnostics revision: 2026-08-23-v17.22-final-cleanup-diagnostics
+Novel workspace revision: 2026-08-23-v17.23a-novel-simplification
 Worker gateway revision: 2026-08-23-v17.22-companion-diagnostics-gateway
 Frontend runtime core: 2026-08-21-v17.0-workspace-consolidation
 
+V17.23A novel workspace simplification:
+- public/novel-simplify-v1723.css adds a novel-only warm light writing theme.
+- public/novel-simplify-v1723.js owns the novel-only theme preference cfw_novel_theme_v1723.
+- The default novel theme is light; users can still switch back to the existing dark theme from Settings.
+- The novel theme state is removed when leaving novel mode so companion mode does not inherit novel colors.
+- Old anime wallpaper, blur layer and particle canvas are visually disabled only while the novel light theme is active.
+- Novel workspace uses warm off-white canvas, paper-like white editors, dark readable text and restrained green accents.
+- Left library, center AI conversation and right writing tools remain structurally unchanged but use quieter borders/shadows and clearer active states.
+- Duplicate explanatory chrome is reduced by hiding the V15.1 guide, V15.2 writing-now banner and composer context note in novel mode.
+- Actual editors, project/chapter controls, AI chat actions, manuscript tools and stored data are not removed.
+- tests/novel-simplify-v1723.test.mjs ensures the layer remains novel-only and production companion assets stay unchanged.
+
 V17.22 final cleanup and diagnostics:
-- public/boot-diagnostics.js now owns BOOT_REVISION=2026-08-23-v17.22-final-cleanup-diagnostics.
+- public/boot-diagnostics.js owns BOOT_REVISION=2026-08-23-v17.22-final-cleanup-diagnostics.
 - public/index.html cache-busts boot-diagnostics.js with the V17.22 key and exposes unlimited-diagnostics-revision.
 - Browser boot diagnostics dynamically report the current companion core/function/voice/scene/Live2D/call APIs instead of hard-coding old V10/V12 readiness fields to false.
 - Browser diagnostics explicitly report whether legacy V10/V11/V12 structural themes, old companion-runtime.js, old companion-call-mode.js and old companion-live2d.js are absent from the active page.
-- src/worker-voice.js /api/diagnostics now validates the current V17.21 companion stack in addition to the V17.0 novel workspace.
+- src/worker-voice.js /api/diagnostics validates the current V17.21 companion stack in addition to the V17.0 novel workspace.
 - Worker diagnostics check the V17.21 emotional voice, integrated Live2D, isolated scene, cinematic scene CSS, V17.19 luminous shell and unified call implementation.
-- /api/companion/tts/status and /api/companion/stt/status now identify Eve as the default companion voice and expose current frontend/diagnostics revisions.
-- public/deploy-status.json now reflects the real V17.21/V17.22 deployment state instead of V10.2.
-- README.md now documents the current V17 architecture instead of V9.5.
+- /api/companion/tts/status and /api/companion/stt/status identify Eve as the default companion voice and expose current frontend/diagnostics revisions.
+- public/deploy-status.json reflects the V17.21/V17.22 deployment state instead of V10.2.
+- README.md documents the current V17 architecture instead of V9.5.
 - docs/COMPANION_LEGACY.md defines the historical files that must not return to the production startup chain.
-- tests/v1722-final-cleanup.test.mjs locks the diagnostics/documentation/legacy boundary into CI.
-- Historical direct-entry/recovery tests were updated to accept the V17.22 diagnostics bootstrap while continuing to require the V17.5 stable core entry.
 
-Current production companion chain:
+Current production companion chain remains unchanged by V17.23A:
 - V17.5 stable core-only entry: public/companion-entry-v175.js
 - Core: public/companion-mode.css + public/companion-mode.js
 - V17.6 safe polish
