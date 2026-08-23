@@ -272,8 +272,12 @@ body[data-uai-mode="novel"] #studioPanelBody .manuscript-check {
 }
 
 @media (max-width: 980px) {
-  body[data-uai-mode="novel"] #creativeWorkspace {
+  body[data-uai-mode="novel"] #creativeWorkspace,
+  body[data-uai-mode="novel"].library-collapsed #creativeWorkspace,
+  body[data-uai-mode="novel"].studio-collapsed #creativeWorkspace,
+  body[data-uai-mode="novel"].library-collapsed.studio-collapsed #creativeWorkspace {
     min-width: 0;
+    grid-template-columns: minmax(0, 1fr);
   }
   body[data-uai-mode="novel"] #conversationPane .chat {
     padding-inline: clamp(14px, 4vw, 28px) !important;
