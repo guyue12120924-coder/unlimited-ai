@@ -29,12 +29,13 @@ assert.match(js, /novelV1723ChapterName/);
 assert.match(js, /studio-item-main span/);
 assert.match(js, /window\.innerWidth <= 980/);
 assert.match(js, /collapseLibrary/);
-assert.match(js, /document\.getElementById\("msg"\)\?\.focus/);
+assert.doesNotMatch(js, /document\.getElementById\("msg"\)\?\.focus/);
 assert.doesNotMatch(js, /localStorage|UnlimitedCompanion|uai_companion_|uaiCompanionRoot/);
 
 assert.match(css, /V17\.24C Novel Final Regression Polish/);
 assert.match(css, /body\[data-uai-mode="novel"\]/);
-assert.match(css, /max-width:\s*calc\(100vw/);
+assert.match(css, /max-width:\s*calc\(100vw - 20px\)/);
+assert.doesNotMatch(css, /var\(--novel-v1724c-safe-gap\)\s*\*/);
 assert.match(css, /\.novel-v1723d-onboarding-close/);
 assert.match(css, /position:\s*absolute\s*!important/);
 assert.match(css, /@media \(max-width: 980px\)/);
