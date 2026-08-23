@@ -194,3 +194,9 @@ jobs:
         run: |
           set -euo pipefail
           node tests/novel-navigation-v1723c.test.mjs
+
+      - name: Check V17.23D novel final UX contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          node tests/novel-final-v1723d.test.mjs
