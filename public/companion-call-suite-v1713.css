@@ -1,4 +1,4 @@
-/* V17.13 isolated call overlay. Core companion chat stays mounted underneath. */
+/* V17.17 call overlay. The stable chat and integrated background role stay mounted underneath. */
 body[data-uai-mode="companion"] #uaiCompanionRoot .uai-c-v1713-call-launch {
   display: inline-flex;
   align-items: center;
@@ -23,8 +23,9 @@ body[data-uai-mode="companion"] #uaiCompanionCallV1713 {
   grid-template-rows: auto 1fr auto;
   overflow: hidden;
   color: #fff;
-  background: rgba(8,7,13,.92);
+  background: rgba(8,7,13,.46);
   isolation: isolate;
+  backdrop-filter: blur(2px);
 }
 body[data-uai-mode="companion"] #uaiCompanionCallV1713 .uai-c-v1713-call-bg {
   position: absolute;
@@ -32,10 +33,10 @@ body[data-uai-mode="companion"] #uaiCompanionCallV1713 .uai-c-v1713-call-bg {
   z-index: -1;
   pointer-events: none;
   background:
-    radial-gradient(circle at 50% 34%, rgba(192,91,196,.22), transparent 28%),
-    radial-gradient(circle at 24% 72%, rgba(82,104,190,.16), transparent 31%),
-    radial-gradient(circle at 78% 70%, rgba(226,111,166,.12), transparent 28%),
-    linear-gradient(180deg, #17111e, #09080e 72%);
+    radial-gradient(circle at 50% 34%, rgba(192,91,196,.24), transparent 28%),
+    radial-gradient(circle at 24% 72%, rgba(82,104,190,.17), transparent 31%),
+    radial-gradient(circle at 78% 70%, rgba(226,111,166,.13), transparent 28%),
+    linear-gradient(180deg, rgba(23,17,30,.44), rgba(9,8,14,.62) 72%);
 }
 
 body[data-uai-mode="companion"] #uaiCompanionCallV1713 > header {
@@ -73,8 +74,9 @@ body[data-uai-mode="companion"] #uaiCompanionCallV1713 > main {
   display: grid;
   place-items: end center;
   padding: 20px 24px 28px;
+  background: transparent;
 }
-body[data-uai-mode="companion"] #uaiCompanionCallV1713 .uai-c-v1713-stage-space { width: min(520px, 80vw); height: min(64vh, 650px); }
+body[data-uai-mode="companion"] #uaiCompanionCallV1713 .uai-c-v1713-stage-space { width: min(520px, 80vw); height: min(64vh, 650px); pointer-events: none; }
 body[data-uai-mode="companion"] #uaiCompanionCallV1713 .uai-c-v1713-captions {
   position: absolute;
   left: 50%;
@@ -160,20 +162,13 @@ body[data-uai-mode="companion"] #uaiCompanionCallV1713 > footer .hangup small,
 body[data-uai-mode="companion"] #uaiCompanionCallV1713 > footer .hangup span { transform: rotate(-135deg); }
 body[data-uai-mode="companion"] #uaiCompanionCallV1713 > footer .off { opacity: .55; }
 
-/* During a call, the independently mounted V17.12 stage is simply repositioned; its own renderer remains isolated. */
-body[data-uai-mode="companion"] #uaiCompanionRoot[data-v1713-call="active"] #uaiCompanionStageV1712 {
-  z-index: 50620;
-  right: 50%;
-  bottom: 118px;
-  transform: translateX(50%);
-  width: min(460px, 70vw);
-  height: min(650px, calc(100vh - 190px));
-  border-color: rgba(255,255,255,.05);
-  background: transparent;
-  box-shadow: none;
+/* The Live2D renderer now lives in .uai-c-main. Calls never detach or recreate it. */
+body[data-uai-mode="companion"] #uaiCompanionRoot[data-v1713-call="active"] .uai-c-main {
+  overflow: hidden;
 }
-body[data-uai-mode="companion"] #uaiCompanionRoot[data-v1713-call="active"] #uaiCompanionStageV1712 > header,
-body[data-uai-mode="companion"] #uaiCompanionRoot[data-v1713-call="active"] #uaiCompanionStageV1712 > footer { background: rgba(11,9,15,.42); }
+body[data-uai-mode="companion"] #uaiCompanionRoot[data-v1713-call="active"] #uaiCompanionStageV1712 {
+  opacity: 1;
+}
 
 @media (max-width: 760px) {
   body[data-uai-mode="companion"] #uaiCompanionRoot .uai-c-v1713-call-launch b { display: none; }
@@ -183,7 +178,6 @@ body[data-uai-mode="companion"] #uaiCompanionRoot[data-v1713-call="active"] #uai
   body[data-uai-mode="companion"] #uaiCompanionCallV1713 > footer { gap: 9px; padding-inline: 10px; }
   body[data-uai-mode="companion"] #uaiCompanionCallV1713 > footer button { width: 58px; height: 58px; }
   body[data-uai-mode="companion"] #uaiCompanionCallV1713 > footer .listen { width: 68px; height: 68px; }
-  body[data-uai-mode="companion"] #uaiCompanionRoot[data-v1713-call="active"] #uaiCompanionStageV1712 { width: min(340px, 92vw); height: min(500px, calc(100vh - 220px)); bottom: 112px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
