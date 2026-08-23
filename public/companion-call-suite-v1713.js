@@ -1,7 +1,7 @@
-// V17.13 isolated companion call mode. Explicit call sessions may auto-send recognized speech; normal chat remains unchanged.
+// V17.14 companion call audio recovery. Keeps explicit-call auto-send isolated from normal chat.
 (() => {
-  const REVISION = "2026-08-23-v17.13-complete-call-experience";
-  if (window.UnlimitedCompanionCallV1713) return;
+  const REVISION = "2026-08-23-v17.14-call-audio-recovery";
+  if (window.UnlimitedCompanionCallV1713?.revision === REVISION) return;
 
   const KEY = "uai_companion_call_mode_v1";
   const ACTIVE_KEY = "uai_companion_active_character_v1";
@@ -23,18 +23,20 @@
     rex: "Rex · 沉稳自信",
     leo: "Leo · 成熟低沉"
   };
+  const SILENT_WAV = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQQAAACAgICA";
 
   let callActive = false;
   let callStartedAt = 0;
   let callTimer = 0;
+  let overlay = null;
   let generationObserver = null;
   let observedInput = null;
   let previousGenerating = false;
-  let overlay = null;
+
   let stream = null;
   let recorder = null;
   let chunks = [];
-  let audioContext = null;
+  let vadContext = null;
   let analyser = null;
   let vadFrame = 0;
   let recordDeadline = 0;
@@ -42,13 +44,20 @@
   let lastSoundAt = 0;
   let heardSpeech = false;
   let transcribeController = null;
+
+  let playbackContext = null;
+  let playbackSource = null;
+  let fallbackAudio = null;
+  let fallbackUrl = "";
+  let audioUnlocked = false;
+  let unlockPromise = null;
   let ttsController = null;
-  let activeAudio = null;
-  let activeUrl = "";
   let speechToken = 0;
   let mouthTimer = 0;
+  let lastSpokenText = "";
+  let lastPlaybackError = "";
+
   let muted = false;
-  let lastUserTranscript = "";
   let lastAssistantText = "";
   let stageWasOpen = false;
   let previousAutoVoiceSetting = null;
@@ -130,13 +139,17 @@
     toast.textContent = String(message || "");
     toast.classList.add("show");
     clearTimeout(showToast.timer);
-    showToast.timer = setTimeout(() => toast.classList.remove("show"), 1800);
+    showToast.timer = setTimeout(() => toast.classList.remove("show"), 2200);
+  }
+
+  function escapeHtml(value) {
+    return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
   }
 
   function ensureLauncher() {
     const host = root();
     const header = host?.querySelector(".uai-c-header");
-    if (!header) return;
+    if (!header) return null;
     let button = header.querySelector("#uaiCompanionCallButtonV1713");
     if (!button) {
       button = document.createElement("button");
@@ -144,10 +157,66 @@
       button.className = "uai-c-v1713-call-launch";
       button.type = "button";
       button.innerHTML = `<span>☎</span><b>通话</b>`;
+      button.addEventListener("pointerdown", unlockPlayback, { passive: true });
       button.addEventListener("click", () => callActive ? endCall() : startCall());
       header.appendChild(button);
     }
     button.classList.toggle("active", callActive);
+    return button;
+  }
+
+  function ensureFallbackAudio() {
+    if (fallbackAudio) return fallbackAudio;
+    const audio = document.createElement("audio");
+    audio.id = "uaiCompanionCallAudioV1714";
+    audio.preload = "auto";
+    audio.playsInline = true;
+    audio.setAttribute("playsinline", "");
+    audio.setAttribute("webkit-playsinline", "");
+    audio.style.display = "none";
+    document.body.appendChild(audio);
+    fallbackAudio = audio;
+    return audio;
+  }
+
+  function ensurePlaybackContext() {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return null;
+    if (!playbackContext || playbackContext.state === "closed") playbackContext = new AudioCtx();
+    return playbackContext;
+  }
+
+  function unlockPlayback() {
+    const context = ensurePlaybackContext();
+    try { context?.resume?.(); } catch {}
+    const audio = ensureFallbackAudio();
+    if (audioUnlocked) return Promise.resolve(true);
+    if (unlockPromise) return unlockPromise;
+    const previousVolume = audio.volume;
+    audio.volume = .01;
+    audio.src = SILENT_WAV;
+    try {
+      const result = audio.play();
+      unlockPromise = Promise.resolve(result).then(() => {
+        audio.pause();
+        try { audio.currentTime = 0; } catch {}
+        audio.removeAttribute("src");
+        audio.load();
+        audio.volume = previousVolume || 1;
+        audioUnlocked = true;
+        lastPlaybackError = "";
+        return true;
+      }).catch((error) => {
+        audio.volume = previousVolume || 1;
+        lastPlaybackError = error?.message || "audio unlock failed";
+        return false;
+      }).finally(() => { unlockPromise = null; });
+      return unlockPromise;
+    } catch (error) {
+      audio.volume = previousVolume || 1;
+      lastPlaybackError = error?.message || "audio unlock failed";
+      return Promise.resolve(false);
+    }
   }
 
   function formatDuration(ms) {
@@ -191,13 +260,7 @@
     overlay.innerHTML = `
       <div class="uai-c-v1713-call-bg"></div>
       <header><div><small>LIVE CALL</small><strong>${escapeHtml(profile.name || "AI 伙伴")}</strong><span><i></i><b data-v1713-status>正在连接…</b></span></div><div><time data-v1713-time>00:00</time><button type="button" data-v1713-settings title="通话设置">⚙</button></div></header>
-      <main>
-        <div class="uai-c-v1713-stage-space" aria-hidden="true"></div>
-        <div class="uai-c-v1713-captions">
-          <article><small>你</small><p data-v1713-caption="user">你说的话会显示在这里</p></article>
-          <article><small>${escapeHtml(profile.name || "她")}</small><p data-v1713-caption="assistant">她的回复会显示在这里</p></article>
-        </div>
-      </main>
+      <main><div class="uai-c-v1713-stage-space" aria-hidden="true"></div><div class="uai-c-v1713-captions"><article><small>你</small><p data-v1713-caption="user">你说的话会显示在这里</p></article><article><small>${escapeHtml(profile.name || "她")}</small><p data-v1713-caption="assistant">她的回复会显示在这里</p></article></div></main>
       <div class="uai-c-v1713-settings" data-v1713-panel hidden>
         <label><span>语音引擎</span><select data-v1713-engine><option value="auto">自动</option><option value="grok">Grok TTS</option><option value="melo">MeloTTS</option><option value="system">浏览器系统语音</option></select></label>
         <label><span>角色声音</span><select data-v1713-voice>${Object.entries(VOICE_LABELS).map(([id, label]) => `<option value="${id}">${label}</option>`).join("")}</select></label>
@@ -206,24 +269,24 @@
         <label class="check"><input data-v1713-auto-listen type="checkbox" ${settings.autoListen ? "checked" : ""}>回复结束后自动继续聆听</label>
         <label class="check"><input data-v1713-captions-toggle type="checkbox" ${settings.captions ? "checked" : ""}>显示通话字幕</label>
       </div>
-      <footer>
-        <button type="button" class="secondary" data-v1713-mute><span>🎙</span><small>麦克风</small></button>
-        <button type="button" class="listen" data-v1713-listen><span>●</span><small>开始说话</small></button>
-        <button type="button" class="secondary" data-v1713-speaker><span>🔊</span><small>扬声器</small></button>
-        <button type="button" class="hangup" data-v1713-end><span>☎</span><small>挂断</small></button>
-      </footer>`;
+      <footer><button type="button" class="secondary" data-v1713-mute><span>🎙</span><small>麦克风</small></button><button type="button" class="listen" data-v1713-listen><span>●</span><small>开始说话</small></button><button type="button" class="secondary" data-v1713-speaker><span>🔊</span><small>扬声器</small></button><button type="button" class="hangup" data-v1713-end><span>☎</span><small>挂断</small></button></footer>`;
     host.appendChild(overlay);
+
     overlay.querySelector("[data-v1713-end]")?.addEventListener("click", endCall);
+    overlay.querySelector("[data-v1713-listen]")?.addEventListener("pointerdown", unlockPlayback, { passive: true });
     overlay.querySelector("[data-v1713-listen]")?.addEventListener("click", () => recorder ? finishRecording(false) : startListening(false));
     overlay.querySelector("[data-v1713-mute]")?.addEventListener("click", () => {
       muted = !muted;
       if (muted && recorder) finishRecording(true);
       refreshOverlay();
     });
-    overlay.querySelector("[data-v1713-speaker]")?.addEventListener("click", () => {
+    overlay.querySelector("[data-v1713-speaker]")?.addEventListener("pointerdown", unlockPlayback, { passive: true });
+    overlay.querySelector("[data-v1713-speaker]")?.addEventListener("click", async () => {
       const next = !getSettings().speaker;
       setSettings({ speaker: next });
-      if (!next) stopSpeech();
+      if (!next) return stopSpeech();
+      await unlockPlayback();
+      if (callActive && lastSpokenText && lastPlaybackError) respondWithVoice(lastSpokenText, { retry: true });
     });
     overlay.querySelector("[data-v1713-settings]")?.addEventListener("click", () => {
       const panel = overlay?.querySelector("[data-v1713-panel]");
@@ -241,10 +304,6 @@
     overlay.querySelector("[data-v1713-captions-toggle]")?.addEventListener("change", (event) => setSettings({ captions: event.target.checked }));
     refreshOverlay();
     return overlay;
-  }
-
-  function escapeHtml(value) {
-    return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
   }
 
   function refreshOverlay() {
@@ -286,8 +345,8 @@
     vadFrame = 0;
     if (recordDeadline) clearTimeout(recordDeadline);
     recordDeadline = 0;
-    try { audioContext?.close?.(); } catch {}
-    audioContext = null;
+    try { vadContext?.close?.(); } catch {}
+    vadContext = null;
     analyser = null;
   }
 
@@ -334,9 +393,9 @@
       current.addEventListener("error", () => onRecordingError(current), { once: true });
       const AudioCtx = window.AudioContext || window.webkitAudioContext;
       if (AudioCtx) {
-        audioContext = new AudioCtx();
-        const source = audioContext.createMediaStreamSource(stream);
-        analyser = audioContext.createAnalyser();
+        vadContext = new AudioCtx();
+        const source = vadContext.createMediaStreamSource(stream);
+        analyser = vadContext.createAnalyser();
         analyser.fftSize = 512;
         analyser.smoothingTimeConstant = .25;
         source.connect(analyser);
@@ -414,9 +473,8 @@
       if (controller !== transcribeController || !callActive) return;
       const text = String(data?.text || "").trim();
       if (!text) throw new Error("没有识别到文字");
-      lastUserTranscript = text;
-      setCaption("user", text);
       transcribeController = null;
+      setCaption("user", text);
       if (getSettings().autoSend) sendTranscript(text);
       else {
         fillComposer(text);
@@ -476,9 +534,7 @@
   function onGenerationStateChange() {
     if (!callActive) return;
     const generating = isGenerating();
-    if (generating && !previousGenerating) {
-      setCallState("thinking", "她正在想怎么回答你…");
-    }
+    if (generating && !previousGenerating) setCallState("thinking", "她正在想怎么回答你…");
     if (!generating && previousGenerating) {
       const text = lastAssistantBubble();
       if (text && text !== lastAssistantText) {
@@ -520,21 +576,25 @@
     try { window.UnlimitedCompanionStageV1712?.setMouthOpen?.(0); } catch {}
   }
 
-  function stopAudio() {
-    if (activeAudio) {
-      try { activeAudio.pause(); } catch {}
-      try { activeAudio.removeAttribute("src"); activeAudio.load(); } catch {}
+  function stopPlaybackOnly() {
+    if (playbackSource) {
+      try { playbackSource.stop(); } catch {}
+      try { playbackSource.disconnect(); } catch {}
     }
-    activeAudio = null;
-    if (activeUrl) URL.revokeObjectURL(activeUrl);
-    activeUrl = "";
+    playbackSource = null;
+    if (fallbackAudio) {
+      try { fallbackAudio.pause(); } catch {}
+      try { fallbackAudio.removeAttribute("src"); fallbackAudio.load(); } catch {}
+    }
+    if (fallbackUrl) URL.revokeObjectURL(fallbackUrl);
+    fallbackUrl = "";
   }
 
   function stopSpeech() {
     speechToken += 1;
     ttsController?.abort?.();
     ttsController = null;
-    stopAudio();
+    stopPlaybackOnly();
     stopMouth();
     try { window.speechSynthesis?.cancel?.(); } catch {}
   }
@@ -550,10 +610,8 @@
       const zh = voices.find((voice) => /^zh(?:-|_)/i.test(voice.lang || ""));
       if (zh) utterance.voice = zh;
       utterance.onstart = startMouth;
-      utterance.onend = utterance.onerror = () => {
-        stopMouth();
-        resolve(token === speechToken);
-      };
+      utterance.onend = () => { stopMouth(); resolve(token === speechToken); };
+      utterance.onerror = () => { stopMouth(); resolve(false); };
       window.speechSynthesis.cancel();
       window.speechSynthesis.speak(utterance);
     });
@@ -575,61 +633,127 @@
     return response.blob();
   }
 
-  async function playBlob(blob, settings, token) {
+  async function playBlobWithWebAudio(blob, settings, token) {
+    const context = ensurePlaybackContext();
+    if (!context) throw new Error("WebAudio unavailable");
+    await context.resume();
+    if (context.state !== "running") throw new Error("AudioContext is not running");
+    const buffer = await blob.arrayBuffer();
     if (token !== speechToken) return false;
+    const decoded = await context.decodeAudioData(buffer.slice(0));
+    if (token !== speechToken) return false;
+    return new Promise((resolve, reject) => {
+      const source = context.createBufferSource();
+      playbackSource = source;
+      source.buffer = decoded;
+      source.playbackRate.value = settings.playbackRate;
+      source.connect(context.destination);
+      source.onended = () => {
+        if (playbackSource === source) playbackSource = null;
+        try { source.disconnect(); } catch {}
+        stopMouth();
+        resolve(token === speechToken);
+      };
+      try {
+        startMouth();
+        source.start(0);
+      } catch (error) {
+        stopMouth();
+        if (playbackSource === source) playbackSource = null;
+        reject(error);
+      }
+    });
+  }
+
+  async function playBlobWithAudio(blob, settings, token) {
+    if (token !== speechToken) return false;
+    const audio = ensureFallbackAudio();
     const url = URL.createObjectURL(blob);
-    activeUrl = url;
-    const audio = new Audio(url);
-    activeAudio = audio;
+    if (fallbackUrl) URL.revokeObjectURL(fallbackUrl);
+    fallbackUrl = url;
+    audio.src = url;
     audio.playbackRate = settings.playbackRate;
+    audio.volume = 1;
     try {
       await audio.play();
+      audioUnlocked = true;
       startMouth();
       await new Promise((resolve, reject) => {
-        audio.addEventListener("ended", resolve, { once: true });
-        audio.addEventListener("error", () => reject(new Error("Audio playback failed")), { once: true });
+        const cleanup = () => {
+          audio.removeEventListener("ended", onEnd);
+          audio.removeEventListener("error", onError);
+        };
+        const onEnd = () => { cleanup(); resolve(); };
+        const onError = () => { cleanup(); reject(new Error("Audio playback failed")); };
+        audio.addEventListener("ended", onEnd, { once: true });
+        audio.addEventListener("error", onError, { once: true });
       });
-      return true;
+      return token === speechToken;
     } finally {
       stopMouth();
-      if (activeAudio === audio) activeAudio = null;
-      if (activeUrl === url) activeUrl = "";
+      if (fallbackUrl === url) fallbackUrl = "";
       URL.revokeObjectURL(url);
     }
   }
 
-  async function respondWithVoice(text) {
-    if (!callActive) return;
+  async function playBlob(blob, settings, token) {
+    try {
+      return await playBlobWithWebAudio(blob, settings, token);
+    } catch (webAudioError) {
+      try {
+        return await playBlobWithAudio(blob, settings, token);
+      } catch (audioError) {
+        lastPlaybackError = audioError?.message || webAudioError?.message || "声音播放失败";
+        const blocked = audioError?.name === "NotAllowedError" || /play|gesture|allowed/i.test(lastPlaybackError);
+        throw new Error(blocked ? "浏览器拦截了声音，请点一下扬声器后重试" : `声音播放失败：${lastPlaybackError}`);
+      }
+    }
+  }
+
+  async function respondWithVoice(text, options = {}) {
+    if (!callActive) return false;
     const settings = getSettings();
     const cleaned = cleanSpeechText(text);
+    lastSpokenText = cleaned;
     if (!settings.speaker || !cleaned) {
       setCallState("ready", "她回复你了");
-      return scheduleAutoListen(420);
+      scheduleAutoListen(420);
+      return false;
     }
     stopSpeech();
-    setCallState("speaking", "她正在对你说话…");
+    lastPlaybackError = "";
+    setCallState("speaking", options.retry ? "正在重新播放…" : "她正在对你说话…");
     if (settings.engine === "system") {
-      await systemSpeak(cleaned, settings);
+      const ok = await systemSpeak(cleaned, settings);
+      if (!ok && callActive) setCallState("error", "系统语音播放失败，请切换到自动语音");
       if (callActive) scheduleAutoListen(380);
-      return;
+      return ok;
     }
     const token = ++speechToken;
     const controller = new AbortController();
     ttsController = controller;
     try {
-      const blobs = [];
-      for (const part of chunksForSpeech(cleaned)) blobs.push(await fetchTts(part, settings, controller.signal));
-      if (controller !== ttsController || token !== speechToken) return;
-      ttsController = null;
-      for (const blob of blobs) {
-        if (token !== speechToken || !callActive) return;
+      for (const part of chunksForSpeech(cleaned)) {
+        const blob = await fetchTts(part, settings, controller.signal);
+        if (controller !== ttsController || token !== speechToken || !callActive) return false;
         await playBlob(blob, settings, token);
       }
+      if (controller === ttsController) ttsController = null;
+      if (callActive) setCallState("ready", "她说完了");
     } catch (error) {
       if (controller === ttsController) ttsController = null;
-      if (error?.name !== "AbortError" && callActive) await systemSpeak(cleaned, settings);
+      if (error?.name === "AbortError") return false;
+      lastPlaybackError = error?.message || "语音播放失败";
+      if (!callActive) return false;
+      const fallbackOk = await systemSpeak(cleaned, settings);
+      if (!fallbackOk) {
+        setCallState("error", lastPlaybackError);
+        showToast(lastPlaybackError);
+        return false;
+      }
     }
     if (callActive) scheduleAutoListen(420);
+    return true;
   }
 
   function scheduleAutoListen(delay = 500) {
@@ -637,9 +761,9 @@
       setCallState("ready", "点麦克风继续说话");
       return;
     }
-    setCallState("ready", "她说完了，准备继续听你说话…");
+    setCallState("ready", "准备继续听你说话…");
     setTimeout(() => {
-      if (callActive && !muted && !isGenerating() && !recorder && !transcribeController && !ttsController) startListening(true);
+      if (callActive && !muted && !isGenerating() && !recorder && !transcribeController && !ttsController && !playbackSource) startListening(true);
     }, delay);
   }
 
@@ -664,10 +788,14 @@
       showToast("当前浏览器不支持麦克风通话");
       return false;
     }
+
+    // Must run before the first await while the click still owns user activation.
+    unlockPlayback();
+
     callActive = true;
     callStartedAt = Date.now();
-    lastUserTranscript = "";
     lastAssistantText = lastAssistantBubble();
+    lastPlaybackError = "";
     muted = false;
     const host = root();
     host.dataset.v1713Call = "active";
@@ -707,6 +835,13 @@
     root()?.removeAttribute("data-v1713-call");
     overlay?.remove();
     overlay = null;
+    try { playbackContext?.close?.(); } catch {}
+    playbackContext = null;
+    audioUnlocked = false;
+    if (fallbackAudio) {
+      fallbackAudio.remove();
+      fallbackAudio = null;
+    }
     ensureLauncher();
     return true;
   }
@@ -737,10 +872,14 @@
     start: startCall,
     end: endCall,
     refresh,
+    unlockAudio: unlockPlayback,
     getSettings,
     setSettings,
+    retryVoice: () => callActive && lastSpokenText ? respondWithVoice(lastSpokenText, { retry: true }) : false,
     get active() { return callActive; },
-    get state() { return overlay?.dataset.state || "idle"; }
+    get state() { return overlay?.dataset.state || "idle"; },
+    get audioUnlocked() { return audioUnlocked || playbackContext?.state === "running"; },
+    get lastPlaybackError() { return lastPlaybackError; }
   };
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", refresh, { once: true });
