@@ -182,3 +182,9 @@ jobs:
         run: |
           set -euo pipefail
           node tests/novel-simplify-v1723.test.mjs
+
+      - name: Check V17.23B novel session management contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          node tests/novel-sessions-v1723b.test.mjs
