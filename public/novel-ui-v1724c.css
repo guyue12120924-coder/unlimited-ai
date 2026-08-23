@@ -3,16 +3,12 @@
  * Novel-only and intentionally conservative.
  */
 
-body[data-uai-mode="novel"] {
-  --novel-v1724c-safe-gap: 10px;
-}
-
 /* Keep every floating tool inside the viewport and visually consistent. */
 body[data-uai-mode="novel"] .novel-v1723d-top-more-menu,
 body[data-uai-mode="novel"] .novel-v1723-more-tools-menu,
 body[data-uai-mode="novel"] .novel-v1724a-library-tools-panel,
 body[data-uai-mode="novel"] .novel-v1723d-quick-menu {
-  max-width: calc(100vw - (var(--novel-v1724c-safe-gap) * 2));
+  max-width: calc(100vw - 20px);
   overscroll-behavior: contain;
   scrollbar-gutter: stable;
 }
