@@ -1,0 +1,310 @@
+/* V17.23A Novel Workspace Simplification
+ * Novel-only visual layer. Never styles companion mode.
+ */
+
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] {
+  color-scheme: light;
+  --bg-canvas: #f3f0e9;
+  --bg-canvas-soft: #ebe7df;
+  --bg-surface: #fbfaf6;
+  --bg-surface-raised: #ffffff;
+  --bg-surface-hover: #f2eee6;
+  --bg-overlay: rgba(251, 249, 244, .96);
+  --text-primary: #252722;
+  --text-secondary: #53584f;
+  --text-muted: #777b72;
+  --text-disabled: #a2a59e;
+  --border-subtle: rgba(58, 62, 53, .10);
+  --border-default: rgba(58, 62, 53, .16);
+  --border-strong: rgba(58, 62, 53, .24);
+  --accent-primary: #6f8d58;
+  --accent-hover: #5f7d49;
+  --accent: #6f8d58;
+  --accent-strong: #5f7d49;
+  --accent-ink: #fff;
+  --surface: rgba(251, 250, 246, .97);
+  --surface-solid: #fbfaf6;
+  --surface-raised: #fff;
+  --surface-soft: rgba(72, 78, 65, .045);
+  --text: var(--text-primary);
+  --text-soft: var(--text-secondary);
+  --muted: var(--text-muted);
+  --border: var(--border-subtle);
+  --studio-panel: rgba(248, 246, 240, .98);
+  --studio-panel-soft: #fff;
+  --shadow-float: 0 18px 46px rgba(79, 68, 49, .12);
+  --shadow-menu: 0 12px 30px rgba(79, 68, 49, .10);
+  background: #f3f0e9 !important;
+  color: var(--text-primary) !important;
+}
+
+/* Remove the old dark/anime visual stack from the writing mode only. */
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] #blur-bg,
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] #clear-img,
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] #particle-canvas {
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"]::after {
+  background:
+    radial-gradient(circle at 18% 0%, rgba(255,255,255,.78), transparent 32%),
+    linear-gradient(180deg, rgba(248,246,240,.92), rgba(239,235,226,.96)) !important;
+}
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"].studio-ready::before {
+  background: rgba(242,239,232,.50) !important;
+}
+
+/* Top bar: quieter, brighter, writing-first. */
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] #topbar {
+  border-bottom: 1px solid rgba(63,67,58,.09) !important;
+  background: rgba(250,248,243,.92) !important;
+  box-shadow: 0 1px 0 rgba(255,255,255,.8), 0 8px 28px rgba(84,74,57,.05);
+  backdrop-filter: blur(18px) saturate(1.03);
+}
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] .brand-copy strong,
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] .studio-panel-head strong,
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] .library-title span {
+  color: #292b26 !important;
+}
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] .brand-copy span,
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] .model-label {
+  color: #7d8178 !important;
+}
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] .pill.model-pill,
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] .iconbtn,
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] .reader-entry {
+  border-color: rgba(62,67,57,.13) !important;
+  background: rgba(255,255,255,.70) !important;
+  box-shadow: none !important;
+}
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] .iconbtn:hover,
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] .reader-entry:hover {
+  border-color: rgba(88,112,69,.28) !important;
+  background: #fff !important;
+}
+
+/* Workspace becomes a calm three-column writing desk instead of three dark blocks. */
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] #creativeWorkspace {
+  background: #efebe3 !important;
+}
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] #studioLibrary {
+  border-right-color: rgba(62,67,57,.09) !important;
+  background: rgba(247,244,237,.98) !important;
+  box-shadow: 8px 0 30px rgba(82,72,54,.035);
+}
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] #conversationPane {
+  background:
+    linear-gradient(90deg, rgba(235,231,222,.42), transparent 10%, transparent 90%, rgba(235,231,222,.42)),
+    #f7f4ed !important;
+}
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] #studioPanel {
+  border-left-color: rgba(62,67,57,.09) !important;
+  background: rgba(248,246,240,.98) !important;
+  box-shadow: -8px 0 30px rgba(82,72,54,.035);
+}
+
+/* Left library: less card-noise, clearer active chapter. */
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] .project-switcher,
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] .studio-search,
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] .library-section,
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] .library-footer {
+  border-color: rgba(62,67,57,.08) !important;
+}
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] .studio-list-item {
+  border-color: transparent !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] .studio-list-item:hover {
+  background: rgba(255,255,255,.72) !important;
+}
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] .studio-list-item.active {
+  border-color: rgba(111,141,88,.19) !important;
+  background: rgba(111,141,88,.105) !important;
+  box-shadow: inset 3px 0 0 #789760 !important;
+}
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] .project-switcher select,
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] .studio-search input,
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] .inline-create input {
+  border-color: rgba(62,67,57,.13) !important;
+  background: rgba(255,255,255,.76) !important;
+  color: #30332d !important;
+}
+
+/* Conversation canvas: paper-like, brighter, wider breathing room. */
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] #conversationPane #history {
+  padding-top: 74px !important;
+}
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] #conversationPane .chat {
+  max-width: 940px !important;
+}
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] .novel-v15-context {
+  top: 14px !important;
+  min-height: 42px !important;
+  border-color: rgba(62,67,57,.10) !important;
+  background: rgba(255,255,255,.72) !important;
+  box-shadow: 0 8px 24px rgba(82,72,54,.055) !important;
+  backdrop-filter: blur(16px) saturate(1.02) !important;
+}
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] .novel-v15-context-copy > span,
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] .novel-v15-context-progress b {
+  color: #858980 !important;
+}
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] .novel-v15-context-copy > strong {
+  color: #2c2f29 !important;
+}
+
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] .empty-state::before {
+  border-color: rgba(111,141,88,.20) !important;
+  background: rgba(111,141,88,.07) !important;
+  box-shadow: none !important;
+}
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] .empty-state h1 {
+  color: #262823 !important;
+  font-family: Georgia, "Noto Serif SC", "Songti SC", "SimSun", serif !important;
+  font-weight: 560 !important;
+}
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] .empty-state p {
+  color: #6f746b !important;
+}
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] .novel-v15-empty-actions button {
+  border-color: rgba(62,67,57,.12) !important;
+  background: rgba(255,255,255,.64) !important;
+  color: #5d6259 !important;
+}
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] .novel-v15-empty-actions button.primary {
+  border-color: rgba(111,141,88,.24) !important;
+  background: #789760 !important;
+  color: #fff !important;
+}
+
+/* Chat becomes quiet notes on paper instead of dark floating cards. */
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] .avatar {
+  border-color: rgba(62,67,57,.10) !important;
+  background: #f0ede5 !important;
+  color: #777c72 !important;
+}
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] .bubble {
+  border-color: rgba(62,67,57,.09) !important;
+  background: rgba(255,255,255,.82) !important;
+  color: #2d302a !important;
+  box-shadow: 0 5px 18px rgba(79,68,49,.055) !important;
+}
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] .bubble.user {
+  border-color: rgba(111,141,88,.15) !important;
+  background: #edf2e8 !important;
+  box-shadow: none !important;
+}
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] .meta,
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] .stats,
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] .reader-toggle {
+  color: #8a8e85 !important;
+}
+
+/* Composer: clean white writing tool, not a dark dock. */
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] #conversationPane .input-floating {
+  background: linear-gradient(180deg, rgba(247,244,237,0), rgba(247,244,237,.86) 28%, #f7f4ed 76%) !important;
+}
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] #composer {
+  border: 1px solid rgba(62,67,57,.13) !important;
+  background: rgba(255,255,255,.94) !important;
+  box-shadow: 0 14px 38px rgba(79,68,49,.12), inset 0 1px rgba(255,255,255,.9) !important;
+}
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] #composer.novel-v15-focused {
+  border-color: rgba(111,141,88,.44) !important;
+  box-shadow: 0 0 0 3px rgba(111,141,88,.08), 0 16px 42px rgba(79,68,49,.12) !important;
+}
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] #composer textarea#msg {
+  color: #262923 !important;
+  caret-color: #6f8d58 !important;
+}
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] #composer textarea#msg::placeholder {
+  color: #9a9d95 !important;
+}
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] #composer #sendBtn {
+  border-color: #789760 !important;
+  background: #789760 !important;
+  color: #fff !important;
+  box-shadow: none !important;
+}
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] #composer #sendBtn:hover {
+  background: #698951 !important;
+}
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] .novel-v15-composer-assist {
+  border-bottom-color: rgba(62,67,57,.08) !important;
+}
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] .novel-v15-shortcuts button {
+  color: #777c72 !important;
+}
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] .novel-v15-shortcuts button:hover {
+  border-color: rgba(111,141,88,.16) !important;
+  background: rgba(111,141,88,.07) !important;
+  color: #4f6340 !important;
+}
+
+/* Right studio: paper surfaces with less explanatory chrome. */
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] .studio-tabs {
+  border-bottom-color: rgba(62,67,57,.08) !important;
+  background: rgba(241,237,229,.62) !important;
+}
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] .studio-tabs button {
+  color: #81857c !important;
+}
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] .studio-tabs button.active {
+  border-color: rgba(62,67,57,.10) !important;
+  background: #fff !important;
+  color: #607e49 !important;
+  box-shadow: 0 4px 12px rgba(79,68,49,.06) !important;
+}
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] .studio-subtabs {
+  border-bottom-color: rgba(62,67,57,.08) !important;
+  background: rgba(248,246,240,.94) !important;
+}
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] .studio-subtabs button.active {
+  border-color: rgba(111,141,88,.16) !important;
+  background: rgba(111,141,88,.08) !important;
+  color: #536c40 !important;
+}
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] .simple-section-card,
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] .studio-list-item,
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] .draft-fragment-card,
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] .character-card,
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] .scene-card {
+  border-color: rgba(62,67,57,.10) !important;
+  background: rgba(255,255,255,.72) !important;
+  box-shadow: none !important;
+}
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] #simpleManuscriptEditor,
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] #studioPanelBody input,
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] #studioPanelBody textarea,
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] #studioPanelBody select {
+  border-color: rgba(62,67,57,.12) !important;
+  background: #fff !important;
+  color: #2c2f29 !important;
+}
+body[data-uai-mode="novel"][data-novel-v1723-theme="light"] #simpleManuscriptEditor {
+  box-shadow: 0 9px 26px rgba(79,68,49,.055) !important;
+}
+
+/* V17.23A reduction: remove explanatory/status duplication, never remove actual editors/actions. */
+body[data-uai-mode="novel"] .novel-v151-guide,
+body[data-uai-mode="novel"] .novel-v152-writing-now,
+body[data-uai-mode="novel"] .novel-v15-context-note {
+  display: none !important;
+}
+body[data-uai-mode="novel"] .novel-v15-composer-assist {
+  justify-content: flex-start !important;
+}
+body[data-uai-mode="novel"] #composer .composer-footer {
+  opacity: .62;
+}
+
+@media (max-width: 980px) {
+  body[data-uai-mode="novel"][data-novel-v1723-theme="light"] #conversationPane #history { padding-top: 66px !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body[data-uai-mode="novel"] .studio-list-item,
+  body[data-uai-mode="novel"] #composer,
+  body[data-uai-mode="novel"] .novel-v15-empty-actions button { transition: none !important; }
+}
