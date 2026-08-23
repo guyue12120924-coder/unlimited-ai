@@ -1,0 +1,302 @@
+/* V17.24A Novel Interface Simplification
+ * First of three UI passes: writing-first hierarchy without deleting features.
+ * All rules are novel-mode only.
+ */
+
+body[data-uai-mode="novel"] {
+  --studio-left: 232px;
+  --studio-right: 296px;
+}
+
+/* Give the manuscript / conversation area more of the screen. */
+body[data-uai-mode="novel"] #creativeWorkspace {
+  grid-template-columns: var(--studio-left) minmax(500px, 1fr) var(--studio-right);
+}
+
+/* Quieter top bar. Keep every action available, but reduce chrome. */
+body[data-uai-mode="novel"] #topbar .topbar-shell {
+  min-height: 58px;
+  gap: 9px;
+}
+body[data-uai-mode="novel"] #topbar .brand-copy {
+  gap: 1px;
+}
+body[data-uai-mode="novel"] #topbar .brand-copy strong {
+  font-size: 13px;
+}
+body[data-uai-mode="novel"] #topbar .brand-copy span {
+  font-size: 8px;
+  opacity: .72;
+}
+body[data-uai-mode="novel"] .novel-v1723d-current-work {
+  max-width: min(30vw, 330px);
+  padding: 6px 9px;
+  border-color: color-mix(in srgb, var(--border-default, var(--border)) 74%, transparent);
+  background: color-mix(in srgb, var(--bg-surface, #fff) 82%, transparent);
+}
+
+/* Left side = project -> chapter -> AI conversation. */
+body[data-uai-mode="novel"] #studioLibrary > .studio-panel-head,
+body[data-uai-mode="novel"] #studioPanel > .studio-panel-head {
+  min-height: 56px;
+  padding: 10px 12px;
+}
+body[data-uai-mode="novel"] #studioLibrary > .studio-panel-head strong::after,
+body[data-uai-mode="novel"] #studioPanel > .studio-panel-head strong::after {
+  font-size: 14px !important;
+}
+body[data-uai-mode="novel"] #studioLibrary .project-switcher {
+  gap: 5px;
+  padding: 9px 9px 7px;
+}
+body[data-uai-mode="novel"] #studioLibrary .project-switcher select {
+  height: 32px;
+  font-size: 11px;
+}
+body[data-uai-mode="novel"] #studioLibrary .project-switcher .studio-icon-btn {
+  min-width: 32px;
+  width: 32px;
+  height: 32px;
+}
+body[data-uai-mode="novel"] #studioLibrary > .chapter-section {
+  flex: 1.2 1 0;
+  padding-top: 8px;
+}
+body[data-uai-mode="novel"] #studioLibrary > .library-section:not(.chapter-section) {
+  flex: .72 1 0;
+}
+body[data-uai-mode="novel"] #studioLibrary .library-title {
+  padding: 4px 5px 6px;
+  font-size: 10px;
+  letter-spacing: .02em;
+}
+body[data-uai-mode="novel"] #studioLibrary .studio-list-item {
+  min-height: 42px;
+  margin: 1px 0;
+  border-radius: 8px;
+}
+body[data-uai-mode="novel"] #studioLibrary .studio-item-main {
+  gap: 2px;
+  padding: 6px 7px;
+}
+body[data-uai-mode="novel"] #studioLibrary .studio-item-main span {
+  font-size: 11px;
+}
+body[data-uai-mode="novel"] #studioLibrary .studio-item-main small {
+  font-size: 8px;
+}
+
+/* Low-frequency project operations are folded into one obvious entry.
+   Their original controls and IDs remain untouched inside the panel. */
+body[data-uai-mode="novel"] .novel-v1724a-library-tools {
+  flex: 0 0 auto;
+  position: relative;
+  padding: 7px 9px 9px;
+  border-top: 1px solid var(--border-subtle, var(--border));
+}
+body[data-uai-mode="novel"] .novel-v1724a-library-tools-toggle {
+  width: 100%;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 9px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-muted, var(--muted));
+  cursor: pointer;
+  font-size: 9px;
+  font-weight: 680;
+}
+body[data-uai-mode="novel"] .novel-v1724a-library-tools-toggle:hover,
+body[data-uai-mode="novel"] .novel-v1724a-library-tools-toggle[aria-expanded="true"] {
+  border-color: color-mix(in srgb, var(--accent) 20%, var(--border));
+  background: var(--surface-soft);
+  color: var(--text-secondary, var(--text-soft));
+}
+body[data-uai-mode="novel"] .novel-v1724a-library-tools-toggle > span:last-child {
+  color: var(--accent);
+  font-size: 14px;
+  line-height: 1;
+  transition: transform 160ms ease;
+}
+body[data-uai-mode="novel"] .novel-v1724a-library-tools-toggle[aria-expanded="true"] > span:last-child {
+  transform: rotate(180deg);
+}
+body[data-uai-mode="novel"] .novel-v1724a-library-tools-panel {
+  position: absolute;
+  left: 9px;
+  right: 9px;
+  bottom: calc(100% - 3px);
+  z-index: 75;
+  max-height: min(420px, calc(100dvh - 150px));
+  overflow-y: auto;
+  padding: 8px;
+  border: 1px solid var(--border-default, var(--border));
+  border-radius: 11px;
+  background: color-mix(in srgb, var(--bg-surface-raised, #fff) 97%, transparent);
+  box-shadow: 0 16px 42px rgba(55, 47, 35, .14);
+  backdrop-filter: blur(18px);
+}
+body[data-uai-mode="novel"] .novel-v1724a-library-tools-panel[hidden] {
+  display: none !important;
+}
+body[data-uai-mode="novel"] .novel-v1724a-library-tools-panel .studio-search {
+  padding: 2px 2px 9px !important;
+  border: 0 !important;
+}
+body[data-uai-mode="novel"] .novel-v1724a-library-tools-panel .studio-search > span {
+  font-size: 8px;
+}
+body[data-uai-mode="novel"] .novel-v1724a-library-tools-panel .library-footer {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  padding: 8px 0 0 !important;
+  border-top: 1px solid var(--border-subtle, var(--border));
+}
+body[data-uai-mode="novel"] .novel-v1724a-library-tools-panel .library-footer #workspaceSearch {
+  grid-column: 1 / -1;
+}
+body[data-uai-mode="novel"] .novel-v1724a-library-tools-panel .library-footer button {
+  min-height: 32px;
+  height: auto;
+  border-radius: 7px;
+  font-size: 9px;
+}
+
+/* Center is the visual center of gravity. */
+body[data-uai-mode="novel"] #conversationPane #history {
+  padding-top: 58px !important;
+  padding-bottom: 116px !important;
+}
+body[data-uai-mode="novel"] #conversationPane .chat {
+  width: min(100%, 1040px) !important;
+  max-width: 1040px !important;
+  padding-inline: clamp(18px, 3vw, 44px) !important;
+}
+body[data-uai-mode="novel"] .novel-v15-context {
+  top: 10px !important;
+  min-height: 36px !important;
+  padding-block: 5px !important;
+  box-shadow: none !important;
+  opacity: .9;
+}
+body[data-uai-mode="novel"] .empty-state {
+  max-width: 600px;
+}
+body[data-uai-mode="novel"] .empty-state h1 {
+  font-size: clamp(27px, 3vw, 40px) !important;
+}
+body[data-uai-mode="novel"] .empty-state p {
+  max-width: 480px;
+  line-height: 1.75;
+}
+body[data-uai-mode="novel"] #conversationPane .input-floating {
+  padding: 12px clamp(16px, 3vw, 34px) 16px;
+}
+body[data-uai-mode="novel"] #conversationPane .input-inner,
+body[data-uai-mode="novel"] #composer {
+  width: 100%;
+  max-width: 1040px !important;
+  margin-inline: auto;
+}
+body[data-uai-mode="novel"] #composer {
+  border-radius: 14px !important;
+}
+body[data-uai-mode="novel"] #composer textarea#msg {
+  min-width: 0;
+  width: 100%;
+  min-height: 38px;
+  max-height: 190px;
+  padding-block: 9px;
+  line-height: 1.55;
+}
+body[data-uai-mode="novel"] .novel-v1723d-quick-btn {
+  border-color: transparent;
+  background: var(--surface-soft);
+}
+
+/* Right side stays complete, but looks like reference material rather than a second main app. */
+body[data-uai-mode="novel"] #studioPanel .studio-tabs {
+  height: 37px;
+  background: transparent !important;
+}
+body[data-uai-mode="novel"] #studioPanel .studio-tabs button {
+  height: 37px;
+  font-size: 9px;
+}
+body[data-uai-mode="novel"] #studioPanelBody .studio-pane {
+  padding: 12px;
+}
+body[data-uai-mode="novel"] #studioPanelBody .pane-hero {
+  padding: 10px 2px 12px;
+}
+body[data-uai-mode="novel"] #studioPanelBody .pane-hero h3 {
+  margin-top: 5px;
+  font-size: 19px;
+}
+body[data-uai-mode="novel"] #studioPanelBody .pane-hero p {
+  font-size: 9px;
+  line-height: 1.55;
+}
+body[data-uai-mode="novel"] #studioPanelBody .studio-action-grid {
+  gap: 6px;
+  padding: 10px 0;
+}
+body[data-uai-mode="novel"] #studioPanelBody .studio-action-grid button {
+  min-height: 34px;
+  font-size: 10px;
+}
+body[data-uai-mode="novel"] #studioPanelBody .chapter-editor,
+body[data-uai-mode="novel"] #studioPanelBody .activity-panel,
+body[data-uai-mode="novel"] #studioPanelBody .accent-settings,
+body[data-uai-mode="novel"] #studioPanelBody .manuscript-check {
+  border-radius: 9px;
+  box-shadow: none;
+}
+
+@media (max-width: 1220px) and (min-width: 981px) {
+  body[data-uai-mode="novel"] {
+    --studio-left: 218px;
+    --studio-right: 278px;
+  }
+  body[data-uai-mode="novel"] #creativeWorkspace {
+    grid-template-columns: var(--studio-left) minmax(420px, 1fr) var(--studio-right);
+  }
+  body[data-uai-mode="novel"] .novel-v1723d-current-work {
+    max-width: 250px;
+  }
+}
+
+@media (max-width: 980px) {
+  body[data-uai-mode="novel"] #creativeWorkspace {
+    min-width: 0;
+  }
+  body[data-uai-mode="novel"] #conversationPane .chat {
+    padding-inline: clamp(14px, 4vw, 28px) !important;
+  }
+  body[data-uai-mode="novel"] .novel-v1724a-library-tools-panel {
+    max-height: calc(100dvh - 130px);
+  }
+}
+
+@media (max-width: 640px) {
+  body[data-uai-mode="novel"] #topbar .brand-copy span {
+    display: none;
+  }
+  body[data-uai-mode="novel"] #conversationPane .input-floating {
+    padding-inline: 10px;
+  }
+  body[data-uai-mode="novel"] #composer {
+    border-radius: 12px !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body[data-uai-mode="novel"] .novel-v1724a-library-tools-toggle > span:last-child {
+    transition: none !important;
+  }
+}
