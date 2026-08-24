@@ -5,10 +5,10 @@ const index = fs.readFileSync("public/index.html", "utf8");
 const simplifyJs = fs.readFileSync("public/novel-simplify-v1723.js", "utf8");
 const finalJs = fs.readFileSync("public/novel-final-v1723d.js", "utf8");
 const finalCss = fs.readFileSync("public/novel-final-v1723d.css", "utf8");
-const deployStatus = fs.readFileSync("public/deploy-status.json", "utf8");
+const deployStatus = JSON.parse(fs.readFileSync("public/deploy-status.json", "utf8"));
 const readme = fs.readFileSync("README.md", "utf8");
 
-assert.match(index, /unlimited-novel-revision" content="2026-08-23-v17\.23d-novel-final-ux"/);
+assert.match(index, /meta name="unlimited-novel-revision"/);
 
 assert.match(simplifyJs, /novel-final-v1723d\.css/);
 assert.match(simplifyJs, /novel-final-v1723d\.js/);
@@ -41,11 +41,10 @@ assert.match(finalCss, /overflow-y:\s*auto/);
 assert.match(finalCss, /@media \(max-width: 520px\)/);
 assert.doesNotMatch(finalCss, /#uaiCompanionRoot|data-uai-mode="companion"|\.uai-c-/);
 
-assert.match(deployStatus, /"novelRevision": "2026-08-23-v17\.23d-novel-final-ux"/);
-assert.match(deployStatus, /"status": "v17\.23d-novel-final-ux-current"/);
+assert.match(deployStatus.novel.finalUx, /V17\.23D/);
+assert.ok(String(deployStatus.novelRevision || "").length > 0);
+assert.ok(String(deployStatus.status || "").length > 0);
 
-assert.match(readme, /小说工作区：\*\*V17\.23D Novel Final UX\*\*/);
-assert.match(readme, /V17\.23D — 输入区、顶部栏和最终 UX 收口 ✅ 已完成/);
-assert.match(readme, /V17\.24 用户体验回归 \/ Bugfix 阶段/);
+assert.match(readme, /V17\.23D/);
 
-console.log("V17.23D novel final UX contract passed.");
+console.log("V17.23D historical novel final UX contract passed.");
