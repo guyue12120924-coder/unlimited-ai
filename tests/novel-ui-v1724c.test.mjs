@@ -42,7 +42,7 @@ assert.match(css, /@media \(max-width: 980px\)/);
 assert.match(css, /@media \(max-height: 620px\)/);
 assert.doesNotMatch(css, /#uaiCompanionRoot|data-uai-mode="companion"|\.uai-c-/);
 
-// Final polish must not remove original feature controls.
+// V17.24C remains a historical regression layer even when a newer novel UI is current.
 for (const id of [
   "workspaceSearch",
   "readProject",
@@ -56,9 +56,9 @@ for (const id of [
   assert.doesNotMatch(css, new RegExp(`#${id}\\s*\\{[^}]*display\\s*:\\s*none`, "is"));
 }
 
-assert.match(index, /unlimited-novel-revision" content="2026-08-23-v17\.24c-final-regression-polish"/);
-assert.equal(deploy.novelRevision, "2026-08-23-v17.24c-final-regression-polish");
-assert.equal(deploy.status, "v17.24c-final-regression-polish-current");
+assert.match(index, /meta name="unlimited-novel-revision"/);
 assert.match(deploy.novel.uiPass3, /V17\.24C/);
+assert.ok(String(deploy.novelRevision || "").length > 0);
+assert.ok(String(deploy.status || "").length > 0);
 
-console.log("V17.24C final novel UX contract passed.");
+console.log("V17.24C historical novel UX contract passed.");
