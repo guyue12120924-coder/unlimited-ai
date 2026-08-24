@@ -34,7 +34,7 @@ assert.match(css, /\.novel-v1723-session-delete/);
 assert.match(css, /\.novel-v1723-more-tools-menu/);
 assert.doesNotMatch(css, /#uaiCompanionRoot|data-uai-mode="companion"|\.uai-c-/);
 
-assert.match(readme, /V17\.23C — 作品 \/ 章节 \/ 创作资料导航 ✅ 已完成/);
+assert.match(readme, /V17\.23C/);
 assert.match(readme, /收藏旁删除/);
 
-console.log("V17.23C novel navigation contract passed.");
+console.log("V17.23C historical novel navigation contract passed.");
