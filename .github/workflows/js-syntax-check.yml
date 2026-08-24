@@ -218,3 +218,9 @@ jobs:
         run: |
           set -euo pipefail
           node tests/novel-ui-v1724c.test.mjs
+
+      - name: Check V17.25 writing workspace contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          node tests/novel-writing-v1725.test.mjs
