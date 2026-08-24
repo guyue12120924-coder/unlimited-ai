@@ -1,0 +1,66 @@
+/* V17.25 hotfix 2: one materials entry + non-modal desktop drawer. */
+
+/* V17.25 originally added a second materials button. Keep the stable studioToggleBtn
+   as the single visible entry instead of deleting any underlying capability. */
+body[data-uai-mode="novel"] #novelV1725MaterialsBtn {
+  display: none !important;
+}
+
+body[data-uai-mode="novel"] #studioToggleBtn {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--border-default, var(--border));
+  border-radius: 8px;
+  background: var(--bg-surface-raised, #fff);
+  color: var(--text-secondary, var(--text-soft));
+  font-size: 10px;
+  font-weight: 680;
+  white-space: nowrap;
+}
+body[data-uai-mode="novel"] #studioToggleBtn:hover,
+body[data-uai-mode="novel"] #studioToggleBtn[aria-expanded="true"] {
+  border-color: color-mix(in srgb, var(--accent) 32%, var(--border-default));
+  background: color-mix(in srgb, var(--accent) 7%, var(--bg-surface-raised));
+  color: var(--text-primary, var(--text));
+}
+
+/* Desktop: the materials panel behaves like a docked inspector, not a modal.
+   No blur, no dim layer, and the writing area gives the drawer real room. */
+@media (min-width: 981px) {
+  body[data-uai-mode="novel"] .novel-v1725-drawer-scrim {
+    display: none !important;
+    backdrop-filter: none !important;
+    background: transparent !important;
+  }
+
+  body[data-uai-mode="novel"] #creativeWorkspace {
+    box-sizing: border-box;
+    transition: padding-right 220ms ease;
+  }
+
+  body[data-uai-mode="novel"]:not(.studio-collapsed) #creativeWorkspace {
+    padding-right: min(410px, 30vw);
+  }
+
+  body[data-uai-mode="novel"] #studioPanel {
+    width: min(410px, 30vw) !important;
+    min-width: 340px !important;
+    box-shadow: -12px 0 34px rgba(45, 38, 28, .10) !important;
+  }
+}
+
+/* Narrow screens can still use a dismiss layer, but it should never blur content. */
+@media (max-width: 980px) {
+  body[data-uai-mode="novel"] .novel-v1725-drawer-scrim {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: rgba(35, 31, 25, .12) !important;
+  }
+
+  body[data-uai-mode="novel"][data-novel-v1723-theme="dark"] .novel-v1725-drawer-scrim {
+    background: rgba(0, 0, 0, .20) !important;
+  }
+}
