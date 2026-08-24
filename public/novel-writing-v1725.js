@@ -11,6 +11,7 @@
   let currentChapterId = "";
   let view = "manuscript";
   let statusTimer = 0;
+  let entryTimer = 0;
 
   function isNovelMode() {
     return document.body?.dataset?.uaiMode === "novel";
@@ -207,6 +208,22 @@
     }
   }
 
+  function settleNovelEntry() {
+    clearTimeout(entryTimer);
+    entryTimer = setTimeout(() => {
+      if (!isNovelMode()) return;
+      refresh();
+      setView("manuscript");
+      const editor = document.getElementById("simpleManuscriptEditor");
+      const aiInput = document.getElementById("msg");
+      if (window.innerWidth > 980 && editor && !editor.disabled) {
+        editor.focus({ preventScroll: true });
+      } else if (document.activeElement === aiInput) {
+        aiInput.blur();
+      }
+    }, 90);
+  }
+
   function ensureLibraryOpen() {
     if (!document.body.classList.contains("library-collapsed")) return;
     if (!window.UnlimitedNovelNavigationV1723C?.openLibrary?.()) {
@@ -343,11 +360,9 @@
     modeObserver = new MutationObserver(() => {
       if (isNovelMode()) {
         document.body.classList.add("studio-collapsed");
-        requestAnimationFrame(() => {
-          refresh();
-          setView("manuscript");
-        });
+        settleNovelEntry();
       } else {
+        clearTimeout(entryTimer);
         patch();
       }
     });
@@ -430,11 +445,9 @@
   });
 
   window.addEventListener("uai:mode-refresh", () => {
-    if (isNovelMode()) {
-      document.body.classList.add("studio-collapsed");
-      refresh();
-      setView("manuscript");
-    }
+    if (!isNovelMode()) return;
+    document.body.classList.add("studio-collapsed");
+    settleNovelEntry();
   });
   window.addEventListener("uai:workspace-refresh", refresh);
   window.addEventListener("resize", schedulePatch);
@@ -452,11 +465,17 @@
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", () => {
       bindModeObserver();
-      if (isNovelMode()) document.body.classList.add("studio-collapsed");
-      refresh();
+      if (isNovelMode()) {
+        document.body.classList.add("studio-collapsed");
+        settleNovelEntry();
+      } else {
+        refresh();
+      }
     }, { once: true });
+  } else if (isNovelMode()) {
+    document.body.classList.add("studio-collapsed");
+    settleNovelEntry();
   } else {
-    if (isNovelMode()) document.body.classList.add("studio-collapsed");
     refresh();
   }
 })();
