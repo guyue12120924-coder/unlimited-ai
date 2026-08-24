@@ -1,66 +1,369 @@
-/* V17.25 hotfix 2: one materials entry + non-modal desktop drawer. */
+/* V17.25 hotfix 3: screenshot-driven writing workspace polish.
+ * Keep every existing capability, but make the manuscript the obvious center.
+ */
 
-/* V17.25 originally added a second materials button. Keep the stable studioToggleBtn
-   as the single visible entry instead of deleting any underlying capability. */
+body[data-uai-mode="novel"] {
+  --topbar-height: 56px;
+  --studio-left: 220px;
+  --v1725-inspector-width: min(370px, 28vw);
+}
+
+/* Keep exactly one materials entry. */
 body[data-uai-mode="novel"] #novelV1725MaterialsBtn {
   display: none !important;
 }
 
+/* ---------- Top bar: one calm horizontal tool row ---------- */
+body[data-uai-mode="novel"] #topbar,
+body[data-uai-mode="novel"] #topbar .topbar-shell {
+  min-height: var(--topbar-height) !important;
+  height: var(--topbar-height) !important;
+}
+body[data-uai-mode="novel"] #topbar .topbar-shell {
+  gap: 8px !important;
+  padding: 0 12px !important;
+}
+body[data-uai-mode="novel"] #topbar .brand-cluster {
+  min-width: 190px !important;
+}
+body[data-uai-mode="novel"] #topbar .brand-copy strong {
+  font-size: 13px !important;
+  letter-spacing: -.01em;
+}
+body[data-uai-mode="novel"] #topbar .model-pill {
+  width: 190px !important;
+  min-width: 160px !important;
+  max-width: 190px !important;
+  min-height: 34px !important;
+  flex-basis: 190px !important;
+  border-radius: 9px !important;
+}
+body[data-uai-mode="novel"] #topbar .model-pill select {
+  font-size: 11px !important;
+  font-weight: 650;
+}
+body[data-uai-mode="novel"] #topbar .topbar-actions {
+  gap: 5px !important;
+}
+body[data-uai-mode="novel"] #uaiNovelModeSwitch,
+body[data-uai-mode="novel"] #studioToggleBtn,
+body[data-uai-mode="novel"] #topbar .iconbtn,
+body[data-uai-mode="novel"] #novelV1723TopMoreBtn {
+  min-height: 34px !important;
+  height: 34px !important;
+  border-radius: 9px !important;
+}
 body[data-uai-mode="novel"] #studioToggleBtn {
   display: inline-flex !important;
   align-items: center;
   justify-content: center;
-  min-height: 34px;
-  padding: 0 10px;
+  min-width: 74px;
+  padding: 0 11px !important;
   border: 1px solid var(--border-default, var(--border));
-  border-radius: 8px;
   background: var(--bg-surface-raised, #fff);
   color: var(--text-secondary, var(--text-soft));
-  font-size: 10px;
+  font-size: 10px !important;
   font-weight: 680;
   white-space: nowrap;
 }
 body[data-uai-mode="novel"] #studioToggleBtn:hover,
 body[data-uai-mode="novel"] #studioToggleBtn[aria-expanded="true"] {
-  border-color: color-mix(in srgb, var(--accent) 32%, var(--border-default));
+  border-color: color-mix(in srgb, var(--accent) 34%, var(--border-default));
   background: color-mix(in srgb, var(--accent) 7%, var(--bg-surface-raised));
   color: var(--text-primary, var(--text));
 }
 
-/* Desktop: the materials panel behaves like a docked inspector, not a modal.
-   No blur, no dim layer, and the writing area gives the drawer real room. */
+/* ---------- Left navigation: compact, readable, not dashboard-like ---------- */
+body[data-uai-mode="novel"] #studioLibrary {
+  background: color-mix(in srgb, var(--bg-surface, #f8f7f3) 94%, #ffffff) !important;
+  border-right-color: color-mix(in srgb, var(--border-default, #dedbd2) 72%, transparent) !important;
+}
+body[data-uai-mode="novel"] #studioLibrary > .studio-panel-head {
+  min-height: 52px !important;
+  padding: 10px 10px 8px !important;
+}
+body[data-uai-mode="novel"] #studioLibrary > .studio-panel-head strong {
+  font-size: 14px !important;
+  letter-spacing: -.015em;
+}
+body[data-uai-mode="novel"] #studioLibrary .studio-kicker {
+  font-size: 8px !important;
+  letter-spacing: .08em;
+  opacity: .68;
+}
+body[data-uai-mode="novel"] #studioLibrary .project-switcher {
+  gap: 6px !important;
+  padding: 8px 9px 10px !important;
+}
+body[data-uai-mode="novel"] #studioLibrary .project-switcher select,
+body[data-uai-mode="novel"] #studioLibrary .project-switcher button {
+  min-height: 34px !important;
+  border-radius: 8px !important;
+}
+body[data-uai-mode="novel"] #studioLibrary .library-title {
+  min-height: 34px !important;
+  padding-inline: 10px !important;
+  font-size: 10px !important;
+  font-weight: 720 !important;
+}
+body[data-uai-mode="novel"] #studioLibrary .library-title button {
+  min-height: 28px !important;
+  padding-inline: 9px !important;
+  border-radius: 7px !important;
+  font-size: 9px !important;
+}
+body[data-uai-mode="novel"] #studioLibrary .studio-list {
+  padding-inline: 7px !important;
+}
+body[data-uai-mode="novel"] #studioLibrary .studio-list-item {
+  min-height: 42px !important;
+  margin-bottom: 3px !important;
+  padding: 7px 8px !important;
+  border-radius: 8px !important;
+  box-shadow: none !important;
+}
+body[data-uai-mode="novel"] #studioLibrary .studio-list-item.active {
+  background: color-mix(in srgb, var(--accent) 9%, var(--bg-surface-raised)) !important;
+  box-shadow: inset 3px 0 0 var(--accent) !important;
+}
+body[data-uai-mode="novel"] #studioLibrary .studio-item-main span {
+  font-size: 10.5px !important;
+  font-weight: 680 !important;
+}
+body[data-uai-mode="novel"] #studioLibrary .studio-item-main small {
+  margin-top: 2px !important;
+  font-size: 8px !important;
+  opacity: .66;
+}
+body[data-uai-mode="novel"] #studioLibrary > .chapter-section {
+  flex: 1.15 1 0 !important;
+}
+body[data-uai-mode="novel"] #studioLibrary > .library-section:not(.chapter-section) {
+  flex: .72 1 0 !important;
+  max-height: 36vh !important;
+}
+
+/* ---------- Main canvas / manuscript ---------- */
+body[data-uai-mode="novel"] #creativeWorkspace,
+body[data-uai-mode="novel"] #conversationPane,
+body[data-uai-mode="novel"] .novel-v1725-manuscript-view {
+  background: #f3f2ee !important;
+}
+body[data-uai-mode="novel"][data-novel-v1723-theme="dark"] #creativeWorkspace,
+body[data-uai-mode="novel"][data-novel-v1723-theme="dark"] #conversationPane,
+body[data-uai-mode="novel"][data-novel-v1723-theme="dark"] .novel-v1725-manuscript-view {
+  background: var(--bg-canvas) !important;
+}
+body[data-uai-mode="novel"] .novel-v1725-center-bar {
+  height: 46px !important;
+  padding: 0 clamp(14px, 2.2vw, 28px) !important;
+  border-bottom-color: color-mix(in srgb, var(--border-subtle, var(--border)) 70%, transparent) !important;
+  background: color-mix(in srgb, #f3f2ee 95%, transparent) !important;
+}
+body[data-uai-mode="novel"][data-novel-v1723-theme="dark"] .novel-v1725-center-bar {
+  background: color-mix(in srgb, var(--bg-canvas) 94%, transparent) !important;
+}
+body[data-uai-mode="novel"] .novel-v1725-breadcrumb {
+  font-size: 9.5px !important;
+}
+body[data-uai-mode="novel"] .novel-v1725-view-switch {
+  padding: 2px !important;
+  border-radius: 8px !important;
+}
+body[data-uai-mode="novel"] .novel-v1725-view-switch button {
+  min-height: 27px !important;
+  padding-inline: 11px !important;
+  font-size: 9.5px !important;
+}
+body[data-uai-mode="novel"] .novel-v1725-manuscript-view {
+  inset: 46px 0 72px !important;
+  padding: 22px clamp(16px, 4vw, 52px) 30px !important;
+}
+body[data-uai-mode="novel"] .novel-v1725-paper-wrap {
+  width: min(820px, 100%) !important;
+  min-height: calc(100% - 2px) !important;
+  padding: 34px clamp(34px, 5vw, 58px) 18px !important;
+  border: 1px solid rgba(92, 83, 68, .10) !important;
+  border-radius: 12px !important;
+  background: #fffefa !important;
+  box-shadow: 0 12px 34px rgba(55, 48, 38, .055) !important;
+}
+body[data-uai-mode="novel"][data-novel-v1723-theme="dark"] .novel-v1725-paper-wrap {
+  background: var(--bg-surface-raised) !important;
+  border-color: var(--border-subtle, var(--border)) !important;
+  box-shadow: 0 14px 38px rgba(0, 0, 0, .18) !important;
+}
+body[data-uai-mode="novel"] .novel-v1725-paper-head {
+  align-items: center !important;
+  padding-bottom: 15px !important;
+  border-bottom-color: rgba(92, 83, 68, .10) !important;
+}
+body[data-uai-mode="novel"] .novel-v1725-paper-head > div > span {
+  font-size: 8.5px !important;
+}
+body[data-uai-mode="novel"] .novel-v1725-paper-head h1 {
+  margin-top: 5px !important;
+  font-size: clamp(26px, 2.4vw, 32px) !important;
+  line-height: 1.2 !important;
+}
+body[data-uai-mode="novel"] #novelV1725WordCount {
+  font-size: 9px !important;
+  opacity: .72;
+}
+body[data-uai-mode="novel"] #simpleManuscriptEditor.novel-v1725-editor {
+  min-height: 560px !important;
+  height: auto;
+  overflow-y: hidden !important;
+  padding: 25px 0 30px !important;
+  font-size: 16.5px !important;
+  line-height: 1.95 !important;
+  letter-spacing: .012em !important;
+  scrollbar-width: none !important;
+}
+body[data-uai-mode="novel"] #simpleManuscriptEditor.novel-v1725-editor::-webkit-scrollbar {
+  display: none !important;
+}
+body[data-uai-mode="novel"] .novel-v1725-paper-foot {
+  min-height: 28px;
+  padding-top: 10px !important;
+  font-size: 8.5px !important;
+}
+body[data-uai-mode="novel"] .novel-v1725-paper-foot > span:last-child {
+  opacity: .58;
+}
+
+/* ---------- AI composer: always available, visually secondary ---------- */
+body[data-uai-mode="novel"] #conversationPane .input-floating {
+  inset: auto 0 0 !important;
+  padding: 7px clamp(16px, 4vw, 44px) 9px !important;
+  background: linear-gradient(180deg, transparent 0%, rgba(243, 242, 238, .88) 38%, #f3f2ee 78%) !important;
+}
+body[data-uai-mode="novel"][data-novel-v1723-theme="dark"] #conversationPane .input-floating {
+  background: linear-gradient(180deg, transparent 0%, color-mix(in srgb, var(--bg-canvas) 88%, transparent) 38%, var(--bg-canvas) 78%) !important;
+}
+body[data-uai-mode="novel"] #conversationPane .input-inner,
+body[data-uai-mode="novel"] #composer {
+  max-width: 820px !important;
+}
+body[data-uai-mode="novel"] #composer {
+  min-height: 50px !important;
+  border-radius: 12px !important;
+  border-color: rgba(92, 83, 68, .12) !important;
+  box-shadow: 0 8px 24px rgba(52, 46, 36, .075) !important;
+  transition: border-color 160ms ease, box-shadow 160ms ease !important;
+}
+body[data-uai-mode="novel"] #composer:focus-within {
+  border-color: color-mix(in srgb, var(--accent) 38%, var(--border-default)) !important;
+  box-shadow: 0 10px 28px rgba(52, 46, 36, .09), 0 0 0 2px color-mix(in srgb, var(--accent) 8%, transparent) !important;
+}
+body[data-uai-mode="novel"] #composer .composer-main {
+  min-height: 48px !important;
+  gap: 7px !important;
+}
+body[data-uai-mode="novel"] #composer textarea#msg {
+  min-height: 34px !important;
+  max-height: 120px !important;
+  padding-block: 8px !important;
+  font-size: 12.5px !important;
+  line-height: 1.5 !important;
+}
+body[data-uai-mode="novel"] #novelV1723QuickBtn {
+  width: 34px !important;
+  height: 34px !important;
+  min-width: 34px !important;
+  border-radius: 9px !important;
+}
+body[data-uai-mode="novel"] #sendBtn,
+body[data-uai-mode="novel"] #stopBtn {
+  min-width: 62px !important;
+  height: 38px !important;
+  border-radius: 9px !important;
+}
+
+/* ---------- Materials drawer: desktop inspector, mobile drawer ---------- */
 @media (min-width: 981px) {
   body[data-uai-mode="novel"] .novel-v1725-drawer-scrim {
     display: none !important;
     backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
     background: transparent !important;
   }
-
   body[data-uai-mode="novel"] #creativeWorkspace {
     box-sizing: border-box;
-    transition: padding-right 220ms ease;
+    transition: padding-right 200ms ease;
   }
-
   body[data-uai-mode="novel"]:not(.studio-collapsed) #creativeWorkspace {
-    padding-right: min(410px, 30vw);
+    padding-right: var(--v1725-inspector-width);
   }
-
   body[data-uai-mode="novel"] #studioPanel {
-    width: min(410px, 30vw) !important;
-    min-width: 340px !important;
-    box-shadow: -12px 0 34px rgba(45, 38, 28, .10) !important;
+    width: var(--v1725-inspector-width) !important;
+    min-width: 330px !important;
+    box-shadow: -10px 0 30px rgba(45, 38, 28, .09) !important;
+  }
+  body[data-uai-mode="novel"] #studioPanel > .studio-panel-head {
+    min-height: 52px !important;
+  }
+  body[data-uai-mode="novel"] #studioPanel .studio-tabs {
+    gap: 2px !important;
+    padding: 5px 8px !important;
+  }
+  body[data-uai-mode="novel"] #studioPanel .studio-tabs button {
+    min-height: 32px !important;
+    font-size: 10px !important;
   }
 }
 
-/* Narrow screens can still use a dismiss layer, but it should never blur content. */
 @media (max-width: 980px) {
+  body[data-uai-mode="novel"] {
+    --studio-left: 0px;
+  }
   body[data-uai-mode="novel"] .novel-v1725-drawer-scrim {
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
-    background: rgba(35, 31, 25, .12) !important;
+    background: rgba(35, 31, 25, .10) !important;
   }
-
   body[data-uai-mode="novel"][data-novel-v1723-theme="dark"] .novel-v1725-drawer-scrim {
-    background: rgba(0, 0, 0, .20) !important;
+    background: rgba(0, 0, 0, .18) !important;
+  }
+  body[data-uai-mode="novel"] .novel-v1725-paper-wrap {
+    width: min(820px, 100%) !important;
+  }
+}
+
+@media (max-width: 760px) {
+  body[data-uai-mode="novel"] #topbar .brand-cluster {
+    min-width: 36px !important;
+  }
+  body[data-uai-mode="novel"] #topbar .model-pill {
+    width: 142px !important;
+    min-width: 108px !important;
+    flex-basis: 142px !important;
+  }
+  body[data-uai-mode="novel"] .novel-v1725-manuscript-view {
+    padding: 10px 8px 22px !important;
+  }
+  body[data-uai-mode="novel"] .novel-v1725-paper-wrap {
+    padding: 24px 20px 16px !important;
+    border-radius: 9px !important;
+  }
+  body[data-uai-mode="novel"] #simpleManuscriptEditor.novel-v1725-editor {
+    min-height: 480px !important;
+    font-size: 16px !important;
+    line-height: 1.9 !important;
+  }
+  body[data-uai-mode="novel"] .novel-v1725-paper-foot > span:last-child {
+    display: none;
+  }
+}
+
+@media (max-height: 650px) {
+  body[data-uai-mode="novel"] .novel-v1725-manuscript-view {
+    padding-top: 8px !important;
+  }
+  body[data-uai-mode="novel"] .novel-v1725-paper-wrap {
+    padding-top: 24px !important;
+  }
+  body[data-uai-mode="novel"] #simpleManuscriptEditor.novel-v1725-editor {
+    min-height: 340px !important;
   }
 }
