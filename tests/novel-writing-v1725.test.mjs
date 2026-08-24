@@ -55,8 +55,8 @@ assert.doesNotMatch(css, /#uaiCompanionRoot|data-uai-mode="companion"|\.uai-c-/)
 
 // Screenshot-driven polish: one materials entry, non-modal desktop inspector,
 // manuscript autosizing and a compact secondary AI composer.
-assert.match(index, /novel-writing-v1725-hotfix2\.css\?v=20260824-v17\.25-writing-workspace-polish3/);
-assert.match(index, /novel-writing-v1725-hotfix2\.js\?v=20260824-v17\.25-writing-workspace-polish3/);
+assert.match(index, /novel-writing-v1725-hotfix2\.css\?v=20260824-v17\.25-writing-workspace-polish4/);
+assert.match(index, /novel-writing-v1725-hotfix2\.js\?v=20260824-v17\.25-writing-workspace-polish4/);
 assert.match(hotfixCss, /V17\.25 hotfix 3/);
 assert.match(hotfixCss, /#novelV1725MaterialsBtn[\s\S]*display:\s*none\s*!important/);
 assert.match(hotfixCss, /#studioToggleBtn/);
@@ -73,6 +73,7 @@ assert.match(hotfixJs, /data-studio-tab="outline"/);
 assert.match(hotfixJs, /fitEditor/);
 assert.match(hotfixJs, /scrollHeight/);
 assert.match(hotfixJs, /ResizeObserver/);
+assert.match(hotfixJs, /resizeObserver\.observe\(layout\)/);
 assert.match(hotfixJs, /让 AI 续写、润色或帮你构思/);
 assert.match(hotfixJs, /stopImmediatePropagation\(\)/);
 assert.doesNotMatch(hotfixJs, /UnlimitedCompanion|uai_companion_|uaiCompanionRoot/);
