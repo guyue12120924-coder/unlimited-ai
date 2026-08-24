@@ -7,6 +7,7 @@ const css = fs.readFileSync("public/novel-writing-v1725.css", "utf8");
 const studio = fs.readFileSync("public/studio.js", "utf8");
 const simple = fs.readFileSync("public/simple-studio.js", "utf8");
 const aiToManuscript = fs.readFileSync("public/ai-to-manuscript.js", "utf8");
+const deploy = JSON.parse(fs.readFileSync("public/deploy-status.json", "utf8"));
 
 assert.match(loader, /novel-writing-v1725\.css/);
 assert.match(loader, /novel-writing-v1725\.js/);
@@ -60,5 +61,9 @@ assert.match(simple, /chapter\.manuscript/);
 assert.match(simple, /simpleManuscriptEditor/);
 assert.match(aiToManuscript, /加入正文/);
 assert.match(aiToManuscript, /chapter\.manuscript/);
+
+assert.equal(deploy.novelRevision, "2026-08-24-v17.25-writing-workspace-redesign");
+assert.equal(deploy.status, "v17.25-writing-workspace-redesign-current");
+assert.match(deploy.novel.writingWorkspace, /V17\.25/);
 
 console.log("V17.25 writing workspace contract passed.");
