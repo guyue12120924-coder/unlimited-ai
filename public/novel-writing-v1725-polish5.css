@@ -1,0 +1,192 @@
+/* V17.25 polish 5: quieter navigation and assistant chrome.
+ * Novel-only. No capability is removed; chapters and AI conversations share one compact navigator.
+ */
+
+body[data-uai-mode="novel"] {
+  --v1725-nav-accent: color-mix(in srgb, var(--accent) 10%, var(--bg-surface-raised, #fff));
+}
+
+/* ---------- Left navigator: show one task at a time ---------- */
+body[data-uai-mode="novel"] .novel-v1725-library-switch {
+  order: 3;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px;
+  margin: 0 8px 7px;
+  padding: 3px;
+  border: 1px solid color-mix(in srgb, var(--border-default, var(--border)) 78%, transparent);
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--bg-canvas, #f3f2ee) 70%, var(--bg-surface-raised, #fff));
+}
+body[data-uai-mode="novel"] .novel-v1725-library-switch button {
+  min-width: 0;
+  min-height: 30px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-muted, var(--muted));
+  cursor: pointer;
+  font: inherit;
+  font-size: 9.5px;
+  font-weight: 680;
+  white-space: nowrap;
+}
+body[data-uai-mode="novel"] .novel-v1725-library-switch button:hover {
+  color: var(--text-primary, var(--text));
+}
+body[data-uai-mode="novel"] .novel-v1725-library-switch button.active {
+  background: var(--bg-surface-raised, #fff);
+  color: var(--text-primary, var(--text));
+  box-shadow: 0 1px 4px rgba(45, 39, 31, .08);
+}
+body[data-uai-mode="novel"] .novel-v1725-library-switch button.active::before {
+  content: "";
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  margin-right: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+  vertical-align: 1px;
+}
+
+/* V17.23C originally placed chapters at order 3. The switch now occupies that slot. */
+body[data-uai-mode="novel"] #studioLibrary > .chapter-section,
+body[data-uai-mode="novel"] #studioLibrary > .novel-v1725-session-section {
+  order: 4 !important;
+  flex: 1 1 auto !important;
+  max-height: none !important;
+  min-height: 0;
+}
+body[data-uai-mode="novel"] #studioLibrary > .studio-search {
+  order: 5 !important;
+}
+body[data-uai-mode="novel"] #studioLibrary > .library-footer {
+  order: 6 !important;
+}
+body[data-uai-mode="novel"][data-novel-library-view="chapters"] #studioLibrary > .novel-v1725-session-section,
+body[data-uai-mode="novel"][data-novel-library-view="sessions"] #studioLibrary > .chapter-section {
+  display: none !important;
+}
+body[data-uai-mode="novel"][data-novel-library-view="chapters"] #studioLibrary > .chapter-section,
+body[data-uai-mode="novel"][data-novel-library-view="sessions"] #studioLibrary > .novel-v1725-session-section {
+  display: flex !important;
+  flex-direction: column;
+}
+body[data-uai-mode="novel"] #studioLibrary > .chapter-section .studio-list,
+body[data-uai-mode="novel"] #studioLibrary > .novel-v1725-session-section .studio-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* Search is useful for AI conversation browsing; keep the chapter screen calmer. */
+body[data-uai-mode="novel"][data-novel-library-view="chapters"] #studioLibrary > .studio-search {
+  display: none !important;
+}
+body[data-uai-mode="novel"][data-novel-library-view="sessions"] #studioLibrary > .studio-search {
+  display: flex !important;
+}
+
+/* Make the active navigator content feel like one continuous list instead of stacked cards. */
+body[data-uai-mode="novel"] #studioLibrary .library-section {
+  border-top-color: color-mix(in srgb, var(--border-subtle, var(--border)) 62%, transparent) !important;
+}
+body[data-uai-mode="novel"] #studioLibrary .library-title {
+  padding-top: 5px !important;
+  padding-bottom: 4px !important;
+}
+body[data-uai-mode="novel"] #studioLibrary .studio-list-item {
+  border: 1px solid transparent !important;
+}
+body[data-uai-mode="novel"] #studioLibrary .studio-list-item:hover {
+  background: color-mix(in srgb, var(--accent) 5%, var(--bg-surface-raised)) !important;
+}
+body[data-uai-mode="novel"] #studioLibrary .studio-list-item.active {
+  border-color: color-mix(in srgb, var(--accent) 16%, transparent) !important;
+}
+
+/* ---------- Manuscript: reduce chrome while writing ---------- */
+body[data-uai-mode="novel"] .novel-v1725-paper-wrap {
+  border-color: rgba(92, 83, 68, .075) !important;
+  box-shadow: 0 9px 28px rgba(55, 48, 38, .045) !important;
+}
+body[data-uai-mode="novel"] .novel-v1725-paper-head {
+  border-bottom-color: rgba(92, 83, 68, .075) !important;
+}
+body[data-uai-mode="novel"] .novel-v1725-paper-foot {
+  border-top-color: rgba(92, 83, 68, .075) !important;
+}
+body[data-uai-mode="novel"] #simpleManuscriptEditor.novel-v1725-editor {
+  text-rendering: optimizeLegibility;
+}
+body[data-uai-mode="novel"] #simpleManuscriptEditor.novel-v1725-editor::selection {
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+/* ---------- AI composer: quiet in manuscript view, confident in AI view ---------- */
+body[data-uai-mode="novel"] #composer {
+  background: color-mix(in srgb, var(--bg-surface-raised, #fff) 94%, transparent) !important;
+}
+body[data-uai-mode="novel"]:not(.novel-v1725-ai-view) #conversationPane .input-inner,
+body[data-uai-mode="novel"]:not(.novel-v1725-ai-view) #composer {
+  max-width: 760px !important;
+}
+body[data-uai-mode="novel"]:not(.novel-v1725-ai-view) #composer {
+  border-color: rgba(92, 83, 68, .085) !important;
+  box-shadow: 0 5px 18px rgba(52, 46, 36, .055) !important;
+  opacity: .91;
+}
+body[data-uai-mode="novel"]:not(.novel-v1725-ai-view) #composer:hover,
+body[data-uai-mode="novel"]:not(.novel-v1725-ai-view) #composer:focus-within {
+  opacity: 1;
+}
+body[data-uai-mode="novel"].novel-v1725-ai-view #conversationPane .input-inner,
+body[data-uai-mode="novel"].novel-v1725-ai-view #composer {
+  max-width: 860px !important;
+}
+body[data-uai-mode="novel"].novel-v1725-ai-view #composer {
+  box-shadow: 0 9px 28px rgba(52, 46, 36, .085) !important;
+}
+body[data-uai-mode="novel"] #composer textarea#msg::placeholder {
+  color: color-mix(in srgb, var(--text-muted, var(--muted)) 82%, transparent) !important;
+}
+
+/* AI history gets more breathing room and fewer card-like edges. */
+body[data-uai-mode="novel"].novel-v1725-ai-view #conversationPane .chat {
+  width: min(860px, 100%) !important;
+}
+body[data-uai-mode="novel"].novel-v1725-ai-view #history .message,
+body[data-uai-mode="novel"].novel-v1725-ai-view #history .msg {
+  box-shadow: none !important;
+}
+
+/* ---------- Materials inspector: visually attached, not modal ---------- */
+@media (min-width: 981px) {
+  body[data-uai-mode="novel"] #studioPanel {
+    border-left-color: color-mix(in srgb, var(--border-default, var(--border)) 72%, transparent) !important;
+    box-shadow: -7px 0 24px rgba(45, 38, 28, .065) !important;
+  }
+}
+
+@media (max-width: 760px) {
+  body[data-uai-mode="novel"] .novel-v1725-library-switch {
+    margin-inline: 7px;
+  }
+  body[data-uai-mode="novel"] .novel-v1725-library-switch button {
+    min-height: 32px;
+    font-size: 10px;
+  }
+  body[data-uai-mode="novel"]:not(.novel-v1725-ai-view) #conversationPane .input-inner,
+  body[data-uai-mode="novel"]:not(.novel-v1725-ai-view) #composer {
+    max-width: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body[data-uai-mode="novel"] #composer {
+    transition: none !important;
+  }
+}
