@@ -192,3 +192,31 @@
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", loadRegressionLayer, { once: true });
   else loadRegressionLayer();
 })();
+
+// V17.25 replaces the three-column/chat-first presentation with a manuscript-first workspace.
+// It reuses the existing chapter.manuscript data and original AI/materials functionality.
+(() => {
+  const STYLE_ID = "novelV1725Style";
+  const SCRIPT_ID = "novelV1725Script";
+  const VERSION = "20260824-v17.25-writing-workspace-redesign";
+
+  function loadWritingWorkspace() {
+    if (!document.getElementById(STYLE_ID)) {
+      const link = document.createElement("link");
+      link.id = STYLE_ID;
+      link.rel = "stylesheet";
+      link.href = `/novel-writing-v1725.css?v=${VERSION}`;
+      document.head.appendChild(link);
+    }
+    if (!document.getElementById(SCRIPT_ID)) {
+      const script = document.createElement("script");
+      script.id = SCRIPT_ID;
+      script.src = `/novel-writing-v1725.js?v=${VERSION}`;
+      script.defer = true;
+      document.head.appendChild(script);
+    }
+  }
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", loadWritingWorkspace, { once: true });
+  else loadWritingWorkspace();
+})();
