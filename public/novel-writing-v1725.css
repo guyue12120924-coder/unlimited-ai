@@ -1,0 +1,604 @@
+/* V17.25 Writing Workspace Redesign
+ * Manuscript-first layout. Existing features remain available through the left navigation,
+ * AI assistant view, materials drawer, + menu and More menus.
+ */
+
+body[data-uai-mode="novel"] {
+  --topbar-height: 60px;
+  --studio-left: 238px;
+  --novel-v1725-paper: var(--bg-surface-raised, #fffdf9);
+  --novel-v1725-canvas: var(--bg-canvas, #f1eee7);
+}
+
+/* ---------- One real top bar ---------- */
+body[data-uai-mode="novel"] #topbar {
+  min-height: var(--topbar-height) !important;
+}
+body[data-uai-mode="novel"] #topbar .topbar-shell {
+  width: 100% !important;
+  min-height: var(--topbar-height) !important;
+  height: var(--topbar-height) !important;
+  display: flex !important;
+  align-items: center !important;
+  flex-wrap: nowrap !important;
+  gap: 10px !important;
+  padding: 0 14px !important;
+}
+body[data-uai-mode="novel"] #topbar .brand-cluster {
+  flex: 0 0 auto;
+  min-width: 154px;
+}
+body[data-uai-mode="novel"] #topbar .brand-copy span {
+  display: none !important;
+}
+body[data-uai-mode="novel"] #topbar .brand-copy strong {
+  font-size: 13px !important;
+  white-space: nowrap;
+}
+body[data-uai-mode="novel"] .novel-v1723d-current-work {
+  display: none !important;
+}
+body[data-uai-mode="novel"] #topbar .model-pill {
+  width: min(230px, 22vw) !important;
+  min-width: 150px !important;
+  max-width: 230px !important;
+  min-height: 36px !important;
+  margin-left: auto !important;
+  padding: 0 8px !important;
+  flex: 0 1 230px !important;
+}
+body[data-uai-mode="novel"] #topbar .model-pill select {
+  min-width: 0 !important;
+  width: 100% !important;
+  font-size: 11px !important;
+}
+body[data-uai-mode="novel"] #topbar .topbar-actions {
+  flex: 0 0 auto !important;
+  min-width: 0;
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  flex-wrap: nowrap !important;
+}
+body[data-uai-mode="novel"] #uaiNovelModeSwitch,
+body[data-uai-mode="novel"] .novel-v1725-materials-btn {
+  min-height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--border-default, var(--border));
+  border-radius: 8px;
+  background: var(--bg-surface-raised, #fff);
+  color: var(--text-secondary, var(--text-soft));
+  font: inherit;
+  font-size: 10px;
+  font-weight: 680;
+  white-space: nowrap;
+  cursor: pointer;
+}
+body[data-uai-mode="novel"] #uaiNovelModeSwitch:hover,
+body[data-uai-mode="novel"] .novel-v1725-materials-btn:hover,
+body[data-uai-mode="novel"] .novel-v1725-materials-btn.active {
+  border-color: color-mix(in srgb, var(--accent) 32%, var(--border-default));
+  background: color-mix(in srgb, var(--accent) 7%, var(--bg-surface-raised));
+  color: var(--text-primary, var(--text));
+}
+
+/* ---------- Main layout: left navigation + writing center ---------- */
+body[data-uai-mode="novel"] #creativeWorkspace,
+body[data-uai-mode="novel"].studio-collapsed #creativeWorkspace,
+body[data-uai-mode="novel"].library-collapsed #creativeWorkspace,
+body[data-uai-mode="novel"].library-collapsed.studio-collapsed #creativeWorkspace {
+  grid-template-columns: var(--studio-left) minmax(0, 1fr) !important;
+  background: var(--novel-v1725-canvas) !important;
+}
+body[data-uai-mode="novel"].library-collapsed #creativeWorkspace,
+body[data-uai-mode="novel"].library-collapsed.studio-collapsed #creativeWorkspace {
+  grid-template-columns: 0 minmax(0, 1fr) !important;
+}
+body[data-uai-mode="novel"] #studioLibrary {
+  width: auto;
+  min-width: 0;
+  box-shadow: none !important;
+}
+body[data-uai-mode="novel"] #studioLibrary > .studio-panel-head {
+  min-height: 54px !important;
+}
+body[data-uai-mode="novel"] #studioLibrary > .chapter-section {
+  flex: 1.35 1 0 !important;
+}
+body[data-uai-mode="novel"] #studioLibrary > .library-section:not(.chapter-section) {
+  flex: .58 1 0 !important;
+  max-height: 32vh;
+}
+body[data-uai-mode="novel"] #studioLibrary .studio-list-item {
+  min-height: 40px !important;
+}
+body[data-uai-mode="novel"] #studioLibrary .studio-item-main small {
+  opacity: .72;
+}
+body[data-uai-mode="novel"] #conversationPane {
+  min-width: 0;
+  position: relative;
+  background: var(--novel-v1725-canvas) !important;
+}
+
+/* ---------- Center view switch ---------- */
+body[data-uai-mode="novel"] .novel-v1725-center-bar {
+  position: absolute;
+  inset: 0 0 auto 0;
+  z-index: 70;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 0 clamp(16px, 2.5vw, 34px);
+  border-bottom: 1px solid var(--border-subtle, var(--border));
+  background: color-mix(in srgb, var(--bg-canvas, #f1eee7) 94%, transparent);
+  backdrop-filter: blur(14px);
+}
+body[data-uai-mode="novel"] .novel-v1725-breadcrumb {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--text-muted, var(--muted));
+  font-size: 10px;
+}
+body[data-uai-mode="novel"] .novel-v1725-breadcrumb span,
+body[data-uai-mode="novel"] .novel-v1725-breadcrumb strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+body[data-uai-mode="novel"] .novel-v1725-breadcrumb span { max-width: 180px; }
+body[data-uai-mode="novel"] .novel-v1725-breadcrumb strong {
+  max-width: 280px;
+  color: var(--text-primary, var(--text));
+  font-weight: 680;
+}
+body[data-uai-mode="novel"] .novel-v1725-breadcrumb i {
+  flex: 0 0 auto;
+  font-style: normal;
+  opacity: .45;
+}
+body[data-uai-mode="novel"] .novel-v1725-view-switch {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--border-subtle, var(--border));
+  border-radius: 9px;
+  background: var(--surface-soft);
+}
+body[data-uai-mode="novel"] .novel-v1725-view-switch button {
+  min-height: 28px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-muted, var(--muted));
+  font: inherit;
+  font-size: 9px;
+  font-weight: 680;
+  cursor: pointer;
+}
+body[data-uai-mode="novel"] .novel-v1725-view-switch button.active {
+  background: var(--bg-surface-raised, #fff);
+  color: var(--text-primary, var(--text));
+  box-shadow: 0 1px 4px rgba(43, 37, 28, .08);
+}
+
+/* ---------- Manuscript is the main screen ---------- */
+body[data-uai-mode="novel"] .novel-v1725-manuscript-view {
+  position: absolute;
+  inset: 52px 0 94px;
+  z-index: 20;
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: clamp(18px, 3vw, 40px) clamp(16px, 4vw, 54px) 34px;
+  background: var(--novel-v1725-canvas);
+}
+body[data-uai-mode="novel"].novel-v1725-ai-view .novel-v1725-manuscript-view {
+  display: none !important;
+}
+body[data-uai-mode="novel"] .novel-v1725-paper-wrap {
+  width: min(900px, 100%);
+  min-height: calc(100% - 4px);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  padding: clamp(26px, 3vw, 42px) clamp(28px, 5vw, 68px) 22px;
+  border: 1px solid var(--border-subtle, var(--border));
+  border-radius: 14px;
+  background: var(--novel-v1725-paper);
+  box-shadow: 0 12px 36px rgba(56, 47, 35, .055);
+}
+body[data-uai-mode="novel"] .novel-v1725-paper-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--border-subtle, var(--border));
+}
+body[data-uai-mode="novel"] .novel-v1725-paper-head > div {
+  min-width: 0;
+}
+body[data-uai-mode="novel"] .novel-v1725-paper-head > div > span {
+  display: block;
+  color: var(--accent);
+  font-size: 9px;
+  font-weight: 760;
+  letter-spacing: .08em;
+}
+body[data-uai-mode="novel"] .novel-v1725-paper-head h1 {
+  margin: 7px 0 0;
+  overflow: hidden;
+  color: var(--text-primary, var(--text));
+  font-family: Georgia, "Noto Serif SC", "Songti SC", serif;
+  font-size: clamp(24px, 2.7vw, 34px);
+  font-weight: 560;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+body[data-uai-mode="novel"] #novelV1725WordCount {
+  flex: 0 0 auto;
+  padding-bottom: 3px;
+  color: var(--text-muted, var(--muted));
+  font-size: 9px;
+  white-space: nowrap;
+}
+body[data-uai-mode="novel"] #simpleManuscriptEditor.novel-v1725-editor {
+  width: 100%;
+  min-height: clamp(520px, 64vh, 900px);
+  flex: 1;
+  resize: none;
+  padding: 30px 0 36px;
+  border: 0 !important;
+  outline: 0 !important;
+  background: transparent !important;
+  color: var(--text-primary, var(--text)) !important;
+  box-shadow: none !important;
+  font: 17px/2 Georgia, "Noto Serif SC", "Songti SC", "SimSun", serif !important;
+  letter-spacing: .015em;
+  caret-color: var(--accent) !important;
+  scrollbar-width: thin;
+}
+body[data-uai-mode="novel"] #simpleManuscriptEditor.novel-v1725-editor:focus {
+  border: 0 !important;
+  box-shadow: none !important;
+}
+body[data-uai-mode="novel"] #simpleManuscriptEditor.novel-v1725-editor::placeholder {
+  color: var(--text-muted, var(--muted)) !important;
+  opacity: .62;
+}
+body[data-uai-mode="novel"] .novel-v1725-paper-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-subtle, var(--border));
+  color: var(--text-muted, var(--muted));
+  font-size: 8px;
+}
+body[data-uai-mode="novel"] .novel-v1725-paper-foot > span:first-child {
+  color: var(--accent);
+  font-weight: 700;
+}
+body[data-uai-mode="novel"] .novel-v1725-empty {
+  min-height: 440px;
+  flex: 1;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  text-align: center;
+}
+body[data-uai-mode="novel"] .novel-v1725-empty[hidden] { display: none !important; }
+body[data-uai-mode="novel"] .novel-v1725-empty strong {
+  color: var(--text-primary, var(--text));
+  font-family: Georgia, "Noto Serif SC", serif;
+  font-size: 22px;
+  font-weight: 560;
+}
+body[data-uai-mode="novel"] .novel-v1725-empty p {
+  max-width: 340px;
+  margin: 10px 0 18px;
+  color: var(--text-muted, var(--muted));
+  font-size: 11px;
+  line-height: 1.7;
+}
+body[data-uai-mode="novel"] .novel-v1725-empty button {
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--border-default));
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--accent) 9%, var(--bg-surface-raised));
+  color: var(--accent-strong, var(--accent));
+  font: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+body[data-uai-mode="novel"] .novel-v1725-manuscript-proxy[hidden] { display: none !important; }
+
+/* ---------- AI assistant becomes a secondary view ---------- */
+body[data-uai-mode="novel"] #conversationPane #history {
+  position: absolute !important;
+  inset: 52px 0 94px !important;
+  height: auto !important;
+  min-height: 0 !important;
+  display: none !important;
+  overflow-y: auto !important;
+  padding-top: 28px !important;
+  padding-bottom: 34px !important;
+  background: var(--novel-v1725-canvas) !important;
+}
+body[data-uai-mode="novel"].novel-v1725-ai-view #conversationPane #history {
+  display: block !important;
+}
+body[data-uai-mode="novel"].novel-v1725-ai-view #conversationPane .chat {
+  width: min(920px, 100%) !important;
+  max-width: 920px !important;
+  margin: 0 auto;
+  padding-inline: clamp(18px, 4vw, 46px) !important;
+}
+body[data-uai-mode="novel"] .novel-v15-context {
+  display: none !important;
+}
+body[data-uai-mode="novel"].novel-v1725-ai-view .novel-v15-context {
+  display: flex !important;
+  top: 8px !important;
+}
+body[data-uai-mode="novel"] #conversationSearchBar {
+  top: 60px !important;
+}
+
+/* AI input remains available in both views, but no permanent row of shortcuts. */
+body[data-uai-mode="novel"] #conversationPane .input-floating {
+  inset: auto 0 0 !important;
+  z-index: 80;
+  padding: 12px clamp(16px, 4vw, 44px) 14px !important;
+  background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--bg-canvas) 92%, transparent) 34%, var(--bg-canvas) 78%) !important;
+}
+body[data-uai-mode="novel"] #conversationPane .input-inner,
+body[data-uai-mode="novel"] #composer {
+  max-width: 900px !important;
+}
+body[data-uai-mode="novel"] #composer {
+  border-radius: 13px !important;
+  box-shadow: 0 10px 30px rgba(51, 43, 32, .10) !important;
+}
+body[data-uai-mode="novel"] .novel-v15-composer-assist,
+body[data-uai-mode="novel"] .novel-v15-shortcuts {
+  display: none !important;
+}
+body[data-uai-mode="novel"] #composer .composer-main {
+  min-height: 52px;
+  align-items: center !important;
+}
+body[data-uai-mode="novel"] #composer textarea#msg {
+  max-height: 150px !important;
+  font-size: 13px !important;
+}
+
+/* ---------- Creative materials are a drawer, not a permanent third column ---------- */
+body[data-uai-mode="novel"] #studioPanel {
+  position: fixed !important;
+  top: var(--topbar-height) !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  left: auto !important;
+  z-index: 245 !important;
+  width: min(410px, 92vw) !important;
+  min-width: 0 !important;
+  border-left: 1px solid var(--border-default, var(--border)) !important;
+  background: var(--studio-panel, var(--bg-surface)) !important;
+  box-shadow: -18px 0 52px rgba(45, 38, 28, .14) !important;
+  transform: translateX(0) !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  transition: transform 220ms ease, opacity 180ms ease !important;
+}
+body[data-uai-mode="novel"].studio-collapsed #studioPanel {
+  transform: translateX(102%) !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+body[data-uai-mode="novel"] #studioPanel > .studio-panel-head {
+  min-height: 56px !important;
+  padding: 10px 12px !important;
+}
+body[data-uai-mode="novel"] #studioPanel #collapseStudio {
+  width: 32px !important;
+  height: 32px !important;
+  font-size: 18px !important;
+}
+body[data-uai-mode="novel"] #studioPanel .studio-tabs {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+}
+body[data-uai-mode="novel"] #studioPanel .studio-tabs [data-studio-tab="draft"] {
+  display: none !important;
+}
+body[data-uai-mode="novel"] .novel-v1723-edge-restore.right,
+body[data-uai-mode="novel"] #novelV1723OpenStudio {
+  display: none !important;
+}
+body[data-uai-mode="novel"] .novel-v1725-drawer-scrim {
+  position: fixed;
+  inset: var(--topbar-height) 0 0;
+  z-index: 235;
+  display: block;
+  border: 0;
+  background: rgba(35, 31, 25, .18);
+  backdrop-filter: blur(2px);
+  cursor: default;
+}
+body[data-uai-mode="novel"].studio-collapsed .novel-v1725-drawer-scrim {
+  display: none !important;
+}
+body:not([data-uai-mode="novel"]) .novel-v1725-drawer-scrim {
+  display: none !important;
+}
+
+/* The old right-side manuscript can exist for compatibility but never competes visually. */
+body[data-uai-mode="novel"] #studioPanel #simpleManuscriptPane {
+  display: none !important;
+}
+
+/* ---------- Dark mode ---------- */
+body[data-uai-mode="novel"][data-novel-v1723-theme="dark"] .novel-v1725-paper-wrap {
+  box-shadow: 0 14px 42px rgba(0, 0, 0, .20);
+}
+body[data-uai-mode="novel"][data-novel-v1723-theme="dark"] .novel-v1725-view-switch button.active {
+  box-shadow: 0 1px 5px rgba(0, 0, 0, .22);
+}
+body[data-uai-mode="novel"][data-novel-v1723-theme="dark"] .novel-v1725-drawer-scrim {
+  background: rgba(0, 0, 0, .34);
+}
+
+/* ---------- Laptop ---------- */
+@media (max-width: 1180px) and (min-width: 981px) {
+  body[data-uai-mode="novel"] { --studio-left: 218px; }
+  body[data-uai-mode="novel"] #topbar .brand-cluster { min-width: 126px; }
+  body[data-uai-mode="novel"] #topbar .model-pill { width: 185px !important; min-width: 140px !important; }
+  body[data-uai-mode="novel"] .novel-v1725-paper-wrap { width: min(820px, 100%); }
+}
+
+/* ---------- Tablet / overlay navigation ---------- */
+@media (max-width: 980px) {
+  body[data-uai-mode="novel"] #creativeWorkspace,
+  body[data-uai-mode="novel"].studio-collapsed #creativeWorkspace,
+  body[data-uai-mode="novel"].library-collapsed #creativeWorkspace,
+  body[data-uai-mode="novel"].library-collapsed.studio-collapsed #creativeWorkspace {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+  body[data-uai-mode="novel"] #studioLibrary {
+    position: fixed !important;
+    top: var(--topbar-height) !important;
+    bottom: 0 !important;
+    width: min(310px, 88vw) !important;
+    z-index: 244 !important;
+  }
+  body[data-uai-mode="novel"] #studioPanel {
+    width: min(390px, 94vw) !important;
+  }
+  body[data-uai-mode="novel"] .novel-v1725-paper-wrap {
+    min-height: calc(100% - 2px);
+    padding-inline: clamp(24px, 6vw, 52px);
+  }
+}
+
+@media (max-width: 760px) {
+  body[data-uai-mode="novel"] #topbar .topbar-shell {
+    gap: 6px !important;
+    padding-inline: 8px !important;
+  }
+  body[data-uai-mode="novel"] #topbar .brand-cluster {
+    min-width: auto;
+  }
+  body[data-uai-mode="novel"] #topbar .brand-copy strong {
+    display: none;
+  }
+  body[data-uai-mode="novel"] #topbar .model-label {
+    display: none !important;
+  }
+  body[data-uai-mode="novel"] #topbar .model-pill {
+    width: 150px !important;
+    min-width: 110px !important;
+    flex-basis: 150px !important;
+  }
+  body[data-uai-mode="novel"] #uaiNovelModeSwitch {
+    width: 34px;
+    padding: 0;
+    overflow: hidden;
+    font-size: 0;
+  }
+  body[data-uai-mode="novel"] #uaiNovelModeSwitch::after {
+    content: "↔";
+    font-size: 14px;
+  }
+  body[data-uai-mode="novel"] .novel-v1725-materials-btn {
+    padding: 0 8px;
+    font-size: 9px;
+  }
+  body[data-uai-mode="novel"] .novel-v1725-center-bar {
+    padding-inline: 12px;
+  }
+  body[data-uai-mode="novel"] .novel-v1725-breadcrumb span {
+    display: none;
+  }
+  body[data-uai-mode="novel"] .novel-v1725-breadcrumb i {
+    display: none;
+  }
+  body[data-uai-mode="novel"] .novel-v1725-breadcrumb strong {
+    max-width: 46vw;
+  }
+  body[data-uai-mode="novel"] .novel-v1725-manuscript-view {
+    padding: 12px 10px 24px;
+  }
+  body[data-uai-mode="novel"] .novel-v1725-paper-wrap {
+    border-radius: 10px;
+    padding: 22px 20px 18px;
+  }
+  body[data-uai-mode="novel"] #simpleManuscriptEditor.novel-v1725-editor {
+    min-height: 520px;
+    padding-top: 24px;
+    font-size: 16px !important;
+    line-height: 1.9 !important;
+  }
+  body[data-uai-mode="novel"] .novel-v1725-paper-foot {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+  }
+}
+
+@media (max-width: 520px) {
+  body[data-uai-mode="novel"] #topbar .model-pill {
+    width: 116px !important;
+    min-width: 90px !important;
+    flex-basis: 116px !important;
+  }
+  body[data-uai-mode="novel"] .novel-v1725-materials-btn {
+    width: 34px;
+    padding: 0;
+    font-size: 0;
+  }
+  body[data-uai-mode="novel"] .novel-v1725-materials-btn::after {
+    content: "资料";
+    font-size: 8px;
+  }
+  body[data-uai-mode="novel"] .novel-v1725-view-switch button {
+    padding-inline: 8px;
+  }
+  body[data-uai-mode="novel"] .novel-v1725-paper-head {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 7px;
+  }
+  body[data-uai-mode="novel"] #novelV1725WordCount {
+    padding: 0;
+  }
+}
+
+@media (max-height: 650px) {
+  body[data-uai-mode="novel"] .novel-v1725-manuscript-view {
+    padding-top: 12px;
+  }
+  body[data-uai-mode="novel"] .novel-v1725-paper-wrap {
+    padding-top: 22px;
+  }
+  body[data-uai-mode="novel"] #simpleManuscriptEditor.novel-v1725-editor {
+    min-height: 360px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body[data-uai-mode="novel"] #studioPanel {
+    transition: none !important;
+  }
+}
