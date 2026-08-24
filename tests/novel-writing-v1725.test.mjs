@@ -15,6 +15,12 @@ assert.match(loader, /novel-writing-v1725\.js/);
 assert.match(loader, /20260824-v17\.25-writing-workspace-redesign/);
 assert.ok(loader.indexOf("novel-ui-v1724c.js") < loader.indexOf("novel-writing-v1725.js"));
 
+// V17.25 must also be loaded directly from index so a stale historical loader cache
+// cannot leave users on the old V17.24 three-column interface.
+assert.match(index, /novel-writing-v1725\.css\?v=20260824-v17\.25-writing-workspace-redesign-fix1/);
+assert.match(index, /novel-writing-v1725\.js\?v=20260824-v17\.25-writing-workspace-redesign-fix1/);
+assert.match(index, /novel-simplify-v1723\.js\?v=20260824-v17\.25-entry-refresh/);
+
 assert.match(js, /2026-08-24-v17\.25-writing-workspace-redesign/);
 assert.match(js, /dataset\?\.uaiMode === "novel"/);
 assert.match(js, /novelV1725ManuscriptView/);
@@ -73,4 +79,4 @@ assert.equal(deploy.novelRevision, "2026-08-24-v17.25-writing-workspace-redesign
 assert.equal(deploy.status, "v17.25-writing-workspace-redesign-current");
 assert.match(deploy.novel.writingWorkspace, /V17\.25/);
 
-console.log("V17.25 writing workspace contract passed.");
+console.log("V17.25 writing workspace contract passed with direct cache-safe asset loading.");
