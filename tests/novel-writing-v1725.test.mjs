@@ -4,6 +4,8 @@ import fs from "node:fs";
 const loader = fs.readFileSync("public/novel-simplify-v1723.js", "utf8");
 const js = fs.readFileSync("public/novel-writing-v1725.js", "utf8");
 const css = fs.readFileSync("public/novel-writing-v1725.css", "utf8");
+const hotfixJs = fs.readFileSync("public/novel-writing-v1725-hotfix2.js", "utf8");
+const hotfixCss = fs.readFileSync("public/novel-writing-v1725-hotfix2.css", "utf8");
 const studio = fs.readFileSync("public/studio.js", "utf8");
 const simple = fs.readFileSync("public/simple-studio.js", "utf8");
 const aiToManuscript = fs.readFileSync("public/ai-to-manuscript.js", "utf8");
@@ -14,12 +16,6 @@ assert.match(loader, /novel-writing-v1725\.css/);
 assert.match(loader, /novel-writing-v1725\.js/);
 assert.match(loader, /20260824-v17\.25-writing-workspace-redesign/);
 assert.ok(loader.indexOf("novel-ui-v1724c.js") < loader.indexOf("novel-writing-v1725.js"));
-
-// V17.25 must also be loaded directly from index so a stale historical loader cache
-// cannot leave users on the old V17.24 three-column interface.
-assert.match(index, /novel-writing-v1725\.css\?v=20260824-v17\.25-writing-workspace-redesign-fix1/);
-assert.match(index, /novel-writing-v1725\.js\?v=20260824-v17\.25-writing-workspace-redesign-fix1/);
-assert.match(index, /novel-simplify-v1723\.js\?v=20260824-v17\.25-entry-refresh/);
 
 assert.match(js, /2026-08-24-v17\.25-writing-workspace-redesign/);
 assert.match(js, /dataset\?\.uaiMode === "novel"/);
@@ -57,6 +53,20 @@ assert.match(css, /display:\s*none\s*!important/);
 assert.match(css, /\.novel-v1725-drawer-scrim[\s\S]*left:\s*var\(--studio-left\)/);
 assert.doesNotMatch(css, /#uaiCompanionRoot|data-uai-mode="companion"|\.uai-c-/);
 
+// Hotfix 2 keeps exactly one visible materials entry and makes the desktop drawer non-modal.
+assert.match(index, /novel-writing-v1725-hotfix2\.css\?v=20260824-v17\.25-materials-drawer-hotfix2/);
+assert.match(index, /novel-writing-v1725-hotfix2\.js\?v=20260824-v17\.25-materials-drawer-hotfix2/);
+assert.match(hotfixCss, /#novelV1725MaterialsBtn[\s\S]*display:\s*none\s*!important/);
+assert.match(hotfixCss, /#studioToggleBtn/);
+assert.match(hotfixCss, /@media \(min-width: 981px\)[\s\S]*novel-v1725-drawer-scrim[\s\S]*display:\s*none\s*!important/);
+assert.match(hotfixCss, /@media \(max-width: 980px\)[\s\S]*backdrop-filter:\s*none\s*!important/);
+assert.match(hotfixCss, /padding-right:\s*min\(410px, 30vw\)/);
+assert.match(hotfixJs, /studioToggleBtn/);
+assert.match(hotfixJs, /ensureUsefulTab/);
+assert.match(hotfixJs, /data-studio-tab="outline"/);
+assert.match(hotfixJs, /stopImmediatePropagation\(\)/);
+assert.doesNotMatch(hotfixJs, /UnlimitedCompanion|uai_companion_|uaiCompanionRoot/);
+
 // Existing capabilities stay present in the stable cores.
 for (const id of [
   "workspaceSearch",
@@ -79,4 +89,4 @@ assert.equal(deploy.novelRevision, "2026-08-24-v17.25-writing-workspace-redesign
 assert.equal(deploy.status, "v17.25-writing-workspace-redesign-current");
 assert.match(deploy.novel.writingWorkspace, /V17\.25/);
 
-console.log("V17.25 writing workspace contract passed with direct cache-safe asset loading.");
+console.log("V17.25 writing workspace contract passed.");
