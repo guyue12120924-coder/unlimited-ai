@@ -4,7 +4,7 @@
   if (window.UnlimitedNovelWritingV1725Hotfix2?.revision === REVISION) return;
 
   let resizeObserver = null;
-  let observedEditor = null;
+  let observedLayout = null;
 
   function isNovelMode() {
     return document.body?.dataset?.uaiMode === "novel";
@@ -56,14 +56,14 @@
     editor.style.overflowY = "hidden";
   }
 
-  function watchEditor() {
-    const editor = document.getElementById("simpleManuscriptEditor");
-    if (!editor || observedEditor === editor) return;
+  function watchLayout() {
+    const layout = document.getElementById("novelV1725ManuscriptView") || document.getElementById("conversationPane");
+    if (!layout || observedLayout === layout) return;
     resizeObserver?.disconnect();
-    observedEditor = editor;
+    observedLayout = layout;
     if (typeof ResizeObserver === "function") {
       resizeObserver = new ResizeObserver(() => requestAnimationFrame(fitEditor));
-      resizeObserver.observe(editor);
+      resizeObserver.observe(layout);
     }
     requestAnimationFrame(fitEditor);
   }
@@ -79,7 +79,7 @@
     if (!isNovelMode()) return;
     syncButton();
     normalizeComposer();
-    watchEditor();
+    watchLayout();
     requestAnimationFrame(fitEditor);
   }
 
@@ -91,6 +91,7 @@
       event.preventDefault();
       event.stopImmediatePropagation();
       toggleMaterials();
+      setTimeout(fitEditor, 230);
       return;
     }
 
