@@ -10,10 +10,8 @@ body[data-uai-mode="novel"] {
   --novel-v1725-canvas: var(--bg-canvas, #f1eee7);
 }
 
-/* ---------- One real top bar ---------- */
-body[data-uai-mode="novel"] #topbar {
-  min-height: var(--topbar-height) !important;
-}
+/* One compact top bar. */
+body[data-uai-mode="novel"] #topbar { min-height: var(--topbar-height) !important; }
 body[data-uai-mode="novel"] #topbar .topbar-shell {
   width: 100% !important;
   min-height: var(--topbar-height) !important;
@@ -24,20 +22,10 @@ body[data-uai-mode="novel"] #topbar .topbar-shell {
   gap: 10px !important;
   padding: 0 14px !important;
 }
-body[data-uai-mode="novel"] #topbar .brand-cluster {
-  flex: 0 0 auto;
-  min-width: 154px;
-}
-body[data-uai-mode="novel"] #topbar .brand-copy span {
-  display: none !important;
-}
-body[data-uai-mode="novel"] #topbar .brand-copy strong {
-  font-size: 13px !important;
-  white-space: nowrap;
-}
-body[data-uai-mode="novel"] .novel-v1723d-current-work {
-  display: none !important;
-}
+body[data-uai-mode="novel"] #topbar .brand-cluster { flex: 0 0 auto; min-width: 154px; }
+body[data-uai-mode="novel"] #topbar .brand-copy span { display: none !important; }
+body[data-uai-mode="novel"] #topbar .brand-copy strong { font-size: 13px !important; white-space: nowrap; }
+body[data-uai-mode="novel"] .novel-v1723d-current-work { display: none !important; }
 body[data-uai-mode="novel"] #topbar .model-pill {
   width: min(230px, 22vw) !important;
   min-width: 150px !important;
@@ -47,11 +35,7 @@ body[data-uai-mode="novel"] #topbar .model-pill {
   padding: 0 8px !important;
   flex: 0 1 230px !important;
 }
-body[data-uai-mode="novel"] #topbar .model-pill select {
-  min-width: 0 !important;
-  width: 100% !important;
-  font-size: 11px !important;
-}
+body[data-uai-mode="novel"] #topbar .model-pill select { min-width: 0 !important; width: 100% !important; font-size: 11px !important; }
 body[data-uai-mode="novel"] #topbar .topbar-actions {
   flex: 0 0 auto !important;
   min-width: 0;
@@ -82,7 +66,7 @@ body[data-uai-mode="novel"] .novel-v1725-materials-btn.active {
   color: var(--text-primary, var(--text));
 }
 
-/* ---------- Main layout: left navigation + writing center ---------- */
+/* Left navigation + one writing center. The right panel is removed from grid flow. */
 body[data-uai-mode="novel"] #creativeWorkspace,
 body[data-uai-mode="novel"].studio-collapsed #creativeWorkspace,
 body[data-uai-mode="novel"].library-collapsed #creativeWorkspace,
@@ -94,34 +78,15 @@ body[data-uai-mode="novel"].library-collapsed #creativeWorkspace,
 body[data-uai-mode="novel"].library-collapsed.studio-collapsed #creativeWorkspace {
   grid-template-columns: 0 minmax(0, 1fr) !important;
 }
-body[data-uai-mode="novel"] #studioLibrary {
-  width: auto;
-  min-width: 0;
-  box-shadow: none !important;
-}
-body[data-uai-mode="novel"] #studioLibrary > .studio-panel-head {
-  min-height: 54px !important;
-}
-body[data-uai-mode="novel"] #studioLibrary > .chapter-section {
-  flex: 1.35 1 0 !important;
-}
-body[data-uai-mode="novel"] #studioLibrary > .library-section:not(.chapter-section) {
-  flex: .58 1 0 !important;
-  max-height: 32vh;
-}
-body[data-uai-mode="novel"] #studioLibrary .studio-list-item {
-  min-height: 40px !important;
-}
-body[data-uai-mode="novel"] #studioLibrary .studio-item-main small {
-  opacity: .72;
-}
-body[data-uai-mode="novel"] #conversationPane {
-  min-width: 0;
-  position: relative;
-  background: var(--novel-v1725-canvas) !important;
-}
+body[data-uai-mode="novel"] #studioLibrary { width: auto; min-width: 0; box-shadow: none !important; }
+body[data-uai-mode="novel"] #studioLibrary > .studio-panel-head { min-height: 54px !important; }
+body[data-uai-mode="novel"] #studioLibrary > .chapter-section { flex: 1.35 1 0 !important; }
+body[data-uai-mode="novel"] #studioLibrary > .library-section:not(.chapter-section) { flex: .58 1 0 !important; max-height: 32vh; }
+body[data-uai-mode="novel"] #studioLibrary .studio-list-item { min-height: 40px !important; }
+body[data-uai-mode="novel"] #studioLibrary .studio-item-main small { opacity: .72; }
+body[data-uai-mode="novel"] #conversationPane { min-width: 0; position: relative; background: var(--novel-v1725-canvas) !important; }
 
-/* ---------- Center view switch ---------- */
+/* Breadcrumb + simple manuscript / AI switch. */
 body[data-uai-mode="novel"] .novel-v1725-center-bar {
   position: absolute;
   inset: 0 0 auto 0;
@@ -152,16 +117,8 @@ body[data-uai-mode="novel"] .novel-v1725-breadcrumb strong {
   white-space: nowrap;
 }
 body[data-uai-mode="novel"] .novel-v1725-breadcrumb span { max-width: 180px; }
-body[data-uai-mode="novel"] .novel-v1725-breadcrumb strong {
-  max-width: 280px;
-  color: var(--text-primary, var(--text));
-  font-weight: 680;
-}
-body[data-uai-mode="novel"] .novel-v1725-breadcrumb i {
-  flex: 0 0 auto;
-  font-style: normal;
-  opacity: .45;
-}
+body[data-uai-mode="novel"] .novel-v1725-breadcrumb strong { max-width: 280px; color: var(--text-primary, var(--text)); font-weight: 680; }
+body[data-uai-mode="novel"] .novel-v1725-breadcrumb i { flex: 0 0 auto; font-style: normal; opacity: .45; }
 body[data-uai-mode="novel"] .novel-v1725-view-switch {
   flex: 0 0 auto;
   display: inline-flex;
@@ -190,7 +147,7 @@ body[data-uai-mode="novel"] .novel-v1725-view-switch button.active {
   box-shadow: 0 1px 4px rgba(43, 37, 28, .08);
 }
 
-/* ---------- Manuscript is the main screen ---------- */
+/* Manuscript is the visual center. */
 body[data-uai-mode="novel"] .novel-v1725-manuscript-view {
   position: absolute;
   inset: 52px 0 94px;
@@ -200,9 +157,7 @@ body[data-uai-mode="novel"] .novel-v1725-manuscript-view {
   padding: clamp(18px, 3vw, 40px) clamp(16px, 4vw, 54px) 34px;
   background: var(--novel-v1725-canvas);
 }
-body[data-uai-mode="novel"].novel-v1725-ai-view .novel-v1725-manuscript-view {
-  display: none !important;
-}
+body[data-uai-mode="novel"].novel-v1725-ai-view .novel-v1725-manuscript-view { display: none !important; }
 body[data-uai-mode="novel"] .novel-v1725-paper-wrap {
   width: min(900px, 100%);
   min-height: calc(100% - 4px);
@@ -223,9 +178,7 @@ body[data-uai-mode="novel"] .novel-v1725-paper-head {
   padding-bottom: 18px;
   border-bottom: 1px solid var(--border-subtle, var(--border));
 }
-body[data-uai-mode="novel"] .novel-v1725-paper-head > div {
-  min-width: 0;
-}
+body[data-uai-mode="novel"] .novel-v1725-paper-head > div { min-width: 0; }
 body[data-uai-mode="novel"] .novel-v1725-paper-head > div > span {
   display: block;
   color: var(--accent);
@@ -267,14 +220,8 @@ body[data-uai-mode="novel"] #simpleManuscriptEditor.novel-v1725-editor {
   caret-color: var(--accent) !important;
   scrollbar-width: thin;
 }
-body[data-uai-mode="novel"] #simpleManuscriptEditor.novel-v1725-editor:focus {
-  border: 0 !important;
-  box-shadow: none !important;
-}
-body[data-uai-mode="novel"] #simpleManuscriptEditor.novel-v1725-editor::placeholder {
-  color: var(--text-muted, var(--muted)) !important;
-  opacity: .62;
-}
+body[data-uai-mode="novel"] #simpleManuscriptEditor.novel-v1725-editor:focus { border: 0 !important; box-shadow: none !important; }
+body[data-uai-mode="novel"] #simpleManuscriptEditor.novel-v1725-editor::placeholder { color: var(--text-muted, var(--muted)) !important; opacity: .62; }
 body[data-uai-mode="novel"] .novel-v1725-paper-foot {
   display: flex;
   align-items: center;
@@ -285,10 +232,7 @@ body[data-uai-mode="novel"] .novel-v1725-paper-foot {
   color: var(--text-muted, var(--muted));
   font-size: 8px;
 }
-body[data-uai-mode="novel"] .novel-v1725-paper-foot > span:first-child {
-  color: var(--accent);
-  font-weight: 700;
-}
+body[data-uai-mode="novel"] .novel-v1725-paper-foot > span:first-child { color: var(--accent); font-weight: 700; }
 body[data-uai-mode="novel"] .novel-v1725-empty {
   min-height: 440px;
   flex: 1;
@@ -325,7 +269,7 @@ body[data-uai-mode="novel"] .novel-v1725-empty button {
 }
 body[data-uai-mode="novel"] .novel-v1725-manuscript-proxy[hidden] { display: none !important; }
 
-/* ---------- AI assistant becomes a secondary view ---------- */
+/* AI remains fully available, but only when the AI assistant view is selected. */
 body[data-uai-mode="novel"] #conversationPane #history {
   position: absolute !important;
   inset: 52px 0 94px !important;
@@ -337,27 +281,18 @@ body[data-uai-mode="novel"] #conversationPane #history {
   padding-bottom: 34px !important;
   background: var(--novel-v1725-canvas) !important;
 }
-body[data-uai-mode="novel"].novel-v1725-ai-view #conversationPane #history {
-  display: block !important;
-}
+body[data-uai-mode="novel"].novel-v1725-ai-view #conversationPane #history { display: block !important; }
 body[data-uai-mode="novel"].novel-v1725-ai-view #conversationPane .chat {
   width: min(920px, 100%) !important;
   max-width: 920px !important;
   margin: 0 auto;
   padding-inline: clamp(18px, 4vw, 46px) !important;
 }
-body[data-uai-mode="novel"] .novel-v15-context {
-  display: none !important;
-}
-body[data-uai-mode="novel"].novel-v1725-ai-view .novel-v15-context {
-  display: flex !important;
-  top: 8px !important;
-}
-body[data-uai-mode="novel"] #conversationSearchBar {
-  top: 60px !important;
-}
+body[data-uai-mode="novel"] .novel-v15-context { display: none !important; }
+body[data-uai-mode="novel"].novel-v1725-ai-view .novel-v15-context { display: flex !important; top: 8px !important; }
+body[data-uai-mode="novel"] #conversationSearchBar { top: 60px !important; }
 
-/* AI input remains available in both views, but no permanent row of shortcuts. */
+/* AI composer remains available in both views. Permanent shortcut rows stay hidden. */
 body[data-uai-mode="novel"] #conversationPane .input-floating {
   inset: auto 0 0 !important;
   z-index: 80;
@@ -365,27 +300,14 @@ body[data-uai-mode="novel"] #conversationPane .input-floating {
   background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--bg-canvas) 92%, transparent) 34%, var(--bg-canvas) 78%) !important;
 }
 body[data-uai-mode="novel"] #conversationPane .input-inner,
-body[data-uai-mode="novel"] #composer {
-  max-width: 900px !important;
-}
-body[data-uai-mode="novel"] #composer {
-  border-radius: 13px !important;
-  box-shadow: 0 10px 30px rgba(51, 43, 32, .10) !important;
-}
+body[data-uai-mode="novel"] #composer { max-width: 900px !important; }
+body[data-uai-mode="novel"] #composer { border-radius: 13px !important; box-shadow: 0 10px 30px rgba(51, 43, 32, .10) !important; }
 body[data-uai-mode="novel"] .novel-v15-composer-assist,
-body[data-uai-mode="novel"] .novel-v15-shortcuts {
-  display: none !important;
-}
-body[data-uai-mode="novel"] #composer .composer-main {
-  min-height: 52px;
-  align-items: center !important;
-}
-body[data-uai-mode="novel"] #composer textarea#msg {
-  max-height: 150px !important;
-  font-size: 13px !important;
-}
+body[data-uai-mode="novel"] .novel-v15-shortcuts { display: none !important; }
+body[data-uai-mode="novel"] #composer .composer-main { min-height: 52px; align-items: center !important; }
+body[data-uai-mode="novel"] #composer textarea#msg { max-height: 150px !important; font-size: 13px !important; }
 
-/* ---------- Creative materials are a drawer, not a permanent third column ---------- */
+/* Creative materials are a drawer, not a permanent third column. */
 body[data-uai-mode="novel"] #studioPanel {
   position: fixed !important;
   top: var(--topbar-height) !important;
@@ -408,28 +330,21 @@ body[data-uai-mode="novel"].studio-collapsed #studioPanel {
   opacity: 0 !important;
   pointer-events: none !important;
 }
-body[data-uai-mode="novel"] #studioPanel > .studio-panel-head {
-  min-height: 56px !important;
-  padding: 10px 12px !important;
-}
-body[data-uai-mode="novel"] #studioPanel #collapseStudio {
-  width: 32px !important;
-  height: 32px !important;
-  font-size: 18px !important;
-}
-body[data-uai-mode="novel"] #studioPanel .studio-tabs {
-  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-}
-body[data-uai-mode="novel"] #studioPanel .studio-tabs [data-studio-tab="draft"] {
-  display: none !important;
-}
+body[data-uai-mode="novel"] #studioPanel > .studio-panel-head { min-height: 56px !important; padding: 10px 12px !important; }
+body[data-uai-mode="novel"] #studioPanel #collapseStudio { width: 32px !important; height: 32px !important; font-size: 18px !important; }
+body[data-uai-mode="novel"] #studioPanel .studio-tabs { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+body[data-uai-mode="novel"] #studioPanel .studio-tabs [data-studio-tab="draft"] { display: none !important; }
 body[data-uai-mode="novel"] .novel-v1723-edge-restore.right,
-body[data-uai-mode="novel"] #novelV1723OpenStudio {
-  display: none !important;
-}
+body[data-uai-mode="novel"] #novelV1723OpenStudio { display: none !important; }
+body[data-uai-mode="novel"] #studioPanel #simpleManuscriptPane { display: none !important; }
+
+/* On desktop, the drawer scrim starts after the left navigation so chapters stay clickable. */
 body[data-uai-mode="novel"] .novel-v1725-drawer-scrim {
   position: fixed;
-  inset: var(--topbar-height) 0 0;
+  top: var(--topbar-height);
+  right: 0;
+  bottom: 0;
+  left: var(--studio-left);
   z-index: 235;
   display: block;
   border: 0;
@@ -437,30 +352,14 @@ body[data-uai-mode="novel"] .novel-v1725-drawer-scrim {
   backdrop-filter: blur(2px);
   cursor: default;
 }
-body[data-uai-mode="novel"].studio-collapsed .novel-v1725-drawer-scrim {
-  display: none !important;
-}
-body:not([data-uai-mode="novel"]) .novel-v1725-drawer-scrim {
-  display: none !important;
-}
+body[data-uai-mode="novel"].library-collapsed .novel-v1725-drawer-scrim { left: 0; }
+body[data-uai-mode="novel"].studio-collapsed .novel-v1725-drawer-scrim { display: none !important; }
+body:not([data-uai-mode="novel"]) .novel-v1725-drawer-scrim { display: none !important; }
 
-/* The old right-side manuscript can exist for compatibility but never competes visually. */
-body[data-uai-mode="novel"] #studioPanel #simpleManuscriptPane {
-  display: none !important;
-}
+body[data-uai-mode="novel"][data-novel-v1723-theme="dark"] .novel-v1725-paper-wrap { box-shadow: 0 14px 42px rgba(0, 0, 0, .20); }
+body[data-uai-mode="novel"][data-novel-v1723-theme="dark"] .novel-v1725-view-switch button.active { box-shadow: 0 1px 5px rgba(0, 0, 0, .22); }
+body[data-uai-mode="novel"][data-novel-v1723-theme="dark"] .novel-v1725-drawer-scrim { background: rgba(0, 0, 0, .34); }
 
-/* ---------- Dark mode ---------- */
-body[data-uai-mode="novel"][data-novel-v1723-theme="dark"] .novel-v1725-paper-wrap {
-  box-shadow: 0 14px 42px rgba(0, 0, 0, .20);
-}
-body[data-uai-mode="novel"][data-novel-v1723-theme="dark"] .novel-v1725-view-switch button.active {
-  box-shadow: 0 1px 5px rgba(0, 0, 0, .22);
-}
-body[data-uai-mode="novel"][data-novel-v1723-theme="dark"] .novel-v1725-drawer-scrim {
-  background: rgba(0, 0, 0, .34);
-}
-
-/* ---------- Laptop ---------- */
 @media (max-width: 1180px) and (min-width: 981px) {
   body[data-uai-mode="novel"] { --studio-left: 218px; }
   body[data-uai-mode="novel"] #topbar .brand-cluster { min-width: 126px; }
@@ -468,7 +367,6 @@ body[data-uai-mode="novel"][data-novel-v1723-theme="dark"] .novel-v1725-drawer-s
   body[data-uai-mode="novel"] .novel-v1725-paper-wrap { width: min(820px, 100%); }
 }
 
-/* ---------- Tablet / overlay navigation ---------- */
 @media (max-width: 980px) {
   body[data-uai-mode="novel"] #creativeWorkspace,
   body[data-uai-mode="novel"].studio-collapsed #creativeWorkspace,
@@ -483,122 +381,45 @@ body[data-uai-mode="novel"][data-novel-v1723-theme="dark"] .novel-v1725-drawer-s
     width: min(310px, 88vw) !important;
     z-index: 244 !important;
   }
-  body[data-uai-mode="novel"] #studioPanel {
-    width: min(390px, 94vw) !important;
-  }
-  body[data-uai-mode="novel"] .novel-v1725-paper-wrap {
-    min-height: calc(100% - 2px);
-    padding-inline: clamp(24px, 6vw, 52px);
-  }
+  body[data-uai-mode="novel"] #studioPanel { width: min(390px, 94vw) !important; }
+  body[data-uai-mode="novel"] .novel-v1725-drawer-scrim { left: 0; }
+  body[data-uai-mode="novel"] .novel-v1725-paper-wrap { min-height: calc(100% - 2px); padding-inline: clamp(24px, 6vw, 52px); }
 }
 
 @media (max-width: 760px) {
-  body[data-uai-mode="novel"] #topbar .topbar-shell {
-    gap: 6px !important;
-    padding-inline: 8px !important;
-  }
-  body[data-uai-mode="novel"] #topbar .brand-cluster {
-    min-width: auto;
-  }
-  body[data-uai-mode="novel"] #topbar .brand-copy strong {
-    display: none;
-  }
-  body[data-uai-mode="novel"] #topbar .model-label {
-    display: none !important;
-  }
-  body[data-uai-mode="novel"] #topbar .model-pill {
-    width: 150px !important;
-    min-width: 110px !important;
-    flex-basis: 150px !important;
-  }
-  body[data-uai-mode="novel"] #uaiNovelModeSwitch {
-    width: 34px;
-    padding: 0;
-    overflow: hidden;
-    font-size: 0;
-  }
-  body[data-uai-mode="novel"] #uaiNovelModeSwitch::after {
-    content: "↔";
-    font-size: 14px;
-  }
-  body[data-uai-mode="novel"] .novel-v1725-materials-btn {
-    padding: 0 8px;
-    font-size: 9px;
-  }
-  body[data-uai-mode="novel"] .novel-v1725-center-bar {
-    padding-inline: 12px;
-  }
-  body[data-uai-mode="novel"] .novel-v1725-breadcrumb span {
-    display: none;
-  }
-  body[data-uai-mode="novel"] .novel-v1725-breadcrumb i {
-    display: none;
-  }
-  body[data-uai-mode="novel"] .novel-v1725-breadcrumb strong {
-    max-width: 46vw;
-  }
-  body[data-uai-mode="novel"] .novel-v1725-manuscript-view {
-    padding: 12px 10px 24px;
-  }
-  body[data-uai-mode="novel"] .novel-v1725-paper-wrap {
-    border-radius: 10px;
-    padding: 22px 20px 18px;
-  }
-  body[data-uai-mode="novel"] #simpleManuscriptEditor.novel-v1725-editor {
-    min-height: 520px;
-    padding-top: 24px;
-    font-size: 16px !important;
-    line-height: 1.9 !important;
-  }
-  body[data-uai-mode="novel"] .novel-v1725-paper-foot {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 4px;
-  }
+  body[data-uai-mode="novel"] #topbar .topbar-shell { gap: 6px !important; padding-inline: 8px !important; }
+  body[data-uai-mode="novel"] #topbar .brand-cluster { min-width: auto; }
+  body[data-uai-mode="novel"] #topbar .brand-copy strong { display: none; }
+  body[data-uai-mode="novel"] #topbar .model-label { display: none !important; }
+  body[data-uai-mode="novel"] #topbar .model-pill { width: 150px !important; min-width: 110px !important; flex-basis: 150px !important; }
+  body[data-uai-mode="novel"] #uaiNovelModeSwitch { width: 34px; padding: 0; overflow: hidden; font-size: 0; }
+  body[data-uai-mode="novel"] #uaiNovelModeSwitch::after { content: "↔"; font-size: 14px; }
+  body[data-uai-mode="novel"] .novel-v1725-materials-btn { padding: 0 8px; font-size: 9px; }
+  body[data-uai-mode="novel"] .novel-v1725-center-bar { padding-inline: 12px; }
+  body[data-uai-mode="novel"] .novel-v1725-breadcrumb span,
+  body[data-uai-mode="novel"] .novel-v1725-breadcrumb i { display: none; }
+  body[data-uai-mode="novel"] .novel-v1725-breadcrumb strong { max-width: 46vw; }
+  body[data-uai-mode="novel"] .novel-v1725-manuscript-view { padding: 12px 10px 24px; }
+  body[data-uai-mode="novel"] .novel-v1725-paper-wrap { border-radius: 10px; padding: 22px 20px 18px; }
+  body[data-uai-mode="novel"] #simpleManuscriptEditor.novel-v1725-editor { min-height: 520px; padding-top: 24px; font-size: 16px !important; line-height: 1.9 !important; }
+  body[data-uai-mode="novel"] .novel-v1725-paper-foot { align-items: flex-start; flex-direction: column; gap: 4px; }
 }
 
 @media (max-width: 520px) {
-  body[data-uai-mode="novel"] #topbar .model-pill {
-    width: 116px !important;
-    min-width: 90px !important;
-    flex-basis: 116px !important;
-  }
-  body[data-uai-mode="novel"] .novel-v1725-materials-btn {
-    width: 34px;
-    padding: 0;
-    font-size: 0;
-  }
-  body[data-uai-mode="novel"] .novel-v1725-materials-btn::after {
-    content: "资料";
-    font-size: 8px;
-  }
-  body[data-uai-mode="novel"] .novel-v1725-view-switch button {
-    padding-inline: 8px;
-  }
-  body[data-uai-mode="novel"] .novel-v1725-paper-head {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 7px;
-  }
-  body[data-uai-mode="novel"] #novelV1725WordCount {
-    padding: 0;
-  }
+  body[data-uai-mode="novel"] #topbar .model-pill { width: 116px !important; min-width: 90px !important; flex-basis: 116px !important; }
+  body[data-uai-mode="novel"] .novel-v1725-materials-btn { width: 34px; padding: 0; font-size: 0; }
+  body[data-uai-mode="novel"] .novel-v1725-materials-btn::after { content: "资料"; font-size: 8px; }
+  body[data-uai-mode="novel"] .novel-v1725-view-switch button { padding-inline: 8px; }
+  body[data-uai-mode="novel"] .novel-v1725-paper-head { align-items: flex-start; flex-direction: column; gap: 7px; }
+  body[data-uai-mode="novel"] #novelV1725WordCount { padding: 0; }
 }
 
 @media (max-height: 650px) {
-  body[data-uai-mode="novel"] .novel-v1725-manuscript-view {
-    padding-top: 12px;
-  }
-  body[data-uai-mode="novel"] .novel-v1725-paper-wrap {
-    padding-top: 22px;
-  }
-  body[data-uai-mode="novel"] #simpleManuscriptEditor.novel-v1725-editor {
-    min-height: 360px;
-  }
+  body[data-uai-mode="novel"] .novel-v1725-manuscript-view { padding-top: 12px; }
+  body[data-uai-mode="novel"] .novel-v1725-paper-wrap { padding-top: 22px; }
+  body[data-uai-mode="novel"] #simpleManuscriptEditor.novel-v1725-editor { min-height: 360px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  body[data-uai-mode="novel"] #studioPanel {
-    transition: none !important;
-  }
+  body[data-uai-mode="novel"] #studioPanel { transition: none !important; }
 }
