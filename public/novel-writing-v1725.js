@@ -6,6 +6,7 @@
   if (window.UnlimitedNovelWritingV1725?.revision === REVISION) return;
 
   let observer = null;
+  let modeObserver = null;
   let queued = false;
   let currentChapterId = "";
   let view = "manuscript";
@@ -248,7 +249,7 @@
     const button = document.querySelector(`#studioPanel .studio-tabs [data-studio-tab="${CSS.escape(targetTab)}"]`);
     if (button && !button.classList.contains("active")) button.click();
     document.body.classList.remove("studio-collapsed");
-    document.body.classList.add("library-collapsed");
+    if (window.innerWidth <= 980) document.body.classList.add("library-collapsed");
     syncMaterialsButton();
   }
 
@@ -335,6 +336,22 @@
     if (!workspace) return;
     observer = new MutationObserver(schedulePatch);
     observer.observe(workspace, { childList: true, subtree: true });
+  }
+
+  function bindModeObserver() {
+    if (modeObserver || !document.body) return;
+    modeObserver = new MutationObserver(() => {
+      if (isNovelMode()) {
+        document.body.classList.add("studio-collapsed");
+        requestAnimationFrame(() => {
+          refresh();
+          setView("manuscript");
+        });
+      } else {
+        patch();
+      }
+    });
+    modeObserver.observe(document.body, { attributes: true, attributeFilter: ["data-uai-mode"] });
   }
 
   function refresh() {
@@ -431,8 +448,10 @@
     closeMaterials
   };
 
+  bindModeObserver();
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", () => {
+      bindModeObserver();
       if (isNovelMode()) document.body.classList.add("studio-collapsed");
       refresh();
     }, { once: true });
