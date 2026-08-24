@@ -1,0 +1,709 @@
+/* V17.25 Final Writing UI Consolidation
+ * Novel-only final cascade. No capability is removed: low-frequency actions are visually
+ * demoted or routed through existing menus while manuscript, chapters and AI stay primary.
+ */
+
+body[data-uai-mode="novel"] {
+  --topbar-height: 56px;
+  --studio-left: 216px;
+  --v1725-final-paper: 820px;
+  --v1725-final-inspector: min(360px, 27vw);
+  --v1725-final-canvas: #f4f2ed;
+  --v1725-final-paper-bg: #fffefa;
+}
+
+/* ---------- Global hierarchy ---------- */
+body[data-uai-mode="novel"] #clear-img,
+body[data-uai-mode="novel"] #blur-bg {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+body[data-uai-mode="novel"] #creativeWorkspace,
+body[data-uai-mode="novel"] #conversationPane,
+body[data-uai-mode="novel"] .novel-v1725-manuscript-view {
+  background: var(--v1725-final-canvas) !important;
+}
+body[data-uai-mode="novel"][data-novel-v1723-theme="dark"] {
+  --v1725-final-canvas: var(--bg-canvas);
+  --v1725-final-paper-bg: var(--bg-surface-raised);
+}
+
+/* ---------- Top bar: brand | model | mode | materials | settings | more ---------- */
+body[data-uai-mode="novel"] #topbar,
+body[data-uai-mode="novel"] #topbar .topbar-shell {
+  min-height: var(--topbar-height) !important;
+  height: var(--topbar-height) !important;
+}
+body[data-uai-mode="novel"] #topbar {
+  border-bottom: 1px solid color-mix(in srgb, var(--border-default, var(--border)) 60%, transparent) !important;
+  box-shadow: none !important;
+}
+body[data-uai-mode="novel"] #topbar .topbar-shell {
+  width: 100% !important;
+  gap: 7px !important;
+  padding: 0 12px !important;
+}
+body[data-uai-mode="novel"] #topbar .brand-cluster {
+  flex: 0 0 auto !important;
+  min-width: 168px !important;
+}
+body[data-uai-mode="novel"] #topbar .brand-copy strong {
+  font-size: 13px !important;
+  font-weight: 760 !important;
+  letter-spacing: -.015em;
+}
+body[data-uai-mode="novel"] #topbar .brand-copy span,
+body[data-uai-mode="novel"] #sessionBtn,
+body[data-uai-mode="novel"] .novel-v1723d-current-work,
+body[data-uai-mode="novel"] #novelV1725MaterialsBtn {
+  display: none !important;
+}
+body[data-uai-mode="novel"] #topbar .model-pill {
+  order: 10;
+  width: 180px !important;
+  min-width: 150px !important;
+  max-width: 180px !important;
+  min-height: 34px !important;
+  margin-left: auto !important;
+  flex: 0 1 180px !important;
+  border-radius: 9px !important;
+  box-shadow: none !important;
+}
+body[data-uai-mode="novel"] #topbar .model-pill select {
+  min-width: 0 !important;
+  font-size: 11px !important;
+  font-weight: 650 !important;
+}
+body[data-uai-mode="novel"] #topbar .topbar-actions {
+  order: 20;
+  display: flex !important;
+  align-items: center !important;
+  flex-wrap: nowrap !important;
+  gap: 5px !important;
+}
+body[data-uai-mode="novel"] #uaiNovelModeSwitch,
+body[data-uai-mode="novel"] #studioToggleBtn,
+body[data-uai-mode="novel"] #settingsBtn,
+body[data-uai-mode="novel"] #novelV1723TopMore {
+  min-height: 34px !important;
+  height: 34px !important;
+  border-radius: 9px !important;
+  box-shadow: none !important;
+}
+body[data-uai-mode="novel"] #uaiNovelModeSwitch,
+body[data-uai-mode="novel"] #studioToggleBtn,
+body[data-uai-mode="novel"] #novelV1723TopMore {
+  padding: 0 10px !important;
+  font-size: 10px !important;
+  font-weight: 680 !important;
+}
+body[data-uai-mode="novel"] #settingsBtn {
+  width: 34px !important;
+  min-width: 34px !important;
+}
+body[data-uai-mode="novel"] #studioToggleBtn {
+  display: inline-flex !important;
+  min-width: 72px !important;
+}
+body[data-uai-mode="novel"] #libraryToggleBtn {
+  display: none !important;
+}
+body[data-uai-mode="novel"].library-collapsed #libraryToggleBtn {
+  display: inline-flex !important;
+  min-height: 34px !important;
+  height: 34px !important;
+  padding: 0 9px !important;
+  border-radius: 9px !important;
+  font-size: 9px !important;
+}
+body[data-uai-mode="novel"] .novel-v1723d-top-more-menu {
+  width: 218px !important;
+  padding: 6px !important;
+  border-radius: 11px !important;
+  box-shadow: 0 15px 38px rgba(45, 39, 31, .12) !important;
+  backdrop-filter: none !important;
+}
+body[data-uai-mode="novel"] .novel-v1723d-top-more-menu button {
+  min-height: 42px !important;
+  padding: 6px 8px !important;
+}
+
+/* ---------- Left navigator: compact and task-oriented ---------- */
+body[data-uai-mode="novel"] #studioLibrary {
+  width: auto !important;
+  min-width: 0 !important;
+  background: #faf9f5 !important;
+  border-right: 1px solid rgba(95, 87, 73, .09) !important;
+  box-shadow: none !important;
+}
+body[data-uai-mode="novel"][data-novel-v1723-theme="dark"] #studioLibrary {
+  background: var(--bg-surface) !important;
+  border-right-color: var(--border-subtle, var(--border)) !important;
+}
+body[data-uai-mode="novel"] #studioLibrary > .studio-panel-head {
+  min-height: 48px !important;
+  padding: 9px 9px 7px !important;
+}
+body[data-uai-mode="novel"] #studioLibrary > .studio-panel-head .studio-kicker {
+  display: none !important;
+}
+body[data-uai-mode="novel"] #studioLibrary > .studio-panel-head strong::after {
+  font-size: 14px !important;
+  font-weight: 740 !important;
+}
+body[data-uai-mode="novel"] #studioLibrary .project-switcher {
+  gap: 5px !important;
+  padding: 7px 8px 8px !important;
+}
+body[data-uai-mode="novel"] #studioLibrary .project-switcher select {
+  min-width: 0 !important;
+  min-height: 33px !important;
+  border-radius: 8px !important;
+  font-size: 10px !important;
+}
+body[data-uai-mode="novel"] #studioLibrary .project-switcher button {
+  width: 33px !important;
+  min-width: 33px !important;
+  min-height: 33px !important;
+  padding: 0 !important;
+  border-radius: 8px !important;
+  font-size: 10px !important;
+}
+body[data-uai-mode="novel"] .novel-v1725-library-switch {
+  margin: 0 7px 6px !important;
+  padding: 2px !important;
+  border-color: rgba(95, 87, 73, .09) !important;
+  border-radius: 8px !important;
+  background: rgba(95, 87, 73, .04) !important;
+}
+body[data-uai-mode="novel"] .novel-v1725-library-switch button {
+  min-height: 29px !important;
+  border-radius: 6px !important;
+  font-size: 9.5px !important;
+}
+body[data-uai-mode="novel"] .novel-v1725-library-switch button.active {
+  box-shadow: 0 1px 3px rgba(45, 39, 31, .06) !important;
+}
+body[data-uai-mode="novel"] #studioLibrary .library-title {
+  min-height: 32px !important;
+  padding: 4px 9px !important;
+  font-size: 9.5px !important;
+}
+body[data-uai-mode="novel"] #studioLibrary .library-title button {
+  min-height: 26px !important;
+  padding: 0 8px !important;
+  border-radius: 7px !important;
+  font-size: 8.5px !important;
+}
+body[data-uai-mode="novel"] #studioLibrary .studio-list {
+  padding: 0 6px 8px !important;
+  scrollbar-width: thin;
+}
+body[data-uai-mode="novel"] #studioLibrary .studio-list-item {
+  min-height: 42px !important;
+  margin: 0 0 2px !important;
+  padding: 7px 8px !important;
+  border: 1px solid transparent !important;
+  border-radius: 8px !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+body[data-uai-mode="novel"] #studioLibrary .studio-list-item:hover {
+  background: rgba(95, 87, 73, .045) !important;
+}
+body[data-uai-mode="novel"] #studioLibrary .studio-list-item.active {
+  border-color: color-mix(in srgb, var(--accent) 13%, transparent) !important;
+  background: color-mix(in srgb, var(--accent) 8%, transparent) !important;
+  box-shadow: inset 2px 0 0 var(--accent) !important;
+}
+body[data-uai-mode="novel"] #studioLibrary .studio-item-main span {
+  font-size: 10.5px !important;
+  font-weight: 660 !important;
+}
+body[data-uai-mode="novel"] #studioLibrary .studio-item-main small {
+  margin-top: 2px !important;
+  font-size: 8px !important;
+  opacity: .6 !important;
+}
+/* Keep actions accessible but remove permanent visual noise on desktop. */
+@media (min-width: 981px) {
+  body[data-uai-mode="novel"] #studioSessionList .favorite-session,
+  body[data-uai-mode="novel"] #studioSessionList .novel-v1723-session-delete {
+    opacity: .18;
+    transition: opacity 120ms ease, background 120ms ease;
+  }
+  body[data-uai-mode="novel"] #studioSessionList .studio-list-item:hover .favorite-session,
+  body[data-uai-mode="novel"] #studioSessionList .studio-list-item:hover .novel-v1723-session-delete,
+  body[data-uai-mode="novel"] #studioSessionList .studio-list-item:focus-within .favorite-session,
+  body[data-uai-mode="novel"] #studioSessionList .studio-list-item:focus-within .novel-v1723-session-delete,
+  body[data-uai-mode="novel"] #studioSessionList .favorite-session.active {
+    opacity: 1;
+  }
+}
+body[data-uai-mode="novel"] .novel-v1724a-library-tools {
+  margin: auto 7px 7px !important;
+}
+body[data-uai-mode="novel"] .novel-v1724a-library-tools-toggle {
+  min-height: 30px !important;
+  border-color: transparent !important;
+  background: transparent !important;
+  color: var(--text-muted, var(--muted)) !important;
+  font-size: 8.5px !important;
+}
+body[data-uai-mode="novel"] .novel-v1724a-library-tools-toggle:hover,
+body[data-uai-mode="novel"] .novel-v1724a-library-tools-toggle[aria-expanded="true"] {
+  border-color: var(--border-subtle, var(--border)) !important;
+  background: var(--surface-soft) !important;
+  color: var(--text-secondary, var(--text-soft)) !important;
+}
+body[data-uai-mode="novel"] .novel-v1724a-library-tools-panel {
+  max-height: min(44vh, 390px) !important;
+  overflow-y: auto !important;
+  border-radius: 10px !important;
+  box-shadow: 0 12px 30px rgba(45, 39, 31, .10) !important;
+  backdrop-filter: none !important;
+}
+
+/* ---------- Center header ---------- */
+body[data-uai-mode="novel"] .novel-v1725-center-bar {
+  height: 44px !important;
+  padding: 0 clamp(14px, 2.3vw, 28px) !important;
+  border-bottom: 1px solid rgba(95, 87, 73, .07) !important;
+  background: color-mix(in srgb, var(--v1725-final-canvas) 97%, transparent) !important;
+  backdrop-filter: none !important;
+}
+body[data-uai-mode="novel"] .novel-v1725-breadcrumb {
+  font-size: 9px !important;
+  opacity: .82;
+}
+body[data-uai-mode="novel"] .novel-v1725-breadcrumb strong {
+  font-weight: 660 !important;
+}
+body[data-uai-mode="novel"] .novel-v1725-view-switch {
+  gap: 1px !important;
+  padding: 2px !important;
+  border-color: rgba(95, 87, 73, .08) !important;
+  border-radius: 8px !important;
+  background: rgba(95, 87, 73, .04) !important;
+}
+body[data-uai-mode="novel"] .novel-v1725-view-switch button {
+  min-height: 27px !important;
+  padding: 0 10px !important;
+  border-radius: 6px !important;
+  font-size: 9px !important;
+}
+body[data-uai-mode="novel"] .novel-v1725-view-switch button.active {
+  box-shadow: 0 1px 3px rgba(45, 39, 31, .06) !important;
+}
+
+/* ---------- Manuscript: one paper, no nested chrome ---------- */
+body[data-uai-mode="novel"] .novel-v1725-manuscript-view {
+  inset: 44px 0 68px !important;
+  padding: 18px clamp(16px, 4vw, 52px) 34px !important;
+}
+body[data-uai-mode="novel"] .novel-v1725-paper-wrap {
+  width: min(var(--v1725-final-paper), 100%) !important;
+  min-height: calc(100% - 2px) !important;
+  padding: 32px clamp(34px, 5vw, 58px) 16px !important;
+  border: 1px solid rgba(95, 87, 73, .065) !important;
+  border-radius: 10px !important;
+  background: var(--v1725-final-paper-bg) !important;
+  box-shadow: 0 7px 22px rgba(55, 48, 38, .035) !important;
+}
+body[data-uai-mode="novel"] .novel-v1725-paper-head {
+  align-items: flex-end !important;
+  padding-bottom: 13px !important;
+  border-bottom: 1px solid rgba(95, 87, 73, .065) !important;
+}
+body[data-uai-mode="novel"] .novel-v1725-paper-head > div > span {
+  display: none !important;
+}
+body[data-uai-mode="novel"] .novel-v1725-paper-head h1 {
+  margin: 0 !important;
+  max-width: min(620px, 72vw);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: "Noto Serif SC", "Songti SC", "STSong", Georgia, serif !important;
+  font-size: clamp(25px, 2.2vw, 31px) !important;
+  font-weight: 560 !important;
+  line-height: 1.22 !important;
+}
+body[data-uai-mode="novel"] #novelV1725WordCount {
+  padding-bottom: 2px !important;
+  font-size: 8.5px !important;
+  opacity: .62 !important;
+}
+body[data-uai-mode="novel"] #simpleManuscriptEditor.novel-v1725-editor {
+  min-height: 560px !important;
+  overflow-y: hidden !important;
+  padding: 24px 0 28px !important;
+  color: var(--text-primary, var(--text)) !important;
+  font-family: "Noto Serif SC", "Songti SC", "STSong", "SimSun", Georgia, serif !important;
+  font-size: 17px !important;
+  font-weight: 400 !important;
+  line-height: 2 !important;
+  letter-spacing: .01em !important;
+  text-rendering: optimizeLegibility;
+}
+body[data-uai-mode="novel"] #simpleManuscriptEditor.novel-v1725-editor:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+body[data-uai-mode="novel"] .novel-v1725-paper-foot {
+  min-height: 26px !important;
+  padding-top: 8px !important;
+  border-top: 1px solid rgba(95, 87, 73, .055) !important;
+  font-size: 8px !important;
+  opacity: .72;
+}
+body[data-uai-mode="novel"] .novel-v1725-paper-foot > span:last-child {
+  opacity: .55 !important;
+}
+
+/* ---------- AI composer: present but secondary while writing ---------- */
+body[data-uai-mode="novel"] #conversationPane .input-floating {
+  inset: auto 0 0 !important;
+  padding: 6px clamp(14px, 4vw, 42px) 8px !important;
+  background: linear-gradient(180deg, transparent 0%, color-mix(in srgb, var(--v1725-final-canvas) 93%, transparent) 46%, var(--v1725-final-canvas) 78%) !important;
+}
+body[data-uai-mode="novel"] #conversationPane .input-inner,
+body[data-uai-mode="novel"] #composer {
+  max-width: 760px !important;
+}
+body[data-uai-mode="novel"].novel-v1725-ai-view #conversationPane .input-inner,
+body[data-uai-mode="novel"].novel-v1725-ai-view #composer {
+  max-width: 860px !important;
+}
+body[data-uai-mode="novel"] #composer {
+  min-height: 48px !important;
+  border: 1px solid rgba(95, 87, 73, .09) !important;
+  border-radius: 11px !important;
+  background: color-mix(in srgb, var(--bg-surface-raised, #fff) 96%, transparent) !important;
+  box-shadow: 0 4px 15px rgba(52, 46, 36, .045) !important;
+  opacity: .9;
+  transition: opacity 130ms ease, border-color 130ms ease, box-shadow 130ms ease !important;
+}
+body[data-uai-mode="novel"] #composer:hover,
+body[data-uai-mode="novel"] #composer:focus-within,
+body[data-uai-mode="novel"].novel-v1725-ai-view #composer {
+  opacity: 1;
+}
+body[data-uai-mode="novel"] #composer:focus-within {
+  border-color: color-mix(in srgb, var(--accent) 32%, var(--border-default)) !important;
+  box-shadow: 0 6px 19px rgba(52, 46, 36, .06), 0 0 0 2px color-mix(in srgb, var(--accent) 6%, transparent) !important;
+}
+body[data-uai-mode="novel"] #composer .composer-main {
+  min-height: 46px !important;
+  grid-template-columns: 32px minmax(0, 1fr) auto !important;
+  gap: 6px !important;
+}
+body[data-uai-mode="novel"] #novelV1723QuickBtn {
+  width: 32px !important;
+  min-width: 32px !important;
+  height: 32px !important;
+  border-radius: 8px !important;
+  font-size: 18px !important;
+}
+body[data-uai-mode="novel"] #composer textarea#msg {
+  min-height: 32px !important;
+  max-height: 116px !important;
+  padding: 7px 2px !important;
+  font-size: 12px !important;
+  line-height: 1.5 !important;
+}
+body[data-uai-mode="novel"] #sendBtn,
+body[data-uai-mode="novel"] #stopBtn {
+  min-width: 58px !important;
+  height: 36px !important;
+  border-radius: 8px !important;
+  font-size: 11px !important;
+}
+body[data-uai-mode="novel"] .novel-v1723d-quick-menu {
+  width: min(300px, calc(100vw - 24px)) !important;
+  gap: 4px !important;
+  padding: 7px !important;
+  border-radius: 11px !important;
+  box-shadow: 0 14px 36px rgba(45, 39, 31, .12) !important;
+  backdrop-filter: none !important;
+}
+body[data-uai-mode="novel"] .novel-v1723d-quick-menu button {
+  min-height: 50px !important;
+  padding: 7px 8px !important;
+}
+
+/* ---------- AI assistant: one focused conversation lane ---------- */
+body[data-uai-mode="novel"] #conversationPane #history {
+  inset: 44px 0 68px !important;
+  padding: 20px 0 30px !important;
+  background: var(--v1725-final-canvas) !important;
+}
+body[data-uai-mode="novel"].novel-v1725-ai-view #conversationPane .chat {
+  width: min(860px, 100%) !important;
+  max-width: 860px !important;
+  padding-inline: clamp(16px, 3.8vw, 42px) !important;
+}
+body[data-uai-mode="novel"].novel-v1725-ai-view #history .message,
+body[data-uai-mode="novel"].novel-v1725-ai-view #history .msg,
+body[data-uai-mode="novel"].novel-v1725-ai-view #history .assistant-message {
+  box-shadow: none !important;
+}
+body[data-uai-mode="novel"].novel-v1725-ai-view #history .message-actions,
+body[data-uai-mode="novel"].novel-v1725-ai-view #history .ai-actions {
+  opacity: .55;
+}
+body[data-uai-mode="novel"].novel-v1725-ai-view #history .message:hover .message-actions,
+body[data-uai-mode="novel"].novel-v1725-ai-view #history .message:focus-within .message-actions,
+body[data-uai-mode="novel"].novel-v1725-ai-view #history .msg:hover .ai-actions {
+  opacity: 1;
+}
+
+/* ---------- Materials: docked inspector on desktop ---------- */
+body[data-uai-mode="novel"] #studioPanel {
+  background: #faf9f5 !important;
+  border-left: 1px solid rgba(95, 87, 73, .09) !important;
+}
+body[data-uai-mode="novel"][data-novel-v1723-theme="dark"] #studioPanel {
+  background: var(--bg-surface) !important;
+  border-left-color: var(--border-subtle, var(--border)) !important;
+}
+body[data-uai-mode="novel"] #studioPanel > .studio-panel-head {
+  min-height: 48px !important;
+  padding: 8px 10px !important;
+}
+body[data-uai-mode="novel"] #studioPanel > .studio-panel-head .studio-kicker {
+  display: none !important;
+}
+body[data-uai-mode="novel"] #studioPanel > .studio-panel-head strong::after {
+  font-size: 14px !important;
+}
+body[data-uai-mode="novel"] #studioPanel #collapseStudio {
+  width: 30px !important;
+  min-width: 30px !important;
+  height: 30px !important;
+  border-radius: 8px !important;
+}
+body[data-uai-mode="novel"] #studioPanel .studio-tabs {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 2px !important;
+  padding: 5px 7px !important;
+  border-bottom-color: rgba(95, 87, 73, .07) !important;
+}
+body[data-uai-mode="novel"] #studioPanel .studio-tabs [data-studio-tab="draft"],
+body[data-uai-mode="novel"] #studioPanel .studio-tabs [data-studio-tab="scenes"],
+body[data-uai-mode="novel"] #studioPanel .studio-tabs [data-studio-tab="notes"],
+body[data-uai-mode="novel"] #studioPanel .studio-tabs [data-studio-tab="stats"] {
+  display: none !important;
+}
+body[data-uai-mode="novel"] #studioPanel .studio-tabs button {
+  min-height: 31px !important;
+  border-radius: 7px !important;
+  font-size: 9.5px !important;
+}
+body[data-uai-mode="novel"] #studioPanelBody {
+  min-width: 0;
+  overflow-x: hidden;
+}
+body[data-uai-mode="novel"] .novel-v1723-more-tools-btn {
+  min-height: 30px !important;
+  border-color: transparent !important;
+  background: transparent !important;
+  font-size: 8.5px !important;
+}
+body[data-uai-mode="novel"] .novel-v1723-more-tools-btn:hover,
+body[data-uai-mode="novel"] .novel-v1723-more-tools-btn[aria-expanded="true"] {
+  border-color: var(--border-subtle, var(--border)) !important;
+  background: var(--surface-soft) !important;
+}
+body[data-uai-mode="novel"] .novel-v1723-more-tools-menu {
+  width: 150px !important;
+  border-radius: 10px !important;
+  box-shadow: 0 12px 30px rgba(45, 39, 31, .10) !important;
+  backdrop-filter: none !important;
+}
+
+@media (min-width: 981px) {
+  body[data-uai-mode="novel"] #creativeWorkspace,
+  body[data-uai-mode="novel"].studio-collapsed #creativeWorkspace,
+  body[data-uai-mode="novel"].library-collapsed #creativeWorkspace,
+  body[data-uai-mode="novel"].library-collapsed.studio-collapsed #creativeWorkspace {
+    grid-template-columns: var(--studio-left) minmax(0, 1fr) !important;
+  }
+  body[data-uai-mode="novel"].library-collapsed #creativeWorkspace,
+  body[data-uai-mode="novel"].library-collapsed.studio-collapsed #creativeWorkspace {
+    grid-template-columns: 0 minmax(0, 1fr) !important;
+  }
+  body[data-uai-mode="novel"] .novel-v1725-drawer-scrim {
+    display: none !important;
+    background: transparent !important;
+    backdrop-filter: none !important;
+  }
+  body[data-uai-mode="novel"] #creativeWorkspace {
+    box-sizing: border-box;
+    transition: padding-right 180ms ease;
+  }
+  body[data-uai-mode="novel"]:not(.studio-collapsed) #creativeWorkspace {
+    padding-right: var(--v1725-final-inspector) !important;
+  }
+  body[data-uai-mode="novel"] #studioPanel {
+    width: var(--v1725-final-inspector) !important;
+    min-width: 320px !important;
+    box-shadow: -6px 0 20px rgba(45, 38, 28, .05) !important;
+  }
+}
+
+/* ---------- Medium / narrow ---------- */
+@media (max-width: 1180px) and (min-width: 981px) {
+  body[data-uai-mode="novel"] {
+    --studio-left: 204px;
+    --v1725-final-inspector: min(340px, 30vw);
+  }
+  body[data-uai-mode="novel"] #topbar .brand-cluster { min-width: 130px !important; }
+  body[data-uai-mode="novel"] #topbar .model-pill {
+    width: 160px !important;
+    min-width: 130px !important;
+    flex-basis: 160px !important;
+  }
+  body[data-uai-mode="novel"] .novel-v1725-paper-wrap { width: min(780px, 100%) !important; }
+}
+
+@media (max-width: 980px) {
+  body[data-uai-mode="novel"] { --studio-left: 0px; }
+  body[data-uai-mode="novel"] #creativeWorkspace,
+  body[data-uai-mode="novel"].studio-collapsed #creativeWorkspace,
+  body[data-uai-mode="novel"].library-collapsed #creativeWorkspace,
+  body[data-uai-mode="novel"].library-collapsed.studio-collapsed #creativeWorkspace {
+    grid-template-columns: minmax(0, 1fr) !important;
+    padding-right: 0 !important;
+  }
+  body[data-uai-mode="novel"] #studioLibrary {
+    position: fixed !important;
+    top: var(--topbar-height) !important;
+    bottom: 0 !important;
+    width: min(300px, 88vw) !important;
+    z-index: 244 !important;
+    box-shadow: 12px 0 28px rgba(45, 38, 28, .09) !important;
+  }
+  body[data-uai-mode="novel"] #studioPanel {
+    width: min(380px, 94vw) !important;
+    min-width: 0 !important;
+    box-shadow: -12px 0 28px rgba(45, 38, 28, .10) !important;
+  }
+  body[data-uai-mode="novel"] .novel-v1725-drawer-scrim {
+    left: 0 !important;
+    background: rgba(35, 31, 25, .08) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+  body[data-uai-mode="novel"][data-novel-v1723-theme="dark"] .novel-v1725-drawer-scrim {
+    background: rgba(0, 0, 0, .16) !important;
+  }
+}
+
+@media (max-width: 760px) {
+  body[data-uai-mode="novel"] #topbar .topbar-shell {
+    gap: 4px !important;
+    padding: 0 7px !important;
+  }
+  body[data-uai-mode="novel"] #topbar .brand-cluster {
+    min-width: 34px !important;
+  }
+  body[data-uai-mode="novel"] #topbar .brand-copy strong { display: none !important; }
+  body[data-uai-mode="novel"] #topbar .model-label { display: none !important; }
+  body[data-uai-mode="novel"] #topbar .model-pill {
+    width: 132px !important;
+    min-width: 100px !important;
+    flex-basis: 132px !important;
+  }
+  body[data-uai-mode="novel"] #uaiNovelModeSwitch {
+    width: 34px !important;
+    min-width: 34px !important;
+    padding: 0 !important;
+    overflow: hidden;
+    font-size: 0 !important;
+  }
+  body[data-uai-mode="novel"] #uaiNovelModeSwitch::after { content: "↔"; font-size: 13px; }
+  body[data-uai-mode="novel"] #studioToggleBtn {
+    min-width: 48px !important;
+    padding: 0 7px !important;
+    font-size: 9px !important;
+  }
+  body[data-uai-mode="novel"] .novel-v1725-center-bar { padding-inline: 10px !important; }
+  body[data-uai-mode="novel"] .novel-v1725-breadcrumb span,
+  body[data-uai-mode="novel"] .novel-v1725-breadcrumb i { display: none !important; }
+  body[data-uai-mode="novel"] .novel-v1725-breadcrumb strong { max-width: 42vw !important; }
+  body[data-uai-mode="novel"] .novel-v1725-manuscript-view {
+    padding: 8px 6px 22px !important;
+  }
+  body[data-uai-mode="novel"] .novel-v1725-paper-wrap {
+    width: 100% !important;
+    padding: 22px 18px 14px !important;
+    border-left: 0 !important;
+    border-right: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+  body[data-uai-mode="novel"] .novel-v1725-paper-head h1 {
+    max-width: 70vw;
+    font-size: 24px !important;
+  }
+  body[data-uai-mode="novel"] #simpleManuscriptEditor.novel-v1725-editor {
+    min-height: 470px !important;
+    font-size: 16px !important;
+    line-height: 1.92 !important;
+  }
+  body[data-uai-mode="novel"] .novel-v1725-paper-foot > span:last-child { display: none !important; }
+  body[data-uai-mode="novel"] #conversationPane .input-floating {
+    padding: 5px 7px max(7px, env(safe-area-inset-bottom)) !important;
+  }
+  body[data-uai-mode="novel"] #conversationPane .input-inner,
+  body[data-uai-mode="novel"] #composer { max-width: none !important; }
+  body[data-uai-mode="novel"] .novel-v1723d-quick-menu {
+    grid-template-columns: 1fr !important;
+    max-height: 62dvh !important;
+  }
+}
+
+@media (max-width: 520px) {
+  body[data-uai-mode="novel"] #topbar .model-pill {
+    width: 108px !important;
+    min-width: 82px !important;
+    flex-basis: 108px !important;
+  }
+  body[data-uai-mode="novel"] #studioToggleBtn {
+    width: 34px !important;
+    min-width: 34px !important;
+    padding: 0 !important;
+    overflow: hidden;
+    font-size: 0 !important;
+  }
+  body[data-uai-mode="novel"] #studioToggleBtn::after { content: "资料"; font-size: 8px; }
+  body[data-uai-mode="novel"] #novelV1723TopMore {
+    width: 34px !important;
+    min-width: 34px !important;
+    padding: 0 !important;
+    font-size: 0 !important;
+  }
+  body[data-uai-mode="novel"] #novelV1723TopMore::after { content: "•••"; font-size: 10px; letter-spacing: 1px; }
+  body[data-uai-mode="novel"] .novel-v1725-view-switch button { padding-inline: 8px !important; }
+  body[data-uai-mode="novel"] #sendBtn,
+  body[data-uai-mode="novel"] #stopBtn {
+    min-width: 48px !important;
+    padding-inline: 8px !important;
+  }
+}
+
+@media (max-height: 650px) {
+  body[data-uai-mode="novel"] .novel-v1725-manuscript-view { padding-top: 6px !important; }
+  body[data-uai-mode="novel"] .novel-v1725-paper-wrap { padding-top: 20px !important; }
+  body[data-uai-mode="novel"] #simpleManuscriptEditor.novel-v1725-editor { min-height: 330px !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body[data-uai-mode="novel"] #creativeWorkspace,
+  body[data-uai-mode="novel"] #composer,
+  body[data-uai-mode="novel"] #studioSessionList .favorite-session,
+  body[data-uai-mode="novel"] #studioSessionList .novel-v1723-session-delete {
+    transition: none !important;
+  }
+}
