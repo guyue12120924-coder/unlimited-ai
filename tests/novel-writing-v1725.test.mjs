@@ -53,17 +53,27 @@ assert.match(css, /display:\s*none\s*!important/);
 assert.match(css, /\.novel-v1725-drawer-scrim[\s\S]*left:\s*var\(--studio-left\)/);
 assert.doesNotMatch(css, /#uaiCompanionRoot|data-uai-mode="companion"|\.uai-c-/);
 
-// Hotfix 2 keeps exactly one visible materials entry and makes the desktop drawer non-modal.
-assert.match(index, /novel-writing-v1725-hotfix2\.css\?v=20260824-v17\.25-materials-drawer-hotfix2/);
-assert.match(index, /novel-writing-v1725-hotfix2\.js\?v=20260824-v17\.25-materials-drawer-hotfix2/);
+// Screenshot-driven polish: one materials entry, non-modal desktop inspector,
+// manuscript autosizing and a compact secondary AI composer.
+assert.match(index, /novel-writing-v1725-hotfix2\.css\?v=20260824-v17\.25-writing-workspace-polish3/);
+assert.match(index, /novel-writing-v1725-hotfix2\.js\?v=20260824-v17\.25-writing-workspace-polish3/);
+assert.match(hotfixCss, /V17\.25 hotfix 3/);
 assert.match(hotfixCss, /#novelV1725MaterialsBtn[\s\S]*display:\s*none\s*!important/);
 assert.match(hotfixCss, /#studioToggleBtn/);
 assert.match(hotfixCss, /@media \(min-width: 981px\)[\s\S]*novel-v1725-drawer-scrim[\s\S]*display:\s*none\s*!important/);
 assert.match(hotfixCss, /@media \(max-width: 980px\)[\s\S]*backdrop-filter:\s*none\s*!important/);
-assert.match(hotfixCss, /padding-right:\s*min\(410px, 30vw\)/);
+assert.match(hotfixCss, /--v1725-inspector-width/);
+assert.match(hotfixCss, /#simpleManuscriptEditor\.novel-v1725-editor[\s\S]*overflow-y:\s*hidden\s*!important/);
+assert.match(hotfixCss, /#composer:focus-within/);
+assert.match(hotfixCss, /#conversationPane \.input-floating/);
+assert.match(hotfixJs, /2026-08-24-v17\.25-writing-workspace-polish3/);
 assert.match(hotfixJs, /studioToggleBtn/);
 assert.match(hotfixJs, /ensureUsefulTab/);
 assert.match(hotfixJs, /data-studio-tab="outline"/);
+assert.match(hotfixJs, /fitEditor/);
+assert.match(hotfixJs, /scrollHeight/);
+assert.match(hotfixJs, /ResizeObserver/);
+assert.match(hotfixJs, /让 AI 续写、润色或帮你构思/);
 assert.match(hotfixJs, /stopImmediatePropagation\(\)/);
 assert.doesNotMatch(hotfixJs, /UnlimitedCompanion|uai_companion_|uaiCompanionRoot/);
 
