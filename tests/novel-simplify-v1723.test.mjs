@@ -7,7 +7,7 @@ const js = fs.readFileSync("public/novel-simplify-v1723.js", "utf8");
 
 assert.match(index, /meta name="unlimited-novel-revision"/);
 assert.match(index, /novel-simplify-v1723\.css\?v=20260823-v17\.23a-novel-simplification/);
-assert.match(index, /novel-simplify-v1723\.js\?v=20260823-v17\.23a-novel-simplification/);
+assert.match(index, /novel-simplify-v1723\.js\?v=20260824-v17\.25-entry-refresh/);
 assert.ok(index.indexOf("/novel-simplify-v1723.css") < index.indexOf("/companion-core-polish-v176.css"));
 assert.ok(index.indexOf("/novel-simplify-v1723.js") < index.indexOf("/companion-function-pack-v177.js"));
 
@@ -32,4 +32,4 @@ for (const asset of [
 ]) assert.ok(index.includes(asset));
 
 assert.match(index, /<div id="bottom-spacer"><\/div><\/div><\/main>/);
-console.log("V17.23A historical novel simplification contract passed.");
+console.log("V17.23A historical novel simplification contract passed under the cache-busted V17.25 entry.");
