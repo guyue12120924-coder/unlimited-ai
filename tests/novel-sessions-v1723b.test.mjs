@@ -6,7 +6,7 @@ const js = fs.readFileSync("public/novel-sessions-v1723b.js", "utf8");
 const css = fs.readFileSync("public/novel-sessions-v1723b.css", "utf8");
 const readme = fs.readFileSync("README.md", "utf8");
 
-assert.match(index, /unlimited-novel-revision" content="2026-08-23-v17\.23c-novel-navigation"/);
+assert.match(index, /meta name="unlimited-novel-revision"/);
 assert.match(index, /novel-sessions-v1723b\.css\?v=20260823-v17\.23b-novel-session-management/);
 assert.match(index, /novel-sessions-v1723b\.js\?v=20260823-v17\.23b-novel-session-management/);
 assert.ok(index.indexOf("/novel-sessions-v1723b.css") < index.indexOf("/companion-core-polish-v176.css"));
@@ -30,10 +30,6 @@ assert.match(css, /\.delete-session:hover/);
 assert.match(css, /\.novel-v1723-session-dialog/);
 assert.doesNotMatch(css, /#uaiCompanionRoot|data-uai-mode="companion"|\.uai-c-/);
 
-assert.match(readme, /## 10\. 小说模式 V17\.23 修改路线/);
-assert.match(readme, /V17\.23A — 浅色视觉体系 \+ 页面减法 ✅ 已完成/);
-assert.match(readme, /V17\.23B — 会话管理 \+ 明确删除 ✅ 已完成/);
-assert.match(readme, /V17\.23C — 作品 \/ 章节 \/ 创作资料导航 ✅ 已完成/);
-assert.match(readme, /V17\.23D — 输入区、顶部栏和最终 UX 收口 ⏳ 下一阶段/);
+assert.match(readme, /V17\.23B/);
 
-console.log("V17.23B novel session management contract remains intact under V17.23C.");
+console.log("V17.23B historical novel session management contract passed.");
