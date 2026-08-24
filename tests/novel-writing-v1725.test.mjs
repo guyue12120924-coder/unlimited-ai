@@ -6,6 +6,8 @@ const js = fs.readFileSync("public/novel-writing-v1725.js", "utf8");
 const css = fs.readFileSync("public/novel-writing-v1725.css", "utf8");
 const hotfixJs = fs.readFileSync("public/novel-writing-v1725-hotfix2.js", "utf8");
 const hotfixCss = fs.readFileSync("public/novel-writing-v1725-hotfix2.css", "utf8");
+const polish5Js = fs.readFileSync("public/novel-writing-v1725-polish5.js", "utf8");
+const polish5Css = fs.readFileSync("public/novel-writing-v1725-polish5.css", "utf8");
 const studio = fs.readFileSync("public/studio.js", "utf8");
 const simple = fs.readFileSync("public/simple-studio.js", "utf8");
 const aiToManuscript = fs.readFileSync("public/ai-to-manuscript.js", "utf8");
@@ -77,6 +79,22 @@ assert.match(hotfixJs, /resizeObserver\.observe\(layout\)/);
 assert.match(hotfixJs, /让 AI 续写、润色或帮你构思/);
 assert.match(hotfixJs, /stopImmediatePropagation\(\)/);
 assert.doesNotMatch(hotfixJs, /UnlimitedCompanion|uai_companion_|uaiCompanionRoot/);
+
+// Polish 5 keeps chapters and AI conversations equally available without showing both long lists at once.
+assert.match(index, /novel-writing-v1725-polish5\.css\?v=20260824-v17\.25-writing-workspace-polish5/);
+assert.match(index, /novel-writing-v1725-polish5\.js\?v=20260824-v17\.25-writing-workspace-polish5/);
+assert.match(polish5Css, /novel-v1725-library-switch/);
+assert.match(polish5Css, /data-novel-library-view="chapters"/);
+assert.match(polish5Css, /data-novel-library-view="sessions"/);
+assert.match(polish5Css, /novel-v1725-session-section/);
+assert.match(polish5Css, /not\(\.novel-v1725-ai-view\)[\s\S]*#composer/);
+assert.match(polish5Js, /2026-08-24-v17\.25-writing-workspace-polish5/);
+assert.match(polish5Js, /data-v1725-library-view="chapters"/);
+assert.match(polish5Js, /data-v1725-library-view="sessions"/);
+assert.match(polish5Js, /setLibraryView\("chapters"\)/);
+assert.match(polish5Js, /setLibraryView\("sessions"\)/);
+assert.match(polish5Js, /#studioNewSession, #sendBtn/);
+assert.doesNotMatch(polish5Js, /UnlimitedCompanion|uai_companion_|uaiCompanionRoot/);
 
 // Existing capabilities stay present in the stable cores.
 for (const id of [
